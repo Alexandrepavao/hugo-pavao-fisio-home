@@ -46,7 +46,7 @@ const Benefits = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
           {benefits.map((benefit, index) => (
             <Card key={index} className="card-professional group border-0 bg-white/50 backdrop-blur-sm">
               <CardHeader className="pb-4">
@@ -61,7 +61,7 @@ const Benefits = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pl-18">
+              <CardContent className="pl-0 sm:pl-18">
                 <p className="text-muted-foreground leading-relaxed">
                   {benefit.description}
                 </p>

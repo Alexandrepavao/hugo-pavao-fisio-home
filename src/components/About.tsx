@@ -23,25 +23,25 @@ const About = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Photo */}
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-center lg:justify-end order-2 lg:order-1">
             <div className="relative">
-              <div className="w-80 h-80 rounded-2xl overflow-hidden shadow-xl">
+              <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-xl">
                 <img 
                   src={hugoProfile} 
                   alt="Hugo Pavão - Fisioterapeuta" 
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground p-4 rounded-xl shadow-lg">
-                <Award className="w-8 h-8" />
+              <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-primary text-primary-foreground p-3 sm:p-4 rounded-xl shadow-lg">
+                <Award className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8 order-1 lg:order-2">
             <div>
               <h3 className="text-2xl font-bold text-foreground mb-4">
                 Hugo Pavão
@@ -58,13 +58,13 @@ const About = () => {
             </div>
 
             {/* Highlights */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {highlights.map((highlight, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                    <highlight.icon className="w-5 h-5 text-primary" />
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex-shrink-0">
+                    <highlight.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-xs sm:text-sm font-medium text-foreground">
                     {highlight.label}
                   </span>
                 </div>
