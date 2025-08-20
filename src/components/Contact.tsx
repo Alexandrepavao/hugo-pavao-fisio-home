@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -15,7 +16,7 @@ const Contact = () => {
   };
 
   const handleEmailClick = () => {
-    window.open('mailto:hugo.pavao@fisio.com.br', '_blank');
+    window.open('mailto:hugopavaoo@gmail.com', '_blank');
   };
 
   const handleInstagramClick = () => {
@@ -100,7 +101,7 @@ const Contact = () => {
                   size="lg"
                 >
                   <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  <span className="text-sm sm:text-base break-all">hugo.pavao@fisio.com.br</span>
+                  <span className="text-sm sm:text-base break-all">hugopavaoo@gmail.com</span>
                 </Button>
               </CardContent>
             </Card>

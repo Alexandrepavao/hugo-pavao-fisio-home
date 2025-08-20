@@ -1,7 +1,7 @@
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Clock, Heart, MapPin } from "lucide-react";
-import hugoProfile from "@/assets/hugo-pavao-profile.jpg";
 
 const About = () => {
   const highlights = [
@@ -29,7 +29,7 @@ const About = () => {
             <div className="relative">
               <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-xl">
                 <img 
-                  src={hugoProfile} 
+                  src="/lovable-uploads/5e1e6691-0b32-4581-b5ee-5078cf7b9549.png" 
                   alt="Hugo Pavão - Fisioterapeuta" 
                   className="w-full h-full object-cover"
                 />

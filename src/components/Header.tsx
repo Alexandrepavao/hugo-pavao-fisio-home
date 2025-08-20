@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Heart, Phone, Menu, X, Instagram } from "lucide-react";
 import { useState } from "react";
@@ -100,37 +101,37 @@ const Header = () => {
           </Button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Fixed with solid background */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-16 bg-background/98 backdrop-blur-sm border-b border-border shadow-lg">
+          <div className="md:hidden absolute left-0 right-0 top-16 bg-background border-b border-border shadow-xl z-50">
             <div className="px-4 py-6 space-y-4">
               <button
                 onClick={() => scrollToSection('inicio')}
-                className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors duration-200"
+                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
               >
                 Início
               </button>
               <button
                 onClick={() => scrollToSection('sobre')}
-                className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors duration-200"
+                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
               >
                 Sobre
               </button>
               <button
                 onClick={() => scrollToSection('servicos')}
-                className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors duration-200"
+                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
               >
                 Serviços
               </button>
               <button
                 onClick={() => scrollToSection('depoimentos')}
-                className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors duration-200"
+                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
               >
                 Depoimentos
               </button>
               <button
                 onClick={() => scrollToSection('contato')}
-                className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors duration-200"
+                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
               >
                 Contato
               </button>
