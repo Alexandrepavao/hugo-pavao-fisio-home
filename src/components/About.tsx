@@ -30,9 +30,9 @@ const About = () => {
             <div className="relative">
               <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-xl">
                 <img 
-                  src="/lovable-uploads/ae4009fa-08ee-4fd3-9e1f-0cb88ea09141.png" 
+                  src="/lovable-uploads/ca95074f-9b13-44f2-95db-74ab2e856e1c.png" 
                   alt="Hugo Pavão - Fisioterapeuta" 
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
               <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-primary text-primary-foreground p-3 sm:p-4 rounded-xl shadow-lg">
