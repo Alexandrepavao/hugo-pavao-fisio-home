@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Clock, Heart, MapPin } from "lucide-react";
@@ -28,9 +29,9 @@ const About = () => {
             <div className="relative">
               <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-xl">
                 <img 
-                  src="/lovable-uploads/246dd192-aea6-4d7a-95d2-e343dc1c002a.png" 
+                  src="/lovable-uploads/7d7761cc-ed82-4c1f-bdc6-a983a859e65c.png" 
                   alt="Hugo Pavão - Fisioterapeuta" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
               <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-primary text-primary-foreground p-3 sm:p-4 rounded-xl shadow-lg">
