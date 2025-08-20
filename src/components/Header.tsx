@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Heart, Phone, Menu, X, Instagram } from "lucide-react";
 import { useState } from "react";
@@ -13,7 +12,7 @@ const Header = () => {
   };
 
   const handleWhatsAppClick = () => {
-    window.open('https://wa.me/5511959075351', '_blank');
+    window.open('https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F', '_blank');
   };
 
   const handleInstagramClick = () => {

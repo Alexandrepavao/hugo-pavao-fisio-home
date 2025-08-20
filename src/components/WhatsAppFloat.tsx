@@ -1,8 +1,9 @@
+
 import { MessageCircle } from "lucide-react";
 
 const WhatsAppFloat = () => {
   const handleWhatsAppClick = () => {
-    window.open('https://wa.me/5511959075351', '_blank');
+    window.open('https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F', '_blank');
   };
 
   return (
