@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Heart, Phone, Menu, X, Instagram } from "lucide-react";
 import { useState } from "react";
@@ -16,7 +17,7 @@ const Header = () => {
   };
 
   const handleInstagramClick = () => {
-    window.open('https://instagram.com/hugopavaoo', '_blank');
+    window.open('https://www.instagram.com/hugopavaofisio/', '_blank');
   };
 
   return (

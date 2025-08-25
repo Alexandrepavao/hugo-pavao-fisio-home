@@ -1,5 +1,3 @@
-
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -21,7 +19,7 @@ const Contact = () => {
   };
 
   const handleInstagramClick = () => {
-    window.open('https://instagram.com/hugopavaoo', '_blank');
+    window.open('https://www.instagram.com/hugopavaofisio/', '_blank');
   };
 
   return (
@@ -186,4 +184,3 @@ const Contact = () => {
 };
 
 export default Contact;
-
