@@ -1,5 +1,3 @@
-
-
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Clock, Heart, MapPin } from "lucide-react";
@@ -28,7 +26,7 @@ const About = () => {
           {/* Photo */}
           <div className="flex justify-center lg:justify-end order-2 lg:order-1">
             <div className="relative">
-              <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-xl">
+              <div className="w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] rounded-2xl overflow-hidden shadow-xl">
                 <img 
                   src="/lovable-uploads/ca95074f-9b13-44f2-95db-74ab2e856e1c.png" 
                   alt="Hugo Pavão - Fisioterapeuta" 
@@ -95,4 +93,3 @@ const About = () => {
 };
 
 export default About;
-
