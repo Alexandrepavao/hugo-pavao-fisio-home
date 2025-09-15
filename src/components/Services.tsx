@@ -5,7 +5,8 @@ import {
   Wind, 
   Dumbbell, 
   Home,
-  Stethoscope
+  Stethoscope,
+  Hand
 } from "lucide-react";
 
 const Services = () => {
@@ -19,6 +20,11 @@ const Services = () => {
       icon: Stethoscope,
       title: "Fisioterapia para Dores Crônicas",
       description: "Tratamento especializado para dores musculares e articulares crônicas, focando no alívio duradouro e melhoria da qualidade de vida."
+    },
+    {
+      icon: Hand,
+      title: "Liberação Miofascial",
+      description: "Técnica avançada que alivia tensões musculares profundas, melhora a mobilidade articular e reduz rigidez corporal. Ideal para desconfortos pós-treino, dores do dia a dia e restauração do movimento natural."
     },
     {
       icon: Wind,
