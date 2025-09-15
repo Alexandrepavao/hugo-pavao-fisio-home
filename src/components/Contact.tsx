@@ -125,6 +125,10 @@ const Contact = () => {
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
                     <span className="text-foreground font-medium">São Paulo (Capital)</span>
                   </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    <span className="text-foreground font-medium">Litoral - SP</span>
+                  </div>
                   <p className="text-muted-foreground text-sm mt-4">
                     Atendimento domiciliar em toda a região metropolitana
                   </p>
