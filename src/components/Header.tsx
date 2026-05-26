@@ -1,160 +1,105 @@
-
 import { Button } from "@/components/ui/button";
-import { Heart, Phone, Menu, X, Instagram } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    element?.scrollIntoView({ behavior: 'smooth' });
-    setMobileMenuOpen(false);
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setOpen(false);
   };
 
-  const handleWhatsAppClick = () => {
-    window.open('https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F', '_blank');
-  };
+  const whatsapp = () => window.open(
+    "https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F",
+    "_blank"
+  );
 
-  const handleInstagramClick = () => {
-    window.open('https://www.instagram.com/hugopavaofisio/', '_blank');
-  };
+  const links = [
+    { id: "servicos", label: "Serviços" },
+    { id: "sobre", label: "Sobre" },
+    { id: "depoimentos", label: "Depoimentos" },
+    { id: "contato", label: "Contato" },
+  ];
 
   return (
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-40">
+    <header
+      className={`sticky top-0 z-40 transition-all duration-300 ${
+        scrolled ? "bg-background/95 backdrop-blur shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.25)]" : "bg-background"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary">
-              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
+        <div className="flex items-center justify-between h-18 py-3">
+          <button onClick={() => scrollTo("inicio")} className="flex items-center gap-2 text-left">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground font-display font-bold">
+              HP
             </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-bold text-foreground">Hugo Pavão</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Fisioterapia Especializada</p>
+            <div className="leading-tight">
+              <p className="font-display font-bold text-foreground text-base">Hugo Pavão</p>
+              <p className="text-xs text-muted-foreground">Fisioterapia Domiciliar</p>
             </div>
-          </div>
+          </button>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6">
-            <button
-              onClick={() => scrollToSection('inicio')}
-              className="text-sm text-foreground hover:text-primary transition-colors duration-200"
-            >
-              Início
-            </button>
-            <button
-              onClick={() => scrollToSection('sobre')}
-              className="text-sm text-foreground hover:text-primary transition-colors duration-200"
-            >
-              Sobre
-            </button>
-            <button
-              onClick={() => scrollToSection('servicos')}
-              className="text-sm text-foreground hover:text-primary transition-colors duration-200"
-            >
-              Serviços
-            </button>
-            <button
-              onClick={() => scrollToSection('depoimentos')}
-              className="text-sm text-foreground hover:text-primary transition-colors duration-200"
-            >
-              Depoimentos
-            </button>
-            <button
-              onClick={() => scrollToSection('contato')}
-              className="text-sm text-foreground hover:text-primary transition-colors duration-200"
-            >
-              Contato
-            </button>
+          <nav className="hidden lg:flex items-center gap-8">
+            {links.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => scrollTo(l.id)}
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              >
+                {l.label}
+              </button>
+            ))}
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden md:flex items-center gap-3">
             <Button
-              onClick={handleInstagramClick}
-              variant="outline"
-              size="sm"
-              className="h-9 w-9 p-0"
+              onClick={whatsapp}
+              className="bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground font-semibold"
             >
-              <Instagram className="w-4 h-4" />
-            </Button>
-            <Button 
-              onClick={handleWhatsAppClick}
-              variant="default"
-              size="sm"
-              className="bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground"
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              <span className="hidden lg:inline">Agendar</span>
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Agendar pelo WhatsApp
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
           <Button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => setOpen(!open)}
             variant="outline"
             size="sm"
-            className="md:hidden h-9 w-9 p-0"
+            className="md:hidden h-10 w-10 p-0"
+            aria-label="Menu"
           >
-            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
         </div>
 
-        {/* Mobile Menu - Fixed with solid background */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-16 bg-background border-b border-border shadow-xl z-50">
-            <div className="px-4 py-6 space-y-4">
-              <button
-                onClick={() => scrollToSection('inicio')}
-                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
-              >
-                Início
-              </button>
-              <button
-                onClick={() => scrollToSection('sobre')}
-                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
-              >
-                Sobre
-              </button>
-              <button
-                onClick={() => scrollToSection('servicos')}
-                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
-              >
-                Serviços
-              </button>
-              <button
-                onClick={() => scrollToSection('depoimentos')}
-                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
-              >
-                Depoimentos
-              </button>
-              <button
-                onClick={() => scrollToSection('contato')}
-                className="block w-full text-left py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg px-4 transition-colors duration-200"
-              >
-                Contato
-              </button>
-              
-              <div className="flex space-x-3 pt-4 border-t border-border">
-                <Button
-                  onClick={handleInstagramClick}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
+        {open && (
+          <div className="md:hidden absolute left-0 right-0 top-full bg-background border-b border-border shadow-xl">
+            <div className="px-4 py-4 space-y-1">
+              {links.map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => scrollTo(l.id)}
+                  className="block w-full text-left py-3 px-3 rounded-lg text-foreground hover:bg-secondary"
                 >
-                  <Instagram className="w-4 h-4 mr-2" />
-                  Instagram
-                </Button>
-                <Button 
-                  onClick={handleWhatsAppClick}
-                  size="sm"
-                  className="flex-1 bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground"
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  WhatsApp
-                </Button>
-              </div>
+                  {l.label}
+                </button>
+              ))}
+              <Button
+                onClick={whatsapp}
+                className="w-full mt-2 bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Agendar pelo WhatsApp
+              </Button>
             </div>
           </div>
         )}

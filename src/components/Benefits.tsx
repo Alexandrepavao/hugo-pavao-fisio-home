@@ -1,72 +1,51 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Home, 
-  Clock, 
-  User, 
-  Award
-} from "lucide-react";
+import { Home, UserCheck, Clock, Briefcase } from "lucide-react";
 
 const Benefits = () => {
-  const benefits = [
+  const items = [
     {
       icon: Home,
-      title: "Atendimento no conforto da sua casa",
-      description: "Receba cuidados profissionais sem sair de casa, em um ambiente familiar e relaxante.",
-      gradient: "from-blue-500 to-cyan-500"
+      title: "Conforto da sua casa",
+      description: "Tratamento em ambiente familiar e relaxante, sem o estresse de salas de espera.",
+    },
+    {
+      icon: UserCheck,
+      title: "Atendimento 100% individualizado",
+      description: "Atenção exclusiva, plano de tratamento sob medida para os seus objetivos.",
     },
     {
       icon: Clock,
-      title: "Flexibilidade de horários",
-      description: "Agendamentos que se adaptam à sua rotina, incluindo finais de semana e feriados.",
-      gradient: "from-green-500 to-emerald-500"
+      title: "Sem deslocamento e sem espera",
+      description: "Horários flexíveis que se adaptam à sua rotina e à sua família.",
     },
     {
-      icon: User,
-      title: "Atendimento individualizado",
-      description: "Atenção exclusiva e personalizada, com foco nas suas necessidades específicas.",
-      gradient: "from-purple-500 to-pink-500"
+      icon: Briefcase,
+      title: "Equipamentos levados ao local",
+      description: "Estrutura profissional completa entregue no conforto do seu lar.",
     },
-    {
-      icon: Award,
-      title: "Experiência e dedicação",
-      description: "Profissional qualificado com anos de experiência em fisioterapia domiciliar.",
-      gradient: "from-orange-500 to-red-500"
-    }
   ];
 
   return (
-    <section className="section-padding-lg bg-soft-gradient">
+    <section className="section-padding-lg bg-soft">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Por que escolher nossos serviços?
+        <div className="text-center mb-14 max-w-2xl mx-auto">
+          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Vantagens</p>
+          <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-primary mb-4">
+            Por que escolher o atendimento domiciliar?
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Vantagens exclusivas do atendimento fisioterapêutico domiciliar
+          <p className="text-lg text-muted-foreground">
+            Mais conforto, mais resultado — fisioterapia entregue do jeito que você precisa.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
-          {benefits.map((benefit, index) => (
-            <Card key={index} className="card-professional group border-0 bg-white/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <div className="flex items-start space-x-4">
-                  <div className={`flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${benefit.gradient} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <benefit.icon className="w-7 h-7" />
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-xl font-semibold text-foreground mb-2">
-                      {benefit.title}
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pl-0 sm:pl-18">
-                <p className="text-muted-foreground leading-relaxed">
-                  {benefit.description}
-                </p>
-              </CardContent>
-            </Card>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {items.map((b, i) => (
+            <div key={i} className="card-pro text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-5">
+                <b.icon className="w-7 h-7" />
+              </div>
+              <h3 className="font-display font-semibold text-lg text-primary mb-2">{b.title}</h3>
+              <p className="text-muted-foreground text-[15px] leading-relaxed">{b.description}</p>
+            </div>
           ))}
         </div>
       </div>
