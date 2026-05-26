@@ -1,185 +1,124 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  MessageCircle, 
-  Mail, 
-  MapPin, 
-  Clock,
-  Phone,
-  Instagram
-} from "lucide-react";
+import { MessageCircle, MapPin, Clock, Mail, Instagram } from "lucide-react";
 
 const Contact = () => {
-  const handleWhatsAppClick = () => {
-    window.open('https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F', '_blank');
-  };
+  const whatsapp = () => window.open(
+    "https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F",
+    "_blank"
+  );
+  const email = () => window.open("mailto:hugopavaoo@gmail.com", "_blank");
+  const instagram = () => window.open("https://www.instagram.com/hugopavaofisio/", "_blank");
 
-  const handleEmailClick = () => {
-    window.open('mailto:hugopavaoo@gmail.com', '_blank');
-  };
-
-  const handleInstagramClick = () => {
-    window.open('https://www.instagram.com/hugopavaofisio/', '_blank');
-  };
+  const areas = ["Granja Viana - Cotia", "Grande ABC", "São Paulo (Capital)"];
+  const schedule = [
+    ["Segunda a Sexta", "8h às 18h"],
+    ["Sábados", "8h às 14h"],
+    ["Emergências", "Sob consulta"],
+  ];
 
   return (
-    <section id="contato" className="section-padding-lg bg-soft-gradient">
+    <section id="contato" className="section-padding-lg bg-soft">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center mb-14 max-w-2xl mx-auto">
+          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Contato</p>
+          <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-primary mb-4">
             Agende sua avaliação
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Entre em contato e inicie seu tratamento personalizado hoje mesmo
+          <p className="text-lg text-muted-foreground">
+            Entre em contato e inicie seu tratamento personalizado hoje mesmo.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Contact Info */}
-          <div className="space-y-6 sm:space-y-8">
-            <Card className="card-professional">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-3 text-lg sm:text-xl">
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-whatsapp flex-shrink-0" />
-                  <span>WhatsApp - Contato Direto</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                  A forma mais rápida de agendar sua consulta. Respondo rapidamente!
-                </p>
-                <Button 
-                  onClick={handleWhatsAppClick}
-                  className="bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground w-full"
-                  size="lg"
-                >
-                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  <span className="text-sm sm:text-base">Conversar no WhatsApp</span>
-                </Button>
-              </CardContent>
-            </Card>
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Channels */}
+          <div className="space-y-5">
+            <div className="card-pro">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-xl bg-whatsapp/10 text-whatsapp flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-semibold text-lg text-primary">WhatsApp</h3>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                A forma mais rápida de agendar. Respondo em até 1 hora.
+              </p>
+              <Button
+                onClick={whatsapp}
+                className="w-full bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground font-semibold"
+                size="lg"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Conversar no WhatsApp
+              </Button>
+            </div>
 
-            <Card className="card-professional">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-3 text-lg sm:text-xl">
-                  <Instagram className="w-5 h-5 sm:w-6 sm:h-6 text-pink-500 flex-shrink-0" />
-                  <span>Instagram</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                  Acompanhe dicas de saúde e conteúdos exclusivos
-                </p>
-                <Button 
-                  onClick={handleInstagramClick}
-                  variant="outline"
-                  className="w-full border-pink-200 hover:bg-pink-50"
-                  size="lg"
-                >
-                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  <span className="text-sm sm:text-base">@hugopavaoo</span>
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="card-pro">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+                  <Instagram className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-semibold text-lg text-primary">Instagram</h3>
+              </div>
+              <p className="text-muted-foreground mb-4">Dicas de saúde e conteúdo exclusivo.</p>
+              <Button onClick={instagram} variant="outline" size="lg" className="w-full">
+                <Instagram className="w-5 h-5 mr-2" />
+                @hugopavaofisio
+              </Button>
+            </div>
 
-            <Card className="card-professional">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-3 text-lg sm:text-xl">
-                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-                  <span>E-mail</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                  Para dúvidas e informações mais detalhadas
-                </p>
-                <Button 
-                  onClick={handleEmailClick}
-                  variant="outline"
-                  className="w-full"
-                  size="lg"
-                >
-                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  <span className="text-sm sm:text-base break-all">hugopavaoo@gmail.com</span>
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="card-pro">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-semibold text-lg text-primary">E-mail</h3>
+              </div>
+              <p className="text-muted-foreground mb-4">Para dúvidas e informações detalhadas.</p>
+              <Button onClick={email} variant="outline" size="lg" className="w-full">
+                <Mail className="w-5 h-5 mr-2" />
+                <span className="break-all">hugopavaoo@gmail.com</span>
+              </Button>
+            </div>
           </div>
 
-          {/* Service Areas & Info */}
-          <div className="space-y-6 sm:space-y-8">
-            <Card className="card-professional">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-3">
-                  <MapPin className="w-6 h-6 text-primary" />
-                  <span>Área de Atendimento</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground font-medium">Granja Viana - Cotia</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground font-medium">Grande ABC</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-foreground font-medium">São Paulo (Capital)</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm mt-4">
-                    Atendimento domiciliar em toda a região metropolitana
-                  </p>
+          {/* Info */}
+          <div className="space-y-5">
+            <div className="card-pro">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-11 h-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+                  <MapPin className="w-5 h-5" />
                 </div>
-              </CardContent>
-            </Card>
+                <h3 className="font-display font-semibold text-lg text-primary">Área de atendimento</h3>
+              </div>
+              <ul className="space-y-3">
+                {areas.map((a) => (
+                  <li key={a} className="flex items-center gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    <span className="text-foreground font-medium">{a}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-sm text-muted-foreground mt-4">
+                Atendimento domiciliar em toda a região metropolitana.
+              </p>
+            </div>
 
-            <Card className="card-professional">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-3">
-                  <Clock className="w-6 h-6 text-primary" />
-                  <span>Horário de Atendimento</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-foreground">Segunda a Sexta</span>
-                    <span className="text-muted-foreground">8h às 18h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-foreground">Sábados</span>
-                    <span className="text-muted-foreground">8h às 14h</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-foreground">Emergências</span>
-                    <span className="text-muted-foreground">Sob consulta</span>
-                  </div>
+            <div className="card-pro">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Clock className="w-5 h-5" />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* CTA Final */}
-        <div className="text-center mt-12 sm:mt-16">
-          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-border">
-            <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-4">
-              Pronto para começar seu tratamento?
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto text-sm sm:text-base">
-              Atendimento domiciliar humanizado e personalizado no Grande ABC e São Paulo
-            </p>
-            <Button 
-              onClick={handleWhatsAppClick}
-              size="lg"
-              className="w-full sm:w-auto bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            >
-              <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
-              <span className="text-sm sm:text-base">Agendar Consulta Agora</span>
-            </Button>
+                <h3 className="font-display font-semibold text-lg text-primary">Horário de atendimento</h3>
+              </div>
+              <div className="space-y-3">
+                {schedule.map(([day, hours]) => (
+                  <div key={day} className="flex justify-between">
+                    <span className="text-foreground">{day}</span>
+                    <span className="text-muted-foreground">{hours}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

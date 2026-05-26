@@ -1,81 +1,62 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Star, Quote } from "lucide-react";
 
 const Testimonials = () => {
-  const testimonials = [
+  const items = [
     {
       name: "Maria S.",
+      city: "Santo André",
       text: "O Hugo me ajudou a recuperar após minha cirurgia de joelho, super atencioso e profissional. Em poucos meses consegui andar normalmente novamente.",
-      rating: 5,
-      treatment: "Reabilitação Pós-Cirúrgica"
+      treatment: "Reabilitação Pós-Cirúrgica",
     },
     {
       name: "João P.",
+      city: "São Paulo",
       text: "Atendimento em casa fez toda a diferença no meu tratamento. Recomendo muito! Além de conveniente, o Hugo é muito competente.",
-      rating: 5,
-      treatment: "Fisioterapia Domiciliar"
+      treatment: "Fisioterapia Domiciliar",
     },
     {
       name: "Ana L.",
+      city: "São Bernardo",
       text: "Excelente profissional! Me ajudou muito com as dores nas costas. Agora posso trabalhar sem desconforto graças ao tratamento.",
-      rating: 5,
-      treatment: "Dores Crônicas"
-    }
+      treatment: "Dores Crônicas",
+    },
   ];
 
   return (
     <section id="depoimentos" className="section-padding-lg">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            O que dizem nossos pacientes
+        <div className="text-center mb-14 max-w-2xl mx-auto">
+          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Depoimentos</p>
+          <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-primary mb-4">
+            O que dizem meus pacientes
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Depoimentos reais de pessoas que confiaram em nossos cuidados
+          <p className="text-lg text-muted-foreground">
+            Histórias reais de quem confiou no atendimento humanizado.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {testimonials.map((testimonial, index) => (
-            <Card key={index} className="card-professional relative overflow-hidden">
-              <CardContent className="p-6">
-                {/* Quote Icon */}
-                <div className="absolute top-4 right-4 opacity-10">
-                  <Quote className="w-12 h-12 text-primary" />
+        <div className="grid md:grid-cols-3 gap-6">
+          {items.map((t, i) => (
+            <article key={i} className="card-pro relative">
+              <Quote className="absolute top-5 right-5 w-10 h-10 text-accent/15" />
+              <div className="flex gap-1 mb-4">
+                {Array.from({ length: 5 }).map((_, j) => (
+                  <Star key={j} className="w-4 h-4 fill-accent text-accent" />
+                ))}
+              </div>
+              <p className="text-foreground/85 leading-relaxed mb-6">"{t.text}"</p>
+              <div className="flex items-center gap-3 pt-4 border-t border-border">
+                <div className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-display font-bold">
+                  {t.name.charAt(0)}
                 </div>
-
-                {/* Stars */}
-                <div className="flex items-center space-x-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  ))}
+                <div>
+                  <p className="font-semibold text-primary">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t.city} · {t.treatment}
+                  </p>
                 </div>
-
-                {/* Testimonial Text */}
-                <blockquote className="text-muted-foreground leading-relaxed mb-6 relative z-10">
-                  "{testimonial.text}"
-                </blockquote>
-
-                {/* Author */}
-                <div className="border-t border-border pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {testimonial.treatment}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="text-primary font-bold text-lg">
-                        {testimonial.name.charAt(0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </article>
           ))}
         </div>
       </div>
