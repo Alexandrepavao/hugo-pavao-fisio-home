@@ -1,28 +1,40 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import Stats from "@/components/Stats";
-import Services from "@/components/Services";
+import TrustBar from "@/components/TrustBar";
+import HowItWorks from "@/components/HowItWorks";
+import Specialties from "@/components/Specialties";
 import About from "@/components/About";
-import Benefits from "@/components/Benefits";
+import Coverage from "@/components/Coverage";
 import Testimonials from "@/components/Testimonials";
-import Contact from "@/components/Contact";
-import CTASection from "@/components/CTASection";
+import WorkWithUs from "@/components/WorkWithUs";
+import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 
 const Index = () => {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [hash]);
+
   return (
     <div className="min-h-screen">
       <Header />
       <main>
         <Hero />
-        <Stats />
-        <Services />
+        <TrustBar />
+        <HowItWorks />
+        <Specialties />
         <About />
-        <Benefits />
+        <Coverage />
         <Testimonials />
-        <Contact />
-        <CTASection />
+        <WorkWithUs />
+        <FAQ />
       </main>
       <Footer />
       <WhatsAppFloat />

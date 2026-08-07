@@ -1,74 +1,111 @@
-import { Instagram, MessageCircle, Mail } from "lucide-react";
+import { MessageCircle, Instagram, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
+import Logo from "./Logo";
+import Divider from "./Divider";
+import {
+  linkPaciente,
+  linkProfissional,
+  WHATSAPP_PACIENTES_DISPLAY,
+  WHATSAPP_PROFISSIONAIS_DISPLAY,
+} from "@/lib/contact";
 
-const Footer = () => {
-  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  const whatsapp = () => window.open("https://wa.me/5511959075351", "_blank");
-  const instagram = () => window.open("https://www.instagram.com/hugopavaofisio/", "_blank");
-  const email = () => window.open("mailto:hugopavaoo@gmail.com", "_blank");
+const menu = [
+  { label: "Sobre", href: "/#sobre" },
+  { label: "Especialidades", href: "/#especialidades" },
+  { label: "Como Funciona", href: "/#como-funciona" },
+  { label: "Área de Atendimento", href: "/#cobertura" },
+  { label: "Depoimentos", href: "/#depoimentos" },
+  { label: "Perguntas Frequentes", href: "/#faq" },
+];
 
-  return (
-    <footer className="bg-primary text-primary-foreground">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid md:grid-cols-3 gap-10">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent text-accent-foreground font-display font-bold">
-                HP
-              </div>
-              <div>
-                <p className="font-display font-bold">Hugo Pavão</p>
-                <p className="text-xs text-white/60">Fisioterapia Domiciliar</p>
-              </div>
-            </div>
-            <p className="text-sm text-white/70 leading-relaxed">
-              Cuidado fisioterapêutico humanizado, no conforto da sua casa — Grande ABC e São Paulo.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-display font-semibold mb-4">Navegação</p>
-            <ul className="space-y-2 text-sm text-white/70">
-              {[
-                { id: "servicos", label: "Serviços" },
-                { id: "sobre", label: "Sobre" },
-                { id: "depoimentos", label: "Depoimentos" },
-                { id: "contato", label: "Contato" },
-              ].map((l) => (
-                <li key={l.id}>
-                  <button onClick={() => scrollTo(l.id)} className="hover:text-accent transition-colors">
-                    {l.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-display font-semibold mb-4">Contato</p>
-            <ul className="space-y-3 text-sm text-white/70">
-              <li>Hugo Pavão — Fisioterapeuta CREFITO</li>
-              <li>Atendimento: Grande ABC e SP</li>
-            </ul>
-            <div className="flex gap-3 mt-5">
-              <button onClick={whatsapp} aria-label="WhatsApp" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-center">
-                <MessageCircle className="w-5 h-5" />
-              </button>
-              <button onClick={instagram} aria-label="Instagram" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-center">
-                <Instagram className="w-5 h-5" />
-              </button>
-              <button onClick={email} aria-label="E-mail" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-center">
-                <Mail className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-white/10 mt-12 pt-6 text-center text-xs text-white/50">
-          © 2025 Hugo Pavão Fisioterapia. Todos os direitos reservados.
-        </div>
+const Footer = () => (
+  <footer className="bg-card border-t border-border">
+    <div className="container-hp px-6 sm:px-8 py-16 grid lg:grid-cols-[1.2fr_1fr_1fr] gap-12">
+      <div>
+        <Logo className="h-16" />
+        <p className="text-[15px] text-navy-400 mt-6 max-w-sm">
+          Fisioterapia domiciliar humanizada em todo o Brasil, através de uma
+          rede de fisioterapeutas parceiros selecionados em cada região.
+        </p>
+        <p className="flex items-start gap-2 text-[14px] text-navy-400 mt-6">
+          <MapPin className="w-4 h-4 mt-1 text-accent shrink-0" strokeWidth={1.5} />
+          Atuação nacional · Base em São Paulo (capital) e Grande ABC
+        </p>
+        <a
+          href="https://instagram.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-[14px] text-navy-400 hover:text-accent transition-colors mt-4"
+        >
+          <Instagram className="w-4 h-4" strokeWidth={1.5} />
+          Instagram [inserir @perfil]
+        </a>
       </div>
-    </footer>
-  );
-};
+
+      <div>
+        <p className="text-[12px] uppercase tracking-[0.22em] text-navy-900">Contato</p>
+        <Divider className="justify-start my-5 [&::before]:hidden" />
+
+        <a
+          href={linkPaciente}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group"
+        >
+          <span className="text-[12px] uppercase tracking-[0.16em] text-accent">
+            Pacientes / Agendamentos
+          </span>
+          <span className="flex items-center gap-2 text-navy-900 group-hover:text-accent transition-colors mt-1">
+            <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
+            {WHATSAPP_PACIENTES_DISPLAY}
+          </span>
+        </a>
+
+        <a
+          href={linkProfissional}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group mt-6"
+        >
+          <span className="text-[12px] uppercase tracking-[0.16em] text-accent">
+            Fisioterapeutas / Trabalhe Conosco
+          </span>
+          <span className="flex items-center gap-2 text-navy-900 group-hover:text-accent transition-colors mt-1">
+            <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
+            {WHATSAPP_PROFISSIONAIS_DISPLAY}
+          </span>
+        </a>
+      </div>
+
+      <div>
+        <p className="text-[12px] uppercase tracking-[0.22em] text-navy-900">Navegação</p>
+        <Divider className="justify-start my-5 [&::before]:hidden" />
+        <ul className="space-y-3">
+          {menu.map((m) => (
+            <li key={m.href}>
+              <a href={m.href} className="text-[15px] text-navy-400 hover:text-accent transition-colors">
+                {m.label}
+              </a>
+            </li>
+          ))}
+          <li>
+            <Link to="/trabalhe-conosco" className="text-[15px] text-accent hover:text-navy-900 transition-colors">
+              Trabalhe Conosco
+            </Link>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div className="border-t border-border">
+      <div className="container-hp px-6 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-navy-400">
+        <p>© {new Date().getFullYear()} HP Fisioterapia · CNPJ [inserir]</p>
+        <p className="uppercase tracking-[0.2em] text-[11px]">
+          Movimento · Funcionalidade · Qualidade de vida
+        </p>
+      </div>
+    </div>
+  </footer>
+);
 
 export default Footer;

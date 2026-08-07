@@ -1,67 +1,43 @@
-import { Star, Quote } from "lucide-react";
+import Divider from "./Divider";
 
-const Testimonials = () => {
-  const items = [
-    {
-      name: "Maria S.",
-      city: "Santo André",
-      text: "O Hugo me ajudou a recuperar após minha cirurgia de joelho, super atencioso e profissional. Em poucos meses consegui andar normalmente novamente.",
-      treatment: "Reabilitação Pós-Cirúrgica",
-    },
-    {
-      name: "João P.",
-      city: "São Paulo",
-      text: "Atendimento em casa fez toda a diferença no meu tratamento. Recomendo muito! Além de conveniente, o Hugo é muito competente.",
-      treatment: "Fisioterapia Domiciliar",
-    },
-    {
-      name: "Ana L.",
-      city: "São Bernardo",
-      text: "Excelente profissional! Me ajudou muito com as dores nas costas. Agora posso trabalhar sem desconforto graças ao tratamento.",
-      treatment: "Dores Crônicas",
-    },
-  ];
+const cards = [
+  { name: "[nome do paciente]", info: "[cidade] · [tratamento realizado]" },
+  { name: "[nome do paciente]", info: "[cidade] · [tratamento realizado]" },
+  { name: "[nome do paciente]", info: "[cidade] · [tratamento realizado]" },
+];
 
-  return (
-    <section id="depoimentos" className="section-padding-lg">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-14 max-w-2xl mx-auto">
-          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Depoimentos</p>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl text-primary mb-4">
-            O que dizem meus pacientes
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Histórias reais de quem confiou no atendimento humanizado.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {items.map((t, i) => (
-            <article key={i} className="card-pro relative">
-              <Quote className="absolute top-5 right-5 w-10 h-10 text-accent/15" />
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <Star key={j} className="w-4 h-4 fill-accent text-accent" />
-                ))}
-              </div>
-              <p className="text-foreground/85 leading-relaxed mb-6">"{t.text}"</p>
-              <div className="flex items-center gap-3 pt-4 border-t border-border">
-                <div className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-display font-bold">
-                  {t.name.charAt(0)}
-                </div>
-                <div>
-                  <p className="font-semibold text-primary">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t.city} · {t.treatment}
-                  </p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+const Testimonials = () => (
+  <section id="depoimentos" className="section">
+    <div className="container-hp">
+      <div className="text-center max-w-2xl mx-auto">
+        <p className="eyebrow">Depoimentos</p>
+        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-navy-900 mt-5">
+          Quem já foi atendido pela HP
+        </h2>
+        <Divider className="mt-8" />
       </div>
-    </section>
-  );
-};
+
+      <div className="grid md:grid-cols-3 gap-8 mt-16">
+        {cards.map((c, i) => (
+          <article key={i} className="card-hp flex flex-col">
+            <Divider className="justify-start [&::before]:hidden" />
+            <p className="font-display text-lg text-navy-700 mt-6 flex-1">
+              “[depoimento real do paciente aqui]”
+            </p>
+            <div className="mt-8 pt-6 border-t border-border">
+              <p className="text-[13px] uppercase tracking-[0.16em] text-accent">{c.name}</p>
+              <p className="text-[13px] text-navy-400 mt-1">{c.info}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <p className="text-center text-[13px] text-navy-400 mt-10">
+        Espaço reservado para avaliações verdadeiras de pacientes — substituir
+        pelos depoimentos reais.
+      </p>
+    </div>
+  </section>
+);
 
 export default Testimonials;
