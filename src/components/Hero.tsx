@@ -1,101 +1,64 @@
-import { Button } from "@/components/ui/button";
-import { MessageCircle, ArrowRight, ShieldCheck, Clock3, MapPin } from "lucide-react";
+import { MessageCircle, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import Divider from "./Divider";
+import { openPaciente } from "@/lib/contact";
 
-const Hero = () => {
-  const whatsapp = () => window.open(
-    "https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F",
-    "_blank"
-  );
-  const toServices = () => document.getElementById("servicos")?.scrollIntoView({ behavior: "smooth" });
+const Hero = () => (
+  <section id="inicio" className="px-6 sm:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
+    <div className="container-hp grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-20 items-center">
+      <div className="animate-fade-in">
+        <p className="eyebrow">Home Care · Cobertura Nacional</p>
 
-  return (
-    <section id="inicio" className="relative overflow-hidden bg-soft">
-      {/* Decorative shape */}
-      <div className="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full bg-accent/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.6rem] leading-[1.1] text-navy-900 mt-6">
+          Fisioterapia que<br />vai até você.
+        </h1>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-20 lg:pt-24 lg:pb-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Text */}
-          <div className="animate-fade-in">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-wide uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              Fisioterapia em domicílio
-            </span>
+        <div className="hp-divider justify-start my-8" aria-hidden="true">
+          <span className="hp-divider-dot" />
+        </div>
 
-            <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-primary mt-5 leading-[1.05]">
-              Cuidado fisioterapêutico que vai até você.
-            </h1>
+        <p className="text-navy-400 max-w-xl">
+          Atendimento domiciliar humanizado em todo o Brasil. A HP Fisioterapia
+          é uma rede de fisioterapeutas parceiros selecionados e capacitados em
+          cada região do país, seguindo um único padrão de qualidade — com
+          equipamentos inclusos, no conforto da sua casa.
+        </p>
 
-            <p className="text-lg text-muted-foreground mt-6 leading-relaxed max-w-xl">
-              Hugo Pavão atende no Grande ABC e em São Paulo com fisioterapia
-              domiciliar especializada — reabilitação, dores crônicas, pós-cirúrgico
-              e tratamento humanizado no conforto da sua casa.
-            </p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 mt-10">
+          <button
+            onClick={openPaciente}
+            className="inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.16em] px-8 py-4 hover:bg-navy-900 transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Agendar pelo WhatsApp
+          </button>
 
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Button
-                onClick={whatsapp}
-                size="lg"
-                className="bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground font-semibold h-12 px-6 text-base shadow-lg"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Agendar Consulta pelo WhatsApp
-              </Button>
-              <Button
-                onClick={toServices}
-                variant="outline"
-                size="lg"
-                className="h-12 px-6 text-base border-primary/20 hover:bg-primary hover:text-primary-foreground"
-              >
-                Conheça os Serviços
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-x-6 gap-y-3 mt-8 text-sm text-foreground/80">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent" />
-                CREFITO Registrado
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock3 className="w-4 h-4 text-accent" />
-                Atendimento no mesmo dia
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-accent" />
-                Grande ABC e SP
-              </div>
-            </div>
-          </div>
-
-          {/* Image */}
-          <div className="relative animate-fade-in">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/5] max-w-md mx-auto lg:max-w-none">
-              <img
-                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80"
-                alt="Fisioterapeuta realizando atendimento domiciliar"
-                className="w-full h-full object-cover"
-                loading="eager"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent" />
-            </div>
-
-            {/* Floating card */}
-            <div className="hidden sm:flex absolute -bottom-6 -left-6 lg:-left-10 bg-background rounded-2xl shadow-xl p-4 items-center gap-3 border border-border">
-              <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-accent" />
-              </div>
-              <div>
-                <p className="font-display font-bold text-primary">+500 pacientes</p>
-                <p className="text-xs text-muted-foreground">atendidos com excelência</p>
-              </div>
-            </div>
-          </div>
+          <Link
+            to="/trabalhe-conosco"
+            className="inline-flex items-center gap-2 text-[14px] text-accent hover:text-navy-900 transition-colors"
+          >
+            É fisioterapeuta? Conheça a HP
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
-    </section>
-  );
-};
+
+      <div className="animate-fade-in">
+        <div className="relative border border-border bg-card p-3">
+          <div className="placeholder-box aspect-[4/5] flex-col gap-3">
+            <span className="font-display text-2xl normal-case tracking-normal text-navy-700">
+              Foto do atendimento
+            </span>
+            <span>[inserir foto real de atendimento domiciliar]</span>
+          </div>
+        </div>
+        <Divider className="mt-6" />
+        <p className="text-center text-[12px] uppercase tracking-[0.24em] text-navy-400 mt-4">
+          Movimento · Funcionalidade · Qualidade de vida
+        </p>
+      </div>
+    </div>
+  </section>
+);
 
 export default Hero;

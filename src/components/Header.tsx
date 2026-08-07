@@ -1,109 +1,108 @@
-import { Button } from "@/components/ui/button";
-import { Menu, X, MessageCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import Logo from "./Logo";
+import { openPaciente } from "@/lib/contact";
+
+const links = [
+  { label: "Sobre", href: "#sobre" },
+  { label: "Especialidades", href: "#especialidades" },
+  { label: "Como Funciona", href: "#como-funciona" },
+  { label: "Área de Atendimento", href: "#cobertura" },
+  { label: "Depoimentos", href: "#depoimentos" },
+];
 
 const Header = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
+    const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const goTo = (href: string) => {
     setOpen(false);
+    if (location.pathname !== "/") {
+      navigate("/" + href);
+      return;
+    }
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
-
-  const whatsapp = () => window.open(
-    "https://wa.me/5511959075351?text=Oi,+tudo+bem%3F+Vi+seu+site+e+tenho+interesse+em+saber+mais+sobre+os+atendimentos+de+fisioterapia.+Pode+me+orientar%3F",
-    "_blank"
-  );
-
-  const links = [
-    { id: "servicos", label: "Serviços" },
-    { id: "sobre", label: "Sobre" },
-    { id: "depoimentos", label: "Depoimentos" },
-    { id: "contato", label: "Contato" },
-  ];
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        scrolled ? "bg-background/95 backdrop-blur shadow-[0_4px_20px_-12px_hsl(var(--primary)/0.25)]" : "bg-background"
+      className={`sticky top-0 z-40 border-b transition-colors duration-300 ${
+        scrolled ? "bg-background/95 backdrop-blur border-border" : "bg-background border-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18 py-3">
-          <button onClick={() => scrollTo("inicio")} className="flex items-center gap-2 text-left">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground font-display font-bold">
-              HP
-            </div>
-            <div className="leading-tight">
-              <p className="font-display font-bold text-foreground text-base">Hugo Pavão</p>
-              <p className="text-xs text-muted-foreground">Fisioterapia Domiciliar</p>
-            </div>
-          </button>
+      <div className="container-hp flex items-center justify-between gap-6 px-6 sm:px-8 py-4">
+        <Logo className="h-11 sm:h-14" />
 
-          <nav className="hidden lg:flex items-center gap-8">
-            {links.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => scrollTo(l.id)}
-                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
-              >
-                {l.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="hidden md:flex items-center gap-3">
-            <Button
-              onClick={whatsapp}
-              className="bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground font-semibold"
+        <nav className="hidden lg:flex items-center gap-8">
+          {links.map((l) => (
+            <button
+              key={l.href}
+              onClick={() => goTo(l.href)}
+              className="text-[14px] text-navy-400 hover:text-navy-900 transition-colors"
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Agendar pelo WhatsApp
-            </Button>
-          </div>
-
-          <Button
-            onClick={() => setOpen(!open)}
-            variant="outline"
-            size="sm"
-            className="md:hidden h-10 w-10 p-0"
-            aria-label="Menu"
+              {l.label}
+            </button>
+          ))}
+          <Link
+            to="/trabalhe-conosco"
+            className="text-[14px] text-accent hover:text-navy-900 transition-colors"
           >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
+            Trabalhe Conosco
+          </Link>
+        </nav>
 
-        {open && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-background border-b border-border shadow-xl">
-            <div className="px-4 py-4 space-y-1">
-              {links.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => scrollTo(l.id)}
-                  className="block w-full text-left py-3 px-3 rounded-lg text-foreground hover:bg-secondary"
-                >
-                  {l.label}
-                </button>
-              ))}
-              <Button
-                onClick={whatsapp}
-                className="w-full mt-2 bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Agendar pelo WhatsApp
-              </Button>
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openPaciente}
+            className="hidden sm:inline-flex bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.14em] px-6 py-3 hover:bg-navy-900 transition-colors"
+          >
+            Agendar Avaliação
+          </button>
+          <button
+            className="lg:hidden text-navy-900 p-2"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+          >
+            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
+
+      {open && (
+        <div className="lg:hidden border-t border-border bg-background px-6 py-6 flex flex-col gap-5">
+          {links.map((l) => (
+            <button
+              key={l.href}
+              onClick={() => goTo(l.href)}
+              className="text-left text-navy-700"
+            >
+              {l.label}
+            </button>
+          ))}
+          <Link
+            to="/trabalhe-conosco"
+            onClick={() => setOpen(false)}
+            className="text-accent"
+          >
+            Trabalhe Conosco
+          </Link>
+          <button
+            onClick={openPaciente}
+            className="bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.14em] px-6 py-3"
+          >
+            Agendar Avaliação
+          </button>
+        </div>
+      )}
     </header>
   );
 };
