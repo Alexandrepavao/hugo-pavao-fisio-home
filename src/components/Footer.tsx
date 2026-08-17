@@ -38,7 +38,7 @@ const Footer = () => (
           className="inline-flex items-center gap-2 text-[14px] text-navy-400 hover:text-accent transition-colors mt-4"
         >
           <Instagram className="w-4 h-4" strokeWidth={1.5} />
-          Instagram [inserir @perfil]
+          Instagram @hpfisioterapia
         </a>
       </div>
 
@@ -99,7 +99,7 @@ const Footer = () => (
 
     <div className="border-t border-border">
       <div className="container-hp px-6 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-navy-400">
-        <p>© {new Date().getFullYear()} HP Fisioterapia · CNPJ [inserir]</p>
+        <p>© {new Date().getFullYear()} HP Fisioterapia · Todos os direitos reservados</p>
         <p className="uppercase tracking-[0.2em] text-[11px]">
           Movimento · Funcionalidade · Qualidade de vida
         </p>

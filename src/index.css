@@ -108,6 +108,24 @@
   .card-hp:hover {
     border-color: hsl(var(--accent) / 0.5);
     box-shadow: var(--shadow-card);
+    transform: translateY(-3px);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.16em] px-8 py-4 transition-all duration-300;
+  }
+  .btn-primary:hover {
+    background: hsl(var(--navy-900));
+    box-shadow: 0 14px 34px -16px hsl(var(--navy-900) / 0.6);
+  }
+
+  .hero-glow {
+    @apply pointer-events-none absolute -top-40 -right-40 h-[34rem] w-[34rem] rounded-full;
+    background: radial-gradient(
+      closest-side,
+      hsl(var(--accent) / 0.14),
+      transparent
+    );
   }
 
   .whatsapp-float {
