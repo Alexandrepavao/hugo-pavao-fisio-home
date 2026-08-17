@@ -1,14 +1,17 @@
 import { MessageCircle } from "lucide-react";
 import Divider from "./Divider";
 import { openPaciente } from "@/lib/contact";
+import reabilitacao from "@/assets/reabilitacao-idoso.jpg";
 
 const regioes = [
-  "São Paulo (capital)",
-  "Grande ABC",
-  "[inserir estado/capital confirmado]",
-  "[inserir estado/capital confirmado]",
-  "[inserir estado/capital confirmado]",
-  "[inserir estado/capital confirmado]",
+  { nome: "São Paulo (capital)", tag: "Atendimento direto" },
+  { nome: "Grande ABC", tag: "Atendimento direto" },
+  { nome: "Grande São Paulo", tag: "Rede parceira" },
+  { nome: "Campinas e interior de SP", tag: "Rede parceira" },
+  { nome: "Rio de Janeiro", tag: "Rede parceira" },
+  { nome: "Belo Horizonte", tag: "Rede parceira" },
+  { nome: "Curitiba e Porto Alegre", tag: "Rede parceira" },
+  { nome: "Demais capitais do Brasil", tag: "Sob consulta" },
 ];
 
 const Coverage = () => (
@@ -32,10 +35,16 @@ const Coverage = () => (
           próprio Hugo Pavão realiza os atendimentos.
         </p>
 
-        <button
-          onClick={openPaciente}
-          className="inline-flex items-center gap-3 bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.16em] px-8 py-4 mt-10 hover:bg-navy-900 transition-colors"
-        >
+        <img
+          src={reabilitacao}
+          alt="Fisioterapeuta da rede HP auxiliando paciente idosa em treino de marcha em casa"
+          width={1200}
+          height={912}
+          loading="lazy"
+          className="w-full aspect-[16/10] object-cover mt-10"
+        />
+
+        <button onClick={openPaciente} className="btn-primary mt-10">
           <MessageCircle className="w-4 h-4" />
           Consultar disponibilidade na minha cidade
         </button>
@@ -47,17 +56,14 @@ const Coverage = () => (
         </p>
         <ul className="mt-6 divide-y divide-border">
           {regioes.map((r) => (
-            <li key={r} className="flex items-center gap-4 py-4">
-              <span className="h-px w-6 bg-border" />
-              <span className="h-[5px] w-[5px] rounded-full bg-accent shrink-0" />
-              <span
-                className={
-                  r.startsWith("[")
-                    ? "text-[14px] uppercase tracking-[0.14em] text-accent"
-                    : "text-navy-900"
-                }
-              >
-                {r}
+            <li key={r.nome} className="flex items-center justify-between gap-4 py-4">
+              <span className="flex items-center gap-4">
+                <span className="h-px w-6 bg-border" />
+                <span className="h-[5px] w-[5px] rounded-full bg-accent shrink-0" />
+                <span className="text-navy-900">{r.nome}</span>
+              </span>
+              <span className="text-[11px] uppercase tracking-[0.14em] text-accent whitespace-nowrap">
+                {r.tag}
               </span>
             </li>
           ))}
