@@ -24,7 +24,7 @@ const Hero = () => (
         </div>
 
         <p className="text-navy-400 max-w-xl">
-          Atendimento domiciliar humanizado em todo o Brasil. A HP Fisioterapia
+          Atendimento domiciliar humanizado em todo o Brasil. O HP Fisio Group
           é uma rede de fisioterapeutas parceiros selecionados e capacitados em
           cada região do país, seguindo um único padrão de qualidade — com
           equipamentos inclusos, no conforto da sua casa.

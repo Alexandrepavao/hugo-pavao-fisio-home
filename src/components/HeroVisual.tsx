@@ -84,7 +84,7 @@ const HeroVisual = () => (
       </p>
     </div>
 
-    <ul className="mt-16 space-y-3">
+    <ul className="mt-14 space-y-3 sm:pr-[17rem]">
       {chips.map((c) => (
         <li key={c.label} className="flex items-center gap-3 text-[13px] text-navy-400">
           <c.icon className="w-4 h-4 text-accent" strokeWidth={1.5} />
