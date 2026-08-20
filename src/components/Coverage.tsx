@@ -11,7 +11,7 @@ const regioes = [
   { nome: "Rio de Janeiro", tag: "Rede parceira" },
   { nome: "Belo Horizonte", tag: "Rede parceira" },
   { nome: "Curitiba e Porto Alegre", tag: "Rede parceira" },
-  { nome: "Demais capitais do Brasil", tag: "Sob consulta" },
+  { nome: "Demais estados do Brasil", tag: "Rede parceira" },
 ];
 
 const Coverage = () => (
