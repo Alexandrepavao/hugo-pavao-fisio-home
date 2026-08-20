@@ -1,7 +1,7 @@
 import { MessageCircle, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { openPaciente } from "@/lib/contact";
-import hero from "@/assets/hero-atendimento.jpg";
+import HeroVisual from "./HeroVisual";
 import p1 from "@/assets/paciente-1.jpg";
 import p2 from "@/assets/paciente-2.jpg";
 import p3 from "@/assets/paciente-3.jpg";
@@ -71,25 +71,9 @@ const Hero = () => (
       </div>
 
       <div className="animate-fade-in">
-        <div className="relative">
-          <div className="absolute -inset-3 border border-border hidden sm:block" aria-hidden="true" />
-          <img
-            src={hero}
-            alt="Fisioterapeuta da HP realizando mobilização de joelho em atendimento domiciliar"
-            width={1200}
-            height={1504}
-            className="relative w-full aspect-[4/5] object-cover"
-          />
+        <HeroVisual />
 
-          <div className="absolute -bottom-6 left-6 right-6 sm:left-auto sm:right-6 sm:max-w-[16rem] bg-card border border-border p-6 shadow-[var(--shadow-card)]">
-            <p className="font-display text-3xl text-navy-900">100%</p>
-            <p className="text-[13px] text-navy-400 mt-1">
-              das sessões realizadas na casa do paciente, com equipamentos inclusos
-            </p>
-          </div>
-        </div>
-
-        <p className="text-center text-[12px] uppercase tracking-[0.24em] text-navy-400 mt-16">
+        <p className="text-center text-[12px] uppercase tracking-[0.24em] text-navy-400 mt-12">
           Movimento · Funcionalidade · Qualidade de vida
         </p>
       </div>
