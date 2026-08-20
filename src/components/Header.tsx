@@ -40,7 +40,7 @@ const Header = () => {
       }`}
     >
       <div className="container-hp flex items-center justify-between gap-6 px-6 sm:px-8 py-4">
-        <Logo className="h-11 sm:h-14" />
+        <Logo className="h-14 sm:h-16" />
 
         <nav className="hidden lg:flex items-center gap-8">
           {links.map((l) => (
