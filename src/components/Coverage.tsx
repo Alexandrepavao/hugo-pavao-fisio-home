@@ -1,7 +1,7 @@
 import { MessageCircle } from "lucide-react";
 import Divider from "./Divider";
 import { openPaciente } from "@/lib/contact";
-import reabilitacao from "@/assets/reabilitacao-idoso.jpg";
+import BrazilMap from "./BrazilMap";
 
 const regioes = [
   { nome: "São Paulo (capital)", tag: "Atendimento direto" },
@@ -11,7 +11,7 @@ const regioes = [
   { nome: "Rio de Janeiro", tag: "Rede parceira" },
   { nome: "Belo Horizonte", tag: "Rede parceira" },
   { nome: "Curitiba e Porto Alegre", tag: "Rede parceira" },
-  { nome: "Demais capitais do Brasil", tag: "Sob consulta" },
+  { nome: "Demais estados do Brasil", tag: "Rede parceira" },
 ];
 
 const Coverage = () => (
@@ -24,25 +24,19 @@ const Coverage = () => (
         </h2>
         <Divider className="justify-start my-8 [&::before]:hidden" />
         <p className="text-navy-400">
-          A HP Fisioterapia atende em todo o Brasil por meio da sua rede de
+          O HP Fisio Group atende em <strong className="text-navy-900 font-normal">todos os
+          26 estados brasileiros e no Distrito Federal</strong>, por meio da sua rede de
           fisioterapeutas parceiros. Cada profissional é selecionado, avaliado e
-          alinhado ao padrão clínico da marca antes de representar a HP na sua
+          alinhado ao padrão clínico do grupo antes de representar a HP na sua
           região. Onde quer que você esteja, temos um profissional qualificado
           perto de você.
         </p>
         <p className="text-navy-400 mt-5">
-          São Paulo capital e o Grande ABC são a nossa praça de origem, onde o
-          próprio Hugo Pavão realiza os atendimentos.
+          São Paulo capital e o Grande ABC são a praça de origem do grupo, onde
+          a equipe própria do HP Fisio Group realiza os atendimentos.
         </p>
 
-        <img
-          src={reabilitacao}
-          alt="Fisioterapeuta da rede HP auxiliando paciente idosa em treino de marcha em casa"
-          width={1200}
-          height={912}
-          loading="lazy"
-          className="w-full aspect-[16/10] object-cover mt-10"
-        />
+        <BrazilMap className="mt-10" />
 
         <button onClick={openPaciente} className="btn-primary mt-10">
           <MessageCircle className="w-4 h-4" />
