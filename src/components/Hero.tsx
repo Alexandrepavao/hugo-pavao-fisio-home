@@ -45,8 +45,8 @@ const Hero = () => (
           </Link>
         </div>
 
-        <div className="flex items-center gap-5 mt-12 pt-8 border-t border-border">
-          <div className="flex -space-x-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 mt-12 pt-8 border-t border-border">
+          <div className="flex -space-x-3 shrink-0">
             {[p1, p2, p3].map((src, i) => (
               <img
                 key={i}
@@ -57,7 +57,7 @@ const Hero = () => (
               />
             ))}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1 text-accent">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="w-3.5 h-3.5 fill-current" />
@@ -68,6 +68,7 @@ const Hero = () => (
             </p>
           </div>
         </div>
+
       </div>
 
       <div className="animate-fade-in">

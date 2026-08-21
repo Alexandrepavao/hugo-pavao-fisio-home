@@ -44,24 +44,28 @@ const Coverage = () => (
         </button>
       </div>
 
-      <div className="border border-border bg-background p-8 sm:p-10">
+      <div className="border border-border bg-background p-6 sm:p-10">
         <p className="text-[12px] uppercase tracking-[0.24em] text-navy-400">
           Regiões atendidas
         </p>
         <ul className="mt-6 divide-y divide-border">
           {regioes.map((r) => (
-            <li key={r.nome} className="flex items-center justify-between gap-4 py-4">
-              <span className="flex items-center gap-4">
-                <span className="h-px w-6 bg-border" />
+            <li
+              key={r.nome}
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-4"
+            >
+              <span className="flex items-center gap-3 sm:gap-4">
+                <span className="h-px w-4 sm:w-6 bg-border shrink-0" />
                 <span className="h-[5px] w-[5px] rounded-full bg-accent shrink-0" />
                 <span className="text-navy-900">{r.nome}</span>
               </span>
-              <span className="text-[11px] uppercase tracking-[0.14em] text-accent whitespace-nowrap">
+              <span className="pl-7 sm:pl-0 text-[11px] uppercase tracking-[0.14em] text-accent sm:whitespace-nowrap">
                 {r.tag}
               </span>
             </li>
           ))}
         </ul>
+
         <p className="text-[13px] text-navy-400 mt-6">
           Não encontrou a sua cidade? Fale com a gente — a rede está em expansão
           contínua por todo o país.
