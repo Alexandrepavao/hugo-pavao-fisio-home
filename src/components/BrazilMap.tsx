@@ -58,11 +58,12 @@ const BrazilMap = ({ className = "" }: { className?: string }) => (
       ))}
     </svg>
 
-    <div className="flex flex-wrap items-center gap-x-8 gap-y-2 mt-2 text-[12px] uppercase tracking-[0.16em] text-navy-400">
-      <span className="flex items-center gap-2">
-        <span className="h-[7px] w-[7px] rounded-full bg-accent" />
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-2 mt-4 text-[11px] sm:text-[12px] uppercase tracking-[0.14em] sm:tracking-[0.16em] text-navy-400">
+      <span className="flex items-start gap-2">
+        <span className="h-[7px] w-[7px] rounded-full bg-accent shrink-0 mt-1" />
         Cidades com fisioterapeutas da rede
       </span>
+
       <span>26 estados + DF</span>
     </div>
   </div>
