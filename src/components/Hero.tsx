@@ -71,7 +71,15 @@ const Hero = () => (
       </div>
 
       <div className="animate-fade-in">
-        <HeroVisual />
+        <div className="relative">
+          <div className="absolute -inset-3 border border-border hidden sm:block" aria-hidden="true" />
+          <img
+            src={heroAtendimento.url}
+            alt="Fisioterapeuta da HP atendendo paciente idosa em casa"
+            className="relative w-full aspect-[4/5] object-cover"
+          />
+        </div>
+
 
         <p className="text-center text-[12px] uppercase tracking-[0.24em] text-navy-400 mt-12">
           Movimento · Funcionalidade · Qualidade de vida
