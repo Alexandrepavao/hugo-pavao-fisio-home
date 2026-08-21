@@ -1,7 +1,7 @@
 import { MessageCircle, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { openPaciente } from "@/lib/contact";
-import heroAtendimento from "@/assets/hero-atendimento.png.asset.json";
+import heroAtendimento from "@/assets/hero-home-care.jpg";
 import p1 from "@/assets/paciente-1.jpg";
 import p2 from "@/assets/paciente-2.jpg";
 import p3 from "@/assets/paciente-3.jpg";
