@@ -75,7 +75,7 @@ const Hero = () => (
         <div className="relative">
           <div className="absolute -inset-3 border border-border hidden sm:block" aria-hidden="true" />
           <img
-            src={heroAtendimento.url}
+            src={heroAtendimento}
             alt="Fisioterapeuta da HP atendendo paciente idosa em casa"
             className="relative w-full aspect-[4/5] object-cover"
           />
