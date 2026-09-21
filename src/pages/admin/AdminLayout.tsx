@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { LayoutDashboard, LogOut, Menu, Users, X, ScrollText } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Users, X, ScrollText, FileText } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
 
@@ -10,6 +10,7 @@ interface NavItem { to: string; label: string; icon: typeof Users; roles?: AppRo
 const NAV: NavItem[] = [
   { to: "/admin", label: "Visão geral", icon: LayoutDashboard, end: true },
   { to: "/admin/pessoas", label: "Pessoas", icon: Users, roles: ["manager", "ops_admin", "unit_manager", "sales"] },
+  { to: "/admin/paginas", label: "Páginas", icon: FileText, roles: ["manager", "ops_admin", "unit_manager", "sales"] },
   { to: "/admin/auditoria", label: "Auditoria", icon: ScrollText, roles: ["manager"] },
 ];
 

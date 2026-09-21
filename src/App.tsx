@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
-import { AuthProvider, STAFF_ROLES } from "./auth/AuthProvider";
+import { AuthProvider, STAFF_ROLES, type AppRole } from "./auth/AuthProvider";
 import RequireAuth from "./auth/RequireAuth";
 const Login = lazy(() => import("./pages/auth/Login"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
@@ -15,7 +15,11 @@ const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const Overview = lazy(() => import("./pages/admin/Overview"));
 const People = lazy(() => import("./pages/admin/People"));
 const Audit = lazy(() => import("./pages/admin/Audit"));
+const Pages = lazy(() => import("./pages/admin/Pages"));
+const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
+const PublicPage = lazy(() => import("./pages/PublicPage"));
 
+const PAGE_ROLES: AppRole[] = ["manager", "ops_admin", "unit_manager", "sales"];
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -34,8 +38,12 @@ const App = () => (
             <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
               <Route index element={<Overview />} />
               <Route path="pessoas" element={<RequireAuth roles={["manager", "ops_admin", "unit_manager", "sales"]}><People /></RequireAuth>} />
+              <Route path="paginas" element={<RequireAuth roles={PAGE_ROLES}><Pages /></RequireAuth>} />
+              <Route path="paginas/:id" element={<RequireAuth roles={PAGE_ROLES}><PageEditor /></RequireAuth>} />
               <Route path="auditoria" element={<RequireAuth roles={["manager"]}><Audit /></RequireAuth>} />
             </Route>
+            {/* Páginas do HP Pages: /:slug (slugs reservados são impedidos no editor e no banco). Manter APÓS as rotas fixas. */}
+            <Route path="/:slug" element={<PublicPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
