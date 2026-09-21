@@ -1,27 +1,38 @@
 # Permissões
 
 ## Modelo
-- **Conta** (`auth.users`) ≠ **Pessoa** (`people`). `user_accounts` liga conta → organização (+ pessoa opcional).
-- **Papéis** em `role_assignments(user_id, role, unit_id, valid_from, valid_until, revoked_at)`. `unit_id` nulo = todas as unidades. Um usuário pode ter vários papéis; cada um vale no seu escopo, sem herdar privilégios dos demais.
-- Papéis `manager`, `ops_admin`, `member`, `partner` só podem ser org-wide (CHECK no banco).
-- Revogação (`revoked_at`) ou expiração (`valid_until`) tem efeito imediato: as funções `private.has_*_role` são reavaliadas em cada consulta.
-- Sem convite/bootstrap, um usuário autenticado **não tem conta nem papel** e enxerga 0 linhas (signup aberto é inofensivo).
+- **Conta** (`auth.users`) ≠ **Pessoa** (`people`). `user_accounts` liga conta → organização (+ pessoa).
+- **Papéis** em `role_assignments(user_id, role, unit_id, valid_from, valid_until, revoked_at)`; `unit_id` nulo = todas as unidades. Papéis combináveis; cada um vale no seu escopo. `manager`, `ops_admin`, `member`, `partner` só existem em escopo de organização (CHECK).
+- Autoridade vem **sempre das tabelas** via funções `private.has_org_role/has_unit_role/has_any_role` — nunca de metadados do JWT. Revogação/expiração tem efeito imediato (reavaliadas em cada consulta).
+- Sem convite/bootstrap, um usuário autenticado **não tem conta nem papel** e enxerga 0 linhas.
+- Toda escrita com regra de negócio passa por função `SECURITY DEFINER` que checa papel e escopo; `anon` só executa `get_public_page`, `track_page_visit`, `submit_public_form`.
 
-## Matriz atual (o que já está implementado e testado)
-| Recurso | manager | ops_admin | unit_manager | sales | finance | physio | teacher | partner | member |
+## Bootstrap dos gestores (sem senha padrão)
+`private.manager_bootstrap_emails` lista os e-mails autorizados (`contato@hpfisioterapia.com.br`, `jan.darioush@yahoo.com.br`). O trigger em `auth.users` só concede `manager` quando `email_confirmed_at` está preenchido (e-mail **verificado**), uma única vez por e-mail, registrando `bootstrap_manager` na auditoria. Não há promoção no front-end nem por metadados. A senha é criada pela própria pessoa (link do Supabase Auth). Testado (7/7) com e-mail não verificado, e-mail fora da lista, e metadados forjados.
+
+## Matriz (resumo do que está implementado)
+| Área | manager | ops_admin | unit_manager | sales | finance | physio | teacher | partner | member |
 |---|---|---|---|---|---|---|---|---|---|
-| Pessoas (ler) | org | org | unidade | unidade | unidade | — | — | — | só a própria |
-| Pessoas (criar/editar) | org | org | unidade | unidade | — | — | — | — | — |
-| Contatos/tipos/tags de pessoa | idem pessoas | | | | | | | | |
-| Unidades (ler) | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
-| Unidades (editar) | ✔ | ✔ | — | — | — | — | — | — | — |
-| Papéis / convites | tudo | tudo exceto manager/ops_admin | — | — | — | — | — | — | — |
+| Pessoas | org | org | unidade | unidade | — | — | — | — | própria |
+| Páginas/CRM/oportunidades | org | org | unidade | unidade | — | — | — | — | — |
+| Agenda (agendar) | org | org | unidade | unidade | ler | própria agenda | — | — | ver as suas |
+| Vendas / recebíveis (ler) | org | org | unidade | unidade | unidade | — | — | — | próprias parcelas |
+| Recebimentos, estornos, a pagar, comissões | org | org | unidade | — | unidade | — | — | — | — |
+| Cursos (gestão) / acessos | org | org | — | — | — | — | cursos (acessos: gestor/ops) | — | — |
+| Cursos (consumo) | ✔ | ✔ | — | — | — | — | ✔ | — | só com direito ativo |
+| Acompanhamento clínico | **não** | **não** | **não** (só cria vínculos) | — | — | **só com vínculo ativo** | — | — | próprio |
+| Dashboard | org | org | suas unidades | — | — | — | — | — | — |
+| Equipe/convites/papéis | tudo | tudo exceto manager/ops_admin | — | — | — | — | — | — | — |
 | Auditoria | ✔ | — | — | — | — | — | — | — | — |
+| Parceiro: indicações/repasses autorizados | org | org | unidade | unidade | unidade | — | — | os seus | — |
 
-Acesso **clínico individual** não é concedido a nenhum papel administrativo (nem ao gestor). Será uma permissão assistencial específica ligada a um vínculo profissional↔paciente com validade e revogação (Etapa 4, ainda não implementada).
+**Acesso clínico individual** exige vínculo assistencial (`care_relationships`) ativo e papel `physio` na unidade. Gestor cria/revoga vínculos, mas não lê conteúdo clínico. Revogar o vínculo revoga os conteúdos liberados por aquele profissional. O canal de dúvidas e os registros de atividade só são visíveis ao paciente e aos profissionais vinculados.
 
-## Primeiro acesso do gestor (sem senha padrão)
-`private.bootstrap_config` guarda **um e-mail** autorizado a virar gestor. Quando esse e-mail confirma sua conta no Supabase Auth (convite ou recuperação de senha) e ainda não existe gestor ativo, o trigger cria `user_accounts` + papel `manager` e consome a configuração. Nenhuma senha é definida por nós: o usuário cria a sua pelo link enviado por e-mail (`/redefinir-senha`).
+## Arquivos privados
+Buckets `academy-private` e `care-private` (não públicos). Política de Storage por acesso real: curso (`can_read_course`) ou conteúdo liberado (`care_assignment_active`). O navegador usa **URL assinada de 1 h**, gerada só se a política permitir. Revogação bloqueia novas assinaturas imediatamente (URLs já emitidas expiram em até 1 h — limitação conhecida).
 
 ## Testes
-`supabase/tests/001_rls_isolation.sql` — transação desfeita; cobre isolamento por unidade, escalada de privilégio, revogação e `anon`.
+`supabase/tests/001…008` (ver `test-report.md`) + teste de API direta com token de aluna. Refazer a cada expansão do banco.
+
+## Decisões de privacidade que exigem validação do responsável pelo negócio
+Retenção e base legal de dados de saúde; texto de consentimento nos formulários; prazo de guarda de auditoria e de mensagens do canal de dúvidas; política de exclusão a pedido do titular (hoje: arquivar/anonimizar manualmente); necessidade de DPO. Este projeto não afirma conformidade jurídica automática.

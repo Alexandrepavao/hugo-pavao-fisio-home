@@ -38,7 +38,9 @@ const PublicPage = () => {
       const r: Result = error || !data ? { status: "not_found" } : (data as Result);
       setRes(r);
       if (r.status === "published") {
-        void supabase.rpc("track_page_visit", { p_page_id: r.page.id, p_session: sessionId(), p_utm: utmFromLocation(), p_referrer: document.referrer || null });
+        // O builder do supabase-js só executa quando "consumido" (.then); `void` sozinho não dispara a requisição.
+        supabase.rpc("track_page_visit", { p_page_id: r.page.id, p_session: sessionId(), p_utm: utmFromLocation(), p_referrer: document.referrer || null })
+          .then(() => undefined, () => undefined);
       }
     });
     return () => { alive = false; };

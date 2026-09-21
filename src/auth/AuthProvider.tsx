@@ -27,20 +27,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<RoleAssignment[]>([]);
   const [loading, setLoading] = useState(backendConfigured);
+  // "Papéis carregando" conta como carregamento: logo após o login a sessão existe, mas os papéis ainda não chegaram.
+  const [rolesLoading, setRolesLoading] = useState(false);
 
   const loadRoles = useCallback(async (s: Session | null) => {
-    if (!s) { setRoles([]); return; }
+    if (!s) { setRoles([]); setRolesLoading(false); return; }
+    setRolesLoading(true);
     const { data, error } = await supabase
       .from("role_assignments")
       .select("role, unit_id, valid_from, valid_until, revoked_at")
       .eq("user_id", s.user.id);
-    if (error) { setRoles([]); return; }
+    if (error) { setRoles([]); setRolesLoading(false); return; }
     const now = Date.now();
     setRoles(
       (data ?? [])
         .filter((r) => !r.revoked_at && new Date(r.valid_from).getTime() <= now && (!r.valid_until || new Date(r.valid_until).getTime() > now))
         .map((r) => ({ role: r.role as AppRole, unit_id: r.unit_id }))
     );
+    setRolesLoading(false);
   }, []);
 
   useEffect(() => {
@@ -54,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
+      if (s) setRolesLoading(true);
       // Não chamar o supabase dentro do callback de forma síncrona (evita deadlock do cliente).
       setTimeout(() => { void loadRoles(s); }, 0);
     });
@@ -61,15 +66,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [loadRoles]);
 
   const value = useMemo<AuthState>(() => ({
-    loading,
+    loading: loading || rolesLoading,
     session,
     user: session?.user ?? null,
     roles,
-    noAccess: Boolean(session) && !loading && roles.length === 0,
+    noAccess: Boolean(session) && !loading && !rolesLoading && roles.length === 0,
     hasRole: (...wanted) => roles.some((r) => wanted.includes(r.role)),
     signOut: async () => { await supabase.auth.signOut(); },
     refreshRoles: () => loadRoles(session),
-  }), [loading, session, roles, loadRoles]);
+  }), [loading, rolesLoading, session, roles, loadRoles]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

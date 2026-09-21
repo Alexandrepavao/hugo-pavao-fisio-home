@@ -1,27 +1,30 @@
 # Modelo de dados
 
-Migrations em `supabase/migrations/` (ordem por timestamp). Aplicadas hoje: **Dev**. Produção: nenhuma ainda.
+Migrations em `supabase/migrations/` (ordem por timestamp). Aplicadas no **Dev** (001–014). **Produção: nenhuma.** Reaplicar em produção na mesma ordem, com advisors depois.
+Convenções: dinheiro = `bigint` em centavos; percentuais = pontos-base; datas com fuso (`timestamptz`), fuso por unidade (`units.timezone`); exclusão em cascata só para dependentes sem valor próprio, `RESTRICT` para evidência financeira/operacional.
 
-## 001 foundation
-| Tabela | Papel | Chaves / regras relevantes |
+| # | Migration | Conteúdo principal |
 |---|---|---|
-| `organizations` | Grupo | `slug` único |
-| `units` | Unidades | `timezone` por unidade (padrão America/Sao_Paulo); `unique(org_id, slug)`; `ON DELETE RESTRICT` da org |
-| `people` | Cadastro central | Separado do login. `document_number` único por org (parcial, ignorando mescladas). `merged_into_id` preserva histórico em mesclagens. Índice trigram no nome |
-| `person_kinds` | lead/paciente/aluno/parceiro/equipe/contato | PK (pessoa, tipo): a mesma pessoa pode ter vários |
-| `person_contacts` | e-mail/telefone/WhatsApp | **Não único** entre pessoas (contato compartilhado é legítimo); único por pessoa; `is_shared`; normalização por trigger |
-| `user_accounts` | Conta → org (+ pessoa) | `person_id` único |
-| `role_assignments` | Papéis por escopo | Índice único parcial para papéis ativos; CHECK de escopo |
-| `invitations` | Convites | Expira em 14 dias; consumido no primeiro login confirmado |
-| `audit_log` | Auditoria | Só nomes de colunas alteradas + valores de colunas não sensíveis explicitamente listadas no trigger |
-| `tags`, `person_tags` | Segmentação | |
-| `interactions` | Histórico de relacionamento | Somente inserção (sem update/delete concedidos) |
-| `private.bootstrap_config` | E-mail do 1º gestor | fora da API |
+| 001 | foundation | `organizations`, `units`, `people` (≠ login), `person_kinds`, `person_contacts` (não únicos: contato compartilhado), `user_accounts`, `role_assignments` (escopo org/unidade), `invitations`, `audit_log`, `tags`, `interactions`, funções `private.*` de autorização, RLS |
+| 002 | people_functions | `find_person_duplicates`, `create_person`, `has_any_role` |
+| 003 | bootstrap_managers | `private.manager_bootstrap_emails` (uso único, e-mail verificado, auditado) |
+| 004 | catalog_crm_events | `services`, `products`, `pipelines`/`pipeline_stages` (4 modelos), `loss_reasons`, `opportunities` (+ `opportunity_events`), `crm_tasks` (chave de idempotência), `domain_events` + `automation_runs` + registro de handlers, distribuição de responsável |
+| 005 | pages_forms | `pages` (+ `page_versions`), `forms`, `form_submissions`, `page_visits`, `private.rate_limits`; RPCs públicas `get_public_page`, `track_page_visit`, `submit_public_form`; funções do editor |
+| 006 | directory_agenda | `professionals`, `availability_rules`, `time_blocks`, `appointments` (**EXCLUDE gist** profissional e paciente), `client_packages`, `session_ledger` (consumo único por agendamento), `waitlist`, `book_appointment`, `reschedule_appointment`, `set_appointment_status`, handlers de consumo |
+| 007 | sales_finance | `sales`/`sale_items`, `contracts`, `receivables`, `payments` (idempotência, estorno), `payables`, `financial_accounts`, categorias, `commission_*`, `subscription_forecast` |
+| 008 | academy_care | `courses`, módulos, `lessons`, `cohorts`, `entitlements`, progresso, `quizzes` (gabarito só no servidor), `certificates`, `community_posts`; `care_relationships`, `care_contents`, `care_assignments`, `care_activity`, `care_messages`; buckets **privados** + políticas de Storage |
+| 009 | partners_hardening | `partner_profiles`, `referral_codes`/`referrals`, `partner_payouts`, `surveys`/`survey_responses`, `corporate_*` (k-anonimato); `EXECUTE` de `anon` restrito |
+| 010 | function_privileges | reforço: `anon` só nas 3 RPCs públicas |
+| 011 | dashboard | `dashboard_metrics`, `dashboard_alerts`, `cash_flow_monthly`, `results_by_product` |
+| 012 | portal_support | `community_posts.author_name`, `my_appointments`, `my_packages`, `list_team` |
+| 013 | care_names | `care_patient_names`, `list_care_links` |
+| 014 | email_support | `can_send_transactional` |
 
-Exclusão: `people`→`units` é `RESTRICT`; contatos/tipos/tags/interações apagam em cascata com a pessoa (pessoas normalmente são arquivadas, não excluídas — `archived_at`).
+## Relações-chave (nada "só visual")
+Formulário → `people` + `opportunities` (+ `crm_tasks`, `interactions`) → agendamento (`appointments.opportunity_id`) → comparecimento (evento) → `sales`/`contracts`/`receivables` → `payments` → `entitlements` (Academy) e `client_packages`/`session_ledger` (sessões) → `commission_entries`. Eventos em `domain_events` com `idempotency_key` única e execução por handler registrada em `automation_runs`.
 
-## 002 people_functions
-`find_person_duplicates` (contato igual = possível compartilhado; nome com similaridade ≥ 0,6 = possível homônimo) e `create_person` (transacional; sem `p_force` devolve candidatos e não cria).
+## Regras de exclusão e integridade
+`people` é arquivada (`archived_at`) ou mesclada (`merged_into_id`), não excluída; `people→units` `RESTRICT`; contatos/tipos/tags/interações em cascata com a pessoa; `payments`/`receivables`/`sales` sem exclusão (cancelamento e estorno geram novos registros); revogação de acesso e de vínculo assistencial é por `revoked_at` (histórico preservado).
 
-## Planejado (ver `implementation-plan.md`)
-pages/page_versions/forms/submissions → pipelines/opportunities/tasks → services/products/contracts/sales/receivables/payments → appointments (exclusion constraint `tstzrange` por profissional) / packages / session_ledger → academy → partners → domain_events.
+## Índices/constraints relevantes
+Trigram no nome de pessoa; único parcial de documento por org (ignora mescladas); `role_assignments` único ativo por (usuário, papel, unidade); `appointments` EXCLUDE por profissional e por pessoa (status ativos); `session_ledger` único de consumo por agendamento; `payments` único por `(org, idempotency_key)` e por `(org, provider, external_ref)`; `crm_tasks` único por `(org, dedupe_key)`; `entitlements` único ativo por (pessoa, curso, origem, referência).

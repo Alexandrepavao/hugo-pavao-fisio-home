@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { download, toCsv } from "@/lib/format";
 
 interface Person {
   id: string; full_name: string; unit_id: string | null; created_at: string;
@@ -48,12 +49,33 @@ const People = () => {
   useEffect(() => { void load(); }, [load]);
   useEffect(() => { supabase.from("units").select("id, name").eq("active", true).order("name").then(({ data }) => setUnits(data ?? [])); }, []);
 
+  const [note, setNote] = useState<string | null>(null);
+  const exportCsv = async () => {
+    const { data, error } = await supabase.from("people").select("full_name, created_at, unit_id, person_kinds(kind), person_contacts(type, value)").is("merged_into_id", null).is("archived_at", null).order("full_name").limit(5000);
+    if (error) return setNote("Não foi possível exportar (verifique sua permissão).");
+    const rows = (data ?? []).map((p) => ({
+      nome: p.full_name, tipos: (p.person_kinds as { kind: string }[]).map((k) => KIND_LABEL[k.kind] ?? k.kind).join(" | "),
+      email: (p.person_contacts as { type: string; value: string }[]).filter((c) => c.type === "email").map((c) => c.value).join(" | "),
+      telefone: (p.person_contacts as { type: string; value: string }[]).filter((c) => c.type !== "email").map((c) => c.value).join(" | "),
+      unidade: units.find((u) => u.id === p.unit_id)?.name ?? "", criado_em: p.created_at.slice(0, 10),
+    }));
+    download(`pessoas-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows)); setNote(`${rows.length} pessoa(s) exportada(s). O arquivo contém dados pessoais: guarde com cuidado.`);
+  };
+  const invitePortal = async (p: Person) => {
+    const email = p.person_contacts.find((c) => c.type === "email")?.value; if (!email) return setNote("Esta pessoa não tem e-mail cadastrado.");
+    const { data: u } = await supabase.auth.getUser(); const { data: org } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("invitations").insert({ org_id: org?.id, email, role: "member", person_id: p.id, invited_by: u.user?.id });
+    setNote(error ? "Não foi possível criar o convite (permissão ou convite já existente)." : `Convite ao portal registrado para ${email}. A pessoa deve usar “Primeiro acesso” com este e-mail.`);
+  };
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div><p className="eyebrow mb-2">HP Core</p><h1 className="text-3xl text-navy-900">Pessoas</h1></div>
-        <button onClick={() => setShowForm((s) => !s)} className="btn-primary !py-3">{showForm ? "Fechar" : "Nova pessoa"}</button>
+        <div className="flex gap-2"><button onClick={exportCsv} className="px-4 py-3 border border-primary text-primary">Exportar CSV</button>
+          <button onClick={() => setShowForm((s) => !s)} className="btn-primary !py-3">{showForm ? "Fechar" : "Nova pessoa"}</button></div>
       </div>
+      {note && <p role="status" className="mb-4 text-sm text-navy-700">{note}</p>}
 
       {showForm && <NewPerson units={units} onCreated={() => { setShowForm(false); setPage(0); void load(); }} />}
 
@@ -70,7 +92,7 @@ const People = () => {
         <div className="overflow-x-auto bg-card border border-border">
           <table className="w-full text-[15px]">
             <thead><tr className="text-left text-xs uppercase tracking-wider text-navy-400 border-b border-border">
-              <th className="p-3">Nome</th><th className="p-3">Tipo</th><th className="p-3">Contato</th><th className="p-3">Unidade</th>
+              <th className="p-3">Nome</th><th className="p-3">Tipo</th><th className="p-3">Contato</th><th className="p-3">Unidade</th><th className="p-3"><span className="sr-only">Ações</span></th>
             </tr></thead>
             <tbody>
               {rows.map((p) => (
@@ -81,6 +103,7 @@ const People = () => {
                     {p.person_contacts.map((c) => c.value + (c.is_shared ? " (compartilhado)" : "")).join(" · ") || "—"}
                   </td>
                   <td className="p-3 text-navy-400">{units.find((u) => u.id === p.unit_id)?.name ?? "—"}</td>
+                  <td className="p-3"><button className="text-accent text-sm" onClick={() => invitePortal(p)}>Convidar ao portal</button></td>
                 </tr>
               ))}
             </tbody>

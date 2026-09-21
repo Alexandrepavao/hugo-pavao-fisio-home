@@ -9,7 +9,7 @@ type Mode = "login" | "forgot";
 const Login = () => {
   const { session, loading } = useAuth();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/admin";
+  const from = (location.state as { from?: string } | null)?.from ?? "/app";
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

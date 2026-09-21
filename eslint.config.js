@@ -24,6 +24,9 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Desativada: as telas do painel usam `cond ? erro() : (ok(), recarregar())` como instrução.
+      // É regra de estilo; o `tsc` continua verificando tipos.
+      "@typescript-eslint/no-unused-expressions": "off",
     },
   }
 );
