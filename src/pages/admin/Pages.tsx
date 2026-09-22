@@ -35,26 +35,26 @@ const Pages = () => {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <div><p className="eyebrow mb-2">HP Pages</p><h1 className="text-3xl text-navy-900">Páginas</h1>
-          <p className="text-navy-400 text-sm mt-1">Visitas e leads dos últimos 30 dias (por data da visita e do envio).</p></div>
-        <button onClick={() => setShowNew(!showNew)} className="btn-primary !py-3">{showNew ? "Fechar" : "Nova página"}</button>
+        <div><p className="eyebrow mb-2">HP Pages</p><h1 className="text-3xl text-foreground">Páginas</h1>
+          <p className="text-muted-foreground text-sm mt-1">Visitas e leads dos últimos 30 dias (por data da visita e do envio).</p></div>
+        <button onClick={() => setShowNew(!showNew)} className="hp-btn hp-btn-primary">{showNew ? "Fechar" : "Nova página"}</button>
       </div>
       {showNew && <NewPage />}
-      {state === "loading" && <p role="status" className="text-navy-400">Carregando…</p>}
+      {state === "loading" && <p role="status" className="text-muted-foreground">Carregando…</p>}
       {state === "error" && <p role="alert" className="text-destructive">Sem permissão ou falha ao carregar.</p>}
-      {state === "ok" && rows.length === 0 && <p className="bg-card border border-border p-6 text-navy-400">Nenhuma página criada ainda. Use “Nova página” e escolha um modelo.</p>}
+      {state === "ok" && rows.length === 0 && <p className="hp-card p-6 text-muted-foreground">Nenhuma página criada ainda. Use “Nova página” e escolha um modelo.</p>}
       {state === "ok" && rows.length > 0 && (
-        <div className="overflow-x-auto bg-card border border-border">
+        <div className="overflow-x-auto hp-card">
           <table className="w-full text-[15px]">
-            <thead><tr className="text-left text-xs uppercase tracking-wider text-navy-400 border-b border-border">
+            <thead><tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
               <th className="p-3">Página</th><th className="p-3">Endereço</th><th className="p-3">Estado</th><th className="p-3 text-right">Visitas</th><th className="p-3 text-right">Leads</th><th className="p-3 text-right">Conversão</th>
             </tr></thead>
             <tbody>{rows.map((r) => {
               const m = metrics[r.id]; const v = Number(m?.visits ?? 0), l = Number(m?.leads ?? 0);
               return (
                 <tr key={r.id} className="border-b border-border last:border-0">
-                  <td className="p-3"><Link to={`/admin/paginas/${r.id}`} className="text-navy-900 underline-offset-2 hover:underline">{r.title}</Link></td>
-                  <td className="p-3 text-navy-400">/{r.slug}</td>
+                  <td className="p-3"><Link to={`/admin/paginas/${r.id}`} className="text-foreground underline-offset-2 hover:underline">{r.title}</Link></td>
+                  <td className="p-3 text-muted-foreground">/{r.slug}</td>
                   <td className="p-3">{STATUS[r.status]}{r.status === "published" && r.publish_at && new Date(r.publish_at) > new Date() ? " (agendada)" : ""}</td>
                   <td className="p-3 text-right tabular">{v}</td><td className="p-3 text-right tabular">{l}</td>
                   <td className="p-3 text-right tabular">{v > 0 ? `${((l / v) * 100).toFixed(1)}%` : "indisponível"}</td>
@@ -80,11 +80,9 @@ const NewPage = () => {
     supabase.from("units").select("id, name").eq("active", true).then(({ data }) => { setUnits(data ?? []); if (data?.length === 1) setUnit(data[0].id); });
     supabase.from("pipelines").select("id, name, kind").eq("active", true).then(({ data }) => setPipes((data ?? []) as Pipeline[]));
   }, []);
-  useEffect(() => {
-    const t = TEMPLATES.find((x) => x.id === tpl)!;
-    setSlug(t.suggestedSlug); setTitle(t.name);
-    const p = pipes.find((x) => x.kind === t.pipelineKind); setPipe(p?.id ?? "");
-  }, [tpl, pipes]);
+  // Trocar o modelo redefine título e endereço sugeridos; o carregamento dos funis NÃO pode sobrescrever o que a pessoa digitou.
+  useEffect(() => { const t = TEMPLATES.find((x) => x.id === tpl)!; setSlug(t.suggestedSlug); setTitle(t.name); }, [tpl]);
+  useEffect(() => { const t = TEMPLATES.find((x) => x.id === tpl)!; const p = pipes.find((x) => x.kind === t.pipelineKind); setPipe(p?.id ?? ""); }, [tpl, pipes]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr(null);
@@ -99,7 +97,7 @@ const NewPage = () => {
   };
 
   return (
-    <form onSubmit={submit} className="bg-card border border-border p-6 mb-8 grid gap-4 sm:grid-cols-2" noValidate>
+    <form onSubmit={submit} className="hp-card p-6 mb-8 grid gap-4 sm:grid-cols-2" noValidate>
       <div className="sm:col-span-2"><label htmlFor="tpl" className="block text-sm mb-1">Modelo</label>
         <select id="tpl" className={field} value={tpl} onChange={(e) => setTpl(e.target.value)}>
           {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name} — {t.purpose}</option>)}</select></div>
@@ -110,7 +108,7 @@ const NewPage = () => {
       <div><label htmlFor="pp" className="block text-sm mb-1">Funil de destino</label>
         <select id="pp" className={field} value={pipe} onChange={(e) => setPipe(e.target.value)}><option value="">Selecione…</option>{pipes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
       {err && <p role="alert" className="sm:col-span-2 text-sm text-destructive">{err}</p>}
-      <div className="sm:col-span-2"><button disabled={busy} className="btn-primary !py-3 disabled:opacity-60">{busy ? "Criando…" : "Criar e editar"}</button></div>
+      <div className="sm:col-span-2"><button disabled={busy} className="hp-btn hp-btn-primary disabled:opacity-60">{busy ? "Criando…" : "Criar e editar"}</button></div>
     </form>
   );
 };

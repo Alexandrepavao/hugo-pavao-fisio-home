@@ -61,31 +61,31 @@ const Day = () => {
   return (<>
     <Msg m={msg} />
     <div className="flex flex-wrap gap-3 mb-6 items-end">
-      <div><label htmlFor="au" className="block text-xs mb-1">Unidade</label><select id="au" className={inputCls} value={uid} onChange={(e) => { setUnitId(e.target.value); setProfId(""); }}>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-      <div><label htmlFor="ad" className="block text-xs mb-1">Data</label><input id="ad" type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></div>
-      <div><label htmlFor="ap" className="block text-xs mb-1">Profissional</label><select id="ap" className={inputCls} value={profId} onChange={(e) => setProfId(e.target.value)}><option value="">Selecione…</option>{profs.data?.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></div>
-      <div><label htmlFor="as" className="block text-xs mb-1">Serviço</label><select id="as" className={inputCls} value={svcId} onChange={(e) => setSvcId(e.target.value)}><option value="">Selecione…</option>{services.data?.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.duration_min} min)</option>)}</select></div>
+      <div><label htmlFor="au" className="block text-xs mb-1">Unidade</label><select id="au"   value={uid} onChange={(e) => { setUnitId(e.target.value); setProfId(""); }}>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+      <div><label htmlFor="ad" className="block text-xs mb-1">Data</label><input id="ad" type="date"   value={date} onChange={(e) => setDate(e.target.value)} /></div>
+      <div><label htmlFor="ap" className="block text-xs mb-1">Profissional</label><select id="ap"   value={profId} onChange={(e) => setProfId(e.target.value)}><option value="">Selecione…</option>{profs.data?.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></div>
+      <div><label htmlFor="as" className="block text-xs mb-1">Serviço</label><select id="as"   value={svcId} onChange={(e) => setSvcId(e.target.value)}><option value="">Selecione…</option>{services.data?.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.duration_min} min)</option>)}</select></div>
     </div>
-    <form onSubmit={book} className="bg-card border border-border p-5 mb-6 grid gap-3 sm:grid-cols-3" noValidate>
-      <div><label htmlFor="apn" className="block text-sm mb-1">Paciente</label><input id="apn" className={inputCls} value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />
+    <form onSubmit={book} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-3" noValidate>
+      <div><label htmlFor="apn" className="block text-sm mb-1">Paciente</label><input id="apn"   value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />
         {found.data?.map((p) => <button type="button" key={p.id} className="block w-full text-left p-2 border border-border bg-card hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button>)}</div>
       <div><label htmlFor="ash" className="block text-sm mb-1">Horários livres {unit ? `(${unit.timezone})` : ""}</label>
-        <select id="ash" className={inputCls} value={slot} onChange={(e) => setSlot(e.target.value)}><option value="">{profId && svcId ? (slots.isLoading ? "Carregando…" : slots.data?.length ? "Selecione…" : "Sem horários livres") : "Escolha profissional e serviço"}</option>
+        <select id="ash"   value={slot} onChange={(e) => setSlot(e.target.value)}><option value="">{profId && svcId ? (slots.isLoading ? "Carregando…" : slots.data?.length ? "Selecione…" : "Sem horários livres") : "Escolha profissional e serviço"}</option>
           {slots.data?.map((s) => <option key={s} value={s}>{new Date(s).toLocaleTimeString("pt-BR", { timeZone: unit?.timezone, hour: "2-digit", minute: "2-digit" })}</option>)}</select></div>
       <div className="grid gap-2">
-        {pkgs.data && pkgs.data.length > 0 && <div><label htmlFor="apk" className="block text-sm mb-1">Usar pacote</label><select id="apk" className={inputCls} value={pkg} onChange={(e) => setPkg(e.target.value)}><option value="">Sem pacote</option>{pkgs.data.map((p) => <option key={p.id} value={p.id}>{p.product.name}</option>)}</select></div>}
-        {opps.data && opps.data.length > 0 && <div><label htmlFor="aop" className="block text-sm mb-1">Oportunidade</label><select id="aop" className={inputCls} value={oppId} onChange={(e) => setOppId(e.target.value)}><option value="">Nenhuma</option>{opps.data.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select></div>}
+        {pkgs.data && pkgs.data.length > 0 && <div><label htmlFor="apk" className="block text-sm mb-1">Usar pacote</label><select id="apk"   value={pkg} onChange={(e) => setPkg(e.target.value)}><option value="">Sem pacote</option>{pkgs.data.map((p) => <option key={p.id} value={p.id}>{p.product.name}</option>)}</select></div>}
+        {opps.data && opps.data.length > 0 && <div><label htmlFor="aop" className="block text-sm mb-1">Oportunidade</label><select id="aop"   value={oppId} onChange={(e) => setOppId(e.target.value)}><option value="">Nenhuma</option>{opps.data.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select></div>}
       </div>
-      <div className="sm:col-span-3"><button disabled={busy} className="btn-primary !py-3 disabled:opacity-60">{busy ? "Agendando…" : "Agendar"}</button></div>
+      <div className="sm:col-span-3"><button disabled={busy} className="hp-btn hp-btn-primary disabled:opacity-60">{busy ? "Agendando…" : "Agendar"}</button></div>
     </form>
     <State loading={day.isLoading} error={day.error} empty={inDay.length === 0} emptyText="Nenhum agendamento neste dia." />
     {inDay.length > 0 && <Table head={["Horário", "Paciente", "Profissional", "Serviço", "Estado", "Ações"]}>
       {inDay.map((a) => <tr key={a.id}><Td>{new Date(parsePeriod(a.period)[0]).toLocaleTimeString("pt-BR", { timeZone: unit?.timezone, hour: "2-digit", minute: "2-digit" })}</Td><Td>{a.person?.full_name}</Td><Td>{a.professional?.display_name}</Td><Td>{a.service?.name}</Td><Td>{ST[a.status]}</Td>
         <Td>{["scheduled", "confirmed"].includes(a.status) && <div className="flex flex-wrap gap-1 text-sm">
-          {a.status === "scheduled" && <button className={btnGhost + " !py-1 !px-2"} onClick={() => setStatus(a, "confirmed")}>Confirmar</button>}
-          <button className={btnGhost + " !py-1 !px-2"} onClick={() => setStatus(a, "attended")}>Compareceu</button><button className={btnGhost + " !py-1 !px-2"} onClick={() => setStatus(a, "no_show")}>Faltou</button>
-          <button className={btnGhost + " !py-1 !px-2"} onClick={() => resched(a)}>Remarcar</button>
-          <button className={btnDanger + " !py-1 !px-2"} onClick={() => setStatus(a, "cancelled_by_patient")}>Cancelou</button><button className={btnDanger + " !py-1 !px-2"} onClick={() => setStatus(a, "cancelled_by_clinic")}>Clínica cancelou</button></div>}</Td></tr>)}</Table>}
+          {a.status === "scheduled" && <button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "confirmed")}>Confirmar</button>}
+          <button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "attended")}>Compareceu</button><button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "no_show")}>Faltou</button>
+          <button className={btnGhost + " hp-btn-sm"} onClick={() => resched(a)}>Remarcar</button>
+          <button className={btnDanger + " hp-btn-sm"} onClick={() => setStatus(a, "cancelled_by_patient")}>Cancelou</button><button className={btnDanger + " hp-btn-sm"} onClick={() => setStatus(a, "cancelled_by_clinic")}>Clínica cancelou</button></div>}</Td></tr>)}</Table>}
   </>);
 };
 
@@ -98,7 +98,7 @@ const Packages = () => {
   const bal = (id: string) => (pk.data?.ledger ?? []).filter((x) => x.client_package_id === id).reduce((a, x) => a + x.delta, 0);
   const adjust = async (id: string) => { const d = Number(await promptText("Ajustar saldo", "Ajuste de sessões (use + ou −, ex.: 2 ou -1)", { kind: "number" })); if (!d) return; const n = await promptText("Motivo do ajuste", "Motivo (obrigatório)", { multiline: true }); if (!n) return;
     const { error } = await supabase.rpc("adjust_package", { p_pkg: id, p_delta: d, p_note: n }); error ? m.err(errText(error)) : (m.ok("Ajuste registrado no livro."), void qc.invalidateQueries({ queryKey: ["all-pkgs"] })); };
-  return (<><Msg m={msg} /><p className="text-sm text-navy-400 mb-3">Regras: comparecimento consome 1 sessão; falta consome conforme o produto; cancelamento tardio consome; cancelamento com antecedência e da clínica não consome. Cada agendamento consome no máximo uma vez.</p>
+  return (<><Msg m={msg} /><p className="text-sm text-muted-foreground mb-3">Regras: comparecimento consome 1 sessão; falta consome conforme o produto; cancelamento tardio consome; cancelamento com antecedência e da clínica não consome. Cada agendamento consome no máximo uma vez.</p>
     <State loading={pk.isLoading} error={pk.error} empty={pk.data?.pkgs.length === 0} emptyText="Nenhum pacote vendido." />
     {pk.data && pk.data.pkgs.length > 0 && <Table head={["Paciente", "Pacote", "Saldo", "Total", "Validade", "Estado", ""]} right={[2, 3]}>
       {pk.data.pkgs.map((p) => <tr key={p.id}><Td>{p.person.full_name}</Td><Td>{p.product.name}</Td><Td num>{bal(p.id)}</Td><Td num>{p.total_sessions}</Td><Td>{p.valid_until ? new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR") : "—"}</Td><Td>{{ active: "Ativo", exhausted: "Esgotado", expired: "Vencido", cancelled: "Cancelado" }[p.status]}</Td><Td><button className="text-accent text-sm" onClick={() => adjust(p.id)}>Ajustar saldo</button></Td></tr>)}</Table>}</>);
@@ -112,12 +112,12 @@ const Waitlist = () => {
   const add = async (e: FormEvent) => { e.preventDefault(); if (!person || !unit || !svc) return m.err("Selecione paciente, unidade e serviço."); const { data: u } = await supabase.auth.getUser(); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
     const { error } = await supabase.from("waitlist").insert({ org_id: org?.org_id, unit_id: unit, person_id: person.id, service_id: svc, preference: pref || null, created_by: u.user?.id }); error ? m.err(errText(error)) : (m.ok("Adicionado à lista de espera."), setPerson(null), setSearch(""), void qc.invalidateQueries({ queryKey: ["waitlist"] })); };
   return (<><Msg m={msg} />
-    <form onSubmit={add} className="bg-card border border-border p-5 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
-      <div><label htmlFor="wp" className="block text-xs mb-1">Paciente</label><input id="wp" className={inputCls} value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />{found.data?.map((p) => <button type="button" key={p.id} className="block w-full text-left p-2 border border-border hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button>)}</div>
-      <div><label htmlFor="wu" className="block text-xs mb-1">Unidade</label><select id="wu" className={inputCls} value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-      <div><label htmlFor="ws" className="block text-xs mb-1">Serviço</label><select id="ws" className={inputCls} value={svc} onChange={(e) => setSvc(e.target.value)}><option value="">…</option>{services.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
-      <div><label htmlFor="wf" className="block text-xs mb-1">Preferência</label><input id="wf" className={inputCls} value={pref} onChange={(e) => setPref(e.target.value)} placeholder="ex.: manhãs" /></div>
-      <button className="btn-primary !py-2">Adicionar</button></form>
+    <form onSubmit={add} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
+      <div><label htmlFor="wp" className="block text-xs mb-1">Paciente</label><input id="wp"   value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />{found.data?.map((p) => <button type="button" key={p.id} className="block w-full text-left p-2 border border-border hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button>)}</div>
+      <div><label htmlFor="wu" className="block text-xs mb-1">Unidade</label><select id="wu"   value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+      <div><label htmlFor="ws" className="block text-xs mb-1">Serviço</label><select id="ws"   value={svc} onChange={(e) => setSvc(e.target.value)}><option value="">…</option>{services.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+      <div><label htmlFor="wf" className="block text-xs mb-1">Preferência</label><input id="wf"   value={pref} onChange={(e) => setPref(e.target.value)} placeholder="ex.: manhãs" /></div>
+      <button className="hp-btn hp-btn-primary">Adicionar</button></form>
     <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Lista de espera vazia." />
     {list.data && list.data.length > 0 && <Table head={["Paciente", "Serviço", "Preferência", "Desde", "Estado"]}>{list.data.map((w) => <tr key={w.id}><Td>{w.person.full_name}</Td><Td>{w.service.name}</Td><Td>{w.preference ?? "—"}</Td><Td>{fmtDateTime(w.created_at)}</Td><Td>{w.status}</Td></tr>)}</Table>}</>);
 };
@@ -134,15 +134,15 @@ const Professionals = () => {
     const { error } = await supabase.from("availability_rules").insert({ org_id: org?.org_id, professional_id: prof, unit_id: unit, weekday: Number(dow), start_time: st, end_time: en }); error ? m.err(errText(error)) : (m.ok("Disponibilidade cadastrada."), void qc.invalidateQueries({ queryKey: ["rules"] })); };
   return (<><Msg m={msg} />
     <div className="grid gap-6 lg:grid-cols-2 mb-8">
-      <form onSubmit={addProf} className="bg-card border border-border p-5 grid gap-3" noValidate><h2 className="text-xl">Novo profissional</h2>
-        <div><label htmlFor="pn" className="block text-xs mb-1">Nome</label><input id="pn" className={inputCls} value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div><label htmlFor="pun2" className="block text-xs mb-1">Unidade</label><select id="pun2" className={inputCls} value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div><button className="btn-primary !py-2">Cadastrar</button></form>
-      <form onSubmit={addRule} className="bg-card border border-border p-5 grid gap-3 sm:grid-cols-2" noValidate><h2 className="text-xl sm:col-span-2">Disponibilidade semanal</h2>
-        <div><label htmlFor="rp" className="block text-xs mb-1">Profissional</label><select id="rp" className={inputCls} value={prof} onChange={(e) => setProf(e.target.value)}><option value="">…</option>{profs.data?.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></div>
-        <div><label htmlFor="rd" className="block text-xs mb-1">Dia</label><select id="rd" className={inputCls} value={dow} onChange={(e) => setDow(e.target.value)}>{DOW.map((d, i) => <option key={d} value={i}>{d}</option>)}</select></div>
-        <div><label htmlFor="rs" className="block text-xs mb-1">Início</label><input id="rs" type="time" className={inputCls} value={st} onChange={(e) => setSt(e.target.value)} /></div>
-        <div><label htmlFor="re" className="block text-xs mb-1">Fim</label><input id="re" type="time" className={inputCls} value={en} onChange={(e) => setEn(e.target.value)} /></div>
-        <p className="text-xs text-navy-400 sm:col-span-2">Usa a unidade selecionada em “Novo profissional”.</p><button className="btn-primary !py-2 sm:col-span-2">Adicionar</button></form>
+      <form onSubmit={addProf} className="hp-card p-5 grid gap-3" noValidate><h2 className="text-xl">Novo profissional</h2>
+        <div><label htmlFor="pn" className="block text-xs mb-1">Nome</label><input id="pn"   value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div><label htmlFor="pun2" className="block text-xs mb-1">Unidade</label><select id="pun2"   value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div><button className="hp-btn hp-btn-primary">Cadastrar</button></form>
+      <form onSubmit={addRule} className="hp-card p-5 grid gap-3 sm:grid-cols-2" noValidate><h2 className="text-xl sm:col-span-2">Disponibilidade semanal</h2>
+        <div><label htmlFor="rp" className="block text-xs mb-1">Profissional</label><select id="rp"   value={prof} onChange={(e) => setProf(e.target.value)}><option value="">…</option>{profs.data?.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></div>
+        <div><label htmlFor="rd" className="block text-xs mb-1">Dia</label><select id="rd"   value={dow} onChange={(e) => setDow(e.target.value)}>{DOW.map((d, i) => <option key={d} value={i}>{d}</option>)}</select></div>
+        <div><label htmlFor="rs" className="block text-xs mb-1">Início</label><input id="rs" type="time"   value={st} onChange={(e) => setSt(e.target.value)} /></div>
+        <div><label htmlFor="re" className="block text-xs mb-1">Fim</label><input id="re" type="time"   value={en} onChange={(e) => setEn(e.target.value)} /></div>
+        <p className="text-xs text-muted-foreground sm:col-span-2">Usa a unidade selecionada em “Novo profissional”.</p><button className="hp-btn hp-btn-primary sm:col-span-2">Adicionar</button></form>
     </div>
     <State loading={rules.isLoading} error={rules.error} empty={rules.data?.length === 0} emptyText="Nenhuma disponibilidade cadastrada." />
     {rules.data && rules.data.length > 0 && <Table head={["Profissional", "Unidade", "Dia", "Horário"]}>{rules.data.map((r) => <tr key={r.id}><Td>{r.professional.display_name}</Td><Td>{r.unit.name}</Td><Td>{DOW[r.weekday]}</Td><Td>{r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}</Td></tr>)}</Table>}</>);

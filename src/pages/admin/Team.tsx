@@ -30,17 +30,17 @@ const Team = () => {
   return (<div>
     <PageHead eyebrow="Acessos" title="Equipe e convites" hint="Papéis são atribuídos por escopo (organização ou unidade) e podem ser combinados. Acesso só nasce de convite para e-mail verificado; não há senha padrão." />
     <Msg m={msg} />
-    <form onSubmit={invite} className="bg-card border border-border p-5 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
-      <div className="sm:col-span-2"><label htmlFor="ie" className="block text-xs mb-1">E-mail da pessoa</label><input id="ie" type="email" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-      <div><label htmlFor="ir" className="block text-xs mb-1">Papel</label><select id="ir" className={inputCls} value={role} onChange={(e) => setRole(e.target.value)}>{Object.entries(ROLES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-      <div><label htmlFor="iu" className="block text-xs mb-1">Unidade {ORG_WIDE.includes(role) ? "(não se aplica)" : ""}</label><select id="iu" disabled={ORG_WIDE.includes(role)} className={inputCls} value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-      <button className="btn-primary !py-2 sm:w-fit">Convidar</button></form>
-    {invites.data && invites.data.length > 0 && <section className="mb-8"><h2 className="text-xl mb-2">Convites abertos</h2><Table head={["E-mail", "Papel", "Expira em", ""]}>{invites.data.map((i) => <tr key={i.id}><Td>{i.email}</Td><Td>{ROLES[i.role]}</Td><Td>{fmtDate(i.expires_at)}</Td><Td><button className={btnDanger + " !py-1"} onClick={() => revokeInvite(i.id)}>Revogar</button></Td></tr>)}</Table></section>}
+    <form onSubmit={invite} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
+      <div className="sm:col-span-2"><label htmlFor="ie" className="block text-xs mb-1">E-mail da pessoa</label><input id="ie" type="email"   value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+      <div><label htmlFor="ir" className="block text-xs mb-1">Papel</label><select id="ir"   value={role} onChange={(e) => setRole(e.target.value)}>{Object.entries(ROLES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+      <div><label htmlFor="iu" className="block text-xs mb-1">Unidade {ORG_WIDE.includes(role) ? "(não se aplica)" : ""}</label><select id="iu" disabled={ORG_WIDE.includes(role)}   value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+      <button className="hp-btn hp-btn-primary sm:w-fit">Convidar</button></form>
+    {invites.data && invites.data.length > 0 && <section className="mb-8"><h2 className="text-xl mb-2">Convites abertos</h2><Table head={["E-mail", "Papel", "Expira em", ""]}>{invites.data.map((i) => <tr key={i.id}><Td>{i.email}</Td><Td>{ROLES[i.role]}</Td><Td>{fmtDate(i.expires_at)}</Td><Td><button className={btnDanger + " hp-btn-sm"} onClick={() => revokeInvite(i.id)}>Revogar</button></Td></tr>)}</Table></section>}
     <h2 className="text-xl mb-2">Pessoas com acesso</h2>
     <State loading={team.isLoading} error={team.error} empty={team.data?.length === 0} emptyText="Ninguém com acesso." />
-    {team.data && team.data.length > 0 && <Table head={["Pessoa", "Papéis", "Estado", ""]}>{team.data.map((u) => <tr key={u.user_id}><Td><strong>{u.display_name}</strong><br /><span className="text-sm text-navy-400">{u.email}</span></Td>
+    {team.data && team.data.length > 0 && <Table head={["Pessoa", "Papéis", "Estado", ""]}>{team.data.map((u) => <tr key={u.user_id}><Td><strong>{u.display_name}</strong><br /><span className="text-sm text-muted-foreground">{u.email}</span></Td>
       <Td><ul className="space-y-1">{u.roles.map((r) => <li key={r.id} className="text-sm">{ROLES[r.role]}{r.unit ? ` · ${r.unit}` : " · todas as unidades"} <button className="text-destructive ml-1" onClick={() => revokeRole(r.id)} aria-label={`Revogar ${ROLES[r.role]}`}>×</button></li>)}</ul></Td>
-      <Td>{u.status === "active" ? "Ativo" : "Suspenso"}</Td><Td><button className={btnGhost + " !py-1 !px-2 mr-1"} onClick={() => rename(u)}>Renomear</button><button className={btnGhost + " !py-1 !px-2"} onClick={() => toggle(u)}>{u.status === "active" ? "Suspender" : "Reativar"}</button></Td></tr>)}</Table>}
+      <Td>{u.status === "active" ? "Ativo" : "Suspenso"}</Td><Td><button className={btnGhost + " hp-btn-sm mr-1"} onClick={() => rename(u)}>Renomear</button><button className={btnGhost + " hp-btn-sm"} onClick={() => toggle(u)}>{u.status === "active" ? "Suspender" : "Reativar"}</button></Td></tr>)}</Table>}
   </div>);
 };
 export default Team;

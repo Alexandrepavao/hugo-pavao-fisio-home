@@ -93,7 +93,7 @@ const PageEditor = () => {
   const upd = (fn: (b: Block[]) => Block[]) => { setBlocks(fn); setDirty(true); };
 
   if (loadErr) return <p role="alert" className="text-destructive">Página não encontrada ou sem permissão.</p>;
-  if (!page) return <p role="status" className="text-navy-400">Carregando…</p>;
+  if (!page) return <p role="status" className="text-muted-foreground">Carregando…</p>;
 
   const tabs: [Tab, string][] = [["content", "Conteúdo"], ["settings", "Configurações"], ["form", "Formulário"], ["versions", "Versões"]];
   const publicUrl = `${window.location.origin}/${page.slug}`;
@@ -103,16 +103,16 @@ const PageEditor = () => {
       <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
         <div>
           <p className="eyebrow mb-2">HP Pages · {STATUS[page.status]}{page.status === "published" && page.publish_at && new Date(page.publish_at) > new Date() ? " (agendada)" : ""}</p>
-          <h1 className="text-3xl text-navy-900">{page.title}</h1>
-          <p className="text-sm text-navy-400 mt-1">{page.status === "published" ? <a className="underline" href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a> : `Endereço: /${page.slug}`}</p>
+          <h1 className="text-3xl text-foreground">{page.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{page.status === "published" ? <a className="underline" href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a> : `Endereço: /${page.slug}`}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setPreview(!preview)} className="px-4 py-2 border border-border bg-card">{preview ? "Voltar à edição" : "Pré-visualizar rascunho"}</button>
-          <button onClick={save} disabled={busy || !dirty} className="px-4 py-2 border border-primary text-primary disabled:opacity-40">Salvar rascunho</button>
-          <button onClick={publish} disabled={busy} className="btn-primary !py-2 !px-5">Publicar</button>
+          <button onClick={() => setPreview(!preview)} className="hp-btn hp-btn-outline">{preview ? "Voltar à edição" : "Pré-visualizar rascunho"}</button>
+          <button onClick={save} disabled={busy || !dirty} className="hp-btn hp-btn-outline">Salvar rascunho</button>
+          <button onClick={publish} disabled={busy} className="hp-btn hp-btn-primary">Publicar</button>
         </div>
       </div>
-      {msg && <p role={msg.kind === "err" ? "alert" : "status"} className={`mb-4 text-sm ${msg.kind === "err" ? "text-destructive" : "text-navy-700"}`}>{msg.text}</p>}
+      {msg && <p role={msg.kind === "err" ? "alert" : "status"} className={`mb-4 text-sm ${msg.kind === "err" ? "text-destructive" : "text-foreground"}`}>{msg.text}</p>}
       {dirty && <p className="mb-4 text-sm text-accent">Alterações não salvas.</p>}
 
       {preview ? (
@@ -121,7 +121,7 @@ const PageEditor = () => {
       ) : (
         <>
           <div role="tablist" className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-            {tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`px-4 py-2 -mb-px border-b-2 whitespace-nowrap ${tab === k ? "border-primary text-navy-900" : "border-transparent text-navy-400"}`}>{l}</button>)}
+            {tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`px-4 py-2 -mb-px border-b-2 whitespace-nowrap ${tab === k ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>{l}</button>)}
           </div>
 
           {tab === "content" && (
@@ -133,7 +133,7 @@ const PageEditor = () => {
                   onMove={(d) => upd((cur) => { const c = [...cur]; [c[i], c[i + d]] = [c[i + d], c[i]]; return c; })}
                   onRemove={() => upd((cur) => cur.filter((_, j) => j !== i))} />
               ))}
-              <div className="flex flex-wrap gap-2 items-center"><span className="text-sm text-navy-400">Adicionar bloco:</span>
+              <div className="flex flex-wrap gap-2 items-center"><span className="text-sm text-muted-foreground">Adicionar bloco:</span>
                 {(Object.keys(BLOCK_LABEL) as BlockType[]).map((t) => <button key={t} onClick={() => upd((cur) => [...cur, t === "form" ? { ...newBlock(t), form_id: forms[0]?.id ?? "" } : newBlock(t)])} className="px-3 py-1 border border-border bg-card text-sm hover:border-accent">{BLOCK_LABEL[t]}</button>)}
               </div>
             </div>
@@ -142,42 +142,42 @@ const PageEditor = () => {
           {tab === "settings" && (
             <div className="grid gap-8 max-w-3xl">
               <section className="space-y-3"><h2 className="text-xl">Endereço e destino</h2>
-                <div className="flex gap-2"><span className="self-center text-navy-400">/</span><input aria-label="Endereço" className={field} value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} /><button onClick={setSlugFn} disabled={busy || slug === page.slug} className="px-4 border border-primary text-primary disabled:opacity-40">Alterar</button></div>
+                <div className="flex gap-2"><span className="self-center text-muted-foreground">/</span><input aria-label="Endereço" className={field} value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} /><button onClick={setSlugFn} disabled={busy || slug === page.slug} className="hp-btn hp-btn-outline">Alterar</button></div>
                 <div className="flex gap-2"><select aria-label="Funil de destino" className={field} value={pipeId} onChange={(e) => setPipeId(e.target.value)}><option value="">Sem funil</option>{pipes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
-                  <button onClick={savePipe} disabled={busy || pipeId === (page.pipeline_id ?? "")} className="px-4 border border-primary text-primary disabled:opacity-40">Salvar</button></div>
+                  <button onClick={savePipe} disabled={busy || pipeId === (page.pipeline_id ?? "")} className="hp-btn hp-btn-outline">Salvar</button></div>
               </section>
               <section className="space-y-3"><h2 className="text-xl">SEO e compartilhamento</h2>
                 <div><label htmlFor="st" className="block text-sm mb-1">Título para buscadores</label><input id="st" className={field} value={seo.title ?? ""} onChange={(e) => { setSeo({ ...seo, title: e.target.value }); setDirty(true); }} /></div>
                 <div><label htmlFor="sd" className="block text-sm mb-1">Descrição (até 160 caracteres)</label><textarea id="sd" rows={2} maxLength={160} className={field} value={seo.description ?? ""} onChange={(e) => { setSeo({ ...seo, description: e.target.value }); setDirty(true); }} /></div>
                 <div><label htmlFor="si" className="block text-sm mb-1">Imagem de compartilhamento (https://…)</label><input id="si" type="url" className={field} value={seo.image ?? ""} onChange={(e) => { setSeo({ ...seo, image: e.target.value }); setDirty(true); }} /></div>
-                <p className="text-xs text-navy-400">Salve o rascunho para gravar. Atenção: pré-visualizações de redes sociais dependem de renderização no servidor, ainda não implementada.</p>
+                <p className="text-xs text-muted-foreground">Salve o rascunho para gravar. Atenção: pré-visualizações de redes sociais dependem de renderização no servidor, ainda não implementada.</p>
               </section>
               <section className="space-y-3"><h2 className="text-xl">Agendamento</h2>
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div><label htmlFor="pa" className="block text-sm mb-1">Publicar em</label><input id="pa" type="datetime-local" className={field} value={pubAt} onChange={(e) => setPubAt(e.target.value)} /></div>
                   <div><label htmlFor="ua" className="block text-sm mb-1">Encerrar em</label><input id="ua" type="datetime-local" className={field} value={unpubAt} onChange={(e) => setUnpubAt(e.target.value)} /></div>
-                </div><p className="text-xs text-navy-400">Vale ao clicar em “Publicar”. Ao encerrar, a página passa a usar o modo de desativação abaixo.</p>
+                </div><p className="text-xs text-muted-foreground">Vale ao clicar em “Publicar”. Ao encerrar, a página passa a usar o modo de desativação abaixo.</p>
               </section>
               <section className="space-y-3"><h2 className="text-xl">Desativar</h2>
                 <select aria-label="Modo de desativação" className={field} value={mode} onChange={(e) => setMode(e.target.value)}>
                   <option value="message">Mostrar mensagem de encerramento</option><option value="waitlist">Abrir lista de espera</option><option value="redirect">Redirecionar</option></select>
                 {mode === "message" && <input aria-label="Mensagem" className={field} placeholder="Mensagem exibida" value={closeMsg} onChange={(e) => setCloseMsg(e.target.value)} />}
                 {mode === "redirect" && <input aria-label="Endereço de destino" className={field} placeholder="https://… ou /caminho" value={redirect} onChange={(e) => setRedirect(e.target.value)} />}
-                <button onClick={disable} disabled={busy} className="px-4 py-2 border border-destructive text-destructive">Desativar página</button>
+                <button onClick={disable} disabled={busy} className="hp-btn hp-btn-danger">Desativar página</button>
               </section>
-              <section className="flex gap-3"><button onClick={duplicate} className="px-4 py-2 border border-border bg-card">Duplicar página</button><button onClick={archive} className="px-4 py-2 text-destructive">Arquivar</button></section>
+              <section className="flex gap-3"><button onClick={duplicate} className="hp-btn hp-btn-outline">Duplicar página</button><button onClick={archive} className="hp-btn hp-btn-danger">Arquivar</button></section>
             </div>
           )}
 
           {tab === "form" && (
             <div className="space-y-8 max-w-3xl">
               {forms.map((f) => <FormEditor key={f.id} form={f} onSave={saveForm} busy={busy} />)}
-              <p className="text-xs text-navy-400">Todo formulário precisa do campo “Nome” e de e-mail ou telefone. Os envios criam a pessoa e a oportunidade no funil da página, com proteção contra duplicidade e abuso.</p>
+              <p className="text-xs text-muted-foreground">Todo formulário precisa do campo “Nome” e de e-mail ou telefone. Os envios criam a pessoa e a oportunidade no funil da página, com proteção contra duplicidade e abuso.</p>
             </div>
           )}
 
           {tab === "versions" && (
-            <ul className="max-w-3xl divide-y divide-border bg-card border border-border">
+            <ul className="max-w-3xl divide-y divide-border hp-card">
               {versions.map((v) => (
                 <li key={v.version_no} className="p-3 flex items-center justify-between gap-3">
                   <span><span className="tabular">v{v.version_no}</span> · {v.kind === "publish" ? "Publicação" : v.kind === "restore" ? "Restauração" : v.kind === "create" ? "Criação" : "Rascunho"} · {new Date(v.created_at).toLocaleString("pt-BR")}{v.note ? ` — ${v.note}` : ""}</span>
@@ -195,16 +195,16 @@ const FormEditor = ({ form, onSave, busy }: { form: FormRow; onSave: (f: FormRow
   const [f, setF] = useState(form);
   const setField = (i: number, patch: Partial<FormRow["fields"][number]>) => setF({ ...f, fields: f.fields.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
   return (
-    <section className="bg-card border border-border p-4 space-y-3">
+    <section className="hp-card p-4 space-y-3">
       <h2 className="text-xl">{form.name}</h2>
       {f.fields.map((fl, i) => (
         <div key={fl.key} className="grid grid-cols-[1fr_9rem_auto] gap-2 items-center">
           <input aria-label={`Rótulo do campo ${fl.key}`} className={field} value={fl.label} onChange={(e) => setField(i, { label: e.target.value })} />
-          <span className="text-sm text-navy-400">{fl.type}</span>
+          <span className="text-sm text-muted-foreground">{fl.type}</span>
           <label className="text-sm flex items-center gap-1"><input type="checkbox" checked={!!fl.required} disabled={fl.key === "name"} onChange={(e) => setField(i, { required: e.target.checked })} /> Obrigatório</label>
         </div>))}
       <div><label htmlFor={`sm-${f.id}`} className="block text-sm mb-1">Mensagem de sucesso</label><input id={`sm-${f.id}`} className={field} value={f.success_message} onChange={(e) => setF({ ...f, success_message: e.target.value })} /></div>
-      <button onClick={() => onSave(f)} disabled={busy} className="px-4 py-2 border border-primary text-primary">Salvar formulário</button>
+      <button onClick={() => onSave(f)} disabled={busy} className="hp-btn hp-btn-outline">Salvar formulário</button>
     </section>
   );
 };

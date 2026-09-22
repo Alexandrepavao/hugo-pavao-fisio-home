@@ -1,6 +1,6 @@
 /** Parser CSV simples (aspas, separador , ou ;, quebras CRLF). Sem dependências. */
 export function parseCsv(text: string): string[][] {
-  const src = text.replace(/^﻿/, "");
+  const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const firstLine = src.split(/\r?\n/, 1)[0] ?? "";
   const delim = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ";" : ",";
   const rows: string[][] = []; let row: string[] = []; let cell = ""; let quoted = false;

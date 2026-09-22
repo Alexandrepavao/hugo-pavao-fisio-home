@@ -24,7 +24,7 @@ const LABEL: Record<Status, string> = { funcional: "Funcional (Dev)", parcial: "
 const STYLE: Record<Status, string> = {
   funcional: "bg-primary text-primary-foreground",
   parcial: "bg-accent/15 text-accent border border-accent/40",
-  pendente: "bg-muted text-navy-400",
+  pendente: "bg-muted text-muted-foreground",
 };
 
 const Overview = () => {
@@ -32,19 +32,19 @@ const Overview = () => {
   return (
     <div>
       <p className="eyebrow mb-2">Painel</p>
-      <h1 className="text-3xl text-navy-900 mb-2">Estado dos módulos</h1>
-      <p className="text-navy-400 mb-8 max-w-2xl">
+      <h1 className="text-3xl text-foreground mb-2">Estado dos módulos</h1>
+      <p className="text-muted-foreground mb-8 max-w-2xl">
         “Funcional (Dev)” significa implementado e validado no ambiente de desenvolvimento — <strong>não</strong> validado em produção com dados reais.
         {!hasRole("manager", "ops_admin", "unit_manager") && " Use o menu à esquerda para acessar as áreas do seu perfil."}
       </p>
       <ul className="grid gap-3 sm:grid-cols-2">
         {MODULES.map((m) => (
-          <li key={m.name} className="bg-card border border-border p-5">
+          <li key={m.name} className="hp-card p-5">
             <div className="flex items-start justify-between gap-3 mb-2">
-              <h2 className="text-lg text-navy-900">{m.to ? <Link to={m.to} className="hover:underline">{m.name}</Link> : m.name}</h2>
+              <h2 className="text-lg text-foreground">{m.to ? <Link to={m.to} className="hover:underline">{m.name}</Link> : m.name}</h2>
               <span className={`text-[11px] uppercase tracking-wider px-2 py-1 shrink-0 ${STYLE[m.status]}`}>{LABEL[m.status]}</span>
             </div>
-            <p className="text-[14px] text-navy-400 leading-snug">{m.note}</p>
+            <p className="text-[14px] text-muted-foreground leading-snug">{m.note}</p>
           </li>
         ))}
       </ul>

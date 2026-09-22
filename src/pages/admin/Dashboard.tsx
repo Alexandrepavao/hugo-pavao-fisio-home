@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
-import { inputCls, PageHead, State, Table, Td } from "@/lib/ui";
+import { FilterBar, FilterField, PageHead, StatCard, State, Table, Td } from "@/lib/ui";
 
 interface Metric { value: number | null; available: boolean; basis: string; [k: string]: unknown }
 type Metrics = Record<string, Metric | { items: { reason: string; count: number }[]; basis: string }>;
@@ -50,31 +50,28 @@ const Dashboard = () => {
   return (
     <div>
       <PageHead eyebrow="Gestor" title="Dashboard" hint="Todos os números vêm de dados persistidos. Onde não há dado de origem, aparece “Indisponível” (nunca zero fictício). Cada cartão mostra a regra de cálculo e a data usada." />
-      <div className="flex flex-wrap gap-3 mb-6 items-end">
-        <div><label htmlFor="d1" className="block text-xs mb-1">De</label><input id="d1" type="date" className={inputCls} value={from} onChange={(e) => setFrom(e.target.value)} /></div>
-        <div><label htmlFor="d2" className="block text-xs mb-1">Até</label><input id="d2" type="date" className={inputCls} value={to} onChange={(e) => setTo(e.target.value)} /></div>
-        <div><label htmlFor="du" className="block text-xs mb-1">Unidade</label>
-          <select id="du" className={inputCls} value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{(units.data ?? []).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-      </div>
+      <FilterBar>
+        <FilterField label="De" htmlFor="d1"><input id="d1" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></FilterField>
+        <FilterField label="Até" htmlFor="d2"><input id="d2" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></FilterField>
+        <FilterField label="Unidade" htmlFor="du"><select id="du" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{(units.data ?? []).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></FilterField>
+        <p className="text-xs text-muted-foreground ml-auto self-center max-w-sm">Período aplicado conforme a data de cada indicador (criação, venda, pagamento ou atendimento — indicada em cada cartão).</p>
+      </FilterBar>
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {alerts.data && (
         <section aria-label="Alertas" className="mb-8"><h2 className="text-xl mb-3">Alertas</h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {alerts.data.map((a) => (
-              <li key={a.kind}><Link to={a.link} className={`block border p-4 bg-card ${a.count > 0 ? "border-accent" : "border-border"}`}>
-                <span className="text-3xl tabular text-navy-900">{a.count}</span><span className="block text-sm text-navy-400">{a.label}</span></Link></li>))}
+              <li key={a.kind}><Link to={a.link} className="hp-card flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors">
+                <span className={`grid place-items-center rounded-md tabular font-bold ${a.count > 0 ? "hp-badge-warning" : "bg-muted text-muted-foreground"}`} style={{ width: "2.5rem", height: "2.5rem", fontSize: "1.125rem" }}>{a.count}</span>
+                <span className="text-sm">{a.label}</span></Link></li>))}
           </ul></section>
       )}
       {metrics.data && GROUPS.map((g) => (
         <section key={g.title} className="mb-8"><h2 className="text-xl mb-3">{g.title}</h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {g.items.map(([k, label, f]) => { const m = metrics.data![k] as Metric; return (
-              <li key={k} className="bg-card border border-border p-4">
-                <p className="text-sm text-navy-400">{label}</p>
-                <p className={`text-2xl tabular mt-1 ${m.available ? "text-navy-900" : "text-navy-400"}`}>{show(m, f)}</p>
-                <p className="text-xs text-navy-400 mt-2 leading-snug">{m.basis}</p>
-              </li>); })}
+              <StatCard key={k} label={label} value={show(m, f)} basis={m.basis} unavailable={!m.available || m.value == null} />); })}
           </ul></section>
       ))}
       {metrics.data && (
