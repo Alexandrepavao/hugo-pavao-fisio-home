@@ -1,50 +1,57 @@
 # HP Group Hub — Status do Projeto
 
-Atualizado: 2026-09-21 (sessão 2) · Branch `feature/hp-group-hub` · PR em rascunho (sem merge na `main`)
+Atualizado: 2026-09-22 (sessão 4) · Branch `feature/hp-group-hub` · [PR #1](https://github.com/Alexandrepavao/hugo-pavao-fisio-home/pull/1) em rascunho (sem merge na `main`)
 
-> **Não declarar o sistema concluído.** Tudo abaixo foi implementado e validado no ambiente **Dev**. Nada foi aplicado no banco de **produção**, nenhuma integração externa foi conectada, e o fluxo real de e-mail (confirmação/recuperação de senha) **ainda não foi validado**.
+> Todo o trabalho abaixo foi implementado e validado no ambiente **Dev** (banco + servidor local apontando para o Supabase Dev) e, nesta sessão, também por **16 testes E2E automatizados** (Playwright) cobrindo as jornadas críticas, incluindo a nova "Meu dia". O deploy publicado na Netlify **ainda não foi validado ao vivo** — está atrás da proteção de equipe da Netlify (ver bloqueio 1 abaixo), distinta do login do app. Produção (`HP Group Core`) segue vazia.
 
 ## Ambiente
 | Recurso | Destino | Observação |
 |---|---|---|
-| Repositório | `Alexandrepavao/hugo-pavao-fisio-home` | trabalho na branch `feature/hp-group-hub` |
-| Diretório local | `D:\Claude\hugo-pavao-fisio-home` | cache npm em `D:\Tools\npm-cache`; Netlify CLI em `D:\Tools\npm-global` |
-| Supabase **Dev/Preview** | `HP Group Dev` (`fsvtzowcwhvwtluwrhnb`, sa-east-1) | migrations 001–014 aplicadas; usado pelo preview |
-| Supabase **Produção** | `HP Group Core` (`wfqkjrpqkaarpavjheoj`) | **vazio** (nenhuma migration aplicada) — decisão de go-live pendente |
-| Netlify | time "Hp Group" (`contato-e5bg89q`), site `hp-group-hub` (`2c2d11bc-…`) | preview publicado; variáveis `VITE_*` apontam **só** para o Dev; acesso protegido por login de equipe Netlify |
-| Site atual em produção | GitHub Pages → `hpfisioterapia.com.br` | **intocado** (main, DNS e Pages não foram alterados) |
+| Repositório | `Alexandrepavao/hugo-pavao-fisio-home` | branch `feature/hp-group-hub`, PR #1 em rascunho |
+| Supabase Dev/Preview | `HP Group Dev` (`fsvtzowcwhvwtluwrhnb`) | migrations 001–019 aplicadas e testadas |
+| Supabase Produção | `HP Group Core` (`wfqkjrpqkaarpavwagker`… `wfqkjrpqkaarpavjheoj`) | **vazio** |
+| Netlify | site `hp-group-hub`, time "Hp Group" | preview publicado (commit mais recente), **protegido por SSO de equipe** (não confundir com `/login` do app) |
+| Referências auditadas | `D:\Claude\hp-refs\*` (Brighter Core, Brighter Flow, Engage Nest, FocusSphere) | somente leitura; ver `docs/reference-audit.md` |
 
-O CLI do Supabase local está logado na conta da Brighter e **não** é usado; todo acesso ao Supabase é via MCP da organização HP Group.
+## O que mudou nesta sessão
+- **Sistema visual HP** (`src/styles/app.css`, `src/components/hp/*`): sidebar azul institucional recolhível e persistida, drawer mobile, header compacto, busca Ctrl+K, tokens de cor/tipografia/espaçamento centralizados. Propagado a todas as telas do painel e dos portais.
+- **CRM refeito**: colunas de largura fixa com rolagem restrita ao quadro, cards com hierarquia, menu de ações "⋯", arraste (`@dnd-kit`, com sobreposição de arraste e sensor de teclado) com atualização otimista e reversão em erro, painel lateral com abas.
+- **Pessoas**: mesclagem com prévia de conflitos (bloqueios e avisos) e histórico preservado; importação CSV com validação, prévia de duplicidade e relatório final.
+- **Academy**: módulos de aula, turmas (cohort) com concessão de acesso; portal do aluno com capa, "continuar de onde parou", comunidade em thread.
+- **Produtividade pessoal — "Meu dia"** (migration 019, `src/pages/admin/Productivity.tsx`): tarefas pessoais com urgência/importância/categoria e visibilidade privada por padrão (opcionalmente "equipe"), sessão de foco (25/45/60min, uma ativa por vez), vínculo explícito a oportunidade/pessoa/atendimento já existente. `my_day()`/`team_day()` **combinam por leitura** tarefas pessoais + tarefas de CRM atribuídas + agenda clínica — nunca uma segunda fonte de compromissos. Inspirado no FocusSphere (ver `reference-audit.md`); diário emocional e prontuário de psicólogo ficaram explicitamente fora de escopo.
+- **Correções de segurança do banco**: 10 funções (`dashboard_metrics`, `list_team` etc.) haviam nascido executáveis por `anon` apesar do `REVOKE` global da migration 010 — corrigido com guarda por *event trigger* (migration 015) que fecha automaticamente qualquer função nova.
+- **Regra ESLint `no-unused-expressions` revisada**: estava totalmente desativada; agora ativa com `allowShortCircuit`/`allowTernary`, e as 35 ocorrências reais do idioma `cond ? erro() : (a(), b(), c())` (não coberto por essas opções) foram reescritas para `if/else` explícito em 10 arquivos — sem mudar lógica, só a forma da instrução.
+- **Bugs encontrados pelos testes e corrigidos**: rastreio de visita não disparava (o builder do `supabase-js` não executa sem `.then`/`await`); após login a aluna caía em "Sem permissão" por corrida entre sessão e papéis carregando; funis abriam fora de ordem; `create_person` falhava com "violates row-level security" (RETURNING reavaliava a policy antes da linha existir) e não validava formato de contato; `["focus-open"]` do React Query retornava `undefined` em vez de `null` quando não havia sessão de foco ativa.
 
 ## Estado por módulo
-| Módulo | Estado | Evidência | Pendências |
-|---|---|---|---|
-| Fundação (org, unidades, pessoas, papéis, auditoria) | ✅ Dev | testes SQL 001–002 | — |
-| Bootstrap de gestores (2 e-mails, uso único, e-mail verificado) | ✅ Dev | teste SQL 002 (7/7) | acionar de fato com e-mail real (depende de e-mail de confirmação) |
-| Autenticação (login, primeiro acesso, recuperação, `/redefinir-senha`) | 🟡 | login e redirecionamento por perfil verificados no navegador | **fluxo real de e-mail não validado** (SMTP) |
-| HP Pages + formulários públicos | ✅ Dev | testes SQL 003 (30/30) + jornada no navegador | preview social (SEO no servidor) |
-| CRM (funis, kanban/lista, tarefas, histórico) | ✅ Dev | testes 003/004 + navegador | importação, regras avançadas de distribuição |
-| Agenda, pacotes e sessões | ✅ Dev | teste SQL 004 (26/26) | concorrência real entre conexões (só constraint testada em uma sessão), lembretes |
-| Financeiro (vendas→recebimentos, estornos, comissões, a pagar, projeção) | 🟡 | teste SQL 005 (33/33) | conciliação bancária, tela de regras de comissão, DRE gerencial completo |
-| Academy (alunos) + acompanhamento (pacientes) | ✅ Dev | teste SQL 006 (42/42) + navegador | vídeo de provedor externo com assinatura; questionários estruturados (UI) |
-| Parceiros, indicações, repasses, pesquisas, corporativo | 🟡 | teste SQL 007 (16/16, 15 OK + 1 corrigido) | telas de pesquisa e de contas corporativas |
-| Dashboard | ✅ Dev | teste SQL 008 (12/12) + navegador | — |
-| Automações | 🟡 | eventos idempotentes, `automation_runs`, retentativa manual | agendador de retentativas; webhooks de pagamento |
-| Mesclagem de pessoas / importação com validação | ⬜ | — | implementar |
-| E-mail (Resend) | 🔒 | função `send-email` pronta; **não validada** | conta Resend, domínio verificado, chaves (ver `integrations.md`) |
-| Pagamentos, WhatsApp, vídeo | ⬜ | — | provedores a definir |
-| Produção (banco + deploy) | ⬜ | — | aprovar go-live |
+| Módulo | Estado | Evidência |
+|---|---|---|
+| Fundação, bootstrap de gestores, autenticação | ✅ Dev | testes SQL 001–002; E2E `01-auth-and-routes` |
+| HP Pages + formulários públicos | ✅ Dev | teste SQL 003 (30/30); E2E `02-checkup-journey` (jornada completa) |
+| CRM | ✅ Dev | testes SQL 003/004; E2E (criação, kanban, mudança de etapa persistida) |
+| Pessoas — mesclagem e importação | ✅ Dev | teste SQL 009 (novo, 21/21) |
+| Agenda, pacotes, sessões | ✅ Dev | teste SQL 004 (26/26); **concorrência real** validada por 6 requisições HTTP simultâneas (E2E `04-agenda-concurrency`) |
+| Financeiro | 🟡 | teste SQL 005 (33/33); telas de conciliação e regras de comissão ainda pendentes |
+| Academy + Acompanhamento | ✅ Dev | teste SQL 006 (42/42); E2E `03-academy-and-isolation` (aulas, progresso, certificado, comunidade, revogação imediata) |
+| Parceiros | 🟡 | teste SQL 007 (16/16, **reexecutado por inteiro** após a correção de segurança) |
+| Dashboard | ✅ Dev | teste SQL 008 (12/12) |
+| E-mail (Resend + SMTP Auth) | 🔒 | função pronta, não validada — bloqueio externo (ver `integrations.md`) |
+| Deploy publicado na Netlify | 🔒 | preview atualizado, mas atrás da proteção de equipe — **ação sua necessária** (ver abaixo) |
+| Produtividade/foco ("Meu dia", inspirado no FocusSphere) | ✅ Dev | teste SQL 010 (novo, 13/13); E2E `05-productivity` (criar→focar→concluir na interface, isolamento entre colegas pela API, bloqueio de anônimo) |
+| Conciliação bancária, regras de comissão (tela), pesquisas, contas corporativas, retentativa de eventos, metadados sociais | ⬜ | ainda não implementados nesta sessão |
 
-## Testes (resumo — detalhes em `test-report.md`)
-Banco (SQL, transação desfeita): 002 bootstrap 7 · 003 páginas 30 · 004 agenda 26 · 005 financeiro 33 · 006 academy/acompanhamento 42 · 007 parceiros 15/16 → corrigido · 008 dashboard 12 · 001 RLS 16. Front: `vitest` 11 · `tsc` · `eslint` (0 erros) · build. API direta com token de aluna: isolamento confirmado.
+## Testes desta sessão
+**Banco (SQL, Dev, transação desfeita):** 007 reexecutado por inteiro (16/16) após a correção de segurança; 009 (21/21) — mesclagem e importação; 010 novo — produtividade/foco (13/13, isolamento privado×equipe, alternância silenciosa em tarefa alheia, sessão única de foco).
+**E2E (Playwright, Edge do sistema, contra o Supabase Dev real — não simulado):** `npm run test:e2e` com `HP_QA_PASSWORD` — **16/16 passando**, ~1min. Cobre tudo da sessão anterior mais a jornada "Meu dia": criar tarefa pela interface → iniciar/encerrar sessão de foco (cronômetro ao vivo) → concluir e persistir após recarregar, sem nenhum erro de console (a regressão original — `["focus-open"]` retornando `undefined` — era exatamente esse tipo de erro, invisível a um teste SQL puro); isolamento: pessoa não-staff não lê nem altera tarefa alheia pela API direta; visitante anônimo bloqueado.
+**Front:** `tsc`, `eslint` (0 erros — regra `no-unused-expressions` revista e reativada, não mais desligada por completo), `vite build`, `vitest` (15/15, incluindo o novo parser CSV).
+**Visual:** "Meu dia" capturado em 1440/1024/768/390 nesta sessão; sem *overflow* horizontal do documento em nenhuma largura.
 
 ## Bloqueios que dependem de você
-1. **Resend**: criar conta, verificar um domínio próprio do HP Group (o remetente) e informar `RESEND_API_KEY`/`EMAIL_FROM`; configurar o SMTP do Supabase Auth (passo a passo em `integrations.md`). Sem plano pago.
-2. **Supabase Auth → URL Configuration** (Dev): adicionar a URL do preview e `http://localhost:5180` às URLs de redirecionamento.
-3. **Go-live**: decidir o destino (Netlify × GitHub Pages atual), aplicar as migrations em produção e só então mesclar. Nenhum DNS foi tocado.
+1. **Proteção de equipe da Netlify** (não é o login do app): abri `https://hp-group-hub.netlify.app` no navegador embutido — entre com sua conta Netlify do time "Hp Group" quando eu pedir para retomar a validação do deploy publicado.
+2. **Resend + SMTP do Supabase Auth**: conta, domínio verificado do HP Group, `RESEND_API_KEY`/`EMAIL_FROM` — sem isso não valido o fluxo real de e-mail (passo a passo em `docs/integrations.md`).
+3. **Go-live**: destino de hospedagem definitivo e aplicação das migrations em produção — decisão sua, nada foi feito na `HP Group Core`.
 
 ## Próximo passo exato
-1. Você configura Resend + SMTP do Auth; eu executo o teste real: pedido de recuperação → e-mail → link → `/redefinir-senha` → login (e primeiro acesso dos 2 gestores).
-2. Implementar mesclagem de pessoas com decisão explícita e importação com validação.
-3. Agendador de retentativas de eventos + webhook de pagamento assim que o provedor for definido.
-4. Aplicar migrations em produção (com advisors) e validar deploy em produção somente após aprovação.
+1. Você conclui o login no navegador embutido → eu valido o deploy publicado (rotas diretas, login, formulários, CRM, Academy, Productivity, Functions, ausência de referência a produção).
+2. Telas de conciliação bancária e regras de comissão (Financeiro); telas de pesquisas e contas corporativas (Parceiros); agendador de retentativa de eventos; metadados de pré-visualização social verificados de fato — bancos já prontos e testados desde a sessão anterior, telas ainda pendentes.
+3. Configurar Resend/SMTP quando você tiver as credenciais; então testar recuperação de senha e primeiro acesso reais.

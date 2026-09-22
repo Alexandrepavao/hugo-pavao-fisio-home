@@ -1,6 +1,6 @@
 # Modelo de dados
 
-Migrations em `supabase/migrations/` (ordem por timestamp). Aplicadas no **Dev** (001–014). **Produção: nenhuma.** Reaplicar em produção na mesma ordem, com advisors depois.
+Migrations em `supabase/migrations/` (ordem por timestamp). Aplicadas no **Dev** (001–019). **Produção: nenhuma.** Reaplicar em produção na mesma ordem, com advisors depois.
 Convenções: dinheiro = `bigint` em centavos; percentuais = pontos-base; datas com fuso (`timestamptz`), fuso por unidade (`units.timezone`); exclusão em cascata só para dependentes sem valor próprio, `RESTRICT` para evidência financeira/operacional.
 
 | # | Migration | Conteúdo principal |
@@ -19,6 +19,11 @@ Convenções: dinheiro = `bigint` em centavos; percentuais = pontos-base; datas 
 | 012 | portal_support | `community_posts.author_name`, `my_appointments`, `my_packages`, `list_team` |
 | 013 | care_names | `care_patient_names`, `list_care_links` |
 | 014 | email_support | `can_send_transactional` |
+| 015 | anon_surface_guard | re-`REVOKE`/re-`GRANT` de `EXECUTE` (10 funções haviam nascido executáveis por `anon`); `private.anon_extra_functions()` (teste reusável); *event trigger* que bloqueia automaticamente qualquer função nova em `public` que nasça executável por `anon`/`authenticated` fora da lista das 3 RPCs públicas |
+| 016 | people_merge_import | `person_merges` (auditoria), `private.people_fk_columns()` (descoberta dinâmica de FKs), `merge_preview`/`merge_people` (mesclagem com prévia de conflitos, nunca exclui — arquiva), `import_people_check`/`import_people_commit` (importação CSV validada e idempotente) |
+| 017 | fix_create_person | corrige `create_person`: UUID pré-gerado em vez de `RETURNING` (evitava falha de RLS ao reavaliar a política antes da linha existir de forma consistente) |
+| 018 | create_person_validation | validação de formato de e-mail/telefone no servidor (antes só no formulário) |
+| 019 | productivity | `staff_tasks` (tarefas pessoais, `visibility` privado/equipe, vínculo opcional a oportunidade/pessoa/atendimento/tarefa de CRM), `focus_sessions` (uma sessão aberta por vez, índice único parcial), `my_day()`/`team_day()` (combinam por leitura agenda clínica + tarefas de CRM + tarefas pessoais — nunca uma segunda fonte de compromissos), `staff_task_toggle`, `focus_start`/`focus_stop` |
 
 ## Relações-chave (nada "só visual")
 Formulário → `people` + `opportunities` (+ `crm_tasks`, `interactions`) → agendamento (`appointments.opportunity_id`) → comparecimento (evento) → `sales`/`contracts`/`receivables` → `payments` → `entitlements` (Academy) e `client_packages`/`session_ledger` (sessões) → `commission_entries`. Eventos em `domain_events` com `idempotency_key` única e execução por handler registrada em `automation_runs`.

@@ -27,6 +27,7 @@ const AcademyAdmin = lazy(() => import("./pages/admin/AcademyAdmin"));
 const Care = lazy(() => import("./pages/admin/Care"));
 const Partners = lazy(() => import("./pages/admin/Partners"));
 const Team = lazy(() => import("./pages/admin/Team"));
+const Productivity = lazy(() => import("./pages/admin/Productivity"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
 const Landing = lazy(() => import("./pages/portal/Landing"));
 const Patient = lazy(() => import("./pages/portal/Patient"));
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/app" element={<Landing />} />
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
+                <Route path="meu-dia" element={<Productivity />} />
                 <Route path="status" element={<Overview />} />
                 <Route path="pessoas" element={g(R.people, <People />)} />
                 <Route path="paginas" element={g(R.pages, <Pages />)} />

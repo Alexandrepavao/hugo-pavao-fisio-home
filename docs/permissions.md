@@ -28,11 +28,13 @@
 
 **Acesso clínico individual** exige vínculo assistencial (`care_relationships`) ativo e papel `physio` na unidade. Gestor cria/revoga vínculos, mas não lê conteúdo clínico. Revogar o vínculo revoga os conteúdos liberados por aquele profissional. O canal de dúvidas e os registros de atividade só são visíveis ao paciente e aos profissionais vinculados.
 
+**Tarefas pessoais (`staff_tasks`)** não seguem a matriz de papéis por unidade: são **privadas por padrão** — só o dono lê/escreve, sempre, independente de papel (nem `manager` lê a tarefa privada de outra pessoa). Marcar `visibility = 'team'` na criação as torna visíveis a **qualquer papel de equipe da mesma unidade** (não só gestor) — é uma escolha explícita de quem cria a tarefa, nunca automática. `my_day()` combina essas tarefas com `crm_tasks` atribuídas e `appointments` do profissional só por leitura; nada é duplicado nem escrito de volta nessas tabelas de origem.
+
 ## Arquivos privados
 Buckets `academy-private` e `care-private` (não públicos). Política de Storage por acesso real: curso (`can_read_course`) ou conteúdo liberado (`care_assignment_active`). O navegador usa **URL assinada de 1 h**, gerada só se a política permitir. Revogação bloqueia novas assinaturas imediatamente (URLs já emitidas expiram em até 1 h — limitação conhecida).
 
 ## Testes
-`supabase/tests/001…008` (ver `test-report.md`) + teste de API direta com token de aluna. Refazer a cada expansão do banco.
+`supabase/tests/001…010` (ver `test-report.md`) + teste de API direta com token de aluna + E2E (`e2e/`) contra o Dev real. Refazer a cada expansão do banco.
 
 ## Decisões de privacidade que exigem validação do responsável pelo negócio
 Retenção e base legal de dados de saúde; texto de consentimento nos formulários; prazo de guarda de auditoria e de mensagens do canal de dúvidas; política de exclusão a pedido do titular (hoje: arquivar/anonimizar manualmente); necessidade de DPO. Este projeto não afirma conformidade jurídica automática.

@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, ScrollText, ShieldCheck, Users, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarDays, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, ScrollText, ShieldCheck, Sunrise, Users, Wallet, type LucideIcon } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 
 export interface NavItem { to: string; label: string; icon: LucideIcon; roles?: AppRole[]; end?: boolean; keywords?: string }
@@ -8,6 +8,7 @@ export interface NavSection { label?: string; items: NavItem[] }
 export const NAV: NavSection[] = [
   { items: [
     { to: "/admin", label: "Início", icon: LayoutDashboard, end: true, keywords: "dashboard indicadores painel" },
+    { to: "/admin/meu-dia", label: "Meu dia", icon: Sunrise, keywords: "tarefas foco produtividade agenda pessoal" },
   ] },
   { label: "Comercial", items: [
     { to: "/admin/pessoas", label: "Pessoas", icon: Users, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "pacientes leads contatos" },
