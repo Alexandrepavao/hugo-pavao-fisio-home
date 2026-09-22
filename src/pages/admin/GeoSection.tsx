@@ -48,6 +48,8 @@ const BrazilChoropleth = ({ byState, selected, onSelect }: { byState: { uf: stri
         <span>Mais</span>
       </div>
       {selected && <button className="text-accent text-xs mt-2 hover:underline" onClick={() => onSelect(null)}>Limpar seleção ({selected})</button>}
+      {/* Atribuição exigida pela licença CC BY 4.0 do @svg-maps/brazil — ver node_modules/@svg-maps/brazil/README.md */}
+      <p className="text-[10px] text-muted-foreground mt-2">Mapa baseado no trabalho de <a href="https://mapsvg.com/maps/brazil" target="_blank" rel="noopener noreferrer" className="underline">MapSVG</a>, licenciado sob <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline">CC BY 4.0</a>.</p>
     </div>
   );
 };

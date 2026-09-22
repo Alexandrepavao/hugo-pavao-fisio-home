@@ -14,8 +14,18 @@ test.describe.serial("Financeiro — comportamentos", () => {
   test.beforeAll(async () => {
     const m = await signIn(MANAGER); const g = api(m);
     orgId = (await g.get("organizations?select=id")).body[0].id;
-    const person = (await g.get("people?select=id,unit_id&full_name=eq.Aluna%20QA%20Teste")).body[0];
-    personId = person.id; unitId = person.unit_id;
+    const unit = (await g.get("units?select=id&slug=eq.sao-paulo")).body[0];
+    unitId = unit.id;
+    // Pessoa própria desta suíte (via create_person, o mesmo RPC que a tela Pessoas usa — inserir direto em
+    // "people" esbarra numa policy de RLS que não reproduzimos aqui) — nunca reaproveita a QA aluna: vendas,
+    // recebimentos e contratos recorrentes ficam isolados desta suíte e não poluem o histórico financeiro dela,
+    // o que já quebrou o teste de isolamento do Academy (03-academy) ao acumular receivables entre execuções.
+    // p_force: true — o nome muda só pelo runId a cada execução, e create_person corretamente marca isso como
+    // "nome semelhante" a uma pessoa de uma execução anterior (a checagem de duplicidade é real e funciona).
+    const person = await g.rpc("create_person", { p_full_name: `Pessoa Financeiro E2E ${runId}`, p_unit_id: unitId, p_kinds: ["patient"], p_email: `financeiro.e2e.${runId}@t.local`, p_phone: null, p_notes: null, p_force: true });
+    expect(person.status, JSON.stringify(person.body)).toBe(200);
+    expect(person.body.status, JSON.stringify(person.body)).toBe("created");
+    personId = person.body.id;
     const p = await g.post("products", { org_id: orgId, kind: "service", name: `Serviço E2E Fin ${runId}`, price_cents: 15000, active: true });
     expect(p.status, JSON.stringify(p.body)).toBe(201); productId = p.body[0].id;
   });
@@ -47,8 +57,8 @@ test.describe.serial("Financeiro — comportamentos", () => {
     const monthStart = `${new Date().toISOString().slice(0, 7)}-01`;
     const novoOf = async () => { const r = await g.rpc("mrr_report", { p_month: monthStart, p_unit: unitId }); expect(r.status, JSON.stringify(r.body)).toBe(200); return Number(r.body.bridge.novo_cents); };
     const before = await novoOf();
-    // Reaproveita a pessoa QA existente; a asserção é por DELTA (antes/depois), não por valor absoluto —
-    // continua correta mesmo que a suíte seja reexecutada e a pessoa já tenha outros contratos/vendas.
+    // Asserção por DELTA (antes/depois), não por valor absoluto — continua correta mesmo que a suíte seja
+    // reexecutada no mesmo mês e o "Novo" agregado da unidade já inclua contratos de execuções anteriores.
     const mrrPersonId = personId;
     // Contrato recorrente real: R$300,00/mês
     const rc = await g.rpc("recurring_contract_start", { p_person: mrrPersonId, p_unit: unitId, p_product: productId, p_billing_period: "monthly", p_period_amount_cents: 30000, p_period_discount_cents: 0, p_starts_on: new Date().toISOString().slice(0, 10), p_source_sale: null, p_notes: "e2e mrr" });

@@ -35,6 +35,8 @@ const FinanceSettings = lazy(() => import("./pages/admin/finance/Settings"));
 const AcademyAdmin = lazy(() => import("./pages/admin/AcademyAdmin"));
 const Care = lazy(() => import("./pages/admin/Care"));
 const Partners = lazy(() => import("./pages/admin/Partners"));
+const Research = lazy(() => import("./pages/admin/Research"));
+const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
@@ -43,6 +45,7 @@ const Patient = lazy(() => import("./pages/portal/Patient"));
 const Partner = lazy(() => import("./pages/portal/Partner"));
 const AcademyHome = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.AcademyHome })));
 const CourseView = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.CourseView })));
+const PortalResearch = lazy(() => import("./pages/portal/Research"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -52,6 +55,8 @@ const R = {
   academy: ["manager", "ops_admin", "teacher"] as AppRole[],
   care: ["manager", "ops_admin", "unit_manager", "physio"] as AppRole[],
   partners: ["manager", "ops_admin", "unit_manager", "finance", "sales"] as AppRole[],
+  research: ["manager", "ops_admin"] as AppRole[],
+  corporate: ["manager", "ops_admin", "unit_manager", "finance"] as AppRole[],
   team: ["manager", "ops_admin"] as AppRole[],
   portal: ["member", "teacher", "manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "partner"] as AppRole[],
 };
@@ -98,6 +103,8 @@ const App = () => (
                 <Route path="academy" element={g(R.academy, <AcademyAdmin />)} />
                 <Route path="acompanhamento" element={g(R.care, <Care />)} />
                 <Route path="parceiros" element={g(R.partners, <Partners />)} />
+                <Route path="pesquisas" element={g(R.research, <Research />)} />
+                <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
               </Route>
@@ -105,6 +112,7 @@ const App = () => (
               <Route path="/academy/:slug" element={g(R.portal, <CourseView />)} />
               <Route path="/paciente" element={g(["member"], <Patient />)} />
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />
+              <Route path="/pesquisas" element={g(R.portal, <PortalResearch />)} />
               {/* Páginas do HP Pages: /:slug (slugs reservados são impedidos no editor e no banco). Manter APÓS as rotas fixas. */}
               <Route path="/:slug" element={<PublicPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

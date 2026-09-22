@@ -2,7 +2,7 @@
 // Mantido em sincronia com a função private.is_reserved_slug() no banco (migration de páginas).
 export const RESERVED_SLUGS = [
   "admin", "login", "logout", "academy", "portal", "api", "redefinir-senha", "primeiro-acesso",
-  "trabalhe-conosco", "paciente", "parceiro", "auth", "assets", "static", "favicon.png", "robots.txt",
+  "trabalhe-conosco", "paciente", "parceiro", "pesquisas", "auth", "assets", "static", "favicon.png", "robots.txt",
   "sitemap.xml", ".netlify", "netlify", "supabase", "p", "preview",
 ] as const;
 

@@ -10,6 +10,13 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# `npm run dev` sobe o Vite na porta 8080 (vite.config.ts) — sem isto, `netlify dev` espera a porta
+# padrão do Vite (5173) e nunca encontra o servidor.
+[dev]
+  command = "npm run dev"
+  targetPort = 8080
+  port = 8888
+
 # Fallback de SPA: URLs internas (/admin, /checkup, /academy...) abrem direto.
 [[redirects]]
   from = "/*"
