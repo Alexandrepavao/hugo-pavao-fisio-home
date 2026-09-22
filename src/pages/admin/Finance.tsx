@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, fmtDateTime, newKey, parseCents } from "@/lib/format";
-import { btnDanger, btnGhost, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Sale { id: string; status: string; total_cents: number; discount_cents: number; installments: number; sold_at: string | null; created_at: string; unit_id: string; person: { full_name: string } | null }
 interface Rec { id: string; installment_no: number; installments_total: number; due_date: string; amount_cents: number; status: string; sale_id: string; person: { full_name: string } | null }
@@ -67,7 +67,7 @@ const Sales = () => {
     {sales.data && sales.data.length > 0 && <Table head={["Pessoa", "Total", "Desconto", "Parcelas", "Estado", "Data", ""]} right={[1, 2, 3]}>
       {sales.data.map((s) => <tr key={s.id}><Td>{s.person?.full_name}</Td><Td num>{brl(s.total_cents)}</Td><Td num>{brl(s.discount_cents)}</Td><Td num>{s.installments}</Td><Td>{SALE_ST[s.status]}</Td><Td>{fmtDate(s.sold_at ?? s.created_at)}</Td>
         <Td>{s.status === "pending" && <button className={btnGhost + " !py-1"} onClick={() => act("sale_confirm", { p_sale: s.id }, "Venda confirmada: contrato, parcelas e regras do produto aplicados.")}>Confirmar</button>}
-          {s.status !== "cancelled" && <button className={btnDanger + " !py-1 ml-2"} onClick={() => { const r = window.prompt("Motivo do cancelamento:"); if (r) void act("sale_cancel", { p_sale: s.id, p_reason: r }, "Venda cancelada."); }}>Cancelar</button>}</Td></tr>)}</Table>}
+          {s.status !== "cancelled" && <button className={btnDanger + " !py-1 ml-2"} onClick={async () => { const r = await promptText("Cancelar venda", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar venda", danger: true }); if (r) void act("sale_cancel", { p_sale: s.id, p_reason: r }, "Venda cancelada."); }}>Cancelar</button>}</Td></tr>)}</Table>}
   </>);
 };
 
@@ -79,8 +79,8 @@ const Receivables = () => {
   const rows = (recs.data ?? []).filter((r) => filter === "todos" ? true : filter === "vencidos" ? ["open", "partial"].includes(r.status) && r.due_date < today : filter === "pagos" ? r.status === "paid" : ["open", "partial"].includes(r.status));
   const net = (id: string) => (pays.data ?? []).filter((p) => p.receivable_id === id).reduce((a, p) => a + (p.kind === "payment" ? p.amount_cents : -p.amount_cents), 0);
   const refund = async (p: Pay) => {
-    const v = window.prompt(`Valor do estorno (máx. ${brl(p.amount_cents)}):`, (p.amount_cents / 100).toFixed(2).replace(".", ",")); const cents = v ? parseCents(v) : null; if (cents == null) return;
-    const reason = window.prompt("Motivo do estorno:"); if (!reason) return;
+    const v = await promptText("Estornar recebimento", `Valor do estorno em R$ (máximo ${brl(p.amount_cents)})`, { defaultValue: (p.amount_cents / 100).toFixed(2).replace(".", ",") }); const cents = v ? parseCents(v) : null; if (cents == null) return;
+    const reason = await promptText("Motivo do estorno", "Motivo (obrigatório)", { multiline: true, confirmLabel: "Estornar", danger: true }); if (!reason) return;
     const { error } = await supabase.rpc("payment_refund", { p_payment: p.id, p_amount_cents: cents, p_reason: reason, p_idempotency_key: newKey("refund") });
     error ? m.err(errText(error)) : (m.ok("Estorno registrado."), void qc.invalidateQueries());
   };

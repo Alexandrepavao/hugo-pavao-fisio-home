@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { validateSlug } from "@/lib/reserved-slugs";
+import { confirmDialog, promptText } from "@/lib/ui";
 import BlockEditor from "@/features/pages/BlockEditor";
 import { PageRenderer, type PublicForm } from "@/features/pages/PageRenderer";
 import { BLOCK_LABEL, newBlock, type Block, type BlockType } from "@/features/pages/blocks";
@@ -75,7 +76,7 @@ const PageEditor = () => {
   const setSlugFn = () => { const e = validateSlug(slug); if (e) return setMsg({ kind: "err", text: e }); void run(async () => supabase.rpc("page_set_slug", { p_id: id, p_slug: slug }), "Endereço atualizado."); };
   const savePipe = () => run(async () => supabase.from("pages").update({ pipeline_id: pipeId || null }).eq("id", id), "Funil atualizado.");
   const duplicate = async () => {
-    const s = window.prompt("Endereço da cópia (ex.: checkup-2)", `${page?.slug}-2`); if (!s) return;
+    const s = await promptText("Duplicar página", "Endereço da cópia (ex.: checkup-2)", { defaultValue: `${page?.slug}-2` }); if (!s) return;
     const e = validateSlug(s); if (e) return setMsg({ kind: "err", text: e });
     setBusy(true);
     const { data, error } = await supabase.rpc("page_duplicate", { p_id: id, p_new_slug: s });
@@ -84,7 +85,7 @@ const PageEditor = () => {
     nav(`/admin/paginas/${data as string}`);
   };
   const archive = async () => {
-    if (!window.confirm("Arquivar esta página? Ela sai do ar e da lista (o histórico de leads é preservado).")) return;
+    if (!(await confirmDialog("Arquivar esta página?", "Ela sai do ar e da lista. O histórico de leads é preservado.", "Arquivar", true))) return;
     if (await run(async () => supabase.rpc("page_archive", { p_id: id }), "Arquivada.", false)) nav("/admin/paginas");
   };
   const saveForm = (f: FormRow) => run(async () => supabase.from("forms").update({ fields: f.fields, success_message: f.success_message }).eq("id", f.id), "Formulário salvo.");
@@ -180,7 +181,7 @@ const PageEditor = () => {
               {versions.map((v) => (
                 <li key={v.version_no} className="p-3 flex items-center justify-between gap-3">
                   <span><span className="tabular">v{v.version_no}</span> · {v.kind === "publish" ? "Publicação" : v.kind === "restore" ? "Restauração" : v.kind === "create" ? "Criação" : "Rascunho"} · {new Date(v.created_at).toLocaleString("pt-BR")}{v.note ? ` — ${v.note}` : ""}</span>
-                  <button onClick={() => window.confirm(`Restaurar a versão ${v.version_no} como rascunho?`) && run(async () => supabase.rpc("page_restore_version", { p_id: id, p_version_no: v.version_no }), "Versão restaurada como rascunho.")} className="text-sm text-accent hover:text-navy-900">Restaurar</button>
+                  <button onClick={async () => { if (await confirmDialog(`Restaurar a versão ${v.version_no}?`, "O conteúdo dela vira o rascunho atual (uma nova versão é registrada).", "Restaurar")) void run(async () => supabase.rpc("page_restore_version", { p_id: id, p_version_no: v.version_no }), "Versão restaurada como rascunho."); }} className="text-sm text-accent hover:underline">Restaurar</button>
                 </li>))}
             </ul>
           )}

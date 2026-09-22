@@ -1,69 +1,74 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
+import { CalendarClock, KanbanSquare, LayoutList, MoreHorizontal, Plus, Search, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { brl, fmtDateTime } from "@/lib/format";
-import { btnGhost, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { brl, fmtDate, fmtDateTime } from "@/lib/format";
+import { Badge, EmptyState, errText, FilterBar, FilterField, Msg, PageHead, promptText, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import OpportunitySheet from "./crm/OpportunitySheet";
+import { initials, isStale, STALE_H, type Opp, type Stage, type StaffUser, type Task } from "./crm/types";
 
-interface Stage { id: string; name: string; position: number; kind: "open" | "won" | "lost"; pipeline_id: string }
-interface Opp {
-  id: string; title: string; value_cents: number; status: string; stage_id: string; owner_user_id: string | null; unit_id: string; person_id: string;
-  next_contact_at: string | null; last_contact_at: string | null; created_at: string; source: string | null; person: { id: string; full_name: string } | null;
-}
-interface User { user_id: string; name: string }
-interface Task { id: string; title: string; due_at: string; kind: string; assignee_user_id: string | null; opportunity_id: string | null; person_id: string | null }
-
-const STALE_H = 48;
+const RANK = ["patients", "education", "partners", "companies", "custom"];
 
 const CRM = () => {
   const qc = useQueryClient();
   const [sp, setSp] = useSearchParams();
-  const [tab, setTab] = useState<"funil" | "tarefas">("funil");
+  const [tab, setTab] = useState("funil");
   const [pipeId, setPipeId] = useState("");
   const [view, setView] = useState<"kanban" | "lista">("kanban");
   const [q, setQ] = useState(""); const [owner, setOwner] = useState(""); const [openId, setOpenId] = useState<string | null>(null);
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState(false); const [dragId, setDragId] = useState<string | null>(null);
   const [msg, m] = useMsg();
   const stale = sp.get("filtro") === "sem-retorno";
 
-  const pipes = useQuery({ queryKey: ["pipelines"], queryFn: async () => {
-    const rank = ["patients", "education", "partners", "companies", "custom"];
-    return ((await supabase.from("pipelines").select("id, name, kind").eq("active", true)).data ?? []).sort((a, b) => rank.indexOf(a.kind) - rank.indexOf(b.kind) || a.name.localeCompare(b.name));
-  } });
+  const pipes = useQuery({ queryKey: ["pipelines"], queryFn: async () => ((await supabase.from("pipelines").select("id, name, kind").eq("active", true)).data ?? []).sort((a, b) => RANK.indexOf(a.kind) - RANK.indexOf(b.kind) || a.name.localeCompare(b.name)) });
   const pid = pipeId || pipes.data?.[0]?.id || "";
   const stages = useQuery({ queryKey: ["stages", pid], enabled: !!pid, queryFn: async () => (await supabase.from("pipeline_stages").select("*").eq("pipeline_id", pid).order("position")).data as Stage[] });
-  const users = useQuery({ queryKey: ["assignable"], queryFn: async () => ((await supabase.rpc("list_assignable_users", {})).data ?? []) as User[] });
+  const users = useQuery({ queryKey: ["assignable"], queryFn: async () => ((await supabase.rpc("list_assignable_users", {})).data ?? []) as StaffUser[] });
   const reasons = useQuery({ queryKey: ["loss"], queryFn: async () => (await supabase.from("loss_reasons").select("id, name").eq("active", true)).data ?? [] });
-  const opps = useQuery({ queryKey: ["opps", pid], enabled: !!pid, queryFn: async () => {
-    const { data, error } = await supabase.from("opportunities").select("id, title, value_cents, status, stage_id, owner_user_id, unit_id, person_id, next_contact_at, last_contact_at, created_at, source, person:people(id, full_name)")
+  const oppKey = ["opps", pid];
+  const opps = useQuery({ queryKey: oppKey, enabled: !!pid, queryFn: async () => {
+    const { data, error } = await supabase.from("opportunities").select("id, title, value_cents, status, stage_id, owner_user_id, unit_id, person_id, next_contact_at, last_contact_at, created_at, source, campaign, person:people(id, full_name)")
       .eq("pipeline_id", pid).order("created_at", { ascending: false }).limit(500);
     if (error) throw error; return data as unknown as Opp[];
   } });
   const nameOf = (id: string | null) => users.data?.find((u) => u.user_id === id)?.name ?? "Sem responsável";
 
   const filtered = useMemo(() => (opps.data ?? []).filter((o) => {
-    if (q && !(`${o.title} ${o.person?.full_name ?? ""}`.toLowerCase().includes(q.toLowerCase()))) return false;
+    if (q && !`${o.title} ${o.person?.full_name ?? ""}`.toLowerCase().includes(q.toLowerCase())) return false;
     if (owner && (owner === "none" ? o.owner_user_id : o.owner_user_id !== owner)) return false;
-    if (stale && !(o.status === "open" && new Date(o.last_contact_at ?? o.created_at).getTime() < Date.now() - STALE_H * 36e5)) return false;
+    if (stale && !isStale(o)) return false;
     return true;
   }), [opps.data, q, owner, stale]);
+  const stageList = stages.data ?? [];
+  const opened = opps.data?.find((o) => o.id === openId) ?? null;
 
   const move = useMutation({
     mutationFn: async ({ id, stage, reason }: { id: string; stage: string; reason?: string }) => {
       const { error } = await supabase.from("opportunities").update({ stage_id: stage, ...(reason ? { lost_reason_id: reason } : {}) }).eq("id", id); if (error) throw error;
     },
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ["opps", pid] }); m.ok("Etapa atualizada (histórico registrado)."); },
-    onError: (e: { message: string; code?: string }) => m.err(errText(e)),
+    onMutate: async ({ id, stage }) => {           // atualização otimista; falha reverte
+      await qc.cancelQueries({ queryKey: oppKey }); const prev = qc.getQueryData<Opp[]>(oppKey);
+      qc.setQueryData<Opp[]>(oppKey, (cur) => (cur ?? []).map((o) => (o.id === id ? { ...o, stage_id: stage } : o))); return { prev };
+    },
+    onError: (e: { message: string; code?: string }, _v, ctx) => { if (ctx?.prev) qc.setQueryData(oppKey, ctx.prev); m.err(`Não foi possível mover: ${errText(e)}`); },
+    onSuccess: () => m.ok("Etapa atualizada (histórico registrado)."),
+    onSettled: () => { void qc.invalidateQueries({ queryKey: oppKey }); },
   });
-  const onMove = (o: Opp, stage: string) => {
-    const st = stages.data?.find((s) => s.id === stage);
+  const moveTo = async (o: Opp, stageId: string) => {
+    if (o.stage_id === stageId) return;
+    const st = stageList.find((s) => s.id === stageId);
     if (st?.kind === "lost") {
-      const list = (reasons.data ?? []).map((r, i) => `${i + 1}. ${r.name}`).join("\n");
-      const n = Number(window.prompt(`Motivo da perda (digite o número):\n${list}`));
-      const r = reasons.data?.[n - 1]; if (!r) return m.err("Informe um motivo de perda válido.");
-      move.mutate({ id: o.id, stage, reason: r.id });
-    } else move.mutate({ id: o.id, stage });
+      const reason = await promptText("Marcar como perdida", "Motivo da perda", { kind: "select", options: (reasons.data ?? []).map((r) => ({ value: r.id, label: r.name })), confirmLabel: "Marcar como perdida", danger: true });
+      if (!reason) return; move.mutate({ id: o.id, stage: stageId, reason });
+    } else move.mutate({ id: o.id, stage: stageId });
   };
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { keyboardCodes: { start: ["Space"], cancel: ["Escape"], end: ["Space"] } }));
+  const onDragEnd = (e: DragEndEvent) => { setDragId(null); const o = opps.data?.find((x) => x.id === e.active.id); if (o && e.over) void moveTo(o, String(e.over.id)); };
+  const dragged = opps.data?.find((o) => o.id === dragId) ?? null;
 
   const tasks = useQuery({ queryKey: ["tasks"], enabled: tab === "tarefas", queryFn: async () => (await supabase.from("crm_tasks").select("*").is("done_at", null).order("due_at")).data as Task[] });
   const done = useMutation({ mutationFn: async (id: string) => { const { error } = await supabase.from("crm_tasks").update({ done_at: new Date().toISOString() }).eq("id", id); if (error) throw error; },
@@ -71,126 +76,139 @@ const CRM = () => {
 
   return (
     <div>
-      <PageHead eyebrow="HP CRM" title="Oportunidades" actions={<button className="btn-primary !py-3" onClick={() => setShowNew(!showNew)}>{showNew ? "Fechar" : "Nova oportunidade"}</button>} />
-      <Tabs tabs={[["funil", "Funis"], ["tarefas", "Tarefas"]]} value={tab} onChange={(v) => setTab(v as "funil" | "tarefas")} />
+      <PageHead eyebrow="Comercial" title="Oportunidades" hint="Funis, responsáveis, tarefas e histórico. Arraste os cards entre etapas ou use o menu ⋯ (teclado: Espaço para pegar, setas para mover)."
+        actions={<button className="hp-btn hp-btn-primary" onClick={() => setShowNew(true)}><Plus size={16} aria-hidden />Nova oportunidade</button>} />
+      <Tabs tabs={[["funil", "Funis"], ["tarefas", "Tarefas"]]} value={tab} onChange={setTab} />
       <Msg m={msg} />
-      {showNew && <NewOpp pipeId={pid} onDone={() => { setShowNew(false); void qc.invalidateQueries({ queryKey: ["opps", pid] }); }} />}
 
       {tab === "tarefas" && (<>
         <State loading={tasks.isLoading} error={tasks.error} empty={tasks.data?.length === 0} emptyText="Nenhuma tarefa pendente." />
         {tasks.data && tasks.data.length > 0 && <Table head={["Tarefa", "Vencimento", "Responsável", ""]}>
           {tasks.data.map((t) => <tr key={t.id}><Td><span className={new Date(t.due_at) < new Date() ? "text-destructive" : ""}>{t.title}</span></Td><Td>{fmtDateTime(t.due_at)}</Td><Td>{nameOf(t.assignee_user_id)}</Td>
-            <Td><button className={btnGhost + " !py-1"} onClick={() => done.mutate(t.id)}>Concluir</button></Td></tr>)}</Table>}
+            <Td><button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => done.mutate(t.id)}>Concluir</button></Td></tr>)}</Table>}
       </>)}
 
       {tab === "funil" && (<>
-        <div className="flex flex-wrap gap-3 mb-4 items-end">
-          <div><label htmlFor="pp" className="block text-xs mb-1">Funil</label><select id="pp" className={inputCls} value={pid} onChange={(e) => setPipeId(e.target.value)}>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-          <div><label htmlFor="qq" className="block text-xs mb-1">Buscar</label><input id="qq" className={inputCls} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome ou título" /></div>
-          <div><label htmlFor="oo" className="block text-xs mb-1">Responsável</label><select id="oo" className={inputCls} value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option><option value="none">Sem responsável</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
-          <label className="flex items-center gap-2 text-sm pb-2"><input type="checkbox" checked={stale} onChange={(e) => setSp(e.target.checked ? { filtro: "sem-retorno" } : {})} /> Sem retorno há {STALE_H}h+</label>
-          <div className="ml-auto flex gap-1"><button className={view === "kanban" ? "btn-primary !py-2 !px-4" : btnGhost} onClick={() => setView("kanban")}>Kanban</button><button className={view === "lista" ? "btn-primary !py-2 !px-4" : btnGhost} onClick={() => setView("lista")}>Lista</button></div>
-        </div>
-        <State loading={opps.isLoading || stages.isLoading} error={opps.error} empty={!!opps.data && filtered.length === 0} emptyText="Nenhuma oportunidade com estes filtros." />
+        <FilterBar right={
+          <div role="group" aria-label="Visualização" className="inline-flex rounded-md border border-input overflow-hidden">
+            <button aria-pressed={view === "kanban"} onClick={() => setView("kanban")} className={`hp-btn hp-btn-sm rounded-none border-0 ${view === "kanban" ? "hp-btn-primary" : "hp-btn-outline"}`}><KanbanSquare size={14} aria-hidden />Kanban</button>
+            <button aria-pressed={view === "lista"} onClick={() => setView("lista")} className={`hp-btn hp-btn-sm rounded-none border-0 ${view === "lista" ? "hp-btn-primary" : "hp-btn-outline"}`}><LayoutList size={14} aria-hidden />Lista</button>
+          </div>}>
+          <FilterField label="Funil" htmlFor="f-funil"><select id="f-funil" value={pid} onChange={(e) => setPipeId(e.target.value)}>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></FilterField>
+          <FilterField label="Buscar" htmlFor="f-q" className="min-w-[14rem]">
+            <div className="relative"><Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input id="f-q" style={{ paddingLeft: "2rem", paddingRight: q ? "2rem" : undefined }} placeholder="Pessoa ou título" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setQ("")} />
+              {q && <button className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1" aria-label="Limpar busca" onClick={() => setQ("")}><X size={14} /></button>}</div></FilterField>
+          <FilterField label="Responsável" htmlFor="f-owner"><select id="f-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option><option value="none">Sem responsável</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></FilterField>
+          <label className="flex items-center gap-2 text-sm h-9"><input type="checkbox" checked={stale} onChange={(e) => setSp(e.target.checked ? { filtro: "sem-retorno" } : {})} />Sem retorno há {STALE_H}h+</label>
+        </FilterBar>
+
+        <State loading={opps.isLoading || stages.isLoading} error={opps.error} />
         {stages.data && opps.data && view === "kanban" && (
-          <div className="flex gap-3 overflow-x-auto pb-4">
-            {stages.data.map((s) => { const items = filtered.filter((o) => o.stage_id === s.id); return (
-              <section key={s.id} aria-label={s.name} className="min-w-[16rem] w-64 shrink-0 bg-muted/50 border border-border">
-                <h2 className="p-3 text-sm font-medium flex justify-between border-b border-border">{s.name}<span className="tabular text-navy-400">{items.length}</span></h2>
-                <ul className="p-2 space-y-2">{items.map((o) => (
-                  <li key={o.id} className="bg-card border border-border p-3">
-                    <button className="text-left text-navy-900 hover:underline" onClick={() => setOpenId(o.id)}>{o.person?.full_name ?? "—"}</button>
-                    <p className="text-xs text-navy-400">{o.title}</p>
-                    {o.value_cents > 0 && <p className="text-xs tabular">{brl(o.value_cents)}</p>}
-                    {o.status === "open" && new Date(o.last_contact_at ?? o.created_at).getTime() < Date.now() - STALE_H * 36e5 && <p className="text-xs text-destructive">Sem retorno</p>}
-                    <label className="sr-only" htmlFor={`mv-${o.id}`}>Mover para</label>
-                    <select id={`mv-${o.id}`} className="mt-2 w-full text-xs border border-input bg-card p-1" value={o.stage_id} onChange={(e) => onMove(o, e.target.value)}>
-                      {stages.data!.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-                  </li>))}</ul>
-              </section>); })}
-          </div>
+          <DndContext sensors={sensors} onDragStart={(e: DragStartEvent) => setDragId(String(e.active.id))} onDragEnd={onDragEnd} onDragCancel={() => setDragId(null)}
+            accessibility={{ screenReaderInstructions: { draggable: "Para mover a oportunidade, pressione Espaço, use as setas para escolher a etapa e pressione Espaço para soltar. Esc cancela." } }}>
+            <div className="overflow-x-auto pb-2" style={{ overscrollBehaviorX: "contain" }} tabIndex={0} role="region" aria-label="Quadro do funil">
+              <div className="flex gap-3 items-stretch" style={{ width: "max-content", minWidth: "100%" }}>
+                {stageList.map((s) => <Column key={s.id} stage={s} items={filtered.filter((o) => o.stage_id === s.id)} allStages={stageList} nameOf={nameOf} onOpen={setOpenId} onMove={moveTo} dragging={!!dragId} />)}
+              </div>
+            </div>
+            <DragOverlay>{dragged && <CardBody o={dragged} nameOf={nameOf} overlay />}</DragOverlay>
+          </DndContext>
         )}
-        {stages.data && opps.data && view === "lista" && filtered.length > 0 && (
-          <Table head={["Pessoa", "Título", "Etapa", "Responsável", "Próximo contato", "Origem"]}>
-            {filtered.map((o) => <tr key={o.id}><Td><button className="hover:underline" onClick={() => setOpenId(o.id)}>{o.person?.full_name}</button></Td><Td>{o.title}</Td>
-              <Td>{stages.data!.find((s) => s.id === o.stage_id)?.name}</Td><Td>{nameOf(o.owner_user_id)}</Td><Td>{fmtDateTime(o.next_contact_at)}</Td><Td>{o.source ?? "—"}</Td></tr>)}</Table>
-        )}
-        {openId && opps.data && <Detail opp={opps.data.find((o) => o.id === openId)!} users={users.data ?? []} onClose={() => setOpenId(null)} onChanged={() => qc.invalidateQueries({ queryKey: ["opps", pid] })} />}
+        {stages.data && opps.data && view === "lista" && (filtered.length === 0 ? <EmptyState icon={KanbanSquare} title="Nenhuma oportunidade com estes filtros">Ajuste os filtros ou crie uma nova oportunidade.</EmptyState> : (
+          <div className="grid gap-5">{stageList.map((s) => { const items = filtered.filter((o) => o.stage_id === s.id); if (!items.length) return null; return (
+            <section key={s.id} aria-label={s.name}><h3 className="mb-2 flex items-center gap-2">{s.name}<Badge>{items.length}</Badge></h3>
+              <Table head={["Pessoa", "Título", "Responsável", "Próximo contato", "Origem", "Valor"]} right={[5]}>
+                {items.map((o) => <tr key={o.id} className="cursor-pointer" onClick={() => setOpenId(o.id)}><Td><button className="font-medium text-left hover:underline" onClick={(e) => { e.stopPropagation(); setOpenId(o.id); }}>{o.person?.full_name}</button>{isStale(o) && <span className="ml-2"><Badge tone="danger">Sem retorno</Badge></span>}</Td>
+                  <Td>{o.title}</Td><Td>{nameOf(o.owner_user_id)}</Td><Td>{fmtDateTime(o.next_contact_at)}</Td><Td>{o.source ?? "—"}</Td><Td num>{o.value_cents > 0 ? brl(o.value_cents) : "—"}</Td></tr>)}</Table></section>); })}</div>))}
       </>)}
+
+      <OpportunitySheet opp={opened} stages={stageList} users={users.data ?? []} onClose={() => setOpenId(null)} onChanged={() => qc.invalidateQueries({ queryKey: oppKey })} />
+      <NewOpp open={showNew} onOpenChange={setShowNew} pipeId={pid} onDone={() => { setShowNew(false); void qc.invalidateQueries({ queryKey: oppKey }); m.ok("Oportunidade criada."); }} />
     </div>
   );
 };
 
-const Detail = ({ opp, users, onClose, onChanged }: { opp: Opp; users: User[]; onClose: () => void; onChanged: () => void }) => {
-  const qc = useQueryClient(); const [msg, m] = useMsg();
-  const [note, setNote] = useState(""); const [channel, setChannel] = useState("note"); const [taskTitle, setTaskTitle] = useState(""); const [taskDue, setTaskDue] = useState("");
-  const events = useQuery({ queryKey: ["opp-hist", opp?.id], enabled: !!opp, queryFn: async () => {
-    const [i, e] = await Promise.all([
-      supabase.from("interactions").select("id, channel, summary, created_at").eq("opportunity_id", opp.id).order("created_at", { ascending: false }),
-      supabase.from("opportunity_events").select("id, kind, created_at, data").eq("opportunity_id", opp.id).order("created_at", { ascending: false })]);
-    return { interactions: i.data ?? [], events: e.data ?? [] };
-  } });
-  const tasks = useQuery({ queryKey: ["opp-tasks", opp?.id], enabled: !!opp, queryFn: async () => (await supabase.from("crm_tasks").select("*").eq("opportunity_id", opp.id).is("done_at", null).order("due_at")).data as Task[] });
-  if (!opp) return null;
-  const refresh = () => { void qc.invalidateQueries({ queryKey: ["opp-hist", opp.id] }); void qc.invalidateQueries({ queryKey: ["opp-tasks", opp.id] }); onChanged(); };
-
-  const addNote = async (e: FormEvent) => {
-    e.preventDefault(); if (!note.trim()) return;
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("interactions").insert({ org_id: (await supabase.from("people").select("org_id").eq("id", opp.person_id).single()).data?.org_id, person_id: opp.person_id, unit_id: opp.unit_id, opportunity_id: opp.id, channel, summary: note.trim(), created_by: u.user?.id });
-    if (error) return m.err(errText(error)); setNote(""); m.ok("Registro salvo."); refresh();
-  };
-  const patch = async (p: Record<string, unknown>, ok: string) => { const { error } = await supabase.from("opportunities").update(p).eq("id", opp.id); error ? m.err(errText(error)) : (m.ok(ok), refresh()); };
-  const addTask = async (e: FormEvent) => {
-    e.preventDefault(); if (!taskTitle.trim()) return;
-    const { data: u } = await supabase.auth.getUser();
-    const { data: org } = await supabase.from("people").select("org_id").eq("id", opp.person_id).single();
-    const { error } = await supabase.from("crm_tasks").insert({ org_id: org?.org_id, unit_id: opp.unit_id, opportunity_id: opp.id, person_id: opp.person_id, assignee_user_id: opp.owner_user_id ?? u.user?.id, kind: "follow_up", title: taskTitle.trim(), due_at: taskDue ? new Date(taskDue).toISOString() : new Date().toISOString(), created_by: u.user?.id });
-    if (error) return m.err(errText(error)); setTaskTitle(""); setTaskDue(""); m.ok("Tarefa criada."); refresh();
-  };
-  const finish = async (id: string) => { await supabase.from("crm_tasks").update({ done_at: new Date().toISOString() }).eq("id", id); refresh(); };
-
+const Column = ({ stage, items, allStages, nameOf, onOpen, onMove, dragging }: { stage: Stage; items: Opp[]; allStages: Stage[]; nameOf: (id: string | null) => string; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void; dragging: boolean }) => {
+  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const total = items.reduce((a, o) => a + o.value_cents, 0);
   return (
-    <aside aria-label="Detalhe da oportunidade" className="fixed inset-y-0 right-0 w-full sm:w-[28rem] bg-background border-l border-border shadow-xl overflow-y-auto p-5 z-50">
-      <div className="flex justify-between items-start mb-4"><div><h2 className="text-xl">{opp.person?.full_name}</h2><p className="text-sm text-navy-400">{opp.title}</p></div><button onClick={onClose} aria-label="Fechar" className="text-2xl leading-none">×</button></div>
-      <Msg m={msg} />
-      <div className="grid gap-3 mb-6">
-        <div><label htmlFor="ow" className="block text-xs mb-1">Responsável</label>
-          <select id="ow" className={inputCls} value={opp.owner_user_id ?? ""} onChange={(e) => patch({ owner_user_id: e.target.value || null }, "Responsável atualizado.")}><option value="">Sem responsável</option>{users.map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
-        <div><label htmlFor="nc" className="block text-xs mb-1">Próximo contato</label>
-          <input id="nc" type="datetime-local" className={inputCls} defaultValue={opp.next_contact_at ? opp.next_contact_at.slice(0, 16) : ""} onBlur={(e) => e.target.value && patch({ next_contact_at: new Date(e.target.value).toISOString() }, "Próximo contato agendado.")} /></div>
-        {opp.status === "open" && <Link className={btnGhost + " text-center"} to={`/admin/financeiro?venda=${opp.id}&pessoa=${opp.person_id}&unidade=${opp.unit_id}`}>Converter em venda</Link>}
-      </div>
-      <h3 className="text-lg mb-2">Tarefas</h3>
-      <ul className="mb-2 space-y-1">{(tasks.data ?? []).map((t) => <li key={t.id} className="flex justify-between gap-2 text-sm"><span>{t.title} <span className="text-navy-400">({fmtDateTime(t.due_at)})</span></span><button className="text-accent" onClick={() => finish(t.id)}>Concluir</button></li>)}</ul>
-      <form onSubmit={addTask} className="flex gap-2 mb-6"><input aria-label="Nova tarefa" className={inputCls} placeholder="Nova tarefa" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} /><input aria-label="Vencimento" type="datetime-local" className={inputCls + " max-w-[11rem]"} value={taskDue} onChange={(e) => setTaskDue(e.target.value)} /><button className={btnGhost}>+</button></form>
-      <h3 className="text-lg mb-2">Nova nota comercial</h3>
-      <form onSubmit={addNote} className="mb-6 space-y-2"><select aria-label="Canal" className={inputCls} value={channel} onChange={(e) => setChannel(e.target.value)}><option value="note">Nota</option><option value="call">Ligação</option><option value="whatsapp">WhatsApp (registro manual)</option><option value="email">E-mail (registro manual)</option><option value="meeting">Reunião</option></select>
-        <textarea aria-label="Nota" rows={3} className={inputCls} value={note} onChange={(e) => setNote(e.target.value)} /><button className={btnGhost}>Registrar</button></form>
-      <h3 className="text-lg mb-2">Histórico</h3>
-      <ul className="space-y-2 text-sm">{[...(events.data?.interactions ?? []).map((i) => ({ t: i.created_at, x: `${i.channel === "system" ? "Sistema" : i.channel}: ${i.summary}` })), ...(events.data?.events ?? []).map((e) => ({ t: e.created_at, x: e.kind === "stage_changed" ? "Mudança de etapa" : e.kind === "owner_changed" ? "Troca de responsável" : "Oportunidade criada" }))]
-        .sort((a, b) => b.t.localeCompare(a.t)).map((h, i) => <li key={i}><span className="text-navy-400">{fmtDateTime(h.t)}</span> — {h.x}</li>)}</ul>
-    </aside>
+    <section ref={setNodeRef} aria-label={`${stage.name}: ${items.length}`} className="flex flex-col rounded-lg border shrink-0"
+      style={{ width: "17.5rem", background: isOver ? "hsl(var(--info-soft))" : "hsl(var(--muted) / .7)", borderColor: isOver ? "hsl(var(--ring))" : "hsl(var(--border))", maxHeight: "calc(100vh - 18.5rem)", minHeight: dragging ? "8rem" : undefined }}>
+      <header className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-border">
+        <h3 className="!text-[0.8125rem] flex items-center gap-1.5">{stage.kind === "won" && <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--success))" }} />}{stage.kind === "lost" && <span aria-hidden className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--destructive))" }} />}{stage.name}</h3>
+        <span className="text-xs text-muted-foreground tabular" title={total > 0 ? "Soma do valor das oportunidades desta etapa (valor informado na oportunidade ou na venda)" : undefined}>{items.length}{total > 0 ? ` · ${brl(total)}` : ""}</span>
+      </header>
+      <ul className="flex-1 overflow-y-auto p-2 grid gap-2 content-start" style={{ minHeight: "4rem" }}>
+        {items.length === 0 && <li className="text-xs text-muted-foreground text-center py-3">Nenhuma oportunidade</li>}
+        {items.map((o) => <Card key={o.id} o={o} stages={allStages} nameOf={nameOf} onOpen={onOpen} onMove={onMove} />)}
+      </ul>
+    </section>
   );
 };
 
-const NewOpp = ({ pipeId, onDone }: { pipeId: string; onDone: () => void }) => {
+const CardBody = ({ o, nameOf, overlay }: { o: Opp; nameOf: (id: string | null) => string; overlay?: boolean }) => (
+  <div className="hp-card p-3 text-left" style={overlay ? { boxShadow: "var(--shadow-pop)", width: "16.5rem" } : undefined}>
+    <p className="font-medium text-foreground leading-5 pr-6 break-words">{o.person?.full_name ?? "—"}</p>
+    <p className="text-xs text-muted-foreground mt-0.5 break-words">{o.title}</p>
+    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+      {isStale(o) && <Badge tone="danger">Sem retorno</Badge>}
+      {o.next_contact_at && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarClock size={12} aria-hidden />{fmtDate(o.next_contact_at)}</span>}
+      {o.value_cents > 0 && <span className="text-xs tabular font-medium">{brl(o.value_cents)}</span>}
+    </div>
+    <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+      <span className="truncate">{o.source ?? "manual"}</span>
+      <span className={`grid place-items-center rounded-full font-semibold ${o.owner_user_id ? "bg-primary text-primary-foreground" : "border border-dashed border-input text-muted-foreground"}`} style={{ width: "1.375rem", height: "1.375rem", fontSize: "0.625rem" }} title={nameOf(o.owner_user_id)} aria-label={`Responsável: ${nameOf(o.owner_user_id)}`}>{o.owner_user_id ? initials(nameOf(o.owner_user_id)) : "?"}</span>
+    </div>
+  </div>
+);
+
+const Card = ({ o, stages, nameOf, onOpen, onMove }: { o: Opp; stages: Stage[]; nameOf: (id: string | null) => string; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: o.id });
+  return (
+    <li ref={setNodeRef} style={{ opacity: isDragging ? 0.35 : 1, position: "relative", touchAction: "manipulation" }}>
+      <div {...attributes} {...listeners} role="button" aria-roledescription="item arrastável" aria-label={`${o.person?.full_name ?? "Oportunidade"}, ${o.title}. Enter abre os detalhes.`} tabIndex={0} className="cursor-grab active:cursor-grabbing rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+        onClick={() => onOpen(o.id)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onOpen(o.id); } else listeners?.onKeyDown?.(e); }}>
+        <CardBody o={o} nameOf={nameOf} />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild><button className="absolute top-1.5 right-1.5 p-1 rounded hover:bg-muted text-muted-foreground" aria-label={`Ações de ${o.person?.full_name ?? "oportunidade"}`} onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}><MoreHorizontal size={16} /></button></DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuItem onSelect={() => onOpen(o.id)}>Abrir detalhes</DropdownMenuItem>
+          <DropdownMenuSub><DropdownMenuSubTrigger>Mover para…</DropdownMenuSubTrigger><DropdownMenuSubContent>
+            {stages.map((s) => <DropdownMenuItem key={s.id} disabled={s.id === o.stage_id} onSelect={() => onMove(o, s.id)}>{s.name}</DropdownMenuItem>)}</DropdownMenuSubContent></DropdownMenuSub>
+          {o.status === "open" && <><DropdownMenuSeparator /><DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Fechamento</DropdownMenuLabel>
+            {stages.filter((s) => s.kind !== "open").map((s) => <DropdownMenuItem key={s.id} onSelect={() => onMove(o, s.id)}>{s.kind === "won" ? "Marcar como ganha" : "Marcar como perdida"}</DropdownMenuItem>)}</>}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </li>
+  );
+};
+
+const NewOpp = ({ open, onOpenChange, pipeId, onDone }: { open: boolean; onOpenChange: (v: boolean) => void; pipeId: string; onDone: () => void }) => {
   const [search, setSearch] = useState(""); const [title, setTitle] = useState(""); const [person, setPerson] = useState<{ id: string; full_name: string; unit_id: string | null } | null>(null);
-  const [msg, m] = useMsg(); const [busy, setBusy] = useState(false);
-  const found = useQuery({ queryKey: ["ppl-search", search], enabled: search.length >= 2, queryFn: async () => (await supabase.from("people").select("id, full_name, unit_id").ilike("full_name", `%${search.replace(/[%_]/g, "")}%`).is("merged_into_id", null).limit(8)).data ?? [] });
+  const [err, setErr] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  const found = useQuery({ queryKey: ["ppl-search", search], enabled: open && search.length >= 2 && !person, queryFn: async () => (await supabase.from("people").select("id, full_name, unit_id").ilike("full_name", `%${search.replace(/[%_]/g, "")}%`).is("merged_into_id", null).limit(8)).data ?? [] });
   const submit = async (e: FormEvent) => {
-    e.preventDefault(); if (!person?.unit_id) return m.err("Selecione uma pessoa com unidade definida."); if (!title.trim()) return m.err("Informe o título.");
+    e.preventDefault(); setErr(null);
+    if (!person?.unit_id) return setErr("Selecione uma pessoa com unidade definida."); if (!title.trim()) return setErr("Informe o título.");
     setBusy(true); const { error } = await supabase.rpc("crm_create_opportunity", { p_person_id: person.id, p_pipeline_id: pipeId, p_unit_id: person.unit_id, p_title: title.trim(), p_source: "manual" }); setBusy(false);
-    error ? m.err(errText(error)) : onDone();
+    if (error) return setErr(errText(error)); setPerson(null); setSearch(""); setTitle(""); onDone();
   };
   return (
-    <form onSubmit={submit} className="bg-card border border-border p-5 mb-6 grid gap-3 sm:grid-cols-2" noValidate>
-      <div><label htmlFor="ps" className="block text-sm mb-1">Pessoa (busque pelo nome)</label><input id="ps" className={inputCls} value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />
-        {!person && found.data && found.data.length > 0 && <ul className="border border-border bg-card">{found.data.map((p) => <li key={p.id}><button type="button" className="w-full text-left p-2 hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button></li>)}</ul>}
-        <p className="text-xs text-navy-400 mt-1">Não encontrou? Cadastre em <Link className="underline" to="/admin/pessoas">Pessoas</Link> (com verificação de duplicidade).</p></div>
-      <div><label htmlFor="tt" className="block text-sm mb-1">Título</label><input id="tt" className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-      <Msg m={msg} /><div className="sm:col-span-2"><button disabled={busy} className="btn-primary !py-3 disabled:opacity-60">{busy ? "Criando…" : "Criar (responsável distribuído automaticamente)"}</button></div>
-    </form>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Nova oportunidade</DialogTitle><DialogDescription>O responsável é distribuído automaticamente entre os comerciais da unidade.</DialogDescription></DialogHeader>
+        <form onSubmit={submit} id="new-opp" className="grid gap-3" noValidate>
+          <div><label htmlFor="no-p" className="block mb-1">Pessoa</label><input id="no-p" autoComplete="off" placeholder="Busque pelo nome" value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />
+            {!person && found.data && found.data.length > 0 && <ul className="hp-card mt-1 overflow-hidden">{found.data.map((p) => <li key={p.id}><button type="button" className="w-full text-left px-3 py-2 hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button></li>)}</ul>}
+            <p className="text-xs text-muted-foreground mt-1">Não encontrou? Cadastre em <Link className="underline" to="/admin/pessoas">Pessoas</Link> (com verificação de duplicidade).</p></div>
+          <div><label htmlFor="no-t" className="block mb-1">Título</label><input id="no-t" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: Check-up — avaliação" /></div>
+          {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
+        </form>
+        <DialogFooter><button type="button" className="hp-btn hp-btn-outline" onClick={() => onOpenChange(false)}>Cancelar</button><button form="new-opp" disabled={busy} className="hp-btn hp-btn-primary">{busy ? "Criando…" : "Criar oportunidade"}</button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

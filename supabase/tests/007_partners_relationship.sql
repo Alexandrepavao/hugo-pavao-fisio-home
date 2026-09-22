@@ -17,8 +17,7 @@ begin
   insert into public.role_assignments (org_id, user_id, role, unit_id) values (v_org, u_mgr, 'manager', null),(v_org, u_fin, 'finance', v_ua),(v_org, u_partner, 'partner', null),(v_org, u_pat, 'member', null);
 
   -- privilégios de anon: só 3 RPCs públicas
-  select count(*) into n from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
-   where ns.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute') and p.proname not in ('get_public_page','track_page_visit','submit_public_form');
+  n := coalesce(array_length(private.anon_extra_functions(), 1), 0);
   rep := rep || format(E'\n[%s] anon executa somente as 3 RPCs públicas (extras: %s)', case when n = 0 then 'OK' else 'FALHA' end, n);
 
   -- aprovação de parceiro pelo funil

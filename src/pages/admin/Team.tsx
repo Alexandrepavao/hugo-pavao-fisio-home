@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDate } from "@/lib/format";
-import { btnDanger, btnGhost, errText, inputCls, Msg, PageHead, State, Table, Td, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, confirmDialog, promptText, errText, inputCls, Msg, PageHead, State, Table, Td, useMsg } from "@/lib/ui";
 
 interface Member { user_id: string; email: string; display_name: string; status: string; roles: { id: string; role: string; unit_id: string | null; unit: string | null; valid_until: string | null }[] }
 const ROLES: Record<string, string> = { manager: "Gestor", ops_admin: "Administrador operacional", unit_manager: "Gestor de unidade", sales: "Comercial", finance: "Financeiro", physio: "Fisioterapeuta", teacher: "Professor/mentor", partner: "Parceiro", member: "Paciente/aluno" };
@@ -22,9 +22,9 @@ const Team = () => {
     const { error } = await supabase.from("invitations").insert({ org_id: org?.id, email: email.trim(), role, unit_id: orgWide ? null : unit, invited_by: u.user?.id });
     error ? m.err(errText(error)) : (m.ok(`Convite registrado. Peça à pessoa para acessar “Primeiro acesso” com ${email.trim()} e confirmar o e-mail. O envio automático do convite por e-mail depende do SMTP (ver docs/integrations.md).`), setEmail(""), void qc.invalidateQueries({ queryKey: ["invites"] }));
   };
-  const revokeRole = async (id: string) => { if (!window.confirm("Revogar este papel? O efeito é imediato.")) return; const { error } = await supabase.from("role_assignments").update({ revoked_at: new Date().toISOString() }).eq("id", id); error ? m.err(errText(error)) : (m.ok("Papel revogado."), void qc.invalidateQueries({ queryKey: ["team"] })); };
+  const revokeRole = async (id: string) => { if (!(await confirmDialog("Revogar este papel?", "O efeito é imediato: a pessoa perde o acesso vinculado a este papel.", "Revogar", true))) return; const { error } = await supabase.from("role_assignments").update({ revoked_at: new Date().toISOString() }).eq("id", id); error ? m.err(errText(error)) : (m.ok("Papel revogado."), void qc.invalidateQueries({ queryKey: ["team"] })); };
   const revokeInvite = async (id: string) => { const { error } = await supabase.from("invitations").update({ revoked_at: new Date().toISOString() }).eq("id", id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["invites"] }); };
-  const rename = async (u: Member) => { const n = window.prompt("Nome de exibição:", u.display_name); if (!n) return; const { error } = await supabase.from("user_accounts").update({ display_name: n }).eq("user_id", u.user_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["team"] }); };
+  const rename = async (u: Member) => { const n = await promptText("Nome de exibição", "Nome", { defaultValue: u.display_name }); if (!n) return; const { error } = await supabase.from("user_accounts").update({ display_name: n }).eq("user_id", u.user_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["team"] }); };
   const toggle = async (u: Member) => { const { error } = await supabase.from("user_accounts").update({ status: u.status === "active" ? "suspended" : "active" }).eq("user_id", u.user_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["team"] }); };
 
   return (<div>

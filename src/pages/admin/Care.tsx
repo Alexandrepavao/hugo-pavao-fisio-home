@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { fmtDateTime } from "@/lib/format";
-import { btnDanger, btnGhost, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, confirmDialog, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 const KIND: Record<string, string> = { guidance: "Orientação", exercise_video: "Vídeo de exercício", questionnaire: "Questionário", program: "Programa" };
 
@@ -68,7 +68,7 @@ const Links = () => {
   const users = useQuery({ queryKey: ["assignable-physio", person?.unit_id], enabled: !!person?.unit_id, queryFn: async () => ((await supabase.rpc("list_assignable_users", { p_unit: person!.unit_id })).data ?? []).filter((u: { roles: string[] }) => u.roles.includes("physio")) as { user_id: string; name: string }[] });
   const rels = useQuery({ queryKey: ["all-rels"], queryFn: async () => ((await supabase.rpc("list_care_links")).data ?? []) as { id: string; patient_name: string; professional_name: string; unit_name: string; created_at: string }[] });
   const link = async (e: FormEvent) => { e.preventDefault(); if (!person?.unit_id || !prof) return m.err("Selecione paciente (com unidade) e profissional."); const { error } = await supabase.rpc("care_link", { p_person: person.id, p_professional: prof, p_unit: person.unit_id }); error ? m.err(errText(error)) : (m.ok("Vínculo criado."), setPerson(null), setSearch(""), void qc.invalidateQueries({ queryKey: ["all-rels"] })); };
-  const unlink = async (id: string) => { if (!window.confirm("Revogar vínculo? O profissional perde o acesso e os conteúdos liberados por ele ao paciente são revogados.")) return; const { error } = await supabase.rpc("care_unlink", { p_id: id }); error ? m.err(errText(error)) : (m.ok("Vínculo revogado."), void qc.invalidateQueries({ queryKey: ["all-rels"] })); };
+  const unlink = async (id: string) => { if (!(await confirmDialog("Revogar vínculo assistencial?", "O profissional perde o acesso ao paciente e os conteúdos liberados por ele são revogados.", "Revogar", true))) return; const { error } = await supabase.rpc("care_unlink", { p_id: id }); error ? m.err(errText(error)) : (m.ok("Vínculo revogado."), void qc.invalidateQueries({ queryKey: ["all-rels"] })); };
   return (<><Msg m={msg} /><form onSubmit={link} className="bg-card border border-border p-4 mb-4 grid gap-3 sm:grid-cols-3 items-end">
     <div><label htmlFor="lp" className="block text-xs mb-1">Paciente</label><input id="lp" className={inputCls} value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />{found.data?.map((p) => <button type="button" key={p.id} className="block w-full text-left p-2 border border-border hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button>)}</div>
     <div><label htmlFor="lf" className="block text-xs mb-1">Fisioterapeuta</label><select id="lf" className={inputCls} value={prof} onChange={(e) => setProf(e.target.value)}><option value="">…</option>{users.data?.map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div><button className={btnGhost + " sm:w-fit"}>Vincular</button></form>

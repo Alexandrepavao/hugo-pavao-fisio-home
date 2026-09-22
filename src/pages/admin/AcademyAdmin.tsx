@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { validateSlug } from "@/lib/reserved-slugs";
 import { fmtDate } from "@/lib/format";
-import { btnDanger, btnGhost, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Course { id: string; title: string; slug: string; kind: string; status: string; product_id: string | null; org_id: string }
 interface Lesson { id: string; title: string; kind: string; position: number; published: boolean; body: string | null; external_url: string | null; storage_path: string | null }
@@ -95,7 +95,7 @@ const Access = ({ course }: { course: Course }) => {
   const ents = useQuery({ queryKey: ["ents", course.id], queryFn: async () => (await supabase.from("entitlements").select("id, source, valid_from, valid_until, revoked_at, revoked_reason, person:people(full_name)").eq("course_id", course.id).order("created_at", { ascending: false })).data as unknown as { id: string; source: string; valid_from: string; valid_until: string | null; revoked_at: string | null; revoked_reason: string | null; person: { full_name: string } }[] });
   const grant = async (e: FormEvent) => { e.preventDefault(); if (!person) return m.err("Selecione a pessoa."); const { error } = await supabase.rpc("entitlement_grant_manual", { p_person: person.id, p_course: course.id, p_valid_until: until ? new Date(until).toISOString() : null, p_reason: reason });
     error ? m.err(errText(error)) : (m.ok("Acesso liberado (registrado na auditoria)."), setPerson(null), setSearch(""), setReason(""), void qc.invalidateQueries({ queryKey: ["ents", course.id] })); };
-  const revoke = async (id: string) => { const r = window.prompt("Motivo da revogação:"); if (!r) return; const { error } = await supabase.rpc("entitlement_revoke", { p_id: id, p_reason: r }); error ? m.err(errText(error)) : (m.ok("Acesso revogado — vale imediatamente."), void qc.invalidateQueries({ queryKey: ["ents", course.id] })); };
+  const revoke = async (id: string) => { const r = await promptText("Revogar acesso", "Motivo da revogação", { multiline: true, confirmLabel: "Revogar", danger: true }); if (!r) return; const { error } = await supabase.rpc("entitlement_revoke", { p_id: id, p_reason: r }); error ? m.err(errText(error)) : (m.ok("Acesso revogado — vale imediatamente."), void qc.invalidateQueries({ queryKey: ["ents", course.id] })); };
   const SRC: Record<string, string> = { purchase: "Compra", cohort: "Turma", link: "Vínculo", manual: "Manual" };
   return (<><Msg m={msg} />
     <form onSubmit={grant} className="bg-card border border-border p-4 mb-4 grid gap-3 sm:grid-cols-4 items-end" noValidate>

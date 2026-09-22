@@ -9,6 +9,7 @@ import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, STAFF_ROLES, type AppRole } from "./auth/AuthProvider";
 import RequireAuth from "./auth/RequireAuth";
+import { AskProvider } from "./lib/ui";
 const Login = lazy(() => import("./pages/auth/Login"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const FirstAccess = lazy(() => import("./pages/auth/FirstAccess"));
@@ -54,6 +55,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AskProvider>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-navy-400" role="status">Carregando…</div>}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -87,6 +89,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </AskProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

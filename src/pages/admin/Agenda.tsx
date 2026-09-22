@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
-import { btnDanger, btnGhost, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Unit { id: string; name: string; timezone: string }
 interface Prof { id: string; display_name: string }
@@ -49,11 +49,12 @@ const Day = () => {
     setBusy(false); if (error) return m.err(errText(error)); m.ok("Agendamento criado."); setSlot(""); void qc.invalidateQueries({ queryKey: ["appts"] }); void qc.invalidateQueries({ queryKey: ["slots"] });
   };
   const setStatus = async (a: Appt, s: string) => {
-    const reason = s.startsWith("cancelled") ? window.prompt("Motivo do cancelamento:") ?? "" : null; if (s.startsWith("cancelled") && !reason) return;
+    const reason = s.startsWith("cancelled") ? (await promptText("Cancelar agendamento", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar agendamento", danger: true })) ?? "" : null; if (s.startsWith("cancelled") && !reason) return;
     const { error } = await supabase.rpc("set_appointment_status", { p_id: a.id, p_status: s, p_reason: reason }); error ? m.err(errText(error)) : (m.ok("Status atualizado."), void qc.invalidateQueries({ queryKey: ["appts"] }));
   };
   const resched = async (a: Appt) => {
-    const v = window.prompt("Novo horário (AAAA-MM-DD HH:MM, no fuso da unidade):"); if (!v) return; const d = new Date(v.replace(" ", "T") + ":00");
+    const v = await promptText("Remarcar", "Novo horário (AAAA-MM-DD HH:MM, no fuso do seu navegador)", { defaultValue: "" }); if (!v) return; const d = new Date(v.replace(" ", "T") + ":00");
+    if (Number.isNaN(d.getTime())) return m.err("Data inválida. Use o formato AAAA-MM-DD HH:MM.");
     const { error } = await supabase.rpc("reschedule_appointment", { p_id: a.id, p_new_start: d.toISOString() }); error ? m.err(errText(error)) : (m.ok("Remarcado."), void qc.invalidateQueries({ queryKey: ["appts"] }));
   };
 
@@ -95,7 +96,7 @@ const Packages = () => {
     return { pkgs: (p.data ?? []) as unknown as { id: string; total_sessions: number; status: string; valid_until: string | null; person: { full_name: string }; product: { name: string } }[], ledger: l.data ?? [] };
   } });
   const bal = (id: string) => (pk.data?.ledger ?? []).filter((x) => x.client_package_id === id).reduce((a, x) => a + x.delta, 0);
-  const adjust = async (id: string) => { const d = Number(window.prompt("Ajuste de sessões (+/-):")); if (!d) return; const n = window.prompt("Motivo do ajuste (obrigatório):"); if (!n) return;
+  const adjust = async (id: string) => { const d = Number(await promptText("Ajustar saldo", "Ajuste de sessões (use + ou −, ex.: 2 ou -1)", { kind: "number" })); if (!d) return; const n = await promptText("Motivo do ajuste", "Motivo (obrigatório)", { multiline: true }); if (!n) return;
     const { error } = await supabase.rpc("adjust_package", { p_pkg: id, p_delta: d, p_note: n }); error ? m.err(errText(error)) : (m.ok("Ajuste registrado no livro."), void qc.invalidateQueries({ queryKey: ["all-pkgs"] })); };
   return (<><Msg m={msg} /><p className="text-sm text-navy-400 mb-3">Regras: comparecimento consome 1 sessão; falta consome conforme o produto; cancelamento tardio consome; cancelamento com antecedência e da clínica não consome. Cada agendamento consome no máximo uma vez.</p>
     <State loading={pk.isLoading} error={pk.error} empty={pk.data?.pkgs.length === 0} emptyText="Nenhum pacote vendido." />
