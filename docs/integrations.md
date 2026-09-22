@@ -13,6 +13,7 @@ Regra: nada é apresentado como "conectado" sem configuração e validação rea
 | WhatsApp / e-mail no CRM | ⬜ | Registro manual de contatos por enquanto |
 | Vídeo privado externo | ⬜ | Hoje: Supabase Storage privado + URL assinada (1h) com política por acesso |
 | Google Analytics | ✅ preexistente | `G-CCSTPKF8GP` já estava na home |
+| **Login social (Google OAuth)** | ⬜ não configurado | Confirmado via `GET /auth/v1/settings` (Dev): `"google": false`. Botão **omitido** da tela de login (ver `docs/deployment.md`/sessão de 2026-09-23) — não publicar um botão sem integração real. Ação necessária: em Supabase Auth → *Providers* → *Google*, criar um OAuth Client ID/Secret no Google Cloud Console e habilitar o provider; depois disso, o botão pode ser reativado no código com `supabase.auth.signInWithOAuth({ provider: "google" })` |
 
 ## Resend — separação de responsabilidades
 1. **SMTP do Supabase Auth** (não passa pela nossa aplicação): usar o SMTP do Resend em *Auth → SMTP Settings* com remetente do domínio próprio do HP Group.
