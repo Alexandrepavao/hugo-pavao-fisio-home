@@ -5,7 +5,7 @@ import { brl, fmtDate } from "@/lib/format";
 import { btnGhost, errText, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Rule { id: string; name: string; product_id: string | null; beneficiary_user_id: string | null; percent_bp: number; active: boolean; product: { name: string } | null }
-interface Member { user_id: string; name: string; email: string; roles: string[] }
+interface Member { user_id: string; display_name: string; email: string; roles: unknown[] }
 
 const FinanceCommissions = () => {
   const [tab, setTab] = useState("lancamentos");
@@ -36,7 +36,7 @@ const Rules = () => {
   const products = useQuery({ queryKey: ["products-cr"], queryFn: async () => (await supabase.from("products").select("id, name").eq("active", true).order("name")).data ?? [] });
   const team = useQuery({ queryKey: ["team-cr"], queryFn: async () => ((await supabase.rpc("list_team")).data ?? []) as Member[] });
   const rules = useQuery({ queryKey: ["comm-rules"], queryFn: async () => (await supabase.from("commission_rules").select("id, name, product_id, beneficiary_user_id, percent_bp, active, product:products(name)").order("name")).data as unknown as Rule[] });
-  const memberName = (uid: string | null) => uid ? (team.data?.find((t) => t.user_id === uid)?.name ?? "—") : "Responsável da oportunidade";
+  const memberName = (uid: string | null) => uid ? (team.data?.find((t) => t.user_id === uid)?.display_name ?? "—") : "Responsável da oportunidade";
 
   const add = async (e: FormEvent) => {
     e.preventDefault(); const { data: org } = await supabase.from("organizations").select("id").single();
@@ -52,7 +52,7 @@ const Rules = () => {
     <form onSubmit={add} className="hp-card p-4 mb-6 grid gap-3 sm:grid-cols-5 items-end" noValidate>
       <div className="sm:col-span-2"><label htmlFor="crn" className="block text-xs mb-1">Nome da regra</label><input id="crn"   value={name} onChange={(e) => setName(e.target.value)} /></div>
       <div><label htmlFor="crp" className="block text-xs mb-1">Produto (opcional)</label><select id="crp"   value={product} onChange={(e) => setProduct(e.target.value)}><option value="">Todos os produtos</option>{products.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-      <div><label htmlFor="crb" className="block text-xs mb-1">Beneficiário (opcional)</label><select id="crb"   value={beneficiary} onChange={(e) => setBeneficiary(e.target.value)}><option value="">Responsável da oportunidade</option>{team.data?.map((t) => <option key={t.user_id} value={t.user_id}>{t.name}</option>)}</select></div>
+      <div><label htmlFor="crb" className="block text-xs mb-1">Beneficiário (opcional)</label><select id="crb"   value={beneficiary} onChange={(e) => setBeneficiary(e.target.value)}><option value="">Responsável da oportunidade</option>{team.data?.map((t) => <option key={t.user_id} value={t.user_id}>{t.display_name}</option>)}</select></div>
       <div><label htmlFor="crv" className="block text-xs mb-1">Percentual (%)</label><input id="crv" inputMode="decimal"   value={pct} onChange={(e) => setPct(e.target.value)} /></div>
       <div className="sm:col-span-5"><button className="hp-btn hp-btn-primary">Criar regra</button></div>
     </form>

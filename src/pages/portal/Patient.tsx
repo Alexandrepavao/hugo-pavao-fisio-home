@@ -2,13 +2,14 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
-import { btnGhost, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
+import { btnGhost, btnPrimary, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
 import PortalShell from "./PortalShell";
 
 interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
-interface Me { full_name: string; preferred_name: string | null; birth_date: string | null }
+interface Me { full_name: string; preferred_name: string | null; birth_date: string | null; city: string | null; state_uf: string | null }
 interface Contact { type: string; value: string; is_primary: boolean }
+const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
 const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Faltou", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
 const PHASE: Record<string, string> = { before: "Antes do atendimento", after: "Depois do atendimento", program: "Programa de acompanhamento" };
 
@@ -43,20 +44,49 @@ const Patient = () => {
 };
 
 const PersonalData = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const [editing, setEditing] = useState(false); const [saving, setSaving] = useState(false);
+  const [preferredName, setPreferredName] = useState(""); const [phone, setPhone] = useState(""); const [city, setCity] = useState(""); const [uf, setUf] = useState("");
   // RLS (can_read_person) só deixa a pessoa ler o próprio cadastro — sem filtro adicional, o único registro que volta é o dela mesma.
-  const self = useQuery({ queryKey: ["my-person"], queryFn: async () => (await supabase.from("people").select("id, full_name, preferred_name, birth_date").limit(1).maybeSingle()).data as (Me & { id: string }) | null });
+  const self = useQuery({ queryKey: ["my-person"], queryFn: async () => (await supabase.from("people").select("id, full_name, preferred_name, birth_date, city, state_uf").limit(1).maybeSingle()).data as (Me & { id: string }) | null });
   const contacts = useQuery({ queryKey: ["my-contacts", self.data?.id], enabled: !!self.data?.id, queryFn: async () => (await supabase.from("person_contacts").select("type, value, is_primary").eq("person_id", self.data!.id)).data as Contact[] ?? [] });
   const TYPE_LABEL: Record<string, string> = { email: "E-mail", phone: "Telefone/WhatsApp" };
+  const primaryPhone = contacts.data?.find((c) => c.type === "phone" && c.is_primary)?.value ?? "";
+
+  const startEdit = () => { setPreferredName(self.data?.preferred_name ?? ""); setPhone(primaryPhone); setCity(self.data?.city ?? ""); setUf(self.data?.state_uf ?? ""); setEditing(true); };
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    const { error } = await supabase.rpc("my_profile_update", { p_preferred_name: preferredName.trim() || null, p_phone: phone.trim() || null, p_city: city.trim() || null, p_state_uf: uf || null });
+    setSaving(false);
+    if (error) m.err(errText(error));
+    else { m.ok("Dados atualizados."); setEditing(false); void qc.invalidateQueries({ queryKey: ["my-person"] }); void qc.invalidateQueries({ queryKey: ["my-contacts"] }); }
+  };
+
   return (
     <section className="mb-10"><h2 className="text-xl mb-1">Dados pessoais</h2>
-      <p className="text-sm text-muted-foreground mb-3">Cadastro mantido pela equipe da clínica. Para corrigir algum dado, fale com a recepção ou pelo canal de dúvidas abaixo.</p>
+      <p className="text-sm text-muted-foreground mb-3">Nome, telefone e cidade/UF podem ser atualizados por você. Nome completo, unidade, documentos e demais dados do cadastro são mantidos pela equipe da clínica — para corrigi-los, fale com a recepção ou pelo canal de dúvidas abaixo.</p>
+      <Msg m={msg} />
       <State loading={self.isLoading} error={self.error} empty={!self.isLoading && !self.data} emptyText="Cadastro não encontrado. Fale com a equipe se isso não for esperado." />
-      {self.data && (
+      {self.data && !editing && (
         <div className="hp-card p-4 grid gap-2 max-w-md text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Nome</span><span>{self.data.preferred_name || self.data.full_name}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Nome completo</span><span>{self.data.full_name}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Nome de preferência</span><span>{self.data.preferred_name || "—"}</span></div>
           {self.data.birth_date && <div className="flex justify-between"><span className="text-muted-foreground">Nascimento</span><span>{new Date(self.data.birth_date + "T12:00:00Z").toLocaleDateString("pt-BR")}</span></div>}
+          <div className="flex justify-between"><span className="text-muted-foreground">Cidade/UF</span><span>{self.data.city ? `${self.data.city}${self.data.state_uf ? "/" + self.data.state_uf : ""}` : "—"}</span></div>
           {contacts.data?.map((c) => <div key={c.type + c.value} className="flex justify-between"><span className="text-muted-foreground">{TYPE_LABEL[c.type] ?? c.type}</span><span>{c.value}{c.is_primary && " (principal)"}</span></div>)}
+          <button className={btnGhost + " mt-2 justify-self-start"} onClick={startEdit}>Editar meus dados</button>
         </div>
+      )}
+      {self.data && editing && (
+        <form onSubmit={save} className="hp-card p-4 grid gap-3 max-w-md text-sm">
+          <div><label htmlFor="pd-nome" className="block text-xs mb-1">Nome de preferência</label><input id="pd-nome" className={inputCls} value={preferredName} onChange={(e) => setPreferredName(e.target.value)} maxLength={120} /></div>
+          <div><label htmlFor="pd-fone" className="block text-xs mb-1">Telefone/WhatsApp</label><input id="pd-fone" className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 98888-7777" /></div>
+          <div className="grid grid-cols-[1fr_5rem] gap-2">
+            <div><label htmlFor="pd-cidade" className="block text-xs mb-1">Cidade</label><input id="pd-cidade" className={inputCls} value={city} onChange={(e) => setCity(e.target.value)} maxLength={120} /></div>
+            <div><label htmlFor="pd-uf" className="block text-xs mb-1">UF</label><select id="pd-uf" className={inputCls} value={uf} onChange={(e) => setUf(e.target.value)}><option value="">—</option>{UFS.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
+          </div>
+          <div className="flex gap-2"><button className={btnPrimary} disabled={saving}>{saving ? "Salvando…" : "Salvar"}</button><button type="button" className={btnGhost} onClick={() => setEditing(false)} disabled={saving}>Cancelar</button></div>
+        </form>
       )}
     </section>
   );

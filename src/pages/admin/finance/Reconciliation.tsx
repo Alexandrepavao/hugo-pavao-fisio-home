@@ -19,7 +19,7 @@ const HEADERS: Record<string, "date" | "description" | "amount" | "ref"> = {
 const FinanceReconciliation = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [account, setAccount] = useState(""); const [busy, setBusy] = useState(false); const [report, setReport] = useState<{ ok: number; bad: string[] } | null>(null);
+  const [account, setAccount] = useState(""); const [busy, setBusy] = useState(false); const [report, setReport] = useState<{ ok: number; dup: number; bad: string[] } | null>(null);
   const [openLine, setOpenLine] = useState<string | null>(null);
 
   const accounts = useQuery({ queryKey: ["accounts-rec"], queryFn: async () => (await supabase.from("financial_accounts").select("id, name").eq("active", true)).data as Account[] });
@@ -49,11 +49,13 @@ const FinanceReconciliation = () => {
       if (cents == null || cents === 0) return void bad.push(`Linha ${line}: valor inválido (${r.amount}).`);
       rows.push({ date: r.date.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : d.toISOString().slice(0, 10), description: r.description || "(sem descrição)", amount_cents: cents, ref: r.ref || null });
     });
-    if (rows.length === 0) { setBusy(false); setReport({ ok: 0, bad }); return; }
-    const { error } = await supabase.rpc("bank_statement_import", { p_account: account, p_lines: rows });
+    if (rows.length === 0) { setBusy(false); setReport({ ok: 0, dup: 0, bad }); return; }
+    const { data, error } = await supabase.rpc("bank_statement_import", { p_account: account, p_lines: rows });
     setBusy(false);
     if (error) { m.err(errText(error)); return; }
-    setReport({ ok: rows.length, bad }); m.ok(`Extrato importado: ${rows.length} linha(s).`);
+    const res = data as { import_id: string; inserted: number; duplicates: number };
+    setReport({ ok: res.inserted, dup: res.duplicates, bad });
+    m.ok(res.duplicates > 0 ? `Extrato importado: ${res.inserted} linha(s) nova(s), ${res.duplicates} já existente(s) (ignorada(s), sem duplicar).` : `Extrato importado: ${res.inserted} linha(s).`);
     void qc.invalidateQueries({ queryKey: ["bsi"] }); void qc.invalidateQueries({ queryKey: ["bsl"] });
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -87,7 +89,7 @@ const FinanceReconciliation = () => {
       </div>
       {report && (
         <div className="hp-card p-3 mb-6 text-sm">
-          <p>{report.ok} linha(s) importada(s).</p>
+          <p>{report.ok} linha(s) importada(s).{report.dup > 0 && ` ${report.dup} já existente(s) na conta (ignorada(s), sem duplicar).`}</p>
           {report.bad.length > 0 && <ul className="mt-2 text-destructive text-xs list-disc pl-4">{report.bad.slice(0, 20).map((b, i) => <li key={i}>{b}</li>)}</ul>}
         </div>
       )}
