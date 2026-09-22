@@ -5,10 +5,10 @@ Regra: nada é apresentado como "conectado" sem configuração e validação rea
 | Integração | Estado | Observação |
 |---|---|---|
 | GitHub | ✅ | Repositório com escrita; branch + PR em rascunho |
-| Netlify | ✅ (infra) | Site `hp-group-hub`, preview publicado, variáveis do Dev |
+| Netlify | ✅ (infra) | Site `hp-group-hub`, deploy republicado hoje a partir de `52cac0e`, variáveis do Dev corrigidas (ver `docs/deployment.md`) |
 | Supabase | ✅ (Dev) | Produção vazia até o go-live |
-| **E-mail — Supabase Auth (SMTP)** | 🔒 pendente | Confirmação de conta, convite de autenticação, recuperação de senha. Ver abaixo |
-| **E-mail — transacional (Resend, backend)** | 🔒 preparado, não validado | `netlify/functions/send-email.mts` |
+| **E-mail — Supabase Auth (SMTP)** | 🟡 resultado incerto — ver observação | Confirmação de conta, convite de autenticação, recuperação de senha. Ver abaixo |
+| **E-mail — transacional (Resend, backend)** | 🔒 preparado, não validado, **sem call-site na UI** | `netlify/functions/send-email.mts` responde 501 sem `RESEND_API_KEY`/`EMAIL_FROM`. Nenhuma tela da aplicação chama `/api/send-email` hoje (confirmado por busca no código) — mesmo configurando as chaves, nenhum fluxo dispararia um envio sem integrar a chamada em alguma tela |
 | Pagamentos (checkout/webhook) | ⬜ | Provedor a definir. Acesso pago só por evento confirmado no servidor (já é assim: `payment_record` → evento → acesso) |
 | WhatsApp / e-mail no CRM | ⬜ | Registro manual de contatos por enquanto |
 | Vídeo privado externo | ⬜ | Hoje: Supabase Storage privado + URL assinada (1h) com política por acesso |
@@ -30,6 +30,13 @@ Não reutilizar credenciais ou remetentes da Brighter. Não contratar plano pago
 
 ### Como será validado (após configurado)
 Pedido de recuperação → e-mail recebido → link → `/redefinir-senha` → nova senha → login; primeiro acesso dos gestores; `send-email` com convite. Só então o status muda para "validado".
+
+### Teste de API feito em 2026-09-22 (sessão de prontidão para lançamento)
+Chamei `POST /auth/v1/recover` diretamente na API do Supabase Auth (Dev), sem alterar nenhuma senha:
+- Com um e-mail de domínio inválido (`@hp-test.dev`, conta de teste sintética): rejeitado corretamente com `email_address_invalid` — confirma que o GoTrue valida o formato/domínio do e-mail.
+- Com o endereço autorizado `jan.darioush@yahoo.com.br` (um dos dois gestores do bootstrap): resposta `200 OK` em 80ms, sem erro síncrono.
+
+Isso **não prova** que um e-mail real chegou — pode ser (a) SMTP customizado já funcionando, (b) o remetente padrão/limitado do próprio Supabase (`mail.app.supabase.io`, sem necessidade de configuração, mas com limite de poucos envios por hora e não recomendado para produção), ou (c) uma falha silenciosa que a API não expõe. **Pendente**: confirmar na caixa de entrada de `jan.darioush@yahoo.com.br` se o e-mail chegou e qual o remetente. Só isso resolve a dúvida sobre se o SMTP customizado já está configurado ou se é o modo de teste padrão do Supabase (que não deve ser usado em produção).
 
 ## Convites
 Criar convite (tela *Equipe e acessos* ou *Pessoas → Convidar ao portal*) grava em `invitations`. A pessoa acessa **Primeiro acesso** com o mesmo e-mail, cria a senha e confirma o e-mail; o banco concede o papel **somente** quando o e-mail verificado coincide com um convite aberto (ou com a lista de bootstrap dos gestores). O envio automático do convite por e-mail depende do item acima; até lá o convite é comunicado manualmente.
