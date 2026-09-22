@@ -12,7 +12,8 @@ const Partner = () => {
   const refs = useQuery({ queryKey: ["my-refs"], queryFn: async () => ((await supabase.rpc("partner_my_referrals")).data ?? []) as { referral_id: string; created_at: string; first_name: string; stage_name: string | null; status: string | null }[] });
   const payouts = useQuery({ queryKey: ["my-payouts"], queryFn: async () => (await supabase.from("partner_payouts").select("id, description, amount_cents, status, reference_month, paid_at").order("created_at", { ascending: false })).data ?? [] });
   const p = profile.data;
-  const save = async (e: FormEvent) => { e.preventDefault(); const { error } = await supabase.from("partner_profiles").update({ specialty: spec ?? p?.specialty, council_registration: reg ?? p?.council_registration, bio: bio ?? p?.bio }).eq("person_id", p!.person_id); error ? m.err(errText(error)) : (m.ok("Perfil atualizado."), void qc.invalidateQueries({ queryKey: ["my-partner"] })); };
+  const save = async (e: FormEvent) => { e.preventDefault(); const { error } = await supabase.from("partner_profiles").update({ specialty: spec ?? p?.specialty, council_registration: reg ?? p?.council_registration, bio: bio ?? p?.bio }).eq("person_id", p!.person_id);
+    if (error) m.err(errText(error)); else { m.ok("Perfil atualizado."); void qc.invalidateQueries({ queryKey: ["my-partner"] }); } };
   const link = code.data ? `${window.location.origin}/?ref=${code.data}` : "";
   const OB: Record<string, string> = { contrato: "Contrato", formacao: "Formação", integracao: "Integração" };
   return (

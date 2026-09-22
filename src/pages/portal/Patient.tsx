@@ -17,7 +17,8 @@ const Patient = () => {
   const assigns = useQuery({ queryKey: ["my-care"], queryFn: async () => (await supabase.from("care_assignments").select("id, phase, note, released_at, content:care_contents(id, title, kind, body, storage_path, questions)").order("released_at", { ascending: false })).data as unknown as Assign[] });
   const survey = useQuery({ queryKey: ["survey"], queryFn: async () => (await supabase.from("surveys").select("id").eq("active", true).limit(1).maybeSingle()).data });
 
-  const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null }); error ? m.err(errText(error)) : (m.ok("Obrigado pela avaliação!"), void qc.invalidateQueries({ queryKey: ["my-appts"] })); };
+  const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null });
+    if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
 
   return (
     <PortalShell title="Meu acompanhamento">
@@ -42,7 +43,8 @@ const Item = ({ a, onLogged, onError }: { a: Assign; onLogged: () => void; onErr
   const [pain, setPain] = useState(""); const [note, setNote] = useState(""); const [need, setNeed] = useState(false); const [open, setOpen] = useState(false);
   const c = a.content!;
   const url = useQuery({ queryKey: ["care-url", c.storage_path], enabled: !!c.storage_path && open, staleTime: 50 * 60_000, queryFn: async () => (await supabase.storage.from("care-private").createSignedUrl(c.storage_path!, 3600)).data?.signedUrl ?? null });
-  const log = async (e: FormEvent) => { e.preventDefault(); const { error } = await supabase.rpc("care_log_activity", { p_assignment: a.id, p_pain: pain === "" ? null : Number(pain), p_answers: null, p_note: note || null, p_needs_attention: need }); error ? onError(errText(error)) : (onLogged(), setNote(""), setPain(""), setNeed(false)); };
+  const log = async (e: FormEvent) => { e.preventDefault(); const { error } = await supabase.rpc("care_log_activity", { p_assignment: a.id, p_pain: pain === "" ? null : Number(pain), p_answers: null, p_note: note || null, p_needs_attention: need });
+    if (error) onError(errText(error)); else { onLogged(); setNote(""); setPain(""); setNeed(false); } };
   return (<li className="hp-card p-4"><p className="eyebrow mb-1">{PHASE[a.phase]}</p><h3 className="text-lg">{c.title}</h3>{a.note && <p className="text-sm text-muted-foreground">Nota do profissional: {a.note}</p>}
     <button className="text-accent text-sm mt-1" onClick={() => setOpen(!open)}>{open ? "Recolher" : "Abrir"}</button>
     {open && <div className="mt-3">{(c.body ?? "").split(/\n{2,}/).map((p, i) => <p key={i} className="mb-2 whitespace-pre-line">{p}</p>)}
@@ -55,7 +57,8 @@ const Item = ({ a, onLogged, onError }: { a: Assign; onLogged: () => void; onErr
 const Chat = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [body, setBody] = useState("");
   const list = useQuery({ queryKey: ["my-msgs"], queryFn: async () => (await supabase.from("care_messages").select("id, sender, body, created_at").order("created_at")).data ?? [], refetchInterval: 30_000 });
-  const send = async (e: FormEvent) => { e.preventDefault(); if (!body.trim()) return; const { error } = await supabase.rpc("care_send_message", { p_body: body }); error ? m.err(errText(error)) : (setBody(""), void qc.invalidateQueries({ queryKey: ["my-msgs"] })); };
+  const send = async (e: FormEvent) => { e.preventDefault(); if (!body.trim()) return; const { error } = await supabase.rpc("care_send_message", { p_body: body });
+    if (error) m.err(errText(error)); else { setBody(""); void qc.invalidateQueries({ queryKey: ["my-msgs"] }); } };
   return (<section><h2 className="text-xl mb-1">Canal de dúvidas</h2><p className="text-sm text-muted-foreground mb-3">Sua mensagem é vista apenas pelos profissionais vinculados ao seu acompanhamento. Não é um canal de urgência.</p><Msg m={msg} />
     <ul className="space-y-2 mb-3">{list.data?.map((x) => <li key={x.id} className={`p-3 border border-border max-w-lg ${x.sender === "patient" ? "bg-muted ml-auto" : "bg-card"}`}><p className="text-xs text-muted-foreground">{x.sender === "patient" ? "Você" : "Profissional"} · {fmtDateTime(x.created_at)}</p><p className="whitespace-pre-line">{x.body}</p></li>)}</ul>
     <form onSubmit={send} className="flex gap-2"><label htmlFor="cm" className="sr-only">Mensagem</label><textarea id="cm" rows={2}   value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} /><button className={btnGhost}>Enviar</button></form></section>);

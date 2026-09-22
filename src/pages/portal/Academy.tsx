@@ -85,8 +85,9 @@ export const CourseView = () => {
     return out;
   }, [modules.data, list]);
 
-  const complete = async () => { if (!lesson) return; const { error } = await supabase.rpc("lesson_complete", { p_lesson: lesson.id }); error ? m.err(errText(error)) : (m.ok("Aula concluída."), void qc.invalidateQueries({ queryKey: ["c-done", c?.id] }), void qc.invalidateQueries({ queryKey: ["c-prog", c?.id] }), void qc.invalidateQueries({ queryKey: ["my-progress-all"] })); };
-  const issue = async () => { const { error } = await supabase.rpc("issue_certificate", { p_course: c!.id }); error ? m.err(errText(error)) : (m.ok("Certificado emitido."), void qc.invalidateQueries({ queryKey: ["c-cert", c?.id] })); };
+  const complete = async () => { if (!lesson) return; const { error } = await supabase.rpc("lesson_complete", { p_lesson: lesson.id });
+    if (error) m.err(errText(error)); else { m.ok("Aula concluída."); void qc.invalidateQueries({ queryKey: ["c-done", c?.id] }); void qc.invalidateQueries({ queryKey: ["c-prog", c?.id] }); void qc.invalidateQueries({ queryKey: ["my-progress-all"] }); } };
+  const issue = async () => { const { error } = await supabase.rpc("issue_certificate", { p_course: c!.id }); if (error) m.err(errText(error)); else { m.ok("Certificado emitido."); void qc.invalidateQueries({ queryKey: ["c-cert", c?.id] }); } };
 
   if (course.isLoading) return <PortalShell title="Carregando…"><State loading /></PortalShell>;
   if (!c) return <PortalShell title="Acesso não disponível"><EmptyState icon={Lock} title="Você não tem acesso a este curso" action={<Link className="hp-btn hp-btn-outline mt-2" to="/academy">Voltar aos cursos</Link>}>Ele pode não estar liberado para você, ter expirado ou ter sido encerrado. O acesso é conferido no servidor — esconder o menu não seria suficiente, por isso não há como abrir o conteúdo por outro caminho.</EmptyState></PortalShell>;
@@ -143,7 +144,8 @@ interface Post { id: string; body: string; created_at: string; author_name: stri
 const Community = ({ courseId }: { courseId: string }) => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [body, setBody] = useState(""); const [reply, setReply] = useState<string | null>(null); const [rbody, setRbody] = useState("");
   const posts = useQuery({ queryKey: ["c-posts", courseId], queryFn: async () => (await supabase.from("community_posts").select("id, body, created_at, author_name, parent_id").eq("course_id", courseId).order("created_at", { ascending: true }).limit(300)).data as Post[] });
-  const send = async (text: string, parent: string | null) => { if (!text.trim()) return; const { error } = await supabase.rpc("community_post", { p_course: courseId, p_body: text, p_parent: parent }); error ? m.err(errText(error)) : (setBody(""), setRbody(""), setReply(null), void qc.invalidateQueries({ queryKey: ["c-posts", courseId] })); };
+  const send = async (text: string, parent: string | null) => { if (!text.trim()) return; const { error } = await supabase.rpc("community_post", { p_course: courseId, p_body: text, p_parent: parent });
+    if (error) m.err(errText(error)); else { setBody(""); setRbody(""); setReply(null); void qc.invalidateQueries({ queryKey: ["c-posts", courseId] }); } };
   const top = (posts.data ?? []).filter((p) => !p.parent_id).reverse(); const kids = (id: string) => (posts.data ?? []).filter((p) => p.parent_id === id);
   return (<section aria-label="Comunidade do curso">
     <p className="text-xs text-muted-foreground mb-3">Espaço de discussão do curso. Não compartilhe dados de pacientes: o acompanhamento individual não acontece aqui.</p><Msg m={msg} />

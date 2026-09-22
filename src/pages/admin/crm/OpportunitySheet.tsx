@@ -34,7 +34,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
     const { error } = await supabase.from("interactions").insert({ org_id: await orgId(), person_id: opp.person_id, unit_id: opp.unit_id, opportunity_id: opp.id, channel, summary: note.trim(), created_by: u.user?.id });
     if (error) return m.err(errText(error)); setNote(""); m.ok("Registro salvo."); refresh();
   };
-  const patch = async (p: Record<string, unknown>, ok: string) => { const { error } = await supabase.from("opportunities").update(p).eq("id", opp!.id); error ? m.err(errText(error)) : (m.ok(ok), refresh()); };
+  const patch = async (p: Record<string, unknown>, ok: string) => { const { error } = await supabase.from("opportunities").update(p).eq("id", opp!.id); if (error) m.err(errText(error)); else { m.ok(ok); refresh(); } };
   const addTask = async (e: FormEvent) => {
     e.preventDefault(); if (!taskTitle.trim() || !opp) return; const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("crm_tasks").insert({ org_id: await orgId(), unit_id: opp.unit_id, opportunity_id: opp.id, person_id: opp.person_id, assignee_user_id: opp.owner_user_id ?? u.user?.id, kind: "follow_up", title: taskTitle.trim(), due_at: taskDue ? new Date(taskDue).toISOString() : new Date().toISOString(), created_by: u.user?.id });

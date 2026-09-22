@@ -46,7 +46,7 @@ const Sales = () => {
     const { error } = await supabase.rpc("sale_create", { p_person: person, p_unit: unit, p_opportunity: opp || null, p_items: [{ product_id: pr.id, qty: Number(qty) || 1 }], p_discount_cents: disc, p_installments: Number(inst) || 1, p_first_due: due });
     setBusy(false); if (error) return m.err(errText(error)); m.ok("Venda criada como pendente. Confirme para gerar contrato e parcelas."); void qc.invalidateQueries({ queryKey: ["sales"] });
   };
-  const act = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); error ? m.err(errText(error)) : (m.ok(ok), void qc.invalidateQueries({ queryKey: ["sales"] })); };
+  const act = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); if (error) m.err(errText(error)); else { m.ok(ok); void qc.invalidateQueries({ queryKey: ["sales"] }); } };
 
   return (<>
     <Msg m={msg} />
@@ -82,7 +82,7 @@ const Receivables = () => {
     const v = await promptText("Estornar recebimento", `Valor do estorno em R$ (máximo ${brl(p.amount_cents)})`, { defaultValue: (p.amount_cents / 100).toFixed(2).replace(".", ",") }); const cents = v ? parseCents(v) : null; if (cents == null) return;
     const reason = await promptText("Motivo do estorno", "Motivo (obrigatório)", { multiline: true, confirmLabel: "Estornar", danger: true }); if (!reason) return;
     const { error } = await supabase.rpc("payment_refund", { p_payment: p.id, p_amount_cents: cents, p_reason: reason, p_idempotency_key: newKey("refund") });
-    error ? m.err(errText(error)) : (m.ok("Estorno registrado."), void qc.invalidateQueries());
+    if (error) m.err(errText(error)); else { m.ok("Estorno registrado."); void qc.invalidateQueries(); }
   };
   return (<>
     <Msg m={msg} />
@@ -131,7 +131,7 @@ const Payables = () => {
     if (!desc.trim() || !unit || cents == null) return m.err("Preencha descrição, unidade e valor.");
     const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
     const { error } = await supabase.from("payables").insert({ org_id: org?.org_id, unit_id: unit, category_id: cat || null, description: desc.trim(), amount_cents: cents, due_date: due, competence_month: due.slice(0, 8) + "01", created_by: u.user?.id });
-    error ? m.err(errText(error)) : (m.ok("Conta cadastrada."), setDesc(""), setAmount(""), void qc.invalidateQueries({ queryKey: ["payables"] }));
+    if (error) m.err(errText(error)); else { m.ok("Conta cadastrada."); setDesc(""); setAmount(""); void qc.invalidateQueries({ queryKey: ["payables"] }); }
   };
   return (<>
     <Msg m={msg} />
@@ -146,7 +146,7 @@ const Payables = () => {
     <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhuma conta a pagar." />
     {list.data && list.data.length > 0 && <Table head={["Descrição", "Vencimento", "Valor", "Estado", ""]} right={[2]}>
       {list.data.map((p) => <tr key={p.id}><Td>{p.description}</Td><Td>{fmtDate(p.due_date + "T12:00:00Z")}</Td><Td num>{brl(p.amount_cents)}</Td><Td>{p.status === "paid" ? `Paga em ${fmtDate(p.paid_at)}` : p.status === "open" ? "Em aberto" : "Cancelada"}</Td>
-        <Td>{p.status === "open" && <button className={btnGhost + " hp-btn-sm"} onClick={async () => { const { error } = await supabase.rpc("payable_pay", { p_id: p.id, p_account: accounts.data?.[0]?.id ?? null }); error ? m.err(errText(error)) : (m.ok("Baixa registrada."), void qc.invalidateQueries({ queryKey: ["payables"] })); }}>Marcar como paga</button>}</Td></tr>)}</Table>}
+        <Td>{p.status === "open" && <button className={btnGhost + " hp-btn-sm"} onClick={async () => { const { error } = await supabase.rpc("payable_pay", { p_id: p.id, p_account: accounts.data?.[0]?.id ?? null }); if (error) m.err(errText(error)); else { m.ok("Baixa registrada."); void qc.invalidateQueries({ queryKey: ["payables"] }); } }}>Marcar como paga</button>}</Td></tr>)}</Table>}
   </>);
 };
 

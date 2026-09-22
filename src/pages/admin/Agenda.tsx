@@ -50,12 +50,12 @@ const Day = () => {
   };
   const setStatus = async (a: Appt, s: string) => {
     const reason = s.startsWith("cancelled") ? (await promptText("Cancelar agendamento", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar agendamento", danger: true })) ?? "" : null; if (s.startsWith("cancelled") && !reason) return;
-    const { error } = await supabase.rpc("set_appointment_status", { p_id: a.id, p_status: s, p_reason: reason }); error ? m.err(errText(error)) : (m.ok("Status atualizado."), void qc.invalidateQueries({ queryKey: ["appts"] }));
+    const { error } = await supabase.rpc("set_appointment_status", { p_id: a.id, p_status: s, p_reason: reason }); if (error) m.err(errText(error)); else { m.ok("Status atualizado."); void qc.invalidateQueries({ queryKey: ["appts"] }); }
   };
   const resched = async (a: Appt) => {
     const v = await promptText("Remarcar", "Novo horário (AAAA-MM-DD HH:MM, no fuso do seu navegador)", { defaultValue: "" }); if (!v) return; const d = new Date(v.replace(" ", "T") + ":00");
     if (Number.isNaN(d.getTime())) return m.err("Data inválida. Use o formato AAAA-MM-DD HH:MM.");
-    const { error } = await supabase.rpc("reschedule_appointment", { p_id: a.id, p_new_start: d.toISOString() }); error ? m.err(errText(error)) : (m.ok("Remarcado."), void qc.invalidateQueries({ queryKey: ["appts"] }));
+    const { error } = await supabase.rpc("reschedule_appointment", { p_id: a.id, p_new_start: d.toISOString() }); if (error) m.err(errText(error)); else { m.ok("Remarcado."); void qc.invalidateQueries({ queryKey: ["appts"] }); }
   };
 
   return (<>
@@ -97,7 +97,7 @@ const Packages = () => {
   } });
   const bal = (id: string) => (pk.data?.ledger ?? []).filter((x) => x.client_package_id === id).reduce((a, x) => a + x.delta, 0);
   const adjust = async (id: string) => { const d = Number(await promptText("Ajustar saldo", "Ajuste de sessões (use + ou −, ex.: 2 ou -1)", { kind: "number" })); if (!d) return; const n = await promptText("Motivo do ajuste", "Motivo (obrigatório)", { multiline: true }); if (!n) return;
-    const { error } = await supabase.rpc("adjust_package", { p_pkg: id, p_delta: d, p_note: n }); error ? m.err(errText(error)) : (m.ok("Ajuste registrado no livro."), void qc.invalidateQueries({ queryKey: ["all-pkgs"] })); };
+    const { error } = await supabase.rpc("adjust_package", { p_pkg: id, p_delta: d, p_note: n }); if (error) m.err(errText(error)); else { m.ok("Ajuste registrado no livro."); void qc.invalidateQueries({ queryKey: ["all-pkgs"] }); } };
   return (<><Msg m={msg} /><p className="text-sm text-muted-foreground mb-3">Regras: comparecimento consome 1 sessão; falta consome conforme o produto; cancelamento tardio consome; cancelamento com antecedência e da clínica não consome. Cada agendamento consome no máximo uma vez.</p>
     <State loading={pk.isLoading} error={pk.error} empty={pk.data?.pkgs.length === 0} emptyText="Nenhum pacote vendido." />
     {pk.data && pk.data.pkgs.length > 0 && <Table head={["Paciente", "Pacote", "Saldo", "Total", "Validade", "Estado", ""]} right={[2, 3]}>
@@ -110,7 +110,8 @@ const Waitlist = () => {
   const found = useQuery({ queryKey: ["ppl-w", search], enabled: search.length >= 2 && !person, queryFn: async () => (await supabase.from("people").select("id, full_name").ilike("full_name", `%${search.replace(/[%_]/g, "")}%`).limit(6)).data ?? [] });
   const list = useQuery({ queryKey: ["waitlist"], queryFn: async () => (await supabase.from("waitlist").select("id, status, preference, created_at, person:people(full_name), service:services(name)").order("created_at")).data as unknown as { id: string; status: string; preference: string | null; created_at: string; person: { full_name: string }; service: { name: string } }[] });
   const add = async (e: FormEvent) => { e.preventDefault(); if (!person || !unit || !svc) return m.err("Selecione paciente, unidade e serviço."); const { data: u } = await supabase.auth.getUser(); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
-    const { error } = await supabase.from("waitlist").insert({ org_id: org?.org_id, unit_id: unit, person_id: person.id, service_id: svc, preference: pref || null, created_by: u.user?.id }); error ? m.err(errText(error)) : (m.ok("Adicionado à lista de espera."), setPerson(null), setSearch(""), void qc.invalidateQueries({ queryKey: ["waitlist"] })); };
+    const { error } = await supabase.from("waitlist").insert({ org_id: org?.org_id, unit_id: unit, person_id: person.id, service_id: svc, preference: pref || null, created_by: u.user?.id });
+    if (error) m.err(errText(error)); else { m.ok("Adicionado à lista de espera."); setPerson(null); setSearch(""); void qc.invalidateQueries({ queryKey: ["waitlist"] }); } };
   return (<><Msg m={msg} />
     <form onSubmit={add} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
       <div><label htmlFor="wp" className="block text-xs mb-1">Paciente</label><input id="wp"   value={person ? person.full_name : search} onChange={(e) => { setPerson(null); setSearch(e.target.value); }} />{found.data?.map((p) => <button type="button" key={p.id} className="block w-full text-left p-2 border border-border hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button>)}</div>
@@ -129,9 +130,9 @@ const Professionals = () => {
   const rules = useQuery({ queryKey: ["rules"], queryFn: async () => (await supabase.from("availability_rules").select("id, weekday, start_time, end_time, professional:professionals(display_name), unit:units(name)").order("weekday")).data as unknown as { id: string; weekday: number; start_time: string; end_time: string; professional: { display_name: string }; unit: { name: string } }[] });
   const addProf = async (e: FormEvent) => { e.preventDefault(); if (!name.trim() || !unit) return m.err("Informe nome e unidade."); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
     const { data, error } = await supabase.from("professionals").insert({ org_id: org?.org_id, display_name: name.trim() }).select("id").single(); if (error) return m.err(errText(error));
-    const l = await supabase.from("professional_units").insert({ professional_id: data.id, unit_id: unit }); l.error ? m.err(errText(l.error)) : (m.ok("Profissional cadastrado."), setName(""), void qc.invalidateQueries({ queryKey: ["all-profs"] })); };
+    const l = await supabase.from("professional_units").insert({ professional_id: data.id, unit_id: unit }); if (l.error) m.err(errText(l.error)); else { m.ok("Profissional cadastrado."); setName(""); void qc.invalidateQueries({ queryKey: ["all-profs"] }); } };
   const addRule = async (e: FormEvent) => { e.preventDefault(); if (!prof || !unit) return m.err("Selecione profissional e unidade."); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
-    const { error } = await supabase.from("availability_rules").insert({ org_id: org?.org_id, professional_id: prof, unit_id: unit, weekday: Number(dow), start_time: st, end_time: en }); error ? m.err(errText(error)) : (m.ok("Disponibilidade cadastrada."), void qc.invalidateQueries({ queryKey: ["rules"] })); };
+    const { error } = await supabase.from("availability_rules").insert({ org_id: org?.org_id, professional_id: prof, unit_id: unit, weekday: Number(dow), start_time: st, end_time: en }); if (error) m.err(errText(error)); else { m.ok("Disponibilidade cadastrada."); void qc.invalidateQueries({ queryKey: ["rules"] }); } };
   return (<><Msg m={msg} />
     <div className="grid gap-6 lg:grid-cols-2 mb-8">
       <form onSubmit={addProf} className="hp-card p-5 grid gap-3" noValidate><h2 className="text-xl">Novo profissional</h2>

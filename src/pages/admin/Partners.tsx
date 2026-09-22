@@ -15,7 +15,8 @@ const Partners = () => {
   const step = async (p: { person_id: string; onboarding: Record<string, boolean> }, k: string) => { const { error } = await supabase.from("partner_profiles").update({ onboarding: { ...p.onboarding, [k]: !p.onboarding[k] } }).eq("person_id", p.person_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["partners"] }); };
   const addPayout = async (e: FormEvent) => { e.preventDefault(); const cents = parseCents(amount); const { data: u } = await supabase.auth.getUser(); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
     if (!pp || !unit || !desc.trim() || cents == null) return m.err("Selecione parceiro e unidade e informe descrição e valor.");
-    const { error } = await supabase.from("partner_payouts").insert({ org_id: org?.org_id, unit_id: unit, partner_person_id: pp, description: desc.trim(), amount_cents: cents, created_by: u.user?.id }); error ? m.err(errText(error)) : (m.ok("Repasse criado (pendente de autorização)."), setDesc(""), setAmount(""), void qc.invalidateQueries({ queryKey: ["payouts"] })); };
+    const { error } = await supabase.from("partner_payouts").insert({ org_id: org?.org_id, unit_id: unit, partner_person_id: pp, description: desc.trim(), amount_cents: cents, created_by: u.user?.id });
+    if (error) m.err(errText(error)); else { m.ok("Repasse criado (pendente de autorização)."); setDesc(""); setAmount(""); void qc.invalidateQueries({ queryKey: ["payouts"] }); } };
   const setSt = async (id: string, s: string) => { const { error } = await supabase.rpc("payout_set_status", { p_id: id, p_status: s }); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["payouts"] }); };
   const OB: Record<string, string> = { contrato: "Contrato", formacao: "Formação", integracao: "Integração" };
 
