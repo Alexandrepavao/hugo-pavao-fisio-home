@@ -21,10 +21,19 @@ const Cover = ({ title, kind }: { title: string; kind: string }) => (
   </div>
 );
 
+interface Track { id: string; title: string; description: string | null; courses: { id: string; title: string; slug: string }[] }
+
 export const AcademyHome = () => {
   const courses = useQuery({ queryKey: ["my-courses"], queryFn: async () => (await supabase.from("courses").select("id, title, slug, description, kind").eq("status", "published").order("title")).data as Course[] });
   const lessons = useQuery({ queryKey: ["my-lessons-all"], queryFn: async () => (await supabase.from("lessons").select("id, course_id, kind").eq("published", true).neq("kind", "live")).data ?? [] });
   const prog = useQuery({ queryKey: ["my-progress-all"], queryFn: async () => (await supabase.from("lesson_progress").select("lesson_id, course_id, completed_at, last_viewed_at")).data ?? [] });
+  // Trilhas: só as publicadas, e só os cursos delas que o aluno de fato enxerga (RLS já filtra por acesso concedido).
+  const tracks = useQuery({ queryKey: ["tracks-portal"], queryFn: async () => {
+    const { data } = await supabase.from("learning_tracks").select("id, title, description, position, learning_track_courses(position, course:courses(id, title, slug, status))").eq("status", "published").order("position");
+    return ((data ?? []) as unknown as { id: string; title: string; description: string | null; learning_track_courses: { position: number; course: { id: string; title: string; slug: string; status: string } | null }[] }[])
+      .map((t) => ({ id: t.id, title: t.title, description: t.description, courses: t.learning_track_courses.filter((tc) => tc.course?.status === "published").sort((a, b) => a.position - b.position).map((tc) => tc.course!) }))
+      .filter((t) => t.courses.length > 0);
+  } });
 
   const stats = useMemo(() => {
     const total: Record<string, number> = {}; const done: Record<string, number> = {}; const last: Record<string, string> = {};
@@ -45,6 +54,20 @@ export const AcademyHome = () => {
         <section aria-label="Continuar de onde parou" className="hp-card p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
           <div><p className="text-xs text-muted-foreground">Continuar de onde parou</p><p className="font-semibold">{cont.title}</p><p className="text-xs text-muted-foreground tabular">{pct(cont.id)}% concluído</p></div>
           <Link to={`/academy/${cont.slug}`} className="hp-btn hp-btn-primary">Continuar</Link>
+        </section>
+      )}
+      {tracks.data && tracks.data.length > 0 && (
+        <section aria-label="Trilhas recomendadas" className="mb-8">
+          <h2 className="!text-[1.0625rem] mb-3">Trilhas recomendadas</h2>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {tracks.data.map((t: Track) => (
+              <li key={t.id} className="hp-card p-4">
+                <p className="font-semibold mb-1">{t.title}</p>
+                {t.description && <p className="text-[13px] text-muted-foreground mb-2">{t.description}</p>}
+                <ol className="text-sm space-y-1">{t.courses.map((c, i) => <li key={c.id}><Link to={`/academy/${c.slug}`} className="text-accent hover:underline">{i + 1}. {c.title}</Link></li>)}</ol>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

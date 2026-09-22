@@ -8,7 +8,9 @@ test.describe("autenticação e proteção de rotas", () => {
       await page.getByLabel("E-mail").fill(MANAGER); await page.getByLabel("Senha").fill(PASSWORD);
       await page.getByRole("button", { name: "Entrar" }).click();
       await expect(page).toHaveURL(/\/admin$/);
-      await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+      // O título da página agora é a saudação por horário local (varia com a hora e o nome) — verificamos o padrão, não o texto exato.
+      await expect(page.getByRole("heading", { name: /Bom dia|Boa tarde|Boa noite/ })).toBeVisible();
+      await expect(page.getByText("Resumo da operação.")).toBeVisible();
     });
     expect(errors).toEqual([]);
 

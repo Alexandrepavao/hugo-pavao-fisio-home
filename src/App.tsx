@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Index from "./pages/Index";
 import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
@@ -22,7 +22,16 @@ const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
 const CRM = lazy(() => import("./pages/admin/CRM"));
 const Agenda = lazy(() => import("./pages/admin/Agenda"));
-const Finance = lazy(() => import("./pages/admin/Finance"));
+const FinanceOverview = lazy(() => import("./pages/admin/finance/Overview"));
+const FinanceSales = lazy(() => import("./pages/admin/finance/Sales"));
+const FinancePayables = lazy(() => import("./pages/admin/finance/Payables"));
+const FinanceCashFlow = lazy(() => import("./pages/admin/finance/CashFlow"));
+const FinanceRecurrence = lazy(() => import("./pages/admin/finance/Recurrence"));
+const FinanceDre = lazy(() => import("./pages/admin/finance/Dre"));
+const FinanceCommissions = lazy(() => import("./pages/admin/finance/Commissions"));
+const FinanceReconciliation = lazy(() => import("./pages/admin/finance/Reconciliation"));
+const FinanceReports = lazy(() => import("./pages/admin/finance/Reports"));
+const FinanceSettings = lazy(() => import("./pages/admin/finance/Settings"));
 const AcademyAdmin = lazy(() => import("./pages/admin/AcademyAdmin"));
 const Care = lazy(() => import("./pages/admin/Care"));
 const Partners = lazy(() => import("./pages/admin/Partners"));
@@ -74,7 +83,18 @@ const App = () => (
                 <Route path="paginas/:id" element={g(R.pages, <PageEditor />)} />
                 <Route path="crm" element={g(R.people, <CRM />)} />
                 <Route path="agenda" element={g(R.agenda, <Agenda />)} />
-                <Route path="financeiro" element={g(R.finance, <Finance />)} />
+                <Route path="financeiro" element={g(R.finance, <Outlet />)}>
+                  <Route index element={<FinanceOverview />} />
+                  <Route path="vendas" element={<FinanceSales />} />
+                  <Route path="pagar" element={<FinancePayables />} />
+                  <Route path="fluxo-caixa" element={<FinanceCashFlow />} />
+                  <Route path="recorrencia" element={<FinanceRecurrence />} />
+                  <Route path="dre" element={<FinanceDre />} />
+                  <Route path="comissoes" element={<FinanceCommissions />} />
+                  <Route path="conciliacao" element={<FinanceReconciliation />} />
+                  <Route path="relatorios" element={<FinanceReports />} />
+                  <Route path="config" element={<FinanceSettings />} />
+                </Route>
                 <Route path="academy" element={g(R.academy, <AcademyAdmin />)} />
                 <Route path="acompanhamento" element={g(R.care, <Care />)} />
                 <Route path="parceiros" element={g(R.partners, <Partners />)} />

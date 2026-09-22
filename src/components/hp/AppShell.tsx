@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ChevronsLeft, ChevronsRight, GraduationCap, LogOut, Menu, Search } from "lucide-react";
+import { ChevronDown, ChevronsLeft, ChevronsRight, HeartPulse, LogOut, Menu, Search } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CommandMenu from "./CommandMenu";
-import { NAV, ROLE_LABEL, type NavItem } from "./nav";
+import { HEADER_PRIMARY, NAV, ROLE_LABEL, type NavItem } from "./nav";
 
 /** Aplica o escopo visual da área logada no <html> (portais do Radix renderizam fora do container). */
 export const useAppTheme = () => {
@@ -38,15 +38,22 @@ const SidebarNav = ({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?
   );
 };
 
-const SidebarFoot = ({ collapsed }: { collapsed: boolean }) => (
-  <div className="hp-sb-foot">
-    <Link to="/academy" className="hp-sb-link" title={collapsed ? "Área do aluno" : undefined}><GraduationCap aria-hidden /><span className="hp-sb-text">Área do aluno</span></Link>
-  </div>
-);
+/** "Área do paciente" é o acompanhamento clínico (papel "member") — nada a ver com o Academy, que continua com "alunos".
+ *  Só aparece para quem de fato tem o papel de paciente (mesmo critério já usado no PortalShell), então nunca leva
+ *  a um "Sem permissão" nem precisa mostrar dado de outra pessoa como demonstração. */
+const SidebarFoot = ({ collapsed }: { collapsed: boolean }) => {
+  const { hasRole } = useAuth();
+  if (!hasRole("member")) return null;
+  return (
+    <div className="hp-sb-foot">
+      <Link to="/paciente" className="hp-sb-link" title={collapsed ? "Área do paciente" : undefined}><HeartPulse aria-hidden /><span className="hp-sb-text">Área do paciente</span></Link>
+    </div>
+  );
+};
 
 const AppShell = ({ children }: { children: ReactNode }) => {
   useAppTheme();
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, hasRole } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [drawer, setDrawer] = useState(false);
@@ -59,10 +66,14 @@ const AppShell = ({ children }: { children: ReactNode }) => {
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const title = useMemo(() => {
+  const activeItem = useMemo(() => {
     const items = NAV.flatMap((s) => s.items);
-    return (items.find((i) => (i.end ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"))) ?? items[0]).label;
+    return items.find((i) => (i.end ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"))) ?? items[0];
   }, [location.pathname]);
+  const title = activeItem.label;
+  const primaryChildren = activeItem.children?.slice(0, HEADER_PRIMARY) ?? [];
+  const moreChildren = activeItem.children?.slice(HEADER_PRIMARY) ?? [];
+  const moreActive = moreChildren.some((c) => (c.end ? location.pathname === c.to : location.pathname === c.to || location.pathname.startsWith(c.to + "/")));
   const roleNames = [...new Set(roles.map((r) => ROLE_LABEL[r.role]))].join(", ");
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
@@ -104,11 +115,31 @@ const AppShell = ({ children }: { children: ReactNode }) => {
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel><span className="block text-sm font-medium break-all">{user?.email}</span><span className="block text-xs font-normal text-muted-foreground">{roleNames}</span></DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild><Link to="/academy">Área do aluno</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/academy">Academy</Link></DropdownMenuItem>
+              {hasRole("member") && <DropdownMenuItem asChild><Link to="/paciente">Área do paciente</Link></DropdownMenuItem>}
               <DropdownMenuItem onSelect={() => void signOut()}><LogOut className="mr-2 h-4 w-4" aria-hidden />Sair</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+        {activeItem.children && activeItem.children.length > 0 && (
+          <nav aria-label={`Navegação de ${title}`} className="hp-subnav">
+            {primaryChildren.map((c) => (
+              <NavLink key={c.to} to={c.to} end={c.end} className="hp-subnav-link">{c.label}</NavLink>
+            ))}
+            {moreChildren.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`hp-subnav-link hp-subnav-more ${moreActive ? "hp-subnav-link-active" : ""}`} aria-label="Mais destinos">Mais<ChevronDown size={13} aria-hidden /></button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {moreChildren.map((c) => (
+                    <DropdownMenuItem key={c.to} asChild><NavLink to={c.to} end={c.end}>{c.label}</NavLink></DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </nav>
+        )}
         <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao">{children}</main>
       </div>
       <CommandMenu open={cmd} onOpenChange={setCmd} />

@@ -11,6 +11,16 @@ const KIND: Record<string, string> = { course: "Curso", mentoring: "Mentoria", p
 const STAT: Record<string, string> = { draft: "Rascunho", published: "Publicado", archived: "Arquivado" };
 
 const AcademyAdmin = () => {
+  const [tab, setTab] = useState("cursos");
+  return (<div>
+    <PageHead eyebrow="HP Academy" title="Cursos e mentorias" hint="O acesso do aluno é verificado no servidor a cada consulta: liberar, expirar ou revogar tem efeito imediato (não é só esconder menu)." />
+    <Tabs tabs={[["cursos", "Cursos"], ["trilhas", "Trilhas"]]} value={tab} onChange={setTab} />
+    {tab === "cursos" && <Courses />}
+    {tab === "trilhas" && <Tracks />}
+  </div>);
+};
+
+const Courses = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [sel, setSel] = useState<string | null>(null);
   const [title, setTitle] = useState(""); const [slug, setSlug] = useState(""); const [kind, setKind] = useState("course"); const [prod, setProd] = useState("");
   const courses = useQuery({ queryKey: ["courses"], queryFn: async () => (await supabase.from("courses").select("id, title, slug, kind, status, product_id, org_id").order("created_at", { ascending: false })).data as Course[] });
@@ -22,8 +32,7 @@ const AcademyAdmin = () => {
     if (error) m.err(errText(error)); else { m.ok("Curso criado como rascunho."); setTitle(""); setSlug(""); void qc.invalidateQueries({ queryKey: ["courses"] }); }
   };
   const course = courses.data?.find((c) => c.id === sel);
-  return (<div>
-    <PageHead eyebrow="HP Academy" title="Cursos e mentorias" hint="O acesso do aluno é verificado no servidor a cada consulta: liberar, expirar ou revogar tem efeito imediato (não é só esconder menu)." />
+  return (<>
     <Msg m={msg} />
     <form onSubmit={create} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-5 items-end" noValidate>
       <div className="sm:col-span-2"><label htmlFor="ct" className="block text-xs mb-1">Título</label><input id="ct"   value={title} onChange={(e) => setTitle(e.target.value)} /></div>
@@ -35,7 +44,80 @@ const AcademyAdmin = () => {
     {courses.data && courses.data.length > 0 && <Table head={["Curso", "Tipo", "Estado", ""]}>{courses.data.map((c) => <tr key={c.id}><Td>{c.title}</Td><Td>{KIND[c.kind]}</Td><Td>{STAT[c.status]}</Td>
       <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => setSel(c.id === sel ? null : c.id)}>{c.id === sel ? "Fechar" : "Gerenciar"}</button></Td></tr>)}</Table>}
     {course && <CourseManager course={course} onChanged={() => qc.invalidateQueries({ queryKey: ["courses"] })} />}
-  </div>);
+  </>);
+};
+
+interface Track { id: string; slug: string; title: string; description: string | null; status: string; position: number }
+const TRACK_ST: Record<string, string> = { draft: "Rascunho", published: "Publicado" };
+
+/** Trilhas: agrupam cursos já cadastrados em uma sequência recomendada. Nunca inventa curso/aula — só ordena o que já existe. */
+const Tracks = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const [sel, setSel] = useState<string | null>(null);
+  const [title, setTitle] = useState(""); const [slug, setSlug] = useState(""); const [desc, setDesc] = useState("");
+  const tracks = useQuery({ queryKey: ["tracks"], queryFn: async () => (await supabase.from("learning_tracks").select("id, slug, title, description, status, position").order("position")).data as Track[] });
+  const allCourses = useQuery({ queryKey: ["courses-for-tracks"], queryFn: async () => (await supabase.from("courses").select("id, title, status").order("title")).data as { id: string; title: string; status: string }[] });
+  const linked = useQuery({ queryKey: ["track-courses", sel], enabled: !!sel, queryFn: async () => (await supabase.from("learning_track_courses").select("course_id, position, course:courses(id, title, status)").eq("track_id", sel).order("position")).data as unknown as { course_id: string; position: number; course: { id: string; title: string; status: string } }[] });
+
+  const create = async (e: FormEvent) => {
+    e.preventDefault(); const se = validateSlug(slug); if (se || !title.trim()) return m.err(se ?? "Informe o título.");
+    const { data: u } = await supabase.auth.getUser(); const { data: o } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("learning_tracks").insert({ org_id: o?.id, slug, title: title.trim(), description: desc || null, position: (tracks.data?.length ?? 0) + 1, created_by: u.user?.id });
+    if (error) m.err(errText(error)); else { m.ok("Trilha criada como rascunho."); setTitle(""); setSlug(""); setDesc(""); void qc.invalidateQueries({ queryKey: ["tracks"] }); }
+  };
+  const toggleStatus = async (t: Track) => {
+    const next = t.status === "draft" ? "published" : "draft";
+    const { error } = await supabase.from("learning_tracks").update({ status: next }).eq("id", t.id);
+    if (error) m.err(errText(error)); else { m.ok(next === "published" ? "Trilha publicada." : "Trilha voltou a rascunho."); void qc.invalidateQueries({ queryKey: ["tracks"] }); }
+  };
+  const addCourse = async (trackId: string, courseId: string) => {
+    if (!courseId) return;
+    const { error } = await supabase.from("learning_track_courses").insert({ track_id: trackId, course_id: courseId, position: (linked.data?.length ?? 0) + 1 });
+    if (error) m.err(errText(error)); else void qc.invalidateQueries({ queryKey: ["track-courses", trackId] });
+  };
+  const removeCourse = async (trackId: string, courseId: string) => {
+    const { error } = await supabase.from("learning_track_courses").delete().eq("track_id", trackId).eq("course_id", courseId);
+    if (error) m.err(errText(error)); else void qc.invalidateQueries({ queryKey: ["track-courses", trackId] });
+  };
+
+  return (<>
+    <Msg m={msg} />
+    <p className="text-sm text-muted-foreground mb-3">Estrutura proposta como ponto de partida (rascunho). Publicar uma trilha vazia não expõe conteúdo — vincule cursos reais antes de publicar.</p>
+    <form onSubmit={create} className="hp-card p-4 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
+      <div><label htmlFor="tt" className="block text-xs mb-1">Título</label><input id="tt"   value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+      <div><label htmlFor="ts" className="block text-xs mb-1">Endereço</label><input id="ts"   value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} /></div>
+      <div className="sm:col-span-2"><label htmlFor="td" className="block text-xs mb-1">Descrição</label><input id="td"   value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+      <button className="hp-btn hp-btn-primary sm:col-span-4 sm:w-fit">Criar trilha</button>
+    </form>
+    <State loading={tracks.isLoading} error={tracks.error} empty={tracks.data?.length === 0} emptyText="Nenhuma trilha criada." />
+    {tracks.data && tracks.data.length > 0 && <ul className="grid gap-2">
+      {tracks.data.map((t) => (
+        <li key={t.id} className="hp-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div><p className="font-medium">{t.title}</p>{t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}</div>
+            <div className="flex items-center gap-2">
+              <span className="hp-badge">{TRACK_ST[t.status]}</span>
+              <button className={btnGhost + " hp-btn-sm"} onClick={() => toggleStatus(t)}>{t.status === "draft" ? "Publicar" : "Voltar a rascunho"}</button>
+              <button className={btnGhost + " hp-btn-sm"} onClick={() => setSel(sel === t.id ? null : t.id)}>{sel === t.id ? "Fechar" : "Cursos da trilha"}</button>
+            </div>
+          </div>
+          {sel === t.id && (
+            <div className="mt-3 border-t border-border pt-3">
+              {linked.data && linked.data.length > 0 ? <ul className="mb-3 grid gap-1.5">
+                {linked.data.map((l) => <li key={l.course_id} className="flex items-center justify-between text-sm bg-muted/50 px-3 py-2">
+                  <span>{l.course.title} {l.course.status !== "published" && <span className="text-muted-foreground">({STAT[l.course.status]})</span>}</span>
+                  <button className="text-destructive text-xs" onClick={() => removeCourse(t.id, l.course_id)}>Remover</button></li>)}
+              </ul> : <p className="text-sm text-muted-foreground mb-3">Nenhum curso vinculado ainda.</p>}
+              <label htmlFor={`add-${t.id}`} className="sr-only">Adicionar curso</label>
+              <select id={`add-${t.id}`}   defaultValue="" onChange={(e) => { void addCourse(t.id, e.target.value); e.target.value = ""; }}>
+                <option value="" disabled>Adicionar curso existente…</option>
+                {allCourses.data?.filter((c) => !linked.data?.some((l) => l.course_id === c.id)).map((c) => <option key={c.id} value={c.id}>{c.title} ({STAT[c.status]})</option>)}
+              </select>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>}
+  </>);
 };
 
 const CourseManager = ({ course, onChanged }: { course: Course; onChanged: () => void }) => {

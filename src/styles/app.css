@@ -133,6 +133,12 @@ html.hp-app table tbody tr:hover { background: hsl(var(--muted) / .6); }
 .hp-sidebar[data-collapsed="true"] .hp-sb-text { display: none; }
 .hp-sb-foot { border-top: 1px solid hsl(var(--sb-line)); padding: .5rem; flex-shrink: 0; }
 .hp-header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: .75rem; height: var(--header-h); padding: 0 1rem; background: hsl(var(--card) / .96); backdrop-filter: none; border-bottom: 1px solid hsl(var(--border)); }
+/* Sub-navegação de uma seção com "children" (ex.: Financeiro) — presa logo abaixo do header, com rolagem própria contida (nunca corta itens). */
+.hp-subnav { position: sticky; top: var(--header-h); z-index: 29; display: flex; align-items: center; gap: .125rem; height: 2.75rem; padding: 0 1rem; background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border)); overflow-x: auto; scrollbar-width: thin; }
+.hp-subnav-link { display: inline-flex; align-items: center; gap: .25rem; height: 1.875rem; padding: 0 .625rem; border-radius: .375rem; font-size: .8125rem; font-weight: 500; color: hsl(var(--muted-foreground)); white-space: nowrap; flex-shrink: 0; transition: background-color .12s, color .12s; }
+.hp-subnav-link:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.hp-subnav-link[aria-current="page"], .hp-subnav-link-active { background: hsl(var(--primary) / .1); color: hsl(var(--primary)); font-weight: 600; }
+.hp-subnav-more { border: none; background: transparent; cursor: pointer; }
 .hp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .hp-content { flex: 1; min-width: 0; padding: 1.25rem 1.5rem 2rem; max-width: 90rem; width: 100%; margin: 0 auto; }
 @media (max-width: 767px) { .hp-content { padding: 1rem; } .hp-sidebar-desktop { display: none; } }

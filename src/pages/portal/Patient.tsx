@@ -7,6 +7,8 @@ import PortalShell from "./PortalShell";
 
 interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
+interface Me { full_name: string; preferred_name: string | null; birth_date: string | null }
+interface Contact { type: string; value: string; is_primary: boolean }
 const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Faltou", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
 const PHASE: Record<string, string> = { before: "Antes do atendimento", after: "Depois do atendimento", program: "Programa de acompanhamento" };
 
@@ -34,8 +36,29 @@ const Patient = () => {
       <section className="mb-10"><h2 className="text-xl mb-1">Orientações liberadas pela sua equipe</h2><p className="text-sm text-muted-foreground mb-3">Conteúdos definidos por profissionais autorizados. Em caso de dor intensa ou piora, procure atendimento — este espaço não substitui uma avaliação.</p>
         <State loading={assigns.isLoading} error={assigns.error} empty={assigns.data?.length === 0} emptyText="Nenhum conteúdo liberado no momento." />
         <ul className="space-y-4">{assigns.data?.map((a) => a.content && <Item key={a.id} a={a} onLogged={() => m.ok("Registro enviado.")} onError={(t) => m.err(t)} />)}</ul></section>
+      <PersonalData />
       <Chat />
     </PortalShell>
+  );
+};
+
+const PersonalData = () => {
+  // RLS (can_read_person) só deixa a pessoa ler o próprio cadastro — sem filtro adicional, o único registro que volta é o dela mesma.
+  const self = useQuery({ queryKey: ["my-person"], queryFn: async () => (await supabase.from("people").select("id, full_name, preferred_name, birth_date").limit(1).maybeSingle()).data as (Me & { id: string }) | null });
+  const contacts = useQuery({ queryKey: ["my-contacts", self.data?.id], enabled: !!self.data?.id, queryFn: async () => (await supabase.from("person_contacts").select("type, value, is_primary").eq("person_id", self.data!.id)).data as Contact[] ?? [] });
+  const TYPE_LABEL: Record<string, string> = { email: "E-mail", phone: "Telefone/WhatsApp" };
+  return (
+    <section className="mb-10"><h2 className="text-xl mb-1">Dados pessoais</h2>
+      <p className="text-sm text-muted-foreground mb-3">Cadastro mantido pela equipe da clínica. Para corrigir algum dado, fale com a recepção ou pelo canal de dúvidas abaixo.</p>
+      <State loading={self.isLoading} error={self.error} empty={!self.isLoading && !self.data} emptyText="Cadastro não encontrado. Fale com a equipe se isso não for esperado." />
+      {self.data && (
+        <div className="hp-card p-4 grid gap-2 max-w-md text-sm">
+          <div className="flex justify-between"><span className="text-muted-foreground">Nome</span><span>{self.data.preferred_name || self.data.full_name}</span></div>
+          {self.data.birth_date && <div className="flex justify-between"><span className="text-muted-foreground">Nascimento</span><span>{new Date(self.data.birth_date + "T12:00:00Z").toLocaleDateString("pt-BR")}</span></div>}
+          {contacts.data?.map((c) => <div key={c.type + c.value} className="flex justify-between"><span className="text-muted-foreground">{TYPE_LABEL[c.type] ?? c.type}</span><span>{c.value}{c.is_primary && " (principal)"}</span></div>)}
+        </div>
+      )}
+    </section>
   );
 };
 

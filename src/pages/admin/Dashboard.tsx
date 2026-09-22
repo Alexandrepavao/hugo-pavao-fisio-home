@@ -1,65 +1,77 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
-import { FilterBar, FilterField, PageHead, StatCard, State, Table, Td } from "@/lib/ui";
+import { State, StatCard } from "@/lib/ui";
+import Greeting from "./Greeting";
+import GeoSection from "./GeoSection";
+import { PeriodFilter } from "./finance/PeriodFilter";
+import { axisBrl, mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./finance/shared";
 
-interface Metric { value: number | null; available: boolean; basis: string; [k: string]: unknown }
 type Metrics = Record<string, Metric | { items: { reason: string; count: number }[]; basis: string }>;
 interface Alert { kind: string; label: string; link: string; count: number }
-type Fmt = "int" | "brl" | "pct" | "min" | "score";
-
-const GROUPS: { title: string; items: [string, string, Fmt][] }[] = [
-  { title: "Captação", items: [["visits", "Visitas às páginas", "int"], ["leads", "Leads por formulário", "int"], ["page_conversion", "Conversão das páginas", "pct"], ["referrals", "Indicações", "int"], ["acquisition_cost", "Custo de aquisição / retorno de mídia", "brl"]] },
-  { title: "Comercial", items: [["opportunities_created", "Oportunidades criadas", "int"], ["first_response_minutes", "Tempo até o 1º atendimento", "min"], ["win_rate", "Conversão comercial", "pct"], ["average_ticket_cents", "Ticket médio", "brl"]] },
-  { title: "Operação", items: [["evaluations_scheduled", "Agendamentos vindos do CRM", "int"], ["attended", "Atendimentos realizados", "int"], ["no_shows", "Faltas", "int"], ["attendance_rate", "Comparecimento", "pct"], ["occupancy", "Ocupação da agenda", "pct"], ["sessions_contracted", "Sessões contratadas", "int"], ["sessions_used", "Sessões utilizadas", "int"]] },
-  { title: "Financeiro (caixa)", items: [["receipts_cents", "Recebimentos", "brl"], ["expenses_cents", "Despesas pagas", "brl"], ["cash_result_cents", "Resultado de caixa", "brl"], ["overdue_cents", "Inadimplência (vencido)", "brl"], ["forecast_receivables_30d_cents", "A receber em 30 dias (contratado)", "brl"], ["forecast_payables_30d_cents", "A pagar em 30 dias", "brl"], ["forecast_subscriptions_next_month_cents", "PROJEÇÃO de mensalidades (mês seguinte)", "brl"]] },
-  { title: "Educação e relacionamento", items: [["active_students", "Alunos ativos", "int"], ["certificates_issued", "Certificados emitidos", "int"], ["completion_rate", "Taxa de conclusão", "pct"], ["nps", "NPS", "score"], ["satisfaction_avg", "Nota média", "score"]] },
-];
-
-const show = (m: Metric, f: Fmt) => {
-  if (!m.available || m.value == null) return "Indisponível";
-  const v = Number(m.value);
-  return f === "brl" ? brl(v) : f === "pct" ? `${v.toString().replace(".", ",")}%` : f === "min" ? `${v} min` : f === "score" ? v.toString().replace(".", ",") : v.toLocaleString("pt-BR");
-};
-
-const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 const Dashboard = () => {
-  const today = new Date();
-  const [from, setFrom] = useState(iso(new Date(today.getFullYear(), today.getMonth(), 1)));
-  const [to, setTo] = useState(iso(today));
-  const [unit, setUnit] = useState("");
-  const range = { from: new Date(from + "T00:00:00").toISOString(), to: new Date(new Date(to + "T00:00:00").getTime() + 864e5).toISOString() };
+  const [preset, setPreset] = useState<RangePreset>("mes");
+  const [custom, setCustom] = useState(presetRange("mes"));
+  const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
+  const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
+  const range = { from: `${from}T00:00:00.000Z`, to: toExclusive(to) };
+  const prevRange = (() => {
+    const f = new Date(from + "T00:00:00"); const t = new Date(to + "T00:00:00");
+    const days = Math.max(1, Math.round((t.getTime() - f.getTime()) / 864e5) + 1);
+    const pf = new Date(f.getTime() - days * 864e5); const pt = new Date(f.getTime() - 864e5);
+    return { from: pf.toISOString(), to: new Date(pt.getTime() + 864e5).toISOString() };
+  })();
 
-  const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
+  const units = useUnits();
   const metrics = useQuery({ queryKey: ["dash", range.from, range.to, unit], queryFn: async () => {
     const { data, error } = await supabase.rpc("dashboard_metrics", { p_from: range.from, p_to: range.to, p_unit: unit || null }); if (error) throw error; return data as Metrics;
   } });
+  const prevMetrics = useQuery({ queryKey: ["dash-prev", prevRange.from, prevRange.to, unit], enabled: compare, queryFn: async () => {
+    const { data, error } = await supabase.rpc("dashboard_metrics", { p_from: prevRange.from, p_to: prevRange.to, p_unit: unit || null }); if (error) throw error; return data as Metrics;
+  } });
   const alerts = useQuery({ queryKey: ["alerts", unit], queryFn: async () => { const { data, error } = await supabase.rpc("dashboard_alerts", { p_unit: unit || null }); if (error) throw error; return data as Alert[]; } });
-  const cash = useQuery({ queryKey: ["cash", from, to, unit], queryFn: async () => {
-    const { data, error } = await supabase.rpc("cash_flow_monthly", { p_from: from, p_to: iso(new Date(today.getFullYear(), today.getMonth() + 3, 1)), p_unit: unit || null }); if (error) throw error;
-    return data as { month: string; realized_in_cents: number; realized_out_cents: number; forecast_in_cents: number; forecast_out_cents: number }[];
+  const cash = useQuery({ queryKey: ["cash-home", unit], queryFn: async () => {
+    const to3 = new Date(); to3.setMonth(to3.getMonth() + 1); const from6 = new Date(); from6.setMonth(from6.getMonth() - 5);
+    const { data, error } = await supabase.rpc("cash_flow_monthly", { p_from: from6.toISOString().slice(0, 10), p_to: to3.toISOString().slice(0, 10), p_unit: unit || null }); if (error) throw error;
+    return (data as { month: string; realized_in_cents: number; realized_out_cents: number }[]).map((r) => ({ mes: fmtDate(r.month + "T12:00:00Z").slice(0, 5), Entradas: r.realized_in_cents / 100, Saídas: r.realized_out_cents / 100 }));
   } });
-  const prods = useQuery({ queryKey: ["prod-results", range.from, range.to, unit], queryFn: async () => {
-    const { data, error } = await supabase.rpc("results_by_product", { p_from: range.from, p_to: range.to, p_unit: unit || null }); if (error) throw error;
-    return data as { product_id: string; product_name: string; contracted_cents: number; received_cents: number; delivered_sessions: number; recognized_cents: number }[];
+  const funnel = useQuery({ queryKey: ["funnel-home", range.from, range.to, unit], queryFn: async () => {
+    const m = metrics.data; if (!m) return [];
+    return [
+      { etapa: "Leads", n: (m.leads as Metric)?.available ? Number((m.leads as Metric).value) : 0 },
+      { etapa: "Oportunidades", n: (m.opportunities_created as Metric)?.available ? Number((m.opportunities_created as Metric).value) : 0 },
+      { etapa: "Avaliações", n: (m.evaluations_scheduled as Metric)?.available ? Number((m.evaluations_scheduled as Metric).value) : 0 },
+      { etapa: "Contratos", n: (m.average_ticket_cents as Metric & { sales?: number })?.sales ?? 0 },
+    ];
+  }, enabled: !!metrics.data });
+  // "Novos pacientes" e "pacientes ativos" ainda não têm RPC dedicada — consulta direta (contagem simples, sem regra complexa de negócio).
+  const patients = useQuery({ queryKey: ["patients-home", range.from, range.to, unit], queryFn: async () => {
+    let newQ = supabase.from("people").select("id, person_kinds!inner(kind)", { count: "exact", head: true }).eq("person_kinds.kind", "patient").gte("created_at", range.from).lt("created_at", range.to);
+    const activeQ = supabase.from("client_packages").select("person_id", { count: "exact", head: true }).eq("status", "active");
+    const partnersQ = supabase.from("partner_profiles").select("id", { count: "exact", head: true }).eq("status", "active");
+    if (unit) { newQ = newQ.eq("unit_id", unit); }
+    const [n, a, p] = await Promise.all([newQ, activeQ, partnersQ]);
+    return { newPatients: n.count ?? 0, activePackages: a.count ?? 0, activePartners: p.count ?? 0 };
   } });
+
+  const alertsTotal = (alerts.data ?? []).reduce((a, x) => a + x.count, 0);
 
   return (
     <div>
-      <PageHead eyebrow="Gestor" title="Dashboard" hint="Todos os números vêm de dados persistidos. Onde não há dado de origem, aparece “Indisponível” (nunca zero fictício). Cada cartão mostra a regra de cálculo e a data usada." />
-      <FilterBar>
-        <FilterField label="De" htmlFor="d1"><input id="d1" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></FilterField>
-        <FilterField label="Até" htmlFor="d2"><input id="d2" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></FilterField>
-        <FilterField label="Unidade" htmlFor="du"><select id="du" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{(units.data ?? []).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></FilterField>
-        <p className="text-xs text-muted-foreground ml-auto self-center max-w-sm">Período aplicado conforme a data de cada indicador (criação, venda, pagamento ou atendimento — indicada em cada cartão).</p>
-      </FilterBar>
+      <Greeting />
+      <p className="text-muted-foreground mb-5 max-w-2xl">Resumo da operação. Toque em qualquer cartão de alerta para ver a lista completa.</p>
+      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
+        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {alerts.data && (
-        <section aria-label="Alertas" className="mb-8"><h2 className="text-xl mb-3">Alertas</h2>
+        <section aria-label="Alertas" className="mb-8">
+          <h2 className="text-xl mb-3">Alertas e ações prioritárias {alertsTotal === 0 && <span className="text-sm font-normal text-muted-foreground">— tudo em dia</span>}</h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {alerts.data.map((a) => (
               <li key={a.kind}><Link to={a.link} className="hp-card flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors">
@@ -67,32 +79,57 @@ const Dashboard = () => {
                 <span className="text-sm">{a.label}</span></Link></li>))}
           </ul></section>
       )}
-      {metrics.data && GROUPS.map((g) => (
-        <section key={g.title} className="mb-8"><h2 className="text-xl mb-3">{g.title}</h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {g.items.map(([k, label, f]) => { const m = metrics.data![k] as Metric; return (
-              <StatCard key={k} label={label} value={show(m, f)} basis={m.basis} unavailable={!m.available || m.value == null} />); })}
-          </ul></section>
-      ))}
-      {metrics.data && (
-        <section className="mb-8"><h2 className="text-xl mb-3">Motivos de perda</h2>
-          {(metrics.data.loss_reasons as { items: { reason: string; count: number }[] }).items.length === 0 ? <p className="text-navy-400">Nenhuma perda no período.</p> :
-            <ul className="bg-card border border-border divide-y divide-border">{(metrics.data.loss_reasons as { items: { reason: string; count: number }[] }).items.map((i) => <li key={i.reason} className="p-3 flex justify-between"><span>{i.reason}</span><span className="tabular">{i.count}</span></li>)}</ul>}
+
+      {metrics.data && patients.data && (
+        <section className="mb-8"><h2 className="text-xl mb-3">Visão executiva</h2>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Exec label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" />
+            <Exec label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" />
+            <Exec label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} />
+            <Exec label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} basis="pessoas com ao menos um pacote em status ativo (hoje)" />
+            <Exec label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} />
+            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} />
+            <Exec label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" />
+            <Exec label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} />
+            <Exec label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} />
+            <Exec label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" />
+            <Exec label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" />
+            <Exec label="NPS" m={metrics.data.nps as Metric} />
+          </ul>
         </section>
       )}
-      <section className="mb-8"><h2 className="text-xl mb-3">Fluxo de caixa mensal</h2>
-        <p className="text-sm text-navy-400 mb-2">Realizado = pagamentos e despesas efetivos. Previsto = parcelas contratadas e contas a pagar em aberto (a projeção de mensalidades está separada acima).</p>
-        <State loading={cash.isLoading} error={cash.error} empty={cash.data?.length === 0} />
-        {cash.data && cash.data.length > 0 && <Table head={["Mês", "Recebido", "Pago", "A receber (contratado)", "A pagar"]} right={[1, 2, 3, 4]}>
-          {cash.data.map((r) => <tr key={r.month}><Td>{fmtDate(r.month + "T12:00:00Z").slice(3)}</Td><Td num>{brl(r.realized_in_cents)}</Td><Td num>{brl(r.realized_out_cents)}</Td><Td num>{brl(r.forecast_in_cents)}</Td><Td num>{brl(r.forecast_out_cents)}</Td></tr>)}</Table>}
-      </section>
-      <section><h2 className="text-xl mb-3">Resultados por produto</h2>
-        <p className="text-sm text-navy-400 mb-2">Venda contratada, recebido, serviço realizado e receita reconhecida (regra gerencial <strong>proposta</strong>: pacotes = sessões realizadas × valor por sessão; demais = valor recebido — a validar pelo responsável).</p>
-        <State loading={prods.isLoading} error={prods.error} empty={prods.data?.length === 0} />
-        {prods.data && prods.data.length > 0 && <Table head={["Produto", "Contratado", "Recebido", "Sessões realizadas", "Reconhecido"]} right={[1, 2, 3, 4]}>
-          {prods.data.map((r) => <tr key={r.product_id}><Td>{r.product_name}</Td><Td num>{brl(r.contracted_cents)}</Td><Td num>{brl(r.received_cents)}</Td><Td num>{r.delivered_sessions}</Td><Td num>{brl(r.recognized_cents)}</Td></tr>)}</Table>}
-      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
+        <section><h2 className="text-xl mb-3">Evolução financeira (6 meses)</h2>
+          {cash.data && cash.data.length > 0 ? (
+            <div className="hp-card p-4" style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%">
+              <LineChart data={cash.data}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
+                <Tooltip formatter={(v: number) => brl(Math.round(v * 100))} />
+                <Line type="monotone" dataKey="Entradas" stroke="hsl(var(--success))" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="Saídas" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
+              </LineChart></ResponsiveContainer></div>
+          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem movimentos suficientes.</p>}
+        </section>
+        <section><h2 className="text-xl mb-3">Leads, avaliações e contratos (período)</h2>
+          {funnel.data && funnel.data.some((f) => f.n > 0) ? (
+            <div className="hp-card p-4" style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%">
+              <BarChart data={funnel.data}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="etapa" fontSize={12} /><YAxis fontSize={12} allowDecimals={false} />
+                <Tooltip /><Bar dataKey="n" name="Quantidade" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div>
+          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem dados suficientes no período.</p>}
+        </section>
+      </div>
+
+      <GeoSection unit={unit} />
     </div>
+  );
+};
+
+const Exec = ({ label, m, value, basis, kind = "int", prev, tone }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; prev?: Metric; tone?: "danger" }) => {
+  const shown = value ?? mfmt(m, kind);
+  const delta = prev && m?.available && prev.available && Number(prev.value) !== 0 ? Math.round(((Number(m.value) - Number(prev.value)) / Number(prev.value)) * 1000) / 10 : null;
+  return (
+    <StatCard label={label} value={shown} tone={tone ?? (m && !m.available ? undefined : undefined)}
+      basis={delta != null ? `${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta).toString().replace(".", ",")}% vs. período anterior` : prev !== undefined ? "Sem base de comparação" : (basis ?? m?.basis)}
+      unavailable={m ? !m.available || m.value == null : false} />
   );
 };
 

@@ -3,32 +3,24 @@ import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, fmtDateTime, newKey, parseCents } from "@/lib/format";
-import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, promptText, errText, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { REC_ST, SALE_ST, type Account, type Pay, type Rec, type Sale } from "./shared";
 
-interface Sale { id: string; status: string; total_cents: number; discount_cents: number; installments: number; sold_at: string | null; created_at: string; unit_id: string; person: { full_name: string } | null }
-interface Rec { id: string; installment_no: number; installments_total: number; due_date: string; amount_cents: number; status: string; sale_id: string; person: { full_name: string } | null }
-interface Pay { id: string; kind: string; amount_cents: number; paid_at: string; method: string | null; receivable_id: string; refund_of: string | null }
-interface Account { id: string; name: string }
-const SALE_ST: Record<string, string> = { pending: "Pendente", confirmed: "Confirmada", cancelled: "Cancelada" };
-const REC_ST: Record<string, string> = { open: "Em aberto", partial: "Parcial", paid: "Paga", cancelled: "Cancelada", refunded: "Estornada" };
-
-const Finance = () => {
+/** "Vendas e recebimentos": venda contratada (vendas), valor a receber e recebimento efetivo (recebíveis) — conceitos separados, na mesma tela por fluxo de trabalho. */
+const FinanceSales = () => {
   const [sp] = useSearchParams();
   const [tab, setTab] = useState(sp.get("venda") ? "vendas" : "recebiveis");
   return (
     <div>
-      <PageHead eyebrow="HP Finance" title="Vendas e financeiro" hint="Venda contratada, valor a receber, recebimento efetivo, serviço realizado e receita reconhecida são conceitos separados. Valores em reais, calculados em centavos inteiros." />
-      <Tabs tabs={[["vendas", "Vendas"], ["recebiveis", "Recebíveis e recebimentos"], ["pagar", "Contas a pagar"], ["comissoes", "Comissões"], ["projecao", "Projeção de mensalidades"]]} value={tab} onChange={setTab} />
-      {tab === "vendas" && <Sales />}
+      <PageHead eyebrow="Financeiro" title="Vendas e recebimentos" hint="Venda contratada, valor a receber e recebimento efetivo são conceitos separados. Valores em reais, calculados em centavos inteiros." />
+      <Tabs tabs={[["vendas", "Vendas"], ["recebiveis", "Recebíveis e recebimentos"]]} value={tab} onChange={setTab} />
+      {tab === "vendas" && <SalesTab />}
       {tab === "recebiveis" && <Receivables />}
-      {tab === "pagar" && <Payables />}
-      {tab === "comissoes" && <Commissions />}
-      {tab === "projecao" && <Forecast />}
     </div>
   );
 };
 
-const Sales = () => {
+const SalesTab = () => {
   const [sp] = useSearchParams(); const qc = useQueryClient(); const [msg, m] = useMsg();
   const [person, setPerson] = useState(sp.get("pessoa") ?? ""); const [unit, setUnit] = useState(sp.get("unidade") ?? ""); const [opp] = useState(sp.get("venda") ?? "");
   const [product, setProduct] = useState(""); const [qty, setQty] = useState("1"); const [discount, setDiscount] = useState("0,00"); const [inst, setInst] = useState("1"); const [due, setDue] = useState(new Date().toISOString().slice(0, 10));
@@ -119,57 +111,4 @@ const PayForm = ({ rec, balance, onClose, onDone }: { rec: Rec; balance: number;
   );
 };
 
-const Payables = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg();
-  const [desc, setDesc] = useState(""); const [amount, setAmount] = useState(""); const [due, setDue] = useState(new Date().toISOString().slice(0, 10)); const [unit, setUnit] = useState(""); const [cat, setCat] = useState("");
-  const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
-  const cats = useQuery({ queryKey: ["cats"], queryFn: async () => (await supabase.from("finance_categories").select("id, name").eq("kind", "expense")).data ?? [] });
-  const accounts = useQuery({ queryKey: ["accounts"], queryFn: async () => (await supabase.from("financial_accounts").select("id, name").eq("active", true)).data as Account[] });
-  const list = useQuery({ queryKey: ["payables"], queryFn: async () => (await supabase.from("payables").select("id, description, amount_cents, due_date, status, paid_at").order("due_date").limit(200)).data ?? [] });
-  const add = async (e: FormEvent) => {
-    e.preventDefault(); const cents = parseCents(amount); const { data: u } = await supabase.auth.getUser();
-    if (!desc.trim() || !unit || cents == null) return m.err("Preencha descrição, unidade e valor.");
-    const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
-    const { error } = await supabase.from("payables").insert({ org_id: org?.org_id, unit_id: unit, category_id: cat || null, description: desc.trim(), amount_cents: cents, due_date: due, competence_month: due.slice(0, 8) + "01", created_by: u.user?.id });
-    if (error) m.err(errText(error)); else { m.ok("Conta cadastrada."); setDesc(""); setAmount(""); void qc.invalidateQueries({ queryKey: ["payables"] }); }
-  };
-  return (<>
-    <Msg m={msg} />
-    <form onSubmit={add} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-5 items-end" noValidate>
-      <div className="sm:col-span-2"><label htmlFor="pd" className="block text-xs mb-1">Descrição</label><input id="pd"   value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
-      <div><label htmlFor="pv" className="block text-xs mb-1">Valor (R$)</label><input id="pv"   value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-      <div><label htmlFor="pdue" className="block text-xs mb-1">Vencimento</label><input id="pdue" type="date"   value={due} onChange={(e) => setDue(e.target.value)} /></div>
-      <div><label htmlFor="pun" className="block text-xs mb-1">Unidade</label><select id="pun"   value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-      <div><label htmlFor="pcat" className="block text-xs mb-1">Categoria</label><select id="pcat"   value={cat} onChange={(e) => setCat(e.target.value)}><option value="">…</option>{cats.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-      <button className="hp-btn hp-btn-primary">Cadastrar</button>
-    </form>
-    <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhuma conta a pagar." />
-    {list.data && list.data.length > 0 && <Table head={["Descrição", "Vencimento", "Valor", "Estado", ""]} right={[2]}>
-      {list.data.map((p) => <tr key={p.id}><Td>{p.description}</Td><Td>{fmtDate(p.due_date + "T12:00:00Z")}</Td><Td num>{brl(p.amount_cents)}</Td><Td>{p.status === "paid" ? `Paga em ${fmtDate(p.paid_at)}` : p.status === "open" ? "Em aberto" : "Cancelada"}</Td>
-        <Td>{p.status === "open" && <button className={btnGhost + " hp-btn-sm"} onClick={async () => { const { error } = await supabase.rpc("payable_pay", { p_id: p.id, p_account: accounts.data?.[0]?.id ?? null }); if (error) m.err(errText(error)); else { m.ok("Baixa registrada."); void qc.invalidateQueries({ queryKey: ["payables"] }); } }}>Marcar como paga</button>}</Td></tr>)}</Table>}
-  </>);
-};
-
-const Commissions = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg();
-  const list = useQuery({ queryKey: ["commissions"], queryFn: async () => (await supabase.from("commission_entries").select("id, amount_cents, status, created_at, sale_id").order("created_at", { ascending: false }).limit(200)).data ?? [] });
-  const set = async (id: string, s: string) => { const { error } = await supabase.rpc("commission_set_status", { p_entry: id, p_status: s }); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["commissions"] }); };
-  return (<><Msg m={msg} /><p className="text-sm text-muted-foreground mb-3">Geradas a cada recebimento conforme as regras cadastradas; estornos geram lançamento negativo. Regras de comissão são configuradas por SQL/gestor nesta versão (tela de regras pendente).</p>
-    <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhuma comissão gerada." />
-    {list.data && list.data.length > 0 && <Table head={["Data", "Valor", "Estado", ""]} right={[1]}>{list.data.map((c) => <tr key={c.id}><Td>{fmtDate(c.created_at)}</Td><Td num>{brl(c.amount_cents)}</Td><Td>{{ pending: "Pendente", authorized: "Autorizada", paid: "Paga", reversed: "Estornada" }[c.status as string]}</Td>
-      <Td>{c.status === "pending" && <button className={btnGhost + " hp-btn-sm"} onClick={() => set(c.id, "authorized")}>Autorizar</button>}{c.status === "authorized" && <button className={btnGhost + " hp-btn-sm"} onClick={() => set(c.id, "paid")}>Marcar paga</button>}</Td></tr>)}</Table>}</>);
-};
-
-const Forecast = () => {
-  const next = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString().slice(0, 10);
-  const f = useQuery({ queryKey: ["forecast", next], queryFn: async () => { const { data, error } = await supabase.rpc("subscription_forecast", { p_month: next }); if (error) throw error; return data as { person_id: string; person_name: string; product_name: string; projected_amount_cents: number; origin_paid_at: string; origin_competence: string }[]; } });
-  const total = (f.data ?? []).reduce((a, r) => a + r.projected_amount_cents, 0);
-  return (<>
-    <p className="bg-accent/10 border border-accent/40 p-3 text-sm mb-4"><strong>Projeção — não é conta a receber.</strong> Mensalidade paga na competência anterior contribui para o mês seguinte; quem pagou só antes disso não entra; estornos e cancelamentos saem; já contratado no mês não é duplicado.</p>
-    <State loading={f.isLoading} error={f.error} empty={f.data?.length === 0} emptyText="Sem mensalidades pagas no mês anterior para projetar (indisponível)." />
-    {f.data && f.data.length > 0 && <><p className="mb-3">Total projetado: <strong className="tabular">{brl(total)}</strong></p>
-      <Table head={["Pessoa", "Produto", "Valor projetado", "Origem (pagamento em)", "Competência de origem"]} right={[2]}>{f.data.map((r) => <tr key={r.person_id + r.product_name}><Td>{r.person_name}</Td><Td>{r.product_name}</Td><Td num>{brl(r.projected_amount_cents)}</Td><Td>{fmtDate(r.origin_paid_at)}</Td><Td>{fmtDate(r.origin_competence + "T12:00:00Z").slice(3)}</Td></tr>)}</Table></>}
-  </>);
-};
-
-export default Finance;
+export default FinanceSales;
