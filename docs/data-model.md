@@ -1,6 +1,6 @@
 # Modelo de dados
 
-Migrations em `supabase/migrations/` (ordem por timestamp). Aplicadas no **Dev** (001–019). **Produção: nenhuma.** Reaplicar em produção na mesma ordem, com advisors depois.
+Migrations em `supabase/migrations/` (ordem por timestamp). Aplicadas no **Dev** (001–023). **Produção: nenhuma.** Reaplicar em produção na mesma ordem, com advisors depois.
 Convenções: dinheiro = `bigint` em centavos; percentuais = pontos-base; datas com fuso (`timestamptz`), fuso por unidade (`units.timezone`); exclusão em cascata só para dependentes sem valor próprio, `RESTRICT` para evidência financeira/operacional.
 
 | # | Migration | Conteúdo principal |
@@ -24,6 +24,10 @@ Convenções: dinheiro = `bigint` em centavos; percentuais = pontos-base; datas 
 | 017 | fix_create_person | corrige `create_person`: UUID pré-gerado em vez de `RETURNING` (evitava falha de RLS ao reavaliar a política antes da linha existir de forma consistente) |
 | 018 | create_person_validation | validação de formato de e-mail/telefone no servidor (antes só no formulário) |
 | 019 | productivity | `staff_tasks` (tarefas pessoais, `visibility` privado/equipe, vínculo opcional a oportunidade/pessoa/atendimento/tarefa de CRM), `focus_sessions` (uma sessão aberta por vez, índice único parcial), `my_day()`/`team_day()` (combinam por leitura agenda clínica + tarefas de CRM + tarefas pessoais — nunca uma segunda fonte de compromissos), `staff_task_toggle`, `focus_start`/`focus_stop` |
+| 020 | finance_reports_geo | `people.city`/`state_uf`/`country`; `mrr_report()`/`mrr_history()` (MRR/ARR com ponte de movimentação, sobre `products.recurrence`+`receivables.competence_month`); `dre_report()` (honesta: margem/custo direto sempre indisponíveis); `revenue_by_unit()`, `overdue_aging()` (envelhecimento 1-30/31-60/61-90/90+), `efficiency_report()` (CAC/LTV sempre indisponíveis), `geo_distribution()` |
+| 021 | bank_reconciliation | `bank_statement_imports`, `bank_statement_lines` (índice único impede conciliar o mesmo pagamento/conta a pagar duas vezes); `bank_statement_import()`, `bank_reconcile_suggestions/confirm/ignore/undo()` — conciliação nunca cria lançamento novo, só aponta o existente |
+| 022 | mrr_history_date_fix | corrige `mrr_history()`: `generate_series` devolvia timestamp completo em vez de *date* puro |
+| 023 | academy_tracks | `learning_tracks`, `learning_track_courses` (agrupam cursos existentes em trilhas — nunca duplica `courses`/`lessons`); 8 trilhas semeadas como rascunho, sem curso vinculado |
 
 ## Relações-chave (nada "só visual")
 Formulário → `people` + `opportunities` (+ `crm_tasks`, `interactions`) → agendamento (`appointments.opportunity_id`) → comparecimento (evento) → `sales`/`contracts`/`receivables` → `payments` → `entitlements` (Academy) e `client_packages`/`session_ledger` (sessões) → `commission_entries`. Eventos em `domain_events` com `idempotency_key` única e execução por handler registrada em `automation_runs`.
