@@ -43,10 +43,12 @@ feito após este documento deve ser revalidado antes de ser considerado candidat
 ## 4. Configuração de autenticação e storage
 
 - **Supabase Auth (produção)**: configurar *Site URL* para o domínio final; *Redirect URLs* incluindo a URL
-  de produção (e removendo URLs de Dev/preview, se o projeto de produção for realmente separado); **Send
-  Email Hook** (HTTPS, ver `docs/integrations.md`) apontando para a Function `auth-email-hook` do site de
-  produção — com um segredo de hook **próprio** de produção (não reaproveitar o do Dev) — para que todo
-  e-mail de autenticação também saia pela API do Resend, nunca pelo remetente padrão do Supabase.
+  de produção (e removendo URLs de Dev/preview, se o projeto de produção for realmente separado); deployar a
+  Edge Function `auth-email-hook` (`supabase/functions/auth-email-hook/`) **no projeto de produção** (é uma
+  função do projeto, não do site Netlify — precisa ser deployada de novo lá, o deploy do Dev não migra
+  sozinho) e configurar o **Send Email Hook** (tipo *Supabase Edge Functions*, ver `docs/integrations.md`)
+  apontando para ela — com um segredo de hook **próprio** de produção (não reaproveitar o do Dev) — para que
+  todo e-mail de autenticação também saia pela API do Resend, nunca pelo remetente padrão do Supabase.
 - **Storage**: os buckets privados `academy-private` e `care-private` são criados pela própria migration
   `20260921000008_academy_care.sql` — nenhuma ação manual de storage além de aplicar as migrations. Arquivos
   de teste do Dev **não** são copiados (Storage não migra por SQL); qualquer conteúdo real do Academy precisa
@@ -59,19 +61,25 @@ feito após este documento deve ser revalidado antes de ser considerado candidat
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — chave publicável do Core.
 
 **Netlify, escopo Functions (produção):**
-- `RESEND_API_KEY` — pode ser a mesma key do Resend usada no Dev (é uma API key de conta, não por ambiente) ou uma dedicada, à sua escolha.
+- `RESEND_API_KEY` — pode ser a mesma key do Resend usada no Dev (é uma API key de conta, não por ambiente) ou uma dedicada, à sua escolha. Usada pelo `/api/send-email`.
 - `EMAIL_FROM` — `HP Group <contato@hpfisioterapia.com.br>` (mesmo valor do Dev).
+
+**Secrets do projeto Supabase de produção** (Project Settings → Edge Functions → Secrets, não são env vars da Netlify):
+- `RESEND_API_KEY`, `EMAIL_FROM` — mesmos valores acima.
 - `SEND_EMAIL_HOOK_SECRET` — **segredo próprio de produção**, gerado quando o Send Email Hook for configurado no projeto de produção (nunca reaproveitar o segredo do Dev entre ambientes).
 
-**Supabase Auth (produção, via painel, não são env vars da Netlify):**
-- Send Email Hook (HTTPS) apontando para a Function de produção — ver `docs/integrations.md`.
+**Supabase Auth (produção, via painel):**
+- Send Email Hook (tipo *Supabase Edge Functions*) apontando para a `auth-email-hook` de produção — ver `docs/integrations.md`.
 
 ## 6. Functions, Edge Functions e schedulers a publicar
 
-- Function `send-email` (`netlify/functions/send-email.mts`) — publica junto do build normal.
-- Function `auth-email-hook` (`netlify/functions/auth-email-hook.mts`) — idem; só entra em uso depois que o Send Email Hook for configurado no Supabase Auth de produção (ver seção 4).
+- Function `send-email` (`netlify/functions/send-email.mts`) — publica junto do build normal da Netlify.
 - Edge Function `social-meta` (`netlify/edge-functions/social-meta.ts`) — idem; confirmado nesta sessão que
   o deploy process a detecta automaticamente (sem configuração extra no `netlify.toml`).
+- Edge Function do Supabase `auth-email-hook` (`supabase/functions/auth-email-hook/`) — **não publica
+  junto do deploy da Netlify**; precisa ser deployada separadamente no projeto de produção do Supabase
+  (`deploy_edge_function` ou `supabase functions deploy`), e só entra em uso depois que o Send Email Hook
+  for configurado no Supabase Auth de produção (ver seção 4).
 - `pg_cron` job `domain-events-retry` — **recriar manualmente** no banco de produção (ver seção 3.4); não
   existe hoje nenhuma migration que crie o job automaticamente (por design, para não rodar cron em todo
   ambiente que aplica as migrations).
