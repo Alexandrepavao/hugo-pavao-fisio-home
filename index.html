@@ -7,7 +7,10 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-CCSTPKF8GP');
+      // send_page_view desligado: o pageview automático captura a URL inteira (inclusive querystring),
+      // o que vazaria token_hash de links de confirmação de autenticação para o Analytics. O pageview
+      // é disparado manualmente pelo app (src/main.tsx), só com origem+caminho, nunca com querystring.
+      gtag('config', 'G-CCSTPKF8GP', { send_page_view: false });
     </script>
 
     <meta charset="UTF-8" />

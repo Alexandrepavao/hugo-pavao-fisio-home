@@ -11,18 +11,23 @@ import { renderAuthEmail, type AuthEmailType } from "./email-templates.ts";
  * por essa proteção. Hospedar no Supabase remove esse obstáculo sem tocar na proteção da Netlify.
  *
  * O Supabase continua dono de usuários/senhas/sessões/tokens — este hook só entrega o e-mail. O link de
- * confirmação aponta para o /auth/v1/verify do próprio Supabase (token_hash, tipo e redirect_to que o
- * Supabase gerou); validade, expiração e uso único do token continuam sendo do Supabase, sem mecanismo
- * paralelo. `verify_jwt` é desligado no deploy desta função de propósito: quem chama é o Supabase Auth
- * (não um usuário logado), autenticado pela assinatura do webhook abaixo, não por um JWT de sessão.
+ * confirmação aponta para {PUBLIC_SITE_URL}/confirmar?token_hash=...&type=... — uma página HP própria
+ * (src/pages/auth/Confirmar.tsx) que valida o token com o `verifyOtp()` OFICIAL do Supabase Auth,
+ * client-side. Nunca aponta para supabase.co nem para localhost em produção: validade, expiração e uso
+ * único do token continuam sendo do Supabase, isto só troca QUEM mostra a página que recebe o link, não o
+ * mecanismo de validação. `verify_jwt` é desligado no deploy desta função de propósito: quem chama é o
+ * Supabase Auth (não um usuário logado), autenticado pela assinatura do webhook abaixo, não por um JWT de
+ * sessão.
  *
  * Configuração (painel do projeto, Authentication → Hooks → Send Email hook):
  *   Tipo: Supabase Edge Functions → selecionar esta função (auth-email-hook).
  *   O Supabase gera um segredo (formato "v1,whsec_...") — copiar para o secret SEND_EMAIL_HOOK_SECRET
  *   deste projeto (Project Settings → Edge Functions → Secrets, ou `supabase secrets set`).
  * Secrets necessários neste projeto Supabase (nunca em VITE_*, nunca no front-end):
- *   RESEND_API_KEY, SEND_EMAIL_HOOK_SECRET, EMAIL_FROM ("HP Group <contato@hpfisioterapia.com.br>").
- *   SUPABASE_URL já é injetado automaticamente pela plataforma.
+ *   RESEND_API_KEY, SEND_EMAIL_HOOK_SECRET, EMAIL_FROM ("HP Group <contato@hpfisioterapia.com.br>"),
+ *   PUBLIC_SITE_URL (a origem pública do site — produção: "https://hpfisioterapia.com.br"; Dev: a URL do
+ *   site Netlify de preview). SUPABASE_URL já é injetado automaticamente pela plataforma (só usado aqui
+ *   indiretamente, via PUBLIC_SITE_URL para o link do e-mail).
  */
 
 const WEBHOOK_TOLERANCE_SECONDS = 5 * 60;
@@ -99,9 +104,11 @@ Deno.serve(async (req: Request) => {
   // Só a partir daqui o chamador provou ser o Supabase Auth — agora sim checamos a config de envio.
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("EMAIL_FROM");
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  // URL pública da HP (não supabase.co, não localhost) — página /confirmar valida o token pelo verifyOtp()
+  // oficial do Supabase Auth client-side. Nunca cai no remetente/domínio padrão do Supabase.
+  const siteUrl = Deno.env.get("PUBLIC_SITE_URL");
   if (!resendKey || !from) return hookError(500, "email_not_configured: RESEND_API_KEY/EMAIL_FROM ausentes");
-  if (!supabaseUrl) return hookError(500, "supabase_url_not_configured");
+  if (!siteUrl) return hookError(500, "site_url_not_configured: PUBLIC_SITE_URL ausente");
 
   let payload: HookPayload;
   try {
@@ -113,10 +120,12 @@ Deno.serve(async (req: Request) => {
   const email = payload.user?.email;
   const tokenHash = payload.email_data?.token_hash;
   const actionType = payload.email_data?.email_action_type as AuthEmailType | undefined;
-  const redirectTo = payload.email_data?.redirect_to ?? "";
   if (!email || !tokenHash || !actionType) return hookError(400, "invalid_payload");
 
-  const confirmUrl = `${supabaseUrl}/auth/v1/verify?token=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(actionType)}&redirect_to=${encodeURIComponent(redirectTo)}`;
+  // token_hash/type na querystring de uma página nossa — nunca um link supabase.co, nunca localhost.
+  // A página /confirmar exige um clique explícito antes de chamar verifyOtp() (evita que pré-visualizadores
+  // automáticos de e-mail queimem o token de uso único) e nunca expõe o token em log nem em analytics.
+  const confirmUrl = `${siteUrl}/confirmar?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(actionType)}`;
   const { subject, html, text } = renderAuthEmail(actionType, confirmUrl);
 
   const res = await fetch("https://api.resend.com/emails", {

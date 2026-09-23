@@ -13,6 +13,7 @@ import { AskProvider } from "./lib/ui";
 const Login = lazy(() => import("./pages/auth/Login"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const FirstAccess = lazy(() => import("./pages/auth/FirstAccess"));
+const Confirmar = lazy(() => import("./pages/auth/Confirmar"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminHome = lazy(() => import("./pages/admin/AdminHome"));
 const Overview = lazy(() => import("./pages/admin/Overview"));
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
+              <Route path="/confirmar" element={<Confirmar />} />
               <Route path="/app" element={<Landing />} />
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
