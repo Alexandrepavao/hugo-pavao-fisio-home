@@ -1,5 +1,68 @@
 # HP Group Hub — Status do Projeto
 
+## Sessão mais recente (2026-09-23) — Quizzes de captação (atendimento/parceria)
+
+> **Trabalho feito inteiramente no Dev e no preview**, por instrução explícita — produção
+> (`HP Group Core`, DNS, domínio oficial) **não foi tocada**. Branch `feature/lead-quizzes`
+> a partir da `main` (que já contém o cutover de produção executado em sessão anterior — ver
+> `docs/go-live-plan.md`/`docs/deployment.md`, ainda não refletido no restante deste arquivo).
+
+- **Duas jornadas de quiz** (`/avaliacao` — atendimento, `/seja-parceiro` — parceria), 10 perguntas
+  cada, texto e opções seguindo exatamente o que foi especificado. Nome/e-mail/WhatsApp juntos na
+  etapa 1 (com autorização de contato); cidade/UF na etapa 2; gate de consentimento específico de
+  dados de saúde antes das perguntas 5–7 do quiz de atendimento (a jornada de parceria não tem
+  pergunta de saúde); consentimento de marketing opcional e **desmarcado por padrão** no fim.
+- **Integração automática ao CRM**: reaproveita a mesma lógica de deduplicação de
+  `submit_public_form` (contato igual + nome semelhante reaproveita a pessoa; nome bem diferente
+  cria pessoa nova e sinaliza revisão via `crm_tasks` `dedupe_review` — nunca mescla sozinho).
+  Atendimento → funil "Pacientes"; parceria → funil "Parceiros" (ambos já semeados). "Quiz iniciado"
+  e "Quiz concluído — aguardando contato" registrados em `interactions`; tarefa `first_contact`
+  criada com `dedupe_key` (idempotente). Segmento **"Potencial Academy"**: toda captação de
+  parceria ganha a tag `Potencial Academy` (reaproveitando `tags`/`person_tags` já existentes) —
+  nunca matrícula, nunca acesso a curso, nunca uma segunda oportunidade.
+- **Schema novo** (migration `20260924000038_lead_quizzes.sql`, aplicada e testada só no Dev
+  `fsvtzowcwhvwtluwrhnb`): tabelas `quiz_leads` (sem GRANT direto a nenhum papel — acesso só pelas
+  funções abaixo, RLS habilitado como reforço) e `quiz_whatsapp_numbers` (seedada com os números já
+  reais em uso no site, `src/lib/contact.ts` — nunca inventados). Funções públicas (`anon`):
+  `quiz_start`, `quiz_save_progress`, `quiz_set_health_consent`, `quiz_complete`,
+  `quiz_log_whatsapp_click`, `quiz_whatsapp_number`. Funções administrativas (`authenticated`):
+  `list_quiz_leads`, `get_quiz_lead_detail` (mascara as 3 respostas de saúde para quem não tem papel
+  de gestão — `sales` nunca vê, `manager`/`ops_admin`/`unit_manager` veem), `quiz_lead_metrics`.
+- **Identificador da submissão = `id` (uuid aleatório)**: o navegador nunca informa
+  `person_id`/`opportunity_id` — só pode agir sobre a própria submissão. Idempotência por
+  `dedupe_key` (contato + jornada + dia): reenvio no mesmo dia retoma a mesma submissão, nunca
+  duplica. Validação de resposta é um allowlist rígido por jornada+chave
+  (`private.quiz_validate_answer`), igual ao padrão de `forms_validate`/`validate_blocks`.
+  Abandono/inatividade: **não há status "abandonado" gravado** — é calculado na leitura por
+  `quiz_lead_metrics` (>24h sem `last_activity_at` e status ≠ completed), documentado aqui como a
+  regra escolhida em vez de marcar abandono ao fechar a aba.
+- **WhatsApp obrigatório ao final**: mensagem gerada a partir das respostas, com prévia
+  editável, opção desmarcada por padrão para incluir dor/qualidade de vida (só atendimento) e
+  outra para incluir a faixa de investimento; "Copiar mensagem"; número vem de
+  `quiz_whatsapp_number()` (admin-configurável por jornada/unidade em `quiz_whatsapp_numbers`,
+  nunca inventado); clique registrado separadamente da conclusão (`whatsapp_clicked_at`).
+- **Admin "Gestão → Captação de leads"** (`/admin/captacao-leads`, mesmos papéis do CRM/Pessoas):
+  busca/filtros (jornada, status, revisão)/paginação, detalhe da submissão, indicadores reais
+  (capturados por jornada, taxa de conclusão, aguardando contato, tempo até 1º contato, conversão
+  em avaliação agendada/parceiro aprovado, segmento Academy, interesse por tema, origem/UF, cliques
+  no WhatsApp) com período explícito — nunca confunde clique com envio real.
+- **CTAs**: "Quero cuidar da minha dor" (home, bloco logo após o método + rodapé) e "Quero ser
+  fisioterapeuta parceiro" (`/trabalhe-conosco`, destacado + rodapé), componentes reutilizáveis
+  (`QuizCta`/`QuizFloatButton`), botão fixo discreto só no mobile, chamadas específicas existentes
+  preservadas.
+- **Testes**: `supabase/tests/019_lead_quizzes.sql` (21/21, transação sempre desfeita) + E2E novo
+  `e2e/08-lead-quizzes.spec.ts` (3/3 — as duas jornadas completas com WhatsApp interceptado via
+  `route.fulfill` nunca chegando ao servidor real, e reenvio same-day sem duplicar) — suíte E2E
+  completa **30/30**, sem regressão. `tsc`/`eslint`/`vite build` ok. Dados sintéticos de QA
+  removidos do Dev ao final de cada rodada de teste.
+- **Pendências reais**: editor de landing pages (`PageEditor`) ainda não tem seleção de jornada
+  para o bloco `cta` — os CTAs fixos (home/rodapé/trabalhe-conosco) estão prontos, mas a escolha de
+  jornada dentro do editor de páginas não foi implementada nesta sessão. Nenhum número de WhatsApp
+  está "ausente" — os dois já usados no site foram reaproveitados como padrão. PR ainda **não
+  aberto** nesta etapa (branch `feature/lead-quizzes`, sem merge na `main`).
+
+---
+
 Atualizado: 2026-09-22 (sessão 7) · Branch `feature/hp-group-hub` · [PR #1](https://github.com/Alexandrepavao/hugo-pavao-fisio-home/pull/1) em rascunho (sem merge na `main`)
 
 > Todo o trabalho abaixo foi implementado e validado no ambiente **Dev** (banco + servidor local apontando para o Supabase Dev) e por **27 testes E2E automatizados** (Playwright, suíte anterior preservada) + **3 arquivos de teste SQL novos** (016–018, 32/32 asserções). O deploy publicado na Netlify **ainda não foi validado ao vivo** — segue atrás da proteção de equipe (bloqueio externo inalterado). Produção (`HP Group Core`) segue vazia e não foi tocada.
