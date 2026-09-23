@@ -5,9 +5,6 @@ export interface NavChild { to: string; label: string; end?: boolean }
 export interface NavItem { to: string; label: string; icon: LucideIcon; roles?: AppRole[]; end?: boolean; keywords?: string; children?: NavChild[] }
 export interface NavSection { label?: string; items: NavItem[] }
 
-// Destaques na navegação do header quando dentro de uma seção com "children" (os demais ficam em "Mais").
-export const HEADER_PRIMARY = 6;
-
 // Papéis apenas controlam a exibição do menu. A autorização real é feita no banco (RLS e funções).
 export const NAV: NavSection[] = [
   { items: [
@@ -26,14 +23,16 @@ export const NAV: NavSection[] = [
     { to: "/admin/acompanhamento", label: "Acompanhamento", icon: HeartPulse, roles: ["manager", "ops_admin", "unit_manager", "physio"], keywords: "pacientes vínculo conteúdos" },
   ] },
   { label: "Financeiro", items: [
+    // Ordem pedida: Visão geral, Vendas, Contas a receber (ainda sem tela própria — ver docs/project-status.md),
+    // Contas a pagar, Fluxo de caixa, Recorrência, DRE, Conciliação, Comissões e repasses, Relatórios, Configurações.
     { to: "/admin/financeiro", label: "Financeiro", icon: Wallet, roles: ["manager", "ops_admin", "unit_manager", "finance", "sales"], keywords: "vendas recebimentos contas comissões mrr arr dre conciliação", children: [
       { to: "/admin/financeiro", label: "Visão geral", end: true },
       { to: "/admin/financeiro/vendas", label: "Vendas" },
+      { to: "/admin/financeiro/pagar", label: "Contas a pagar" },
       { to: "/admin/financeiro/fluxo-caixa", label: "Fluxo de caixa" },
       { to: "/admin/financeiro/recorrencia", label: "Recorrência" },
       { to: "/admin/financeiro/dre", label: "DRE" },
       { to: "/admin/financeiro/conciliacao", label: "Conciliação" },
-      { to: "/admin/financeiro/pagar", label: "Contas a pagar" },
       { to: "/admin/financeiro/comissoes", label: "Comissões e repasses" },
       { to: "/admin/financeiro/relatorios", label: "Relatórios" },
       { to: "/admin/financeiro/config", label: "Configurações" },
