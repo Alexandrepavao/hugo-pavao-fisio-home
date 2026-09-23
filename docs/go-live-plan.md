@@ -1,150 +1,133 @@
 # Plano de lançamento (go-live) — HP Group Hub
 
-> Documento de preparação para uma decisão final. **Nada aqui foi executado.** Confirmado nesta sessão
-> (2026-09-22, leitura direta via MCP): o banco de produção `HP Group Core` (`wfqkjrpqkaarpavjheoj`) tem
-> **zero tabelas em `public`** e **zero migrations aplicadas** — segue vazio. A validação no Dev não
-> substitui os testes posteriores em produção.
+> **Atualizado em 2026-09-23 — cutover de produção EXECUTADO** (banco, deploy, merge). O que falta é
+> **DNS** (fora do meu acesso — só eu não consigo terminar isto) e **3 itens de painel** (Supabase Auth
+> Site URL/Redirect URLs/Send Email Hook + secrets) — ambos exigem sua ação, detalhados nas seções 4 e 3.
 
-## 1. Destino de hospedagem proposto e suas dependências
+## 1. O que foi executado
 
-**Proposta**: mover o domínio principal (`hpfisioterapia.com.br`) de GitHub Pages para Netlify, no mesmo
-site `hp-group-hub` (ou um site novo dedicado a produção — decisão aberta, ver seção 9).
+- **Migrations 001→037** aplicadas em `HP Group Core` (`wfqkjrpqkaarpavjheoj`), uma a uma, na ordem, com
+  `apply_migration` (nunca `db reset`). `pg_cron` foi habilitado antes da 035 (não vinha por padrão no
+  projeto). Confirmado via `list_migrations`: 37/37 registradas. Advisors de segurança/performance
+  revisados — nenhum achado novo além dos padrões já esperados do desenho do projeto (RPCs
+  `SECURITY DEFINER` com checagem de papel interna é o padrão usado em toda a base, igual ao Dev).
+- **Job `domain-events-retry`** recriado em produção (`cron.schedule`, a cada minuto) — confirmado ativo.
+- **Banco de produção não tinha dados antes das migrations** (`list_tables` vazio) — não houve necessidade
+  de backup de dados existentes; a "cópia de segurança" aqui é o próprio Postgres do Supabase (PITR do
+  plano do projeto — não verifiquei o plano/retenção exata, ver seção 6).
+- **Edge Function `auth-email-hook`** deployada no projeto de produção (`wfqkjrpqkaarpavjheoj`), código
+  idêntico ao Dev, `verify_jwt: false` de propósito (ver `docs/integrations.md`).
+- **Site Netlify de produção criado**: `hp-group-hub-producao` (id `324307d8-7697-4f3a-907f-95e572b5b77d`,
+  time "Hp Group") — **separado** do site `hp-group-hub` (que continua sendo só Dev/preview, protegido por
+  login de equipe, intocado). Protegido por login de equipe **desligado** (`requiresSSOTeamLogin: false`)
+  — confirmado publicamente acessível (`200 OK` sem login) via `https://hp-group-hub-producao.netlify.app`.
+  Decisão de criar um site novo em vez de reaproveitar `hp-group-hub`: evita qualquer risco de um erro de
+  configuração de acesso vazar o site de Dev (que precisa continuar protegido) — total isolamento entre os
+  dois ambientes.
+- **Env vars do site de produção** (Netlify): `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` apontando
+  para o Core; `EMAIL_FROM` = `HP Group <contato@hpfisioterapia.com.br>`. `RESEND_API_KEY` **pendente**
+  (não tenho o valor — ver seção 3).
+- **Deploy publicado**: commit `5fcc175` (branch `feature/hp-group-hub`, antes do merge), build "ready", 1
+  Function (`send-email`) + 1 Edge Function (`social-meta`) publicadas. Login, primeiro acesso, recuperação
+  e a nova página `/confirmar` testados visualmente e funcionando no endereço `hp-group-hub-producao.netlify.app`.
+- **Workflow do GitHub Pages desativado** (`on: workflow_dispatch` em vez de `push: main`) — commitado
+  ANTES do merge, especificamente para não competir com a publicação real quando `main` mudasse. Confirmado
+  depois do merge: nenhuma nova execução do workflow foi disparada; `hpfisioterapia.com.br` continua sendo
+  servido normalmente pelo GitHub Pages, sem nenhuma mudança visível ainda.
+- **PR #1 mesclado em `main`**: commit de merge `436dabe`, branch `feature/hp-group-hub` não excluída.
+- **Correção real dos links de e-mail**: o hook agora aponta para `{PUBLIC_SITE_URL}/confirmar?token_hash=...&type=...`
+  — uma página HP própria que valida com `verifyOtp()` oficial do Supabase Auth (não é link para
+  `supabase.co`, não é `localhost`). Ver `docs/integrations.md` para o novo secret `PUBLIC_SITE_URL`
+  (pendente, seção 3).
 
-Dependências dessa escolha:
-- Mudança de DNS (CNAME/A record apontando para Netlify) — **não executada, exige sua aprovação explícita**.
-- Decisão sobre manter GitHub Pages como está até o cutover, ou desligar antes — hoje GitHub Pages continua
-  servindo o site institucional atual sem nenhuma rota nova.
-- Decisão sobre desativar a proteção de equipe do Netlify no site de produção (hoje ativa no site de
-  preview `hp-group-hub` — correta para preview, mas produção pública não pode ficar atrás de login de
-  equipe).
-- Resolver o site Netlify não documentado (`leafy-cascaron-325147`, achado desta sessão em
-  `docs/deployment.md`) antes de qualquer decisão de DNS, para não confundir qual site é o de produção.
+## 2. O que NÃO foi tocado (deliberadamente)
 
-## 2. Commit candidato ao lançamento
+- **DNS de `hpfisioterapia.com.br`** — nenhum registro alterado. O domínio continua resolvendo para o
+  GitHub Pages (4 IPs `185.199.10{8,9}.153`/`185.199.11{0,1}.153` no apex, `CNAME` para
+  `Alexandrepavao.github.io` no `www`).
+- **Registros de e-mail Hostinger** (SPF `v=spf1 include:_spf.mail.hostinger.com ~all`, MX
+  `mx1`/`mx2.hostinger.com`, DMARC `v=DMARC1; p=none`) — confirmados intactos, não tocados.
+- **Site `hp-group-hub`** (Dev/preview) — env vars e proteção de equipe inalterados.
+- **Banco `HP Group Core`** — só migrations aplicadas; nenhum dado real inserido, nenhuma conta de gestor
+  criada (o bootstrap só ativa quando o e-mail real da pessoa confirma — ninguém fez isso ainda).
 
-`52cac0e` (branch `feature/hp-group-hub`) — inclui Pesquisas, Contas corporativas, retentativa de eventos
-real, metadados sociais, revisão visual 1440px/390px, atribuição de mapa CC BY 4.0. Qualquer commit adicional
-feito após este documento deve ser revalidado antes de ser considerado candidato.
+## 3. Bloqueio real: 3 credenciais que só você pode cadastrar
 
-## 3. Ordem de migração
+Confirmei tecnicamente que não tenho ferramenta para gravar segredos/secrets do Supabase (Edge Functions) —
+isto é sempre um passo de painel, em qualquer ambiente, não uma limitação só desta sessão. Faltam, **no
+projeto de produção** (`wfqkjrpqkaarpavjheoj`, Project Settings → Edge Functions → Secrets):
 
-1. Rodar `supabase/migrations/` na ordem 001→036 (36 arquivos, do bootstrap de gestores até
-   `20260924000036_reserved_slug_pesquisas.sql`) no projeto `HP Group Core` (`wfqkjrpqkaarpavjheoj`).
-   Usar `apply_migration` uma a uma, nunca `db reset` em remoto.
-2. O seed de configuração inicial (organização `hp-group`, unidade-sede, funis padrão, categorias
-   financeiras, pesquisa padrão) já está embutido nas próprias migrations — não há script de seed separado
-   para rodar.
-3. Rodar `get_advisors` (tipos `security` e `performance`) no projeto de produção logo após aplicar todas as
-   migrations, antes de qualquer dado real entrar.
-4. Confirmar `cron.job` — a extensão `pg_cron` precisa ser habilitada e o job `domain-events-retry`
-   **recriado explicitamente** no banco de produção (não é copiado automaticamente do Dev — ver
-   `docs/release-readiness.md`, item 14).
+- `RESEND_API_KEY` — pode ser a mesma key do Resend usada no Dev (é uma API key de conta) ou uma dedicada.
+- `EMAIL_FROM` — `HP Group <contato@hpfisioterapia.com.br>`.
+- `PUBLIC_SITE_URL` — **`https://hpfisioterapia.com.br`** (o valor final; funciona assim que o DNS
+  apontar para lá — até lá, os links de e-mail vão apontar para um domínio que ainda não resolve para o
+  site novo, então **não envie e-mails reais de produção antes do DNS estar no ar**, ou avise os
+  destinatários que o link só funciona depois do cutover).
+- `SEND_EMAIL_HOOK_SECRET` — só existe depois do próximo passo:
 
-## 4. Configuração de autenticação e storage
+**Configurar o Send Email Hook no Supabase Auth de PRODUÇÃO** (painel do projeto `wfqkjrpqkaarpavjheoj` →
+Authentication → Hooks → Send Email hook → tipo **Supabase Edge Functions** → selecionar a função
+`auth-email-hook`, já deployada). Ao salvar, o Supabase gera o segredo — cole-o como `SEND_EMAIL_HOOK_SECRET`
+acima. **Sem isto, nenhum e-mail de autenticação sai em produção** — o Supabase continuaria usando o
+remetente padrão dele (o que eu NÃO configurei e não vou configurar, por instrução explícita sua).
 
-- **Supabase Auth (produção)**: configurar *Site URL* para o domínio final; *Redirect URLs* incluindo a URL
-  de produção (e removendo URLs de Dev/preview, se o projeto de produção for realmente separado); deployar a
-  Edge Function `auth-email-hook` (`supabase/functions/auth-email-hook/`) **no projeto de produção** (é uma
-  função do projeto, não do site Netlify — precisa ser deployada de novo lá, o deploy do Dev não migra
-  sozinho) e configurar o **Send Email Hook** (tipo *Supabase Edge Functions*, ver `docs/integrations.md`)
-  apontando para ela — com um segredo de hook **próprio** de produção (não reaproveitar o do Dev) — para que
-  todo e-mail de autenticação também saia pela API do Resend, nunca pelo remetente padrão do Supabase.
-- **Storage**: os buckets privados `academy-private` e `care-private` são criados pela própria migration
-  `20260921000008_academy_care.sql` — nenhuma ação manual de storage além de aplicar as migrations. Arquivos
-  de teste do Dev **não** são copiados (Storage não migra por SQL); qualquer conteúdo real do Academy precisa
-  ser reenviado em produção.
+Também no Netlify (site `hp-group-hub-producao`, escopo Functions): `RESEND_API_KEY` (mesma key) — para o
+`/api/send-email` funcionar.
 
-## 5. Variáveis de ambiente necessárias (nomes apenas — nenhum valor aqui)
+## 4. Bloqueio real: DNS (não tenho acesso a nenhum provedor de DNS)
 
-**Netlify, contexto `production` (site de produção, a criar/decidir):**
-- `VITE_SUPABASE_URL` — apontando para `HP Group Core`, não para o Dev.
-- `VITE_SUPABASE_PUBLISHABLE_KEY` — chave publicável do Core.
+`hpfisioterapia.com.br` **não é gerenciado pela Hostinger** — os nameservers são `byte.dns-parking.com` e
+`pixel.dns-parking.com` (confirmado por consulta direta). A Hostinger só aparece nos registros MX/SPF
+(hospeda o e-mail); o DNS de verdade está em outro provedor — provavelmente o registrador do domínio.
+Descubra onde isso é editável (painel do registrador, não da Hostinger) usando esses nomes de nameserver
+como referência para confirmar que é o lugar certo.
 
-**Netlify, escopo Functions (produção):**
-- `RESEND_API_KEY` — pode ser a mesma key do Resend usada no Dev (é uma API key de conta, não por ambiente) ou uma dedicada, à sua escolha. Usada pelo `/api/send-email`.
-- `EMAIL_FROM` — `HP Group <contato@hpfisioterapia.com.br>` (mesmo valor do Dev).
+**Registros a adicionar** (sem remover nenhum registro de e-mail existente — MX, SPF, DMARC ficam como
+estão):
+| Tipo | Nome | Valor |
+|---|---|---|
+| A | `@` (apex, `hpfisioterapia.com.br`) | `75.2.60.5` (IP padrão do load balancer da Netlify) |
+| CNAME | `www` | `hp-group-hub-producao.netlify.app` |
 
-**Secrets do projeto Supabase de produção** (Project Settings → Edge Functions → Secrets, não são env vars da Netlify):
-- `RESEND_API_KEY`, `EMAIL_FROM` — mesmos valores acima.
-- `SEND_EMAIL_HOOK_SECRET` — **segredo próprio de produção**, gerado quando o Send Email Hook for configurado no projeto de produção (nunca reaproveitar o segredo do Dev entre ambientes).
+Estes são os valores **padrão documentados** da Netlify para domínio próprio — **confirme os valores exatos
+no painel da Netlify** ao adicionar o domínio customizado (Site `hp-group-hub-producao` → Domain management
+→ Add a domain → `hpfisioterapia.com.br`), porque não tenho ferramenta para consultar/gravar o domínio
+customizado do lado da Netlify nesta sessão — esse cadastro também precisa ser feito por você lá, e o
+painel pode mostrar um valor ligeiramente diferente (ex. se a Netlify oferecer usar os nameservers dela em
+vez de A/CNAME). Depois de adicionar lá, a Netlify emite HTTPS automaticamente (Let's Encrypt) — não requer
+ação extra além de esperar a validação, que só acontece depois do DNS resolver.
 
-**Supabase Auth (produção, via painel):**
-- Send Email Hook (tipo *Supabase Edge Functions*) apontando para a `auth-email-hook` de produção — ver `docs/integrations.md`.
+**Depois que o DNS propagar**: confirme `curl -I https://hpfisioterapia.com.br` responde pelo site novo
+(procure o cabeçalho `Server: Netlify`), then me avise para eu validar as jornadas no domínio final e
+ajustar `Site URL`/`Redirect URLs` do Supabase Auth de produção para `https://hpfisioterapia.com.br` (mais
+um passo de painel que só você pode fazer).
 
-## 6. Functions, Edge Functions e schedulers a publicar
+## 5. Bootstrap dos gestores
 
-- Function `send-email` (`netlify/functions/send-email.mts`) — publica junto do build normal da Netlify.
-- Edge Function `social-meta` (`netlify/edge-functions/social-meta.ts`) — idem; confirmado nesta sessão que
-  o deploy process a detecta automaticamente (sem configuração extra no `netlify.toml`).
-- Edge Function do Supabase `auth-email-hook` (`supabase/functions/auth-email-hook/`) — **não publica
-  junto do deploy da Netlify**; precisa ser deployada separadamente no projeto de produção do Supabase
-  (`deploy_edge_function` ou `supabase functions deploy`), e só entra em uso depois que o Send Email Hook
-  for configurado no Supabase Auth de produção (ver seção 4).
-- `pg_cron` job `domain-events-retry` — **recriar manualmente** no banco de produção (ver seção 3.4); não
-  existe hoje nenhuma migration que crie o job automaticamente (por design, para não rodar cron em todo
-  ambiente que aplica as migrations).
+A allowlist (`contato@hpfisioterapia.com.br`, `jan.darioush@yahoo.com.br`) já está no banco (migration 003).
+**Ninguém completou "Primeiro acesso" em produção ainda** — não criei conta em nome de nenhum gestor (só a
+própria pessoa deve escolher sua senha). Isso só funcionará de ponta a ponta (e-mail recebido) depois que
+os 3 secrets da seção 3 estiverem certos.
 
-## 7. Dados de seed inicial
+## 6. Pendências que ficam para depois (não bloqueiam o essencial)
 
-Já incluídos nas migrations (organização, unidade-sede, funis, categorias financeiras, pesquisa padrão) —
-nada além disso. Nenhum dado de teste/sintético deve ser copiado do Dev para produção.
+- Confirmar plano/retenção de backup automático (PITR) do projeto `HP Group Core` no painel do Supabase —
+  não verifiquei isto nesta sessão (não é uma leitura simples pelas ferramentas disponíveis).
+- Resolver o site Netlify não documentado (`leafy-cascaron-325147`) — ainda ativo, ainda fora do meu
+  acesso, ainda gerando deploy previews automáticos a cada push (visto rodando durante o merge desta
+  sessão). Ver `docs/deployment.md`.
+- Segundo gestor / demais convites de equipe em produção — dependem dos e-mails funcionando (seção 3).
 
-## 8. Bootstrap dos gestores
+## 7. Rollback
 
-A allowlist de bootstrap (`contato@hpfisioterapia.com.br`, `jan.darioush@yahoo.com.br`) já está na migration
-`20260921000003_bootstrap_managers.sql` — aplica junto das demais. Após aplicar as migrations em produção,
-os dois gestores completam "Primeiro acesso" com esses e-mails (nenhuma senha padrão é criada pelo sistema).
-
-## 9. Testes pós-publicação
-
-Repetir, contra o endereço de produção real (não o Dev/preview):
-- Login/logout dos dois gestores via Primeiro acesso.
-- Recarregar e acessar diretamente rotas internas (`/admin`, `/checkup`, `/academy`...).
-- Troca de contexto da sidebar.
-- Formulário de captura → oportunidade no CRM.
-- Agenda e pacote.
-- Venda manual e recebimento.
-- Academy e progresso.
-- Área do paciente (jornada completa — ver pendência no item 9 de `docs/release-readiness.md`).
-- Produtividade.
-- Pesquisas e contas corporativas.
-- Acesso negado para um papel sem permissão.
-- Metadados sociais validados por um crawler real (sem proteção de equipe em produção).
-
-## 10. Backup e recuperação
-
-Backups automáticos do Supabase (point-in-time recovery, conforme o plano do projeto `HP Group Core`) são a
-linha de defesa principal — confirmar o plano/retenção do projeto antes do go-live (não verificado nesta
-sessão, não é uma ação de leitura simples via as ferramentas disponíveis). Nenhum backup adicional foi
-configurado por esta sessão.
-
-## 11. Plano de rollback do frontend
-
-Como o Netlify mantém todo deploy anterior, o rollback do frontend é: reativar o deploy anterior pelo painel
-Netlify (ou publicar de novo a partir do commit anterior). Isso **não desfaz migrations de banco** — ver
-próximo item.
-
-## 12. Estratégia para falha de migration (sem presumir rollback destrutivo)
-
-Migrations do Supabase não têm rollback automático nesta configuração. Se uma migration falhar no meio da
-sequência 001→036:
-1. **Parar imediatamente** — não continuar aplicando as próximas.
-2. Diagnosticar a migration específica que falhou (mensagem de erro do `apply_migration`).
-3. Corrigir o problema (ex.: dependência faltando, dado incompatível) numa migration **nova e corretiva**, em
-   vez de editar a já aplicada.
-4. Só reaplicar a partir do ponto de falha depois da correção validada no Dev.
-5. Nunca usar `reset_branch`/`reset` em produção para "recomeçar" — isso apaga dados reais que possam já
-   existir (ex.: se gestores já completaram o bootstrap antes de uma falha tardia).
-
-## 13. Efeito de um merge na `main` sobre o site atual do GitHub Pages
-
-Confirmado nesta sessão (leitura do workflow, sem alteração): `main` publica automaticamente o site
-institucional atual via GitHub Pages a cada push. O código em `feature/hp-group-hub` é uma SPA com rotas
-novas que **substituiria** esse site — sem as rotas do Hub configuradas no `hpfisioterapia.com.br`, um merge
-direto quebraria a experiência atual do site institucional até que o cutover completo (DNS + Netlify) fosse
-feito. **Decisão necessária antes de qualquer merge**: manter GitHub Pages até o cutover estar 100% pronto,
-ou mover para Netlify primeiro e só então mesclar.
-
-## O que este documento não é
-Não é uma autorização para aplicar migrations, alterar DNS, substituir o site atual ou mesclar em `main`.
-Nenhuma dessas ações foi executada nesta sessão. É a preparação para uma decisão final sobre o lançamento.
+- **Frontend**: reativar o deploy publicado anterior pelo painel da Netlify (site `hp-group-hub-producao`),
+  ou publicar de novo a partir de um commit anterior. Não desfaz nada no banco.
+- **DNS**: reverter os registros A/CNAME para os valores do GitHub Pages (documentados na seção 2) — volta
+  a servir o site institucional antigo imediatamente.
+- **GitHub Pages**: reativar o trigger automático do workflow (`.github/workflows/deploy.yml`, trocar
+  `workflow_dispatch` de volta por `push: branches: [main]`) se decidir voltar a usar GitHub Pages como
+  principal.
+- **Banco**: migrations não têm rollback automático. Se algo aplicado precisar ser desfeito, isso exige uma
+  migration corretiva nova (nunca editar uma já aplicada, nunca `reset` em produção com dados reais).
+- **Merge**: já é permanente no histórico do Git (não revertido por instrução — reverter um merge exigiria
+  `git revert` explícito, não fiz isso preventivamente).
