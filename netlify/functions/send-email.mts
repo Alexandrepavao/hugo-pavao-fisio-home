@@ -1,24 +1,18 @@
 import type { Config, Context } from "@netlify/functions";
+import { renderAppEmail, type AppEmailTemplate } from "./lib/email-templates.mts";
 
 /**
- * E-mails TRANSACIONAIS da aplicação (convites, confirmações), enviados pelo backend via Resend.
- * Não confundir com o SMTP do Supabase Auth (confirmação de conta, convite de autenticação e recuperação de senha),
- * que é configurado no painel do Supabase Auth — ver docs/integrations.md.
+ * E-mails TRANSACIONAIS da aplicação (convites, confirmações), enviados pelo backend via Resend — única
+ * via de envio (sem SMTP, sem fallback silencioso para outro provedor). Os e-mails de AUTENTICAÇÃO
+ * (confirmação de conta, recuperação de senha) não passam por aqui: são entregues pelo Supabase Auth Send
+ * Email Hook (`netlify/functions/auth-email-hook.mts`), também via Resend — ver docs/integrations.md.
  *
  * Estado: PREPARADO, NÃO VALIDADO. Sem RESEND_API_KEY e EMAIL_FROM a função responde 501 e nada é enviado.
  */
-const TEMPLATES = ["invite", "appointment_confirmation", "generic"] as const;
+const TEMPLATES = ["invite", "appointment_confirmation", "generic"] as const satisfies readonly AppEmailTemplate[];
 type Template = (typeof TEMPLATES)[number];
 
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
-
-function render(t: Template, name: string, data: Record<string, string>): { subject: string; text: string } {
-  const n = name || "olá";
-  if (t === "invite") return { subject: "Seu convite para o HP Group", text: `Olá, ${n}.\n\nVocê foi convidado(a) para acessar o HP Group. Para criar sua senha, acesse ${data.link ?? ""} e use este mesmo e-mail em “Primeiro acesso”.\n\nSe você não esperava este convite, ignore esta mensagem.` };
-  if (t === "appointment_confirmation") return { subject: "Confirmação de atendimento — HP Fisioterapia", text: `Olá, ${n}.\n\nSeu atendimento está agendado para ${data.when ?? ""}${data.unit ? ` (${data.unit})` : ""}.\n\nPara remarcar, responda esta mensagem ou fale com nossa equipe.` };
-  return { subject: (data.subject ?? "Mensagem do HP Group").slice(0, 120), text: (data.body ?? "").slice(0, 4000) };
-}
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
@@ -45,8 +39,7 @@ export default async (req: Request, _context: Context) => {
   const data = Object.fromEntries(Object.entries(body.data ?? {}).slice(0, 10).map(([k, v]) => [k, String(v).slice(0, 2000)]));
   if (data.link && !/^https:\/\//.test(data.link)) return json(400, { error: "invalid_link" });
 
-  const { subject, text } = render(body.template as Template, (body.name ?? "").slice(0, 100), data);
-  const html = `<div style="font-family:Inter,Arial,sans-serif;color:#14283d;line-height:1.6">${esc(text).replace(/\n/g, "<br>")}</div>`;
+  const { subject, html, text } = renderAppEmail(body.template as Template, (body.name ?? "").slice(0, 100), data);
 
   const res = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: `Bearer ${resendKey}`, "content-type": "application/json" }, body: JSON.stringify({ from, to: [body.to], subject, text, html }) });
   if (!res.ok) return json(502, { status: "provider_error", http: res.status });

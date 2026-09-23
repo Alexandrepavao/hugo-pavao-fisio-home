@@ -43,8 +43,10 @@ feito após este documento deve ser revalidado antes de ser considerado candidat
 ## 4. Configuração de autenticação e storage
 
 - **Supabase Auth (produção)**: configurar *Site URL* para o domínio final; *Redirect URLs* incluindo a URL
-  de produção (e removendo URLs de Dev/preview, se o projeto de produção for realmente separado); SMTP
-  customizado (Resend, domínio verificado) — não usar o remetente padrão/limitado do Supabase em produção.
+  de produção (e removendo URLs de Dev/preview, se o projeto de produção for realmente separado); **Send
+  Email Hook** (HTTPS, ver `docs/integrations.md`) apontando para a Function `auth-email-hook` do site de
+  produção — com um segredo de hook **próprio** de produção (não reaproveitar o do Dev) — para que todo
+  e-mail de autenticação também saia pela API do Resend, nunca pelo remetente padrão do Supabase.
 - **Storage**: os buckets privados `academy-private` e `care-private` são criados pela própria migration
   `20260921000008_academy_care.sql` — nenhuma ação manual de storage além de aplicar as migrations. Arquivos
   de teste do Dev **não** são copiados (Storage não migra por SQL); qualquer conteúdo real do Academy precisa
@@ -57,15 +59,17 @@ feito após este documento deve ser revalidado antes de ser considerado candidat
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — chave publicável do Core.
 
 **Netlify, escopo Functions (produção):**
-- `RESEND_API_KEY`
-- `EMAIL_FROM`
+- `RESEND_API_KEY` — pode ser a mesma key do Resend usada no Dev (é uma API key de conta, não por ambiente) ou uma dedicada, à sua escolha.
+- `EMAIL_FROM` — `HP Group <contato@hpfisioterapia.com.br>` (mesmo valor do Dev).
+- `SEND_EMAIL_HOOK_SECRET` — **segredo próprio de produção**, gerado quando o Send Email Hook for configurado no projeto de produção (nunca reaproveitar o segredo do Dev entre ambientes).
 
 **Supabase Auth (produção, via painel, não são env vars da Netlify):**
-- SMTP host/porta/usuário/senha (Resend) — ver `docs/integrations.md`.
+- Send Email Hook (HTTPS) apontando para a Function de produção — ver `docs/integrations.md`.
 
 ## 6. Functions, Edge Functions e schedulers a publicar
 
 - Function `send-email` (`netlify/functions/send-email.mts`) — publica junto do build normal.
+- Function `auth-email-hook` (`netlify/functions/auth-email-hook.mts`) — idem; só entra em uso depois que o Send Email Hook for configurado no Supabase Auth de produção (ver seção 4).
 - Edge Function `social-meta` (`netlify/edge-functions/social-meta.ts`) — idem; confirmado nesta sessão que
   o deploy process a detecta automaticamente (sem configuração extra no `netlify.toml`).
 - `pg_cron` job `domain-events-retry` — **recriar manualmente** no banco de produção (ver seção 3.4); não

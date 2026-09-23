@@ -15,12 +15,32 @@ const Team = () => {
   const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
   const invites = useQuery({ queryKey: ["invites"], queryFn: async () => (await supabase.from("invitations").select("id, email, role, expires_at, accepted_at, revoked_at").is("accepted_at", null).is("revoked_at", null).order("created_at", { ascending: false })).data ?? [] });
 
+  const sendInviteEmail = async (to: string): Promise<boolean> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+    try {
+      const link = `${window.location.origin}/primeiro-acesso`;
+      const res = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ template: "invite", to, data: link.startsWith("https://") ? { link } : {} }),
+      });
+      return res.ok;
+    } catch { return false; }
+  };
+
   const invite = async (e: FormEvent) => {
     e.preventDefault(); const orgWide = ORG_WIDE.includes(role);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return m.err("Informe um e-mail válido."); if (!orgWide && !unit) return m.err("Selecione a unidade para este papel.");
     const { data: u } = await supabase.auth.getUser(); const { data: org } = await supabase.from("organizations").select("id").single();
-    const { error } = await supabase.from("invitations").insert({ org_id: org?.id, email: email.trim(), role, unit_id: orgWide ? null : unit, invited_by: u.user?.id });
-    if (error) m.err(errText(error)); else { m.ok(`Convite registrado. Peça à pessoa para acessar “Primeiro acesso” com ${email.trim()} e confirmar o e-mail. O envio automático do convite por e-mail depende do SMTP (ver docs/integrations.md).`); setEmail(""); void qc.invalidateQueries({ queryKey: ["invites"] }); }
+    const emailTrim = email.trim();
+    const { error } = await supabase.from("invitations").insert({ org_id: org?.id, email: emailTrim, role, unit_id: orgWide ? null : unit, invited_by: u.user?.id });
+    if (error) { m.err(errText(error)); return; }
+    setEmail(""); void qc.invalidateQueries({ queryKey: ["invites"] });
+    const sent = await sendInviteEmail(emailTrim);
+    m.ok(sent
+      ? `Convite registrado e e-mail enviado para ${emailTrim}.`
+      : `Convite registrado, mas o envio automático do e-mail não está disponível agora. Peça à pessoa para acessar “Primeiro acesso” com ${emailTrim} e confirmar o e-mail.`);
   };
   const revokeRole = async (id: string) => { if (!(await confirmDialog("Revogar este papel?", "O efeito é imediato: a pessoa perde o acesso vinculado a este papel.", "Revogar", true))) return; const { error } = await supabase.from("role_assignments").update({ revoked_at: new Date().toISOString() }).eq("id", id); if (error) m.err(errText(error)); else { m.ok("Papel revogado."); void qc.invalidateQueries({ queryKey: ["team"] }); } };
   const revokeInvite = async (id: string) => { const { error } = await supabase.from("invitations").update({ revoked_at: new Date().toISOString() }).eq("id", id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["invites"] }); };

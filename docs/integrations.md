@@ -5,39 +5,57 @@ Regra: nada é apresentado como "conectado" sem configuração e validação rea
 | Integração | Estado | Observação |
 |---|---|---|
 | GitHub | ✅ | Repositório com escrita; branch + PR em rascunho |
-| Netlify | ✅ (infra) | Site `hp-group-hub`, deploy republicado hoje a partir de `52cac0e`, variáveis do Dev corrigidas (ver `docs/deployment.md`) |
+| Netlify | ✅ (infra) | Site `hp-group-hub`, deploy republicado a partir de `6cb26c1`, variáveis do Dev corrigidas (ver `docs/deployment.md`) |
 | Supabase | ✅ (Dev) | Produção vazia até o go-live |
-| **E-mail — Supabase Auth (SMTP)** | 🟡 resultado incerto — ver observação | Confirmação de conta, convite de autenticação, recuperação de senha. Ver abaixo |
-| **E-mail — transacional (Resend, backend)** | 🔒 preparado, não validado, **sem call-site na UI** | `netlify/functions/send-email.mts` responde 501 sem `RESEND_API_KEY`/`EMAIL_FROM`. Nenhuma tela da aplicação chama `/api/send-email` hoje (confirmado por busca no código) — mesmo configurando as chaves, nenhum fluxo dispararia um envio sem integrar a chamada em alguma tela |
+| **E-mail — autenticação (Supabase Auth Send Email Hook → Resend)** | 🔒 código pronto, aguardando as 3 credenciais/config abaixo | Substitui o SMTP (proposta anterior descartada por decisão explícita). Ver seção "E-mail — arquitetura" |
+| **E-mail — transacional da aplicação (Resend, backend)** | 🔒 código pronto, aguardando `RESEND_API_KEY` | `netlify/functions/send-email.mts`. Único call-site real hoje: convite de equipe (`Team.tsx`) |
 | Pagamentos (checkout/webhook) | ⬜ | Provedor a definir. Acesso pago só por evento confirmado no servidor (já é assim: `payment_record` → evento → acesso) |
 | WhatsApp / e-mail no CRM | ⬜ | Registro manual de contatos por enquanto |
 | Vídeo privado externo | ⬜ | Hoje: Supabase Storage privado + URL assinada (1h) com política por acesso |
 | Google Analytics | ✅ preexistente | `G-CCSTPKF8GP` já estava na home |
-| **Login social (Google OAuth)** | ⬜ não configurado | Confirmado via `GET /auth/v1/settings` (Dev): `"google": false`. Botão **omitido** da tela de login (ver `docs/deployment.md`/sessão de 2026-09-23) — não publicar um botão sem integração real. Ação necessária: em Supabase Auth → *Providers* → *Google*, criar um OAuth Client ID/Secret no Google Cloud Console e habilitar o provider; depois disso, o botão pode ser reativado no código com `supabase.auth.signInWithOAuth({ provider: "google" })` |
+| **Login social (Google OAuth)** | ⬜ não configurado | Confirmado via `GET /auth/v1/settings` (Dev): `"google": false`. Botão omitido da tela de login. Ação: Supabase Auth → *Providers* → *Google* |
 
-## Resend — separação de responsabilidades
-1. **SMTP do Supabase Auth** (não passa pela nossa aplicação): usar o SMTP do Resend em *Auth → SMTP Settings* com remetente do domínio próprio do HP Group.
-2. **E-mails transacionais da aplicação**: função Netlify `POST /api/send-email` (somente equipe, checado no banco por `can_send_transactional()`), templates fixos e sem HTML livre.
+## E-mail — arquitetura (Resend como único provedor, sem SMTP)
 
-Não reutilizar credenciais ou remetentes da Brighter. Não contratar plano pago sem autorização.
+**Decisão de 2026-09-23**: a proposta anterior de SMTP customizado no Supabase Auth foi **descartada**. Todo envio — autenticação e transacional — sai pela **API do Resend**, com o Supabase Auth continuando dono de usuários/senhas/sessões/tokens (nada disso muda). Duas peças, sem sobreposição:
 
-### O que falta (ação sua)
-- Criar conta no Resend (plano gratuito) e **verificar um domínio do HP Group** (registros DNS SPF/DKIM no domínio escolhido — alteração de DNS exige sua aprovação e não foi feita).
-- Criar uma API key **de envio** restrita a esse domínio.
-- Supabase (projeto Dev → *Authentication → SMTP Settings*): host `smtp.resend.com`, porta `465`, usuário `resend`, senha = a API key, remetente `no-reply@<domínio verificado>`. *(Passo manual: o MCP não expõe a configuração de Auth.)*
-- Supabase (*Authentication → URL Configuration*): incluir a URL do preview e `http://localhost:5180` em *Redirect URLs*.
-- Netlify (variáveis, escopo Functions): `RESEND_API_KEY`, `EMAIL_FROM` (ex.: `HP Fisioterapia <no-reply@dominio>`).
-- Mantido: login por e-mail habilitado; nenhuma proteção foi desativada.
+1. **E-mails de autenticação** (confirmação de conta, convite de autenticação do Supabase, recuperação de senha, troca de e-mail): entregues pelo **Supabase Auth Send Email Hook** (tipo HTTPS) — `netlify/functions/auth-email-hook.mts`. O Supabase chama esse endpoint em vez de enviar o e-mail ele mesmo; a função verifica a assinatura do hook (biblioteca `standardwebhooks`, segredo em `SEND_EMAIL_HOOK_SECRET`), monta o link oficial de verificação do próprio Supabase (`{SUPABASE_URL}/auth/v1/verify?token=...&type=...&redirect_to=...` — o mesmo token/validade/expiração/uso único que o Supabase sempre gerou, **não é um mecanismo paralelo**) e envia via Resend com a identidade HP. Cobre `signup` (primeiro acesso), `recovery` (esqueci minha senha), `invite`, `email_change`, `magiclink` e `reauthentication` — os dois últimos não são usados pela aplicação hoje (login é só por senha), mas o hook os trata para não quebrar se o Supabase algum dia os disparar.
+2. **E-mails transacionais da aplicação** (hoje: convite de equipe): `POST /api/send-email` (`netlify/functions/send-email.mts`) — só equipe autenticada, checado no banco por `can_send_transactional()`, sem HTML livre. Templates compartilham a mesma identidade visual do hook de autenticação via `netlify/functions/lib/email-templates.mts` (um único lugar de marca/branding para os dois).
 
-### Como será validado (após configurado)
-Pedido de recuperação → e-mail recebido → link → `/redefinir-senha` → nova senha → login; primeiro acesso dos gestores; `send-email` com convite. Só então o status muda para "validado".
+**Nenhuma mudança foi necessária em `Login.tsx`, `FirstAccess.tsx` ou `ResetPassword.tsx`** — o hook substitui o remetente no lado do Supabase, de forma transparente; o front-end continua chamando `signUp`/`resetPasswordForEmail`/`updateUser` exatamente como antes.
 
-### Teste de API feito em 2026-09-22 (sessão de prontidão para lançamento)
-Chamei `POST /auth/v1/recover` diretamente na API do Supabase Auth (Dev), sem alterar nenhuma senha:
-- Com um e-mail de domínio inválido (`@hp-test.dev`, conta de teste sintética): rejeitado corretamente com `email_address_invalid` — confirma que o GoTrue valida o formato/domínio do e-mail.
-- Com o endereço autorizado `jan.darioush@yahoo.com.br` (um dos dois gestores do bootstrap): resposta `200 OK` em 80ms, sem erro síncrono.
+**Sem SMTP em nenhum lugar. Sem fallback silencioso para outro provedor**: se o Resend falhar, a função retorna erro (o hook retorna um erro no formato que o Supabase reconhece e propaga como falha real ao usuário — nunca um "200" falso; a função `send-email` retorna 502).
 
-Isso **não prova** que um e-mail real chegou — pode ser (a) SMTP customizado já funcionando, (b) o remetente padrão/limitado do próprio Supabase (`mail.app.supabase.io`, sem necessidade de configuração, mas com limite de poucos envios por hora e não recomendado para produção), ou (c) uma falha silenciosa que a API não expõe. **Pendente**: confirmar na caixa de entrada de `jan.darioush@yahoo.com.br` se o e-mail chegou e qual o remetente. Só isso resolve a dúvida sobre se o SMTP customizado já está configurado ou se é o modo de teste padrão do Supabase (que não deve ser usado em produção).
+### O que falta para ativar (ação sua — 3 itens)
+1. **Criar conta no Resend** (se ainda não existir) e **adicionar o domínio `hpfisioterapia.com.br`** no painel do Resend. Isso gera os registros DNS exatos (SPF/DKIM) — **me envie esses registros antes de alterar o DNS**; eu confirmo se colidem com o que já existe (ver "DNS — o que já existe" abaixo) antes de qualquer alteração. Não tenho acesso ao painel do Resend nem ao provedor de DNS — não consigo gerar nem aplicar esses registros sozinho.
+2. **Criar uma API key de envio** no Resend, restrita a esse domínio.
+3. **Configurar o Send Email Hook no Supabase** (Dashboard do projeto Dev → *Authentication* → *Hooks* → *Send Email hook* → tipo **HTTPS** → URL `https://hp-group-hub.netlify.app/api/auth-email-hook`). Ao salvar, o Supabase gera um segredo no formato `v1,whsec_...` — copie-o.
 
-## Convites
-Criar convite (tela *Equipe e acessos* ou *Pessoas → Convidar ao portal*) grava em `invitations`. A pessoa acessa **Primeiro acesso** com o mesmo e-mail, cria a senha e confirma o e-mail; o banco concede o papel **somente** quando o e-mail verificado coincide com um convite aberto (ou com a lista de bootstrap dos gestores). O envio automático do convite por e-mail depende do item acima; até lá o convite é comunicado manualmente.
+Depois, no Netlify (site `hp-group-hub`, variáveis com escopo **Functions**, marcadas como segredo):
+- `RESEND_API_KEY` — a API key criada no passo 2.
+- `SEND_EMAIL_HOOK_SECRET` — o segredo gerado no passo 3.
+- `EMAIL_FROM` — **já configurei**: `HP Group <contato@hpfisioterapia.com.br>` (não é segredo, é o remetente visível).
+
+Nenhuma dessas 3 chaves foi exibida ou solicitada aqui no chat — cadastre-as diretamente no painel da Netlify (Site → *Environment variables*) ou do Supabase.
+
+### DNS — o que já existe (não alterar sem revisar antes)
+Consultei o DNS atual de `hpfisioterapia.com.br` antes de escrever isto (nenhuma alteração foi feita):
+- **SPF (TXT)**: `v=spf1 include:_spf.mail.hostinger.com ~all` — a caixa `contato@hpfisioterapia.com.br` já recebe e-mail de verdade via Hostinger.
+- **MX**: `mx1.hostinger.com` (prioridade 5), `mx2.hostinger.com` (prioridade 10).
+- **DKIM do Resend**: ainda não existe (`resend._domainkey` não resolve) — domínio não verificado no Resend.
+
+**Importante**: só pode existir **um** registro SPF por domínio. O registro que o Resend vai pedir **não pode ser um segundo `v=spf1`** — precisa ser **mesclado** no registro existente, assim: `v=spf1 include:_spf.mail.hostinger.com include:<o que o Resend indicar> ~all`. Um segundo TXT `v=spf1` separado quebra a validação de SPF (RFC exige exatamente um). Os registros DKIM do Resend (CNAME, geralmente 3) são aditivos e não colidem com o Hostinger. Vou revisar os valores exatos que o Resend gerar antes de qualquer alteração — nada será mudado sem sua aprovação explícita linha a linha.
+
+### Redirect URLs (Supabase Auth → URL Configuration)
+Confirmar que estão na lista de *Redirect URLs* do projeto Dev: a origem do Netlify (`https://hp-group-hub.netlify.app`) e `http://127.0.0.1:5190` (porta atual do `npm run dev`). Não tenho uma ferramenta que leia essa configuração — confira e ajuste diretamente no painel se faltar alguma.
+
+### O que será validado (depois que as 3 credenciais estiverem configuradas)
+Primeiro acesso → e-mail recebido → confirmação → sessão no destino certo por perfil; recuperação → e-mail recebido → `/redefinir-senha` → nova senha → login; links inválidos/expirados/reutilizados; falha do Resend tratada sem falso sucesso; remetente e registro de envio conferidos no painel do Resend. **Um HTTP 200 da nossa função não prova entrega nem leitura** — só a confirmação no painel do Resend (e, idealmente, a chegada real na caixa de entrada) fecha a validação.
+
+### Teste de API feito em 2026-09-22 (sessão anterior, antes desta decisão)
+Chamei `POST /auth/v1/recover` diretamente na API do Supabase Auth (Dev): endereço de domínio inválido rejeitado corretamente (`email_address_invalid`); endereço autorizado (`jan.darioush@yahoo.com.br`) respondeu `200 OK` sem erro síncrono — isso usava o remetente padrão/SMTP não configurado do Supabase, **não** a arquitetura desta seção. Com o Send Email Hook ativo, esse remetente padrão deixa de ser usado (o Supabase chama o hook em vez de enviar ele mesmo).
+
+## Convites e outras comunicações por e-mail
+Criar convite (tela *Equipe e acessos*) grava em `invitations` **e agora também chama `/api/send-email`** com o template `invite` (identidade HP, mesmo botão de ação) — se o envio falhar (Resend ainda não configurado, por exemplo), a tela mostra explicitamente que o e-mail não foi enviado automaticamente e orienta o convite manual; a criação do convite em si nunca falha por causa do e-mail. O papel só é concedido no banco quando o e-mail **verificado** coincide com um convite aberto (ou com a lista de bootstrap dos gestores) — nada disso mudou.
+
+**Eventos que ainda NÃO disparam e-mail (documentado, não implementado — não confundir com "concluído")**: avisos de agenda (confirmação/lembrete de atendimento — o template `appointment_confirmation` existe em código mas nenhuma tela o chama), mensagens financeiras, notificações do Academy, notificações de parceiros. Adicionar esses envios é trabalho futuro de integração (call-site em cada tela), não uma configuração pendente.
