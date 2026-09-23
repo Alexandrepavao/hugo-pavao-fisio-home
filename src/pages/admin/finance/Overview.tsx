@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import { supabase } from "@/lib/supabase";
 import { fmtDate } from "@/lib/format";
 import { PageHead, State, StatCard } from "@/lib/ui";
+import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { PeriodFilter } from "./PeriodFilter";
 import { axisBrl, mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./shared";
 
@@ -41,6 +42,8 @@ const Overview = () => {
   } });
 
   const overdueTotal = aging.data ? Object.values(aging.data).reduce((a, b) => a + b, 0) : 0;
+  const unitLabel = units.data?.find((u2) => u2.id === unit)?.name ?? "Todas as unidades";
+  const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
 
   return (
     <div>
@@ -55,9 +58,9 @@ const Overview = () => {
       {metrics.data && (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           <StatCard label="Vendas confirmadas" value={metrics.data.average_ticket_cents?.sales != null ? (metrics.data.average_ticket_cents.sales as number).toLocaleString("pt-BR") : "0"} basis="quantidade de vendas confirmadas no período" />
-          <StatCard label="Recebimentos" value={mfmt(metrics.data.receipts_cents)} basis={metrics.data.receipts_cents?.basis} />
+          <StatCard label="Recebimentos" value={mfmt(metrics.data.receipts_cents)} basis={metrics.data.receipts_cents?.basis} onClick={() => setDetail({ kind: "receipts", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
           <StatCard label="Contas a receber (30 dias)" value={mfmt(metrics.data.forecast_receivables_30d_cents)} basis={metrics.data.forecast_receivables_30d_cents?.basis} />
-          <StatCard label="Vencidos" value={mfmt(metrics.data.overdue_cents)} tone="danger" basis={metrics.data.overdue_cents?.basis} />
+          <StatCard label="Vencidos" value={mfmt(metrics.data.overdue_cents)} tone="danger" basis={metrics.data.overdue_cents?.basis} onClick={() => setDetail({ kind: "overdue", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
           <StatCard label="Contas a pagar (30 dias)" value={mfmt(metrics.data.forecast_payables_30d_cents)} basis={metrics.data.forecast_payables_30d_cents?.basis} />
           <StatCard label="Resultado de caixa" value={mfmt(metrics.data.cash_result_cents)} basis={metrics.data.cash_result_cents?.basis} />
           <StatCard label="Ticket médio" value={mfmt(metrics.data.average_ticket_cents)} basis={metrics.data.average_ticket_cents?.basis} />
@@ -106,6 +109,7 @@ const Overview = () => {
           ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem recebimentos por produto no período.</p>}
         </section>
       </div>
+      <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
   );
 };
