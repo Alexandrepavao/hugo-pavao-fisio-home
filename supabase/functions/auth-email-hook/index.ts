@@ -82,14 +82,10 @@ interface HookPayload {
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return hookError(405, "method_not_allowed");
 
+  // A assinatura é verificada ANTES de revelar qualquer detalhe de configuração — um chamador sem
+  // assinatura válida não deve aprender quais secrets estão ausentes só por bater neste endpoint.
   const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET");
-  const resendKey = Deno.env.get("RESEND_API_KEY");
-  const from = Deno.env.get("EMAIL_FROM");
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-
-  if (!hookSecret) return hookError(500, "hook_not_configured: SEND_EMAIL_HOOK_SECRET ausente");
-  if (!resendKey || !from) return hookError(500, "email_not_configured: RESEND_API_KEY/EMAIL_FROM ausentes");
-  if (!supabaseUrl) return hookError(500, "supabase_url_not_configured");
+  if (!hookSecret) return hookError(401, "invalid_signature");
 
   const id = req.headers.get("webhook-id") ?? "";
   const timestamp = req.headers.get("webhook-timestamp") ?? "";
@@ -99,6 +95,13 @@ Deno.serve(async (req: Request) => {
   const rawBody = await req.text();
   const valid = await verifyWebhookSignature(hookSecret, rawBody, id, timestamp, signature);
   if (!valid) return hookError(401, "invalid_signature");
+
+  // Só a partir daqui o chamador provou ser o Supabase Auth — agora sim checamos a config de envio.
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  const from = Deno.env.get("EMAIL_FROM");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  if (!resendKey || !from) return hookError(500, "email_not_configured: RESEND_API_KEY/EMAIL_FROM ausentes");
+  if (!supabaseUrl) return hookError(500, "supabase_url_not_configured");
 
   let payload: HookPayload;
   try {

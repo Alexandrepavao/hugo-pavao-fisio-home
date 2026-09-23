@@ -42,9 +42,15 @@ const Login = () => {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/redefinir-senha`,
         });
-        // Mesma resposta exista ou não a conta (evita enumeração de usuários).
-        if (error && error.status === 429) setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
-        else setInfo("Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha.");
+        if (!error) {
+          // Mesma resposta exista ou não a conta (evita enumeração de usuários).
+          setInfo("Se houver uma conta com este e-mail, você receberá as instruções para redefinir sua senha.");
+        } else if (error.status === 429) {
+          setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+        } else {
+          // Falha real do backend — nunca mostrar a mensagem de sucesso aqui.
+          setError("Não foi possível processar sua solicitação agora. Tente novamente em instantes.");
+        }
       }
     } catch {
       setError("Não foi possível conectar agora. Verifique sua internet e tente novamente.");

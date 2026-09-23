@@ -7,7 +7,7 @@ Regra: nada é apresentado como "conectado" sem configuração e validação rea
 | GitHub | ✅ | Repositório com escrita; branch + PR em rascunho |
 | Netlify | ✅ (infra) | Site `hp-group-hub`, deploy republicado a partir de `6cb26c1`, variáveis do Dev corrigidas (ver `docs/deployment.md`) |
 | Supabase | ✅ (Dev) | Produção vazia até o go-live |
-| **E-mail — autenticação (Supabase Edge Function → Resend)** | 🔒 código deployado no Dev (`auth-email-hook`, ACTIVE), aguardando as 3 credenciais/config abaixo | Hospedado como Edge Function do Supabase, não Netlify — ver "Achado" abaixo. Ver seção "E-mail — arquitetura" |
+| **E-mail — autenticação (Supabase Edge Function → Resend)** | 🟡 hook habilitado e alcançado pelo Supabase; falta `RESEND_API_KEY`/`EMAIL_FROM` como secrets do projeto | Investigado ao vivo em 2026-09-23 — ver "Investigação: recuperação de senha sem e-mail" abaixo |
 | **E-mail — transacional da aplicação (Resend, backend)** | 🔒 código pronto, aguardando `RESEND_API_KEY` | `netlify/functions/send-email.mts`. Único call-site real hoje: convite de equipe (`Team.tsx`) |
 | Pagamentos (checkout/webhook) | ⬜ | Provedor a definir. Acesso pago só por evento confirmado no servidor (já é assim: `payment_record` → evento → acesso) |
 | WhatsApp / e-mail no CRM | ⬜ | Registro manual de contatos por enquanto |
@@ -65,6 +65,34 @@ Primeiro acesso → e-mail recebido → confirmação → sessão no destino cer
 2. **Entrega registrada**: confirmada no painel do Resend (Logs → status `delivered`, não apenas `sent`).
 3. **Confirmação de recebimento**: você abre o e-mail de verdade e clica no link.
 Só o nível 3, com você concluindo a jornada no navegador (onde já tem login de equipe), fecha a validação de ponta a ponta.
+
+### 🔎 Investigação: "Esqueci minha senha" sem e-mail nem confirmação (2026-09-23)
+
+Você configurou o Send Email Hook e os secrets, testou "Esqueci minha senha" no site publicado e não recebeu e-mail nem viu confirmação na tela. Investigado com evidência de log antes de mudar qualquer coisa:
+
+1. **A requisição foi disparada e chegou ao Supabase.** Confirmado nos logs de Auth (`auth_logs`): dois eventos `user_recovery_requested` para `jan.darioush@yahoo.com.br`, às `2026-09-23T01:39:22Z` e `01:40:09Z`.
+2. **O hook está habilitado e o Supabase o chamou de verdade** (prova de que a configuração do hook em si está correta): `"hook":"https://fsvtzowcwhvwtluwrhnb.supabase.co/functions/v1/auth-email-hook"`, `"msg":"Hook errored out"`.
+3. **Causa raiz encontrada**: o hook respondeu **HTTP 500** — `"error":"500: Unexpected status code returned from hook: 500"` — e o Supabase corretamente propagou isso como falha real da chamada `/recover` (`"path":"/recover","status":500`). Chamando a função diretamente (`curl`) para reproduzir, a resposta exata foi:
+   ```
+   {"error":{"http_code":500,"message":"email_not_configured: RESEND_API_KEY/EMAIL_FROM ausentes"}}
+   ```
+   Ou seja: `SEND_EMAIL_HOOK_SECRET` **está** configurado corretamente (passou dessa checagem), mas `RESEND_API_KEY` e/ou `EMAIL_FROM` **não estão** salvos como *secrets do projeto Supabase* — só documentei que precisavam estar lá, mas você provavelmente configurou `RESEND_API_KEY` só na Netlify (onde também é necessária, para o `/api/send-email`) sem duplicar no Supabase, que é um cadastro totalmente separado. A função nunca chegou a chamar o Resend — a checagem de configuração barra antes disso, exatamente como projetado (sem tentativa de envio, sem falso sucesso).
+4. **Deploy publicado confere**: o hook chamado pelo Supabase é o mesmo `auth-email-hook` que deployei nesta sessão, no projeto Dev correto (`fsvtzowcwhvwtluwrhnb`) — confirmado pela própria URL do hook nos logs.
+5. **Endpoint sem JWT, com assinatura obrigatória — confirmado por teste, não só por leitura de código**: `curl` sem nenhum header de assinatura → `401 missing_signature_headers`; `curl` com headers de webhook bem-formados mas assinatura forjada → `401 invalid_signature` (a verificação HMAC realmente roda e rejeita). Nenhum JWT de usuário é exigido (`verify_jwt: false` no deploy), exatamente como pedido.
+6. **Resend**: como a função nunca chegou a chamar a API do Resend (barrada antes, no passo 3), não há resposta do Resend para conferir ainda — só será possível depois que `RESEND_API_KEY`/`EMAIL_FROM` estiverem salvos como secrets do projeto Supabase.
+
+**Correções aplicadas nesta investigação:**
+- **Endurecimento de segurança no hook**: a ordem de verificação foi invertida — antes, um `curl` sem assinatura nenhuma já revelava *qual* secret estava faltando (`email_not_configured: ...`); agora a assinatura é validada **primeiro**, e um chamador sem assinatura válida só recebe `401 invalid_signature`, sem nenhuma pista sobre a configuração interna. Redeployado e reconfirmado com os testes do item 5 acima.
+- **Bug real na interface, corrigido**: `Login.tsx` tratava *qualquer* erro que não fosse 429 como sucesso — inclusive um 500 de verdade como este. Ou seja, mesmo com o hook devolvendo erro, a tela deveria (a depender de como o `supabase-js` expôs esse erro específico) mostrar a mensagem genérica de sucesso, escondendo a falha real. Corrigido: agora `error === null` → sucesso; `status === 429` → mensagem de limite de tentativas; qualquer outro erro → mensagem de falha técnica, sem revelar se a conta existe. Ver "Feedback da interface" abaixo.
+
+**Ação sua para destravar**: cadastrar `RESEND_API_KEY` e `EMAIL_FROM` (`HP Group <contato@hpfisioterapia.com.br>`) como *secrets do projeto Supabase* (Project Settings → Edge Functions → Secrets, ou `supabase secrets set RESEND_API_KEY=... EMAIL_FROM="HP Group <contato@hpfisioterapia.com.br>"` — **não** são as variáveis da Netlify, são um cadastro separado no Supabase). Depois disso, um novo teste deve chegar até a chamada real ao Resend.
+
+### Feedback da interface (corrigido em 2026-09-23)
+`Login.tsx`, modo "Esqueci minha senha": loading já existia (spinner + botão desabilitado durante o envio); mensagens agora seguem exatamente:
+- Sucesso (sem erro do backend): "Se houver uma conta com este e-mail, você receberá as instruções para redefinir sua senha."
+- Limite de tentativas (429): "Muitas tentativas. Aguarde alguns minutos e tente novamente."
+- Qualquer outra falha do backend (ex.: o 500 encontrado nesta investigação): "Não foi possível processar sua solicitação agora. Tente novamente em instantes." — nunca mais mostrada como se fosse sucesso.
+- Falha de rede/conexão (exceção antes de chegar ao backend): "Não foi possível conectar agora. Verifique sua internet e tente novamente."
 
 ### Teste de API feito em 2026-09-22 (sessão anterior, antes desta decisão)
 Chamei `POST /auth/v1/recover` diretamente na API do Supabase Auth (Dev): endereço de domínio inválido rejeitado corretamente (`email_address_invalid`); endereço autorizado (`jan.darioush@yahoo.com.br`) respondeu `200 OK` sem erro síncrono — isso usava o remetente padrão/SMTP não configurado do Supabase, **não** a arquitetura desta seção. Com o Send Email Hook ativo, esse remetente padrão deixa de ser usado (o Supabase chama o hook em vez de enviar ele mesmo).
