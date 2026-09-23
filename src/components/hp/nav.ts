@@ -1,4 +1,4 @@
-import { Building2, CalendarDays, ClipboardList, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, MessageCircleQuestion, ScrollText, ShieldCheck, Sunrise, Users, Wallet, type LucideIcon } from "lucide-react";
+import { Building2, CalendarDays, ClipboardList, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, MessageCircleQuestion, ScrollText, Settings, ShieldCheck, Sunrise, Users, Wallet, type LucideIcon } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 
 export interface NavChild { to: string; label: string; end?: boolean }
@@ -45,6 +45,7 @@ export const NAV: NavSection[] = [
   ] },
   { label: "Sistema", items: [
     { to: "/admin/equipe", label: "Equipe e acessos", icon: ShieldCheck, roles: ["manager", "ops_admin"], keywords: "convites papéis usuários" },
+    { to: "/admin/configuracoes", label: "Configurações", icon: Settings, roles: ["manager", "ops_admin"], keywords: "unidades whatsapp captação financeiro parâmetros" },
     { to: "/admin/status", label: "Estado dos módulos", icon: ListChecks, roles: ["manager", "ops_admin"] },
     { to: "/admin/auditoria", label: "Auditoria", icon: ScrollText, roles: ["manager"], keywords: "log histórico" },
   ] },

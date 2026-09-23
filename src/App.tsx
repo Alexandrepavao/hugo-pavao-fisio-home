@@ -50,6 +50,7 @@ const PortalResearch = lazy(() => import("./pages/portal/Research"));
 const Avaliacao = lazy(() => import("./pages/quiz/Avaliacao"));
 const SejaParceiro = lazy(() => import("./pages/quiz/SejaParceiro"));
 const LeadCapture = lazy(() => import("./pages/admin/LeadCapture"));
+const SettingsHub = lazy(() => import("./pages/admin/SettingsHub"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -115,6 +116,7 @@ const App = () => (
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
+                <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
               </Route>
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />
