@@ -1,6 +1,74 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-23) — Quizzes de captação (atendimento/parceria)
+## Sessão mais recente (2026-09-23) — Redesign Mosaic: filtros, cards com detalhe, header financeiro, Configurações
+
+> Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge. Ordem de
+> implementação seguida à risca: filtros compactos → cards com detalhe → header financeiro → Configurações.
+
+**1. Filtros compactos** (`src/lib/PeriodFilter.tsx`, reescrito mantendo a mesma assinatura de props):
+pílula de período ("Mês atual") + seletor de unidade + botão "Filtros" com contador, todos abrindo o mesmo
+popover (drawer no celular) com atalhos de período, intervalo personalizado (só aplica em "Aplicar" — estado
+de rascunho local, não dispara consulta a cada tecla), comparação com período anterior e os filtros
+específicos da tela (`extra`). Período/unidade ficam ocultos quando a tela não tem essa dimensão (CRM).
+Aplicado a **Início, Financeiro (Visão geral/DRE/Relatórios), CRM e Captação de leads** — e de graça em
+Pesquisas/Contas corporativas, que já usavam o mesmo componente compartilhado.
+
+**2. Cards clicáveis com painel de detalhe**: nova função `dashboard_card_detail(p_kind,...)` (migration
+039) — reconcilia sempre com o mesmo escopo (tabelas/data/unidade/permissão) do cartão que abriu, via
+`private.dash_units()` (mesmo guard de `dashboard_metrics`/`dashboard_alerts`). Implementado para os 6
+cartões pedidos como exemplo: **Recebimentos, Contas vencidas, Novos pacientes, Avaliações agendadas,
+Conversão comercial, Tarefas atrasadas** (esta última via o alerta "Tarefas atrasadas"). Indisponível mostra
+"Indisponível: <motivo>" (nunca lista vazia como resultado); "Contas vencidas"/"Tarefas atrasadas" são
+sinalizadas como **situação atual** (não mudam com o período, e nunca calculam comparação — decidido
+estaticamente, sem esperar a resposta do servidor). `StatCard` ganhou `onClick` opcional (vira `<button>`,
+hover/foco visíveis, "Ver detalhes"). `CardDetailSheet` (`src/lib/CardDetailSheet.tsx`) é o painel lateral —
+Escape fecha e devolve o foco automaticamente (Radix). Aplicado ao **Início** (6 cartões de indicador + 2
+alertas) e ao **Financeiro › Visão geral** (Recebimentos, Vencidos). CRM e Captação de leads não ganharam
+esse painel nesta etapa — não têm uma função de detalhamento própria ainda (documentado como pendência).
+
+**3. Header financeiro sem "Mais"**: `AppShell` não separa mais os filhos de uma seção em "primeiros N" +
+dropdown — todos os 10 destinos do Financeiro aparecem direto, na ordem pedida (Visão geral, Vendas, Contas
+a pagar, Fluxo de caixa, Recorrência, DRE, Conciliação, Comissões e repasses, Relatórios, Configurações).
+"Contas a receber" não entrou como item próprio — não existe como destino/rota hoje (só como cartão de
+indicador dentro de Visão geral); criar uma tela dedicada ficou fora do escopo desta etapa. No celular a
+faixa rola horizontalmente sozinha (nunca a página — confirmado via `scrollWidth`/`clientWidth`), com
+degradê de continuidade e o item ativo sempre scrollado à vista; a partir de 768px, quebra para uma segunda
+linha organizada em vez de rolar. Estado ativo continua vindo só da URL (recarregar/voltar mantém o item).
+
+**4. Central de Configurações** (`/admin/configuracoes`, sidebar › Sistema, ícone de engrenagem): 10
+categorias. Só o que já tem suporte real no backend virou tela **gerenciável** agora:
+- **Organização e unidades**: lista/cria/edita unidades (nome, cidade, UF) — tabela `units` já existente, já
+  com trigger de auditoria (`private.audit_row`, migration 001). Dados institucionais gerais (contatos,
+  endereço, horários) não têm coluna no banco — documentado como pendência, não inventado.
+- **Captação**: números de WhatsApp por jornada/unidade (`quiz_whatsapp_numbers`, migration 038) — a mesma
+  tabela que `quiz_whatsapp_number()` já lê nos quizzes publicados; editar aqui muda o número real usado no
+  botão "Continuar pelo WhatsApp". Novo trigger de auditoria (migration 040).
+- **Equipe e acessos** e **Financeiro** linkam para as telas já existentes (`/admin/equipe`,
+  `/admin/financeiro/config`) — mesma implementação, mesma fonte de dados, nunca duplicada. O
+  "Configurações" do header financeiro já apontava para essa mesma rota — satisfeito automaticamente.
+- **Operação, Comercial e CRM, Academy, Parceiros, Comunicação e integrações, Aparência**: card
+  "Pendente" com o motivo real e específico de cada uma (ex.: segredos do Resend nunca são expostos ao
+  frontend por desenho; funis/etapas só existem via migration, sem tela de admin; logo é asset estático no
+  código) — nunca um switch ou formulário decorativo.
+
+**Testes**: suíte E2E completa **32/32**, sem regressão (inclui `07-finance-behaviors` — prova que
+`FinanceSettings` continua funcionando idêntico depois de virar destino também da central). `tsc`/`eslint`/
+`vite build` ok. Validado ao vivo no navegador: abrir cada painel de detalhe, abrir/aplicar/limpar os
+filtros no desktop e no celular (viewport emulado), navegar o header financeiro sem "Mais", editar uma
+unidade e um número de WhatsApp na central e confirmar o registro real em `audit_log` (valores antes/depois).
+
+**Preview para revisão**: `npm run dev -- --port 5181 --host 127.0.0.1` → `http://127.0.0.1:5181/admin`
+(login necessário — conta de gestor).
+
+**Pendências reais desta etapa** (nenhuma tela finge funcionar; tudo abaixo está documentado, não implementado):
+- CRM e Captação de leads sem painel de detalhamento de cartão (só Início e Financeiro › Visão geral).
+- "Contas a receber" sem rota própria no header financeiro.
+- Operação, Comercial/CRM, Academy, Parceiros, Comunicação/integrações e Aparência sem tela de configuração
+  centralizada — motivo específico documentado em cada card de `/admin/configuracoes`.
+
+---
+
+## Sessão anterior (2026-09-23) — Quizzes de captação (atendimento/parceria)
 
 > **Trabalho feito inteiramente no Dev e no preview**, por instrução explícita — produção
 > (`HP Group Core`, DNS, domínio oficial) **não foi tocada**. Branch `feature/lead-quizzes`

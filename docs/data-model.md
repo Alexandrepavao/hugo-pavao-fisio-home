@@ -30,6 +30,8 @@ Convenções: dinheiro = `bigint` em centavos; percentuais = pontos-base; datas 
 | 023 | academy_tracks | `learning_tracks`, `learning_track_courses` (agrupam cursos existentes em trilhas — nunca duplica `courses`/`lessons`); 8 trilhas semeadas como rascunho, sem curso vinculado |
 | 037 | reserved_slug_confirmar | acrescenta `confirmar` aos slugs reservados |
 | 038 | lead_quizzes | `quiz_leads` (sem GRANT direto — só via funções), `quiz_whatsapp_numbers` (seedada com os números reais já usados no site); RPCs `quiz_start/save_progress/set_health_consent/complete/log_whatsapp_click/whatsapp_number` (anon) e `list_quiz_leads/get_quiz_lead_detail/quiz_lead_metrics` (admin, mascarando respostas de saúde para `sales`); acrescenta `avaliacao`/`seja-parceiro` aos slugs reservados. Aplicada só no Dev — ver seção de sessão mais recente em `docs/project-status.md` |
+| 039 | dashboard_card_detail | `dashboard_card_detail(p_kind, p_from, p_to, p_unit)` — detalhamento por cartão (receipts/overdue/new_patients/evaluations_scheduled/win_rate/overdue_tasks), reconcilia com `dashboard_metrics`/`dashboard_alerts` via `private.dash_units()` |
+| 040 | audit_quiz_whatsapp_numbers | trigger de auditoria (`private.audit_row`) em `quiz_whatsapp_numbers` — mesmo padrão genérico já usado em people/units/role_assignments/invitations |
 
 ## Relações-chave (nada "só visual")
 Formulário → `people` + `opportunities` (+ `crm_tasks`, `interactions`) → agendamento (`appointments.opportunity_id`) → comparecimento (evento) → `sales`/`contracts`/`receivables` → `payments` → `entitlements` (Academy) e `client_packages`/`session_ledger` (sessões) → `commission_entries`. Eventos em `domain_events` com `idempotency_key` única e execução por handler registrada em `automation_runs`.
