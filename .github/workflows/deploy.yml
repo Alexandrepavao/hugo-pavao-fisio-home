@@ -1,8 +1,13 @@
 name: Build and Deploy to GitHub Pages
 
+# Desativado em 2026-09-23: o cutover de produção move hpfisioterapia.com.br para a Netlify (ver
+# docs/deployment.md e docs/go-live-plan.md). Manter este workflow disparando em todo push a `main`
+# publicaria o app inteiro (que depende de Netlify Functions/Edge Functions inexistentes no GitHub Pages)
+# como se fosse o site institucional antigo, competindo com a publicação real. O deploy anterior
+# permanece intacto na branch gh-pages e continua sendo servido enquanto o DNS não for repontado.
+# Para publicar manualmente se necessário: Actions → este workflow → "Run workflow".
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch: {}
 
 permissions:
   contents: write

@@ -24,6 +24,13 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Não desativada por completo: o painel usa `cond ? erro() : ok()` e `cond && acao()` como instrução
+      // de controle de fluxo de propósito (idioma do time), então essas duas formas ficam permitidas — mas
+      // a regra continua ativa para pegar uma expressão solta de verdade (esquecida, sem chamada, sem efeito).
+      "@typescript-eslint/no-unused-expressions": [
+        "error",
+        { allowShortCircuit: true, allowTernary: true, allowTaggedTemplates: true },
+      ],
     },
   }
 );

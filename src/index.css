@@ -69,17 +69,21 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.015em;
   }
 }
 
 @layer components {
   .eyebrow {
     @apply text-[11px] uppercase tracking-[0.28em] text-accent font-medium;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+    font-weight: 700;
   }
+
+  /* Indicadores e tabelas financeiras: Inter com números tabulares */
+  .tabular { font-family: 'Inter', system-ui, sans-serif; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
   .section {
     @apply py-24 px-6 sm:px-8 lg:py-32;

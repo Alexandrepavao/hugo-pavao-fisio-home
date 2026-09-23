@@ -1,73 +1,32 @@
-# Welcome to your Lovable project
+# HP Group Hub
 
-## Project info
+Plataforma integrada do HP Group: site institucional, HP Pages (landing pages), HP Core (pessoas, unidades, equipe, produtos), HP CRM, agenda e operação, HP Finance, HP Academy, portal de parceiros e dashboard do gestor.
 
-**URL**: https://lovable.dev/projects/215d43fe-3aa8-4b12-bf50-5aa6157e427f
+> **Estado:** em construção (Etapa 1 de 6). Veja [`docs/project-status.md`](docs/project-status.md) para o que está concluído, parcial, bloqueado e não iniciado.
 
-## How can I edit this code?
+## Stack
+Vite · React 18 · TypeScript · Tailwind · shadcn/ui · react-router · Supabase (PostgreSQL, Auth, Storage) · Netlify (hospedagem e Functions).
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/215d43fe-3aa8-4b12-bf50-5aa6157e427f) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Rodando localmente
+```bash
+npm ci
+cp .env.example .env.local   # preencha com URL e chave publishable do projeto Supabase de DEV
 npm run dev
 ```
+Nunca use as credenciais de produção localmente. Chaves privilegiadas (`SUPABASE_SERVICE_ROLE_KEY`) nunca vão para o front-end nem para o git.
 
-**Edit a file directly in GitHub**
+## Estrutura
+| Caminho | Conteúdo |
+|---|---|
+| `src/pages` | Site institucional, `auth/` (login/recuperação), `admin/` (painel) |
+| `src/auth` | Sessão e guardas de rota (apenas UX — a autorização real é RLS) |
+| `supabase/migrations` | Esquema versionado |
+| `supabase/tests` | Testes SQL (isolamento RLS) |
+| `netlify/functions` | Código privilegiado (convites, webhooks, formulários públicos) |
+| `docs/` | Arquitetura, plano, modelo de dados, permissões, métricas, integrações, deploy, testes, status |
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Ambientes
+Dev/Preview → projeto Supabase *HP Group Dev*. Produção → *HP Group Core*. Detalhes em [`docs/architecture.md`](docs/architecture.md) e [`docs/deployment.md`](docs/deployment.md).
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/215d43fe-3aa8-4b12-bf50-5aa6157e427f) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Atenção: produção atual
+O site em `hpfisioterapia.com.br` é publicado por GitHub Pages a cada push na `main`. Todo trabalho novo acontece na branch `feature/hp-group-hub` via pull request.

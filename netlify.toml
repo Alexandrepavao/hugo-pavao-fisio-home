@@ -1,0 +1,31 @@
+# HP Group Hub — Netlify
+# Segredos NÃO ficam aqui. Chaves privilegiadas: variáveis da Netlify (escopo Functions).
+# As chaves publishable do Supabase são públicas por design (protegidas por RLS).
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# `npm run dev` sobe o Vite na porta 8080 (vite.config.ts) — sem isto, `netlify dev` espera a porta
+# padrão do Vite (5173) e nunca encontra o servidor.
+[dev]
+  command = "npm run dev"
+  targetPort = 8080
+  port = 8888
+
+# Fallback de SPA: URLs internas (/admin, /checkup, /academy...) abrem direto.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"

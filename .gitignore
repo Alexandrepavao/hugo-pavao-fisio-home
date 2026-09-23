@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# dev server logs
+.vite-dev*.log
+
+# Netlify local state
+.netlify
+
+# Playwright
+test-results
+playwright-report
+blob-report
+playwright/.cache
