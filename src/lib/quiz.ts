@@ -102,6 +102,18 @@ export const PARCERIA_QUESTIONS: Question[] = [
 export const JOURNEY_LABEL: Record<Journey, string> = { atendimento: "Avaliação inicial", parceria: "Parceria HP Group" };
 export const JOURNEY_ROUTE: Record<Journey, string> = { atendimento: "/avaliacao", parceria: "/seja-parceiro" };
 export const JOURNEY_CTA_LABEL: Record<Journey, string> = { atendimento: "Quero cuidar da minha dor", parceria: "Quero ser fisioterapeuta parceiro" };
+
+// Parâmetros de campanha permitidos a atravessar de uma landing page para o quiz — nunca dado pessoal,
+// nunca um parâmetro arbitrário. `from` registra a página de origem (rota, não título/conteúdo).
+export const ALLOWED_UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+
+export const buildJourneyHref = (journey: Journey, opts: { from?: string; utm?: Record<string, string> } = {}): string => {
+  const params = new URLSearchParams();
+  if (opts.from) params.set("from", opts.from);
+  for (const k of ALLOWED_UTM_KEYS) { const v = opts.utm?.[k]; if (v) params.set(k, v); }
+  const qs = params.toString();
+  return qs ? `${JOURNEY_ROUTE[journey]}?${qs}` : JOURNEY_ROUTE[journey];
+};
 export const JOURNEY_QUESTIONS: Record<Journey, Question[]> = { atendimento: ATENDIMENTO_QUESTIONS, parceria: PARCERIA_QUESTIONS };
 
 // 3 etapas fixas (contato) + cidade/UF + N perguntas específicas = 10 no total, igual à especificação.

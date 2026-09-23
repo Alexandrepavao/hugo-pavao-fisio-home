@@ -1,10 +1,26 @@
 // Definição dos blocos do editor. O conteúdo é DADOS (JSON), nunca HTML/JS: o front só renderiza componentes conhecidos.
+import { buildJourneyHref, type Journey } from "@/lib/quiz";
+
 export type BlockType = "hero" | "text" | "image" | "video" | "benefits" | "team" | "faq" | "cta" | "form";
 
 export interface Block { type: BlockType; [key: string]: unknown }
 
-export type FieldKind = "text" | "textarea" | "url" | "list";
-export interface FieldDef { key: string; label: string; kind: FieldKind; fields?: FieldDef[]; hint?: string }
+export type FieldKind = "text" | "textarea" | "url" | "list" | "select";
+export interface SelectOption { value: string; label: string }
+export interface FieldDef { key: string; label: string; kind: FieldKind; fields?: FieldDef[]; hint?: string; options?: SelectOption[] }
+
+// Destino do botão do bloco "cta": duas jornadas de quiz já existentes, ou um link personalizado (comportamento
+// anterior, preservado). Blocos antigos não têm `target` gravado — tratados como "custom" (nunca mudam de destino
+// sozinhos). O texto do botão (`label`) é sempre independente do destino.
+export type CtaTarget = "avaliacao" | "seja-parceiro" | "custom";
+export const CTA_TARGET_OPTIONS: SelectOption[] = [
+  { value: "avaliacao", label: "Avaliação de paciente" },
+  { value: "seja-parceiro", label: "Parceria profissional" },
+  { value: "custom", label: "Link personalizado" },
+];
+export const ctaTargetOf = (b: Record<string, unknown>): CtaTarget =>
+  b.target === "avaliacao" || b.target === "seja-parceiro" ? b.target : "custom";
+const CTA_TARGET_JOURNEY: Record<"avaliacao" | "seja-parceiro", Journey> = { avaliacao: "atendimento", "seja-parceiro": "parceria" };
 
 export const BLOCK_LABEL: Record<BlockType, string> = {
   hero: "Destaque (topo)", text: "Texto", image: "Imagem", video: "Vídeo", benefits: "Benefícios",
@@ -39,7 +55,8 @@ export const BLOCK_SCHEMA: Record<BlockType, FieldDef[]> = {
   ],
   cta: [
     { key: "title", label: "Título", kind: "text" }, { key: "text", label: "Texto", kind: "textarea" },
-    { key: "label", label: "Texto do botão", kind: "text" }, { key: "url", label: "Link do botão (https://, /caminho ou #formulario)", kind: "url" },
+    { key: "label", label: "Texto do botão", kind: "text" },
+    // "target" (destino) e a URL personalizada (só quando target = custom) são especiais — ver BlockEditor.tsx.
   ],
   form: [{ key: "title", label: "Título acima do formulário", kind: "text" }],
 };
@@ -49,6 +66,7 @@ export const newBlock = (type: BlockType): Block => {
   if (type === "benefits" || type === "faq") b.items = [];
   if (type === "team") b.members = [];
   if (type === "form") b.form_id = "";
+  if (type === "cta") b.target = "custom";
   return b;
 };
 
@@ -57,6 +75,15 @@ export const safeUrl = (u: unknown): string | null => {
   if (typeof u !== "string") return null;
   const v = u.trim();
   return /^(https:\/\/|\/(?!\/)|#|mailto:|tel:)/i.test(v) ? v : null;
+};
+
+/** Destino real do botão do bloco "cta": jornada de quiz (registra a página de origem + parâmetros de
+ * campanha permitidos) ou o link personalizado de sempre (validado por `safeUrl`, protocolos inseguros
+ * bloqueados). Preview e página publicada usam exatamente esta função — nunca divergem. */
+export const resolveCtaHref = (b: Record<string, unknown>, opts: { pageSlug?: string; utm?: Record<string, string> } = {}): string | null => {
+  const target = ctaTargetOf(b);
+  if (target === "custom") return safeUrl(b.url);
+  return buildJourneyHref(CTA_TARGET_JOURNEY[target], { from: opts.pageSlug ? `/${opts.pageSlug}` : undefined, utm: opts.utm });
 };
 
 export function videoEmbed(url: unknown): string | null {

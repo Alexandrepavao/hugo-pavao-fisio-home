@@ -1,13 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { JOURNEY_CTA_LABEL, JOURNEY_ROUTE, type Journey } from "@/lib/quiz";
+import { buildJourneyHref, JOURNEY_CTA_LABEL, JOURNEY_ROUTE, type Journey } from "@/lib/quiz";
+import { utmFromLocation } from "@/features/pages/PageRenderer";
 
 interface Props { journey: Journey; heading: string; description: string; variant?: "panel" | "banner" }
 
 /** CTA reutilizável para as duas jornadas de captação — usado na página inicial, em /trabalhe-conosco,
- * no rodapé e disponível no editor de landing pages (bloco "cta" com journey). */
+ * no rodapé e disponível no editor de landing pages (bloco "cta" com target). Registra a página de
+ * origem (`from`) e os parâmetros de campanha permitidos, para a captação saber de onde veio. */
 const QuizCta = ({ journey, heading, description, variant = "panel" }: Props) => {
-  const to = JOURNEY_ROUTE[journey];
+  const { pathname } = useLocation();
+  const to = buildJourneyHref(journey, { from: pathname, utm: utmFromLocation() });
   const label = JOURNEY_CTA_LABEL[journey];
 
   if (variant === "banner") {

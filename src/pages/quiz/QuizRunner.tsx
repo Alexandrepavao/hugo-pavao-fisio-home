@@ -60,6 +60,9 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach((k) => { const v = params.get(k); if (v) o[k] = v; });
     return o;
   }, [params]);
+  // `from` = a landing page de origem (registrada pelo CTA que trouxe o visitante até aqui); sem ela,
+  // cai no comportamento anterior (rota do próprio quiz).
+  const fromPage = params.get("from");
 
   const submitContact = async (e: FormEvent) => {
     e.preventDefault(); setError(null);
@@ -71,7 +74,8 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     try {
       const { data, error: rpcError } = await supabase.rpc("quiz_start", {
         p_journey: journey, p_name: name.trim(), p_email: email.trim(), p_phone: phone,
-        p_contact_consent_version: CONTACT_CONSENT_VERSION, p_origin_path: pathname, p_page_slug: pageSlug,
+        p_contact_consent_version: CONTACT_CONSENT_VERSION,
+        p_origin_path: fromPage || pathname, p_page_slug: fromPage ? (fromPage.replace(/^\//, "") || "home") : pageSlug,
         p_referrer: document.referrer || null, p_utm: utm, p_honeypot: honeypotRef.current?.value || null,
       });
       if (rpcError) throw rpcError;

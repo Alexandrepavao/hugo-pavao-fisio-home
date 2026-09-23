@@ -1,4 +1,4 @@
-import { BLOCK_LABEL, BLOCK_SCHEMA, type Block, type FieldDef } from "./blocks";
+import { BLOCK_LABEL, BLOCK_SCHEMA, CTA_TARGET_OPTIONS, ctaTargetOf, type Block, type FieldDef } from "./blocks";
 
 type Obj = Record<string, unknown>;
 const field = "w-full border border-input bg-card px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-ring";
@@ -27,6 +27,10 @@ const Field = ({ def, value, onChange, id }: { def: FieldDef; value: unknown; on
       <label htmlFor={id} className="block text-sm text-navy-700 mb-1">{def.label}</label>
       {def.kind === "textarea"
         ? <textarea id={id} rows={4} className={field} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />
+        : def.kind === "select"
+        ? <select id={id} className={field} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)}>
+            {(def.options ?? []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
         : <input id={id} className={field} type={def.kind === "url" ? "url" : "text"} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />}
       {def.hint && <p className="text-xs text-navy-400 mt-1">{def.hint}</p>}
     </div>
@@ -51,6 +55,20 @@ const BlockEditor = ({ block, index, total, forms, onChange, onMove, onRemove }:
           {forms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
       </div>
+    )}
+    {block.type === "cta" && (
+      <>
+        <div>
+          <label htmlFor={`b${index}-target`} className="block text-sm text-navy-700 mb-1">Destino do botão</label>
+          <select id={`b${index}-target`} className={field} value={ctaTargetOf(block)} onChange={(e) => onChange({ ...block, target: e.target.value })}>
+            {CTA_TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        {ctaTargetOf(block) === "custom" && (
+          <Field id={`b${index}-url`} def={{ key: "url", label: "Link do botão (https://, /caminho ou #formulario)", kind: "url" }}
+            value={block.url} onChange={(v) => onChange({ ...block, url: v })} />
+        )}
+      </>
     )}
     <div className="flex gap-3 text-sm pt-1">
       <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="disabled:opacity-40" aria-label="Mover bloco para cima">↑ Subir</button>

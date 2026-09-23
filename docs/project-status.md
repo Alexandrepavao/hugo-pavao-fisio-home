@@ -55,11 +55,46 @@
   `route.fulfill` nunca chegando ao servidor real, e reenvio same-day sem duplicar) — suíte E2E
   completa **30/30**, sem regressão. `tsc`/`eslint`/`vite build` ok. Dados sintéticos de QA
   removidos do Dev ao final de cada rodada de teste.
-- **Pendências reais**: editor de landing pages (`PageEditor`) ainda não tem seleção de jornada
-  para o bloco `cta` — os CTAs fixos (home/rodapé/trabalhe-conosco) estão prontos, mas a escolha de
-  jornada dentro do editor de páginas não foi implementada nesta sessão. Nenhum número de WhatsApp
-  está "ausente" — os dois já usados no site foram reaproveitados como padrão. PR ainda **não
-  aberto** nesta etapa (branch `feature/lead-quizzes`, sem merge na `main`).
+- PR **#2 aberto em rascunho**, branch `feature/lead-quizzes`, sem merge na `main`.
+
+## Sessão seguinte (2026-09-23) — Destino do CTA no editor de páginas (finaliza a pendência acima)
+
+> Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+
+- **Bloco `cta` do editor** (`src/features/pages/blocks.ts`/`BlockEditor.tsx`) ganhou o campo
+  **"Destino do botão"**: *Avaliação de paciente* (`/avaliacao`), *Parceria profissional*
+  (`/seja-parceiro`) ou *Link personalizado* (comportamento anterior, inalterado). O texto do botão
+  (`label`) continua independente do destino. Blocos já existentes **não têm a chave `target`** —
+  tratados como `custom` automaticamente (`ctaTargetOf()`), então nenhum CTA/página antiga muda de
+  destino sozinha; testado publicando de propósito um bloco sem `target` e confirmando que o link
+  personalizado antigo continua intacto (`e2e/09-cta-block-quiz-target.spec.ts`, 2º teste).
+- **Mesma função resolve preview e publicada**: `resolveCtaHref()` (`blocks.ts`) é chamada pelo
+  `PageRenderer`/`BlockView` tanto na pré-visualização do editor quanto na página `/:slug` real —
+  nunca podem divergir. Link para link personalizado continua validado por `safeUrl()` (mesmos
+  protocolos seguros de sempre); link para jornada de quiz é sempre a rota interna confiável, sem
+  validação de URL externa (não é entrada do usuário).
+- **Origem registrada + campanha preservada, sem PII na URL**: `resolveCtaHref()` monta
+  `/avaliacao?from=/<slug-da-página>&utm_*` (só as 5 chaves `utm_` já usadas em `submit_public_form`
+  — nunca um parâmetro arbitrário, nunca dado pessoal). `QuizRunner` lê `from` e usa como
+  `origin_path`/`page_slug` no `quiz_start` (antes disto, esses campos só continham a própria rota
+  do quiz, "/avaliacao"/"/seja-parceiro" — agora registram de fato a landing page de origem). Os
+  CTAs fixos (`QuizCta`/`QuizFloatButton` — home, rodapé, `/trabalhe-conosco`) foram atualizados do
+  mesmo jeito, por consistência.
+- **Persistência**: como o destino é só mais uma chave dentro do JSON do bloco (`draft_content`/
+  `published_content`), salvar rascunho, reabrir, criar versão e publicar já funcionam de graça pelo
+  mecanismo existente (`page_save_draft`/`page_publish`/`add_version`) — nenhuma migration nova foi
+  necessária (`validate_blocks` já valida só o `type`, não os campos internos de cada bloco).
+- **Validado ao vivo no Dev** (não só em teste automatizado): criada e publicada uma landing page
+  com CTA → `/avaliacao` (clicado, quiz concluído, `origin_path`/`page_slug` corretos, oportunidade
+  no funil Pacientes) e outra com CTA → `/seja-parceiro` (mesma checagem, funil Parceiros); uma
+  terceira página com um bloco `cta` deliberadamente **sem** `target` (simulando dado legado)
+  confirmada apontando para o link personalizado original, sem alteração. As 3 páginas de teste e os
+  cadastros/oportunidades sintéticos foram removidos do Dev ao final.
+- **Testes**: `e2e/09-cta-block-quiz-target.spec.ts` (2/2) + suíte completa **32/32** (o
+  `04-agenda-concurrency` falhou uma vez em lote, como já documentado — passou isolado, flake de
+  timing conhecido, não é regressão desta mudança). `tsc`/`eslint`/`vite build` ok.
+- **Preview para revisão**: `npm run dev -- --port 5181 --host 127.0.0.1` → `http://127.0.0.1:5181/`
+  (editor em `/admin/paginas`, quizzes em `/avaliacao` e `/seja-parceiro`).
 
 ---
 
