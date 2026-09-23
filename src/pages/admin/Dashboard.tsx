@@ -9,15 +9,13 @@ import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/Ca
 import Greeting from "./Greeting";
 import GeoSection from "./GeoSection";
 import { PeriodFilter } from "./finance/PeriodFilter";
-import { axisBrl, mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./finance/shared";
+import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./finance/shared";
 
 type Metrics = Record<string, Metric | { items: { reason: string; count: number }[]; basis: string }>;
 interface Alert { kind: string; label: string; link: string; count: number }
 
 const Dashboard = () => {
-  const [preset, setPreset] = useState<RangePreset>("mes");
-  const [custom, setCustom] = useState(presetRange("mes"));
-  const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
+  const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const range = { from: `${from}T00:00:00.000Z`, to: toExclusive(to) };
   const prevRange = (() => {
@@ -63,15 +61,18 @@ const Dashboard = () => {
   const unitLabel = units.data?.find((u) => u.id === unit)?.name ?? "Todas as unidades";
   const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
   const openDetail = (kind: CardKind) => setDetail({ kind, from: range.from, to: range.to, unit, unitLabel, prevFrom: prevRange.from, prevTo: prevRange.to });
-  const ALERT_DETAIL: Record<string, CardKind> = { cobrancas_vencidas: "overdue", tarefas_atrasadas: "overdue_tasks" };
+  const ALERT_DETAIL: Record<string, CardKind> = {
+    cobrancas_vencidas: "overdue", tarefas_atrasadas: "overdue_tasks",
+    leads_sem_retorno: "leads_sem_retorno", pacotes_fim: "pacotes_fim",
+    duplicidades: "duplicidades", eventos_falhos: "eventos_falhos",
+  };
 
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div className="min-w-0"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
         <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-          onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-          onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+          onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
       </div>
 
       <State loading={metrics.isLoading} error={metrics.error} />
@@ -106,15 +107,15 @@ const Dashboard = () => {
             <Exec label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" onOpen={() => openDetail("receipts")} />
             <Exec label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" onOpen={() => openDetail("overdue")} />
             <Exec label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} onOpen={() => openDetail("new_patients")} />
-            <Exec label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} basis="pessoas com ao menos um pacote em status ativo (hoje)" />
+            <Exec label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} onOpen={() => openDetail("active_packages")} />
             <Exec label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} onOpen={() => openDetail("evaluations_scheduled")} />
-            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} />
+            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} onOpen={() => openDetail("attended")} />
             <Exec label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" onOpen={() => openDetail("win_rate")} />
-            <Exec label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} />
-            <Exec label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} />
-            <Exec label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" />
-            <Exec label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" />
-            <Exec label="NPS" m={metrics.data.nps as Metric} />
+            <Exec label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} onOpen={() => openDetail("active_partners")} />
+            <Exec label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} onOpen={() => openDetail("active_students")} />
+            <Exec label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" onOpen={() => openDetail("average_ticket")} />
+            <Exec label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" onOpen={() => openDetail("attendance_rate")} />
+            <Exec label="NPS" m={metrics.data.nps as Metric} basis="pesquisas de satisfação (NPS) têm detalhamento próprio em Pesquisas — não incluído neste cartão para preservar o k-anonimato já aplicado lá" />
           </ul>
         </section>
       )}

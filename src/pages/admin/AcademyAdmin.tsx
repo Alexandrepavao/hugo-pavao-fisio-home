@@ -5,7 +5,7 @@ import { validateSlug } from "@/lib/reserved-slugs";
 import { fmtDate } from "@/lib/format";
 import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
-interface Course { id: string; title: string; slug: string; kind: string; status: string; product_id: string | null; org_id: string }
+interface Course { id: string; title: string; slug: string; kind: string; status: string; product_id: string | null; org_id: string; certificate_min_progress: number }
 interface Lesson { id: string; title: string; kind: string; position: number; published: boolean; body: string | null; external_url: string | null; storage_path: string | null }
 const KIND: Record<string, string> = { course: "Curso", mentoring: "Mentoria", program: "Programa" };
 const STAT: Record<string, string> = { draft: "Rascunho", published: "Publicado", archived: "Arquivado" };
@@ -23,7 +23,7 @@ const AcademyAdmin = () => {
 const Courses = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [sel, setSel] = useState<string | null>(null);
   const [title, setTitle] = useState(""); const [slug, setSlug] = useState(""); const [kind, setKind] = useState("course"); const [prod, setProd] = useState("");
-  const courses = useQuery({ queryKey: ["courses"], queryFn: async () => (await supabase.from("courses").select("id, title, slug, kind, status, product_id, org_id").order("created_at", { ascending: false })).data as Course[] });
+  const courses = useQuery({ queryKey: ["courses"], queryFn: async () => (await supabase.from("courses").select("id, title, slug, kind, status, product_id, org_id, certificate_min_progress").order("created_at", { ascending: false })).data as Course[] });
   const products = useQuery({ queryKey: ["prods-edu"], queryFn: async () => (await supabase.from("products").select("id, name, kind").in("kind", ["course", "mentoring"])).data ?? [] });
   const create = async (e: FormEvent) => {
     e.preventDefault(); const se = validateSlug(slug); if (se || !title.trim()) return m.err(se ?? "Informe o título.");
@@ -123,8 +123,18 @@ const Tracks = () => {
 const CourseManager = ({ course, onChanged }: { course: Course; onChanged: () => void }) => {
   const [tab, setTab] = useState("aulas"); const [msg, m] = useMsg(); const qc = useQueryClient();
   const setStatus = async (s: string) => { const { error } = await supabase.from("courses").update({ status: s }).eq("id", course.id); if (error) m.err(errText(error)); else { m.ok("Estado atualizado."); onChanged(); } };
+  const setMinProgress = async (v: number) => {
+    if (!Number.isFinite(v) || v < 1 || v > 100) return m.err("Informe um valor entre 1 e 100.");
+    const { error } = await supabase.from("courses").update({ certificate_min_progress: v }).eq("id", course.id);
+    if (error) return m.err(errText(error)); m.ok("Critério de conclusão atualizado."); onChanged();
+  };
   return (<section className="mt-8 border-t border-border pt-6"><h2 className="text-2xl mb-1">{course.title}</h2>
-    <div className="flex gap-2 mb-4"><button className={btnGhost} onClick={() => setStatus("published")} disabled={course.status === "published"}>Publicar</button><button className={btnGhost} onClick={() => setStatus("draft")} disabled={course.status === "draft"}>Voltar a rascunho</button><button className={btnDanger} onClick={() => setStatus("archived")}>Arquivar</button></div>
+    <div className="flex flex-wrap items-center gap-2 mb-4">
+      <button className={btnGhost} onClick={() => setStatus("published")} disabled={course.status === "published"}>Publicar</button><button className={btnGhost} onClick={() => setStatus("draft")} disabled={course.status === "draft"}>Voltar a rascunho</button><button className={btnDanger} onClick={() => setStatus("archived")}>Arquivar</button>
+      <label htmlFor={`cmp-${course.id}`} className="text-xs text-muted-foreground ml-2">Conclusão (% mínimo)</label>
+      <input id={`cmp-${course.id}`} type="number" min={1} max={100} className="w-16" defaultValue={course.certificate_min_progress}
+        onBlur={(e) => { const v = Number(e.target.value); if (v !== course.certificate_min_progress) void setMinProgress(v); }} />
+    </div>
     <Msg m={msg} /><Tabs tabs={[["aulas", "Aulas"], ["provas", "Avaliações"], ["acessos", "Acessos"], ["turmas", "Turmas"], ["comunidade", "Comunidade"]]} value={tab} onChange={setTab} />
     {tab === "aulas" && <Lessons course={course} />}{tab === "provas" && <Quizzes course={course} />}{tab === "acessos" && <Access course={course} />}{tab === "turmas" && <Cohorts course={course} />}{tab === "comunidade" && <Community course={course} refresh={() => qc.invalidateQueries({ queryKey: ["posts", course.id] })} />}
   </section>);

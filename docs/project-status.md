@@ -1,6 +1,78 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-23) — Redesign Mosaic: filtros, cards com detalhe, header financeiro, Configurações
+## Sessão mais recente (2026-09-23, continuação) — Lacunas do relatório do Mosaic: preview Netlify, cards restantes, Configurações reais, testes novos
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+> Esta seção fecha 4 lacunas apontadas no relatório da rodada anterior (a seção "Redesign Mosaic" abaixo).
+
+**1. Preview HTTPS da Netlify (Dev).** Deploy publicado em `https://hp-group-hub.netlify.app`, site `hp-group-hub`
+(id `2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`), conectado exclusivamente às env vars do Supabase Dev, com a
+proteção de SSO de equipe já existente preservada (`requiresSSOTeamLogin: all`, inalterada). O site de produção
+(`hp-group-hub-producao`, `hpfisioterapia.com.br`, sem SSO) não foi tocado.
+
+**2. Detalhamento dos demais cards (migration `20260924000041_dashboard_card_detail_expand.sql`).** Inventário
+completo dos ~40 `StatCard` do admin. `dashboard_card_detail(p_kind, ...)` ampliado de 6 para 23 tipos, todos
+reconciliando com a mesma tabela/filtro/escopo de unidade da métrica original (`dashboard_metrics`/
+`dashboard_alerts`/`mrr_report`). **Bug real corrigido**: nos 6 tipos originais (migration 039), `total_items`
+vinha de um `count(*)` sobre a subconsulta já limitada a 20 — subestimava o total real quando havia mais de 20
+registros. Corrigido em todos os ~23 tipos (agregado exato reaproveitado ou uma segunda consulta sem `LIMIT`).
+Cartões agora com detalhamento: Início (Recebimentos, Contas vencidas, Novos pacientes, Avaliações agendadas,
+Atendimentos realizados, Conversão comercial, Tarefas atrasadas, Alunos ativos no Academy, Ticket médio,
+Comparecimento, Pacientes com pacote ativo, Parceiros ativos, e os 6 alertas); Financeiro › Visão geral
+(+ Vendas confirmadas, Contas a receber/pagar 30 dias, Resultado de caixa); Financeiro › Recorrência (MRR do
+mês, Clientes recorrentes, Churn de clientes — mês de referência passou a ser o mês selecionado na tela, não
+mais fixo no mês corrente, pra respeitar o filtro de mês da própria tela).
+**Indisponíveis com motivo real documentado (não uma mensagem genérica de pendência):**
+- NPS (Início): sem detalhamento próprio — a pesquisa de satisfação já tem seu próprio painel com k-anonimato
+  em Pesquisas; abrir a lista de respondentes individuais aqui contradiria essa proteção de privacidade.
+- ARR, Receita média por cliente, Retenções bruta/líquida, Churn de receita (Recorrência): derivados da mesma
+  ponte de movimentação (`bridge`) de `mrr_report()`, que ainda não tem detalhamento por registro próprio —
+  precisaria de uma consulta nova sobre expansão/contração/cancelamento em R$, não construída nesta rodada.
+- Estornos, Resultado de caixa (DRE): usam `v_despesas`/`v_estornos` de `dre_report()`, que não é a mesma base
+  de `cash_result` do Financeiro › Visão geral (inclui despesas classificadas por categoria) — reaproveitar o
+  cartão existente mostraria um total incoerente; precisaria de uma branch própria, não construída nesta rodada.
+- Receita por paciente pagante, Receita por sessão, Taxa de recompra, CAC, LTV, Prazo de recuperação do CAC
+  (Relatórios): CAC/LTV/payback já eram honestamente `unavailable` desde antes (`efficiency_report()` — sem
+  fonte de custo de aquisição no sistema); os outros três são métricas de cohort sem uma lista de registros
+  única por trás — não construídas nesta rodada.
+- Contas corporativas / Pesquisas: os `StatCard` dessas telas são relatórios por conta/pesquisa individual
+  (já com k-anonimato próprio), não indicadores do painel geral — fora do escopo de `dashboard_card_detail`.
+
+**3. Configurações — reinvestigação das 6 categorias pendentes.** Duas tinham suporte real de backend não
+utilizado e ganharam telas funcionais nesta rodada:
+- **Operação**: `services` (nome/duração/preço) e `products` (nome/tipo/preço/sessões/validade) já tinham RLS
+  de escrita pra manager/ops_admin desde a migration 004, mas nenhuma tela em todo o app gravava nessas
+  tabelas — confirmado por busca no código. Tela nova em `SettingsHub.tsx` (`OperationSettings`).
+- **Comercial e CRM**: `pipelines`/`pipeline_stages`/`loss_reasons`, mesma situação (RLS pronta desde a
+  migration 004, zero tela de escrita). Tela nova (`CrmSettings`): criar funil, adicionar etapas, motivos de
+  perda.
+- **Academy**: achado um campo real sem UI (`courses.certificate_min_progress`, criador do certificado) —
+  exposto como campo editável na própria tela do curso (`AcademyAdmin.tsx`), já que é uma configuração por
+  curso, não uma configuração central. `SettingsHub` passou a linkar pra lá em vez de "pendente".
+- **Parceiros, Comunicação e integrações, Aparência**: reconfirmadas como pendências reais (não apenas
+  copiadas do relatório anterior) — não há coluna nem tabela de suporte no schema (ex.: nenhum campo de
+  percentual padrão de repasse em `partner_payouts`; `organizations` só tem `name`/`slug`, sem logo/remetente).
+  Continuam exibindo o motivo específico, nunca uma mensagem genérica.
+
+**4. Testes novos desta rodada** (nenhum reaproveita a suíte anterior como prova de cobertura nova):
+- `supabase/tests/020_dashboard_card_detail.sql` (novo, 9/9) — `total_items` sobe exatamente o esperado mesmo
+  acima de 20 (regressão do bug corrigido); lista trunca em 20; recebimentos reconciliam por delta; indicador
+  indisponível traz o motivo real; snapshot marcado corretamente; comercial (sales) bloqueado do painel inteiro;
+  gestor de unidade acessa cartão comum mas não `eventos_falhos` (exige manager); tipo desconhecido gera erro
+  explícito.
+- `supabase/tests/021_settings_operacao_crm.sql` (novo, 11/11) — manager cria/edita serviço, produto/pacote
+  (com `service_id` obrigatório pra pacote — constraint real do banco, corrigido na tela depois de o teste
+  pegar o erro), funil, etapa e motivo de perda; comercial (sales) e gestor de unidade bloqueados de escrever
+  em qualquer uma das 5 tabelas (`42501`), mas continuam lendo o catálogo normalmente.
+- Persistência de filtros: não existia (nem em Início, nem em Financeiro) — implementada nesta rodada
+  (`usePeriodFilterState` em `src/lib/period.ts`, período/unidade/comparação na URL) em vez de documentada como
+  pendência, já que era um ajuste pequeno e bem contido.
+- Regressão: `020`/`021` são adição pura (nenhum teste antigo foi alterado); `008_dashboard.sql` reexecutado
+  numa unidade nova isolada para confirmar que a expansão da migration 041 não quebrou `dashboard_metrics`/
+  `dashboard_alerts` (7/7 OK) — a suíte antiga passar sozinha não prova cobertura dos recursos novos, por isso
+  020/021 existem.
+
+## Sessão anterior (2026-09-23) — Redesign Mosaic: filtros, cards com detalhe, header financeiro, Configurações
 
 > Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge. Ordem de
 > implementação seguida à risca: filtros compactos → cards com detalhe → header financeiro → Configurações.

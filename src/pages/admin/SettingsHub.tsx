@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { brl, parseCents } from "@/lib/format";
 import { Badge, btnGhost, errText, Msg, PageHead, State, Table, Td, useMsg } from "@/lib/ui";
 
 type Category = {
@@ -14,11 +15,11 @@ type Category = {
 const CATEGORIES: Category[] = [
   { key: "org", title: "Organização e unidades", description: "Unidades (nome, cidade, UF, fuso). Dados institucionais gerais (contatos, endereço, horários) ainda não têm campo no sistema.", status: "ready" },
   { key: "team", title: "Equipe e acessos", description: "Convites, papéis e vínculos por unidade — mesma tela de sempre.", status: "link", linkTo: "/admin/equipe", linkLabel: "Abrir Equipe e acessos" },
-  { key: "operacao", title: "Operação", description: "Disponibilidade, duração dos atendimentos, intervalos, cancelamentos e regras de pacotes.", status: "pending", pendingNote: "Esses dados já existem no banco (disponibilidade, serviços/pacotes), mas cada um é editado no ponto de uso (Agenda, Financeiro › Configurações) — ainda não há uma tela única que reúna todos como parâmetro de configuração. Reunir isso aqui exigiria uma tela nova, fora do escopo desta etapa." },
-  { key: "crm", title: "Comercial e CRM", description: "Funis, etapas, origens, responsáveis e regras de distribuição.", status: "pending", pendingNote: "Funis e etapas existem no banco (semeados na fundação do sistema) e a distribuição de responsável já funciona (private.pick_owner), mas não há tela para criar/editar funil, etapa ou origem — hoje isso só é feito por migration. Precisa de uma tela de administração de funil nova." },
+  { key: "operacao", title: "Operação", description: "Serviços (duração/preço do atendimento) e produtos/pacotes (sessões, validade). Disponibilidade por profissional continua editada na Agenda — é uma grade por pessoa, não um parâmetro geral.", status: "ready" },
+  { key: "crm", title: "Comercial e CRM", description: "Funis, etapas do funil e motivos de perda.", status: "ready" },
   { key: "captacao", title: "Captação", description: "Número de WhatsApp por jornada (avaliação/parceria) e, quando aplicável, por unidade.", status: "ready" },
   { key: "financeiro", title: "Financeiro", description: "Contas financeiras, categorias, classificação DRE e centros de custo — mesma tela acessada pelo header de Financeiro.", status: "link", linkTo: "/admin/financeiro/config", linkLabel: "Abrir Financeiro › Configurações" },
-  { key: "academy", title: "Academy", description: "Configurações de turmas, liberação de conteúdo e critérios de conclusão.", status: "pending", pendingNote: "Cursos, trilhas e liberação de acesso já são gerenciados em Academy (matrículas/entitlements), mas não há parâmetros globais separados (ex.: critério padrão de conclusão) — cada curso já define isso individualmente na própria tela do curso. Nenhuma configuração adicional identificada para centralizar aqui hoje." },
+  { key: "academy", title: "Academy", description: "Critério de conclusão (% mínimo para certificado) por curso.", status: "link", linkTo: "/admin/academy", linkLabel: "Abrir Academy" },
   { key: "parceiros", title: "Parceiros", description: "Critérios de aprovação, indicações e regras de repasse.", status: "pending", pendingNote: "Aprovação, indicações e repasses já funcionam em Parceiros (fluxo do funil + repasses lançados manualmente), mas os critérios de aprovação são uma decisão administrativa registrada por fora do sistema — não há campo de configuração dedicado para regra automática de repasse (percentual padrão etc.). Precisa de definição de negócio antes de virar tela." },
   { key: "comms", title: "Comunicação e integrações", description: "Remetente, templates, status das integrações e falhas.", status: "pending", pendingNote: "Segredos (Resend, chaves de API) nunca são expostos ao frontend nem gravados em tabela de leitura pública — por desenho de segurança, não há endpoint que devolva se uma integração está configurada. Remetente e templates de e-mail são definidos em código (netlify/functions), não editáveis pela interface. Status real: consulte docs/integrations.md e o painel do Supabase/Netlify diretamente." },
   { key: "aparencia", title: "Aparência", description: "Logo e opções de identidade visual efetivamente suportadas.", status: "pending", pendingNote: "A logo é um arquivo estático do código (src/assets/hp-logo.png), não um campo configurável no banco — trocar a logo hoje exige alterar o código-fonte. Nenhuma outra opção de identidade visual é configurável pela interface." },
@@ -52,6 +53,8 @@ const SettingsHub = () => {
               <div className="mt-4 border-t border-border pt-4">
                 {c.key === "org" && <UnitsSettings />}
                 {c.key === "captacao" && <QuizWhatsAppSettings />}
+                {c.key === "operacao" && <OperationSettings />}
+                {c.key === "crm" && <CrmSettings />}
               </div>
             )}
           </li>
@@ -165,6 +168,214 @@ const QuizWhatsAppSettings = () => {
               <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => toggle(w)}>{w.active ? "Desativar" : "Ativar"}</button></Td>
             </tr>
           ))}
+        </Table>
+      )}
+    </div>
+  );
+};
+
+interface ServiceRow { id: string; name: string; duration_min: number; price_cents: number; active: boolean }
+interface ProductRow { id: string; kind: string; name: string; price_cents: number; sessions_count: number | null; validity_days: number | null; active: boolean }
+const PRODUCT_KIND: Record<string, string> = { service: "Serviço avulso", course: "Curso", mentoring: "Mentoria", package: "Pacote", plan: "Plano/assinatura" };
+
+const OperationSettings = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg();
+  const [sName, setSName] = useState(""); const [sDur, setSDur] = useState("50"); const [sPrice, setSPrice] = useState("");
+  const [pKind, setPKind] = useState("package"); const [pName, setPName] = useState(""); const [pPrice, setPPrice] = useState(""); const [pSessions, setPSessions] = useState(""); const [pValidity, setPValidity] = useState(""); const [pService, setPService] = useState("");
+
+  const services = useQuery({ queryKey: ["settings-services"], queryFn: async () => (await supabase.from("services").select("id, name, duration_min, price_cents, active").order("name")).data as ServiceRow[] });
+  const products = useQuery({ queryKey: ["settings-products"], queryFn: async () => (await supabase.from("products").select("id, kind, name, price_cents, sessions_count, validity_days, active").order("name")).data as ProductRow[] });
+
+  const createService = async (e: FormEvent) => {
+    e.preventDefault();
+    const dur = Number(sDur); const cents = parseCents(sPrice || "0,00");
+    if (!sName.trim()) return m.err("Informe o nome do serviço.");
+    if (!Number.isFinite(dur) || dur < 5 || dur > 480) return m.err("Duração deve ser entre 5 e 480 minutos.");
+    if (cents == null) return m.err("Preço inválido.");
+    const { data: org } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("services").insert({ org_id: org?.id, name: sName.trim(), duration_min: dur, price_cents: cents });
+    if (error) return m.err(errText(error));
+    m.ok("Serviço criado."); setSName(""); setSDur("50"); setSPrice("");
+    void qc.invalidateQueries({ queryKey: ["settings-services"] });
+  };
+  const updateService = async (s: ServiceRow, patch: Partial<ServiceRow>) => {
+    const { error } = await supabase.from("services").update(patch).eq("id", s.id);
+    if (error) return m.err(errText(error));
+    void qc.invalidateQueries({ queryKey: ["settings-services"] });
+  };
+
+  const createProduct = async (e: FormEvent) => {
+    e.preventDefault();
+    const cents = parseCents(pPrice || "0,00");
+    if (!pName.trim()) return m.err("Informe o nome do produto/pacote.");
+    if (cents == null) return m.err("Preço inválido.");
+    const sessions = pSessions ? Number(pSessions) : null;
+    const validity = pValidity ? Number(pValidity) : null;
+    if (pSessions && (!Number.isFinite(sessions) || (sessions ?? 0) <= 0)) return m.err("Sessões inválidas.");
+    if (pValidity && (!Number.isFinite(validity) || (validity ?? 0) <= 0)) return m.err("Validade inválida.");
+    if (pKind === "package" && (!sessions || !pService)) return m.err("Pacote exige serviço vinculado e número de sessões.");
+    const { data: org } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("products").insert({ org_id: org?.id, kind: pKind, name: pName.trim(), price_cents: cents, sessions_count: sessions, validity_days: validity, service_id: pKind === "package" ? pService : null });
+    if (error) return m.err(errText(error));
+    m.ok("Produto criado."); setPName(""); setPPrice(""); setPSessions(""); setPValidity(""); setPService("");
+    void qc.invalidateQueries({ queryKey: ["settings-products"] });
+  };
+  const toggleProduct = async (p: ProductRow) => {
+    const { error } = await supabase.from("products").update({ active: !p.active }).eq("id", p.id);
+    if (error) return m.err(errText(error));
+    void qc.invalidateQueries({ queryKey: ["settings-products"] });
+  };
+
+  return (
+    <div>
+      <Msg m={msg} />
+      <h3 className="text-sm font-medium mb-2">Serviços (duração e preço do atendimento avulso)</h3>
+      <form onSubmit={createService} className="grid gap-3 sm:grid-cols-4 items-end mb-4" noValidate>
+        <div className="sm:col-span-2"><label htmlFor="sv-name" className="block text-xs mb-1">Nome</label><input id="sv-name" value={sName} onChange={(e) => setSName(e.target.value)} placeholder="Ex.: Avaliação fisioterapêutica" /></div>
+        <div><label htmlFor="sv-dur" className="block text-xs mb-1">Duração (min)</label><input id="sv-dur" type="number" min={5} max={480} value={sDur} onChange={(e) => setSDur(e.target.value)} /></div>
+        <div><label htmlFor="sv-price" className="block text-xs mb-1">Preço (R$)</label><input id="sv-price" inputMode="decimal" value={sPrice} onChange={(e) => setSPrice(e.target.value)} placeholder="0,00" /></div>
+        <button className={btnGhost + " sm:col-span-4 w-fit"}>Criar serviço</button>
+      </form>
+      <State loading={services.isLoading} error={services.error} empty={services.data?.length === 0} emptyText="Nenhum serviço cadastrado." />
+      {services.data && services.data.length > 0 && (
+        <Table head={["Nome", "Duração", "Preço", "Estado", ""]}>
+          {services.data.map((s) => (
+            <tr key={s.id}>
+              <Td><input defaultValue={s.name} onBlur={(e) => e.target.value.trim() && e.target.value !== s.name && updateService(s, { name: e.target.value.trim() })} aria-label={`Nome de ${s.name}`} /></Td>
+              <Td><input type="number" min={5} max={480} className="w-16" defaultValue={s.duration_min} onBlur={(e) => { const v = Number(e.target.value); v && v !== s.duration_min && updateService(s, { duration_min: v }); }} aria-label={`Duração de ${s.name}`} /> min</Td>
+              <Td><input className="w-24" defaultValue={brl(s.price_cents).replace("R$ ", "")} onBlur={(e) => { const c = parseCents(e.target.value); c != null && c !== s.price_cents && updateService(s, { price_cents: c }); }} aria-label={`Preço de ${s.name}`} /></Td>
+              <Td>{s.active ? "Ativo" : "Inativo"}</Td>
+              <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => updateService(s, { active: !s.active })}>{s.active ? "Desativar" : "Ativar"}</button></Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+
+      <h3 className="text-sm font-medium mb-2 mt-6">Produtos e pacotes</h3>
+      <form onSubmit={createProduct} className="grid gap-3 sm:grid-cols-6 items-end mb-4" noValidate>
+        <div><label htmlFor="pr-kind" className="block text-xs mb-1">Tipo</label><select id="pr-kind" value={pKind} onChange={(e) => setPKind(e.target.value)}>{Object.entries(PRODUCT_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <div className="sm:col-span-2"><label htmlFor="pr-name" className="block text-xs mb-1">Nome</label><input id="pr-name" value={pName} onChange={(e) => setPName(e.target.value)} placeholder="Ex.: Pacote 10 sessões" /></div>
+        <div><label htmlFor="pr-price" className="block text-xs mb-1">Preço (R$)</label><input id="pr-price" inputMode="decimal" value={pPrice} onChange={(e) => setPPrice(e.target.value)} placeholder="0,00" /></div>
+        {pKind === "package" && (
+          <div><label htmlFor="pr-svc" className="block text-xs mb-1">Serviço vinculado</label><select id="pr-svc" value={pService} onChange={(e) => setPService(e.target.value)}><option value="">Selecione…</option>{services.data?.filter((s) => s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        )}
+        <div><label htmlFor="pr-sess" className="block text-xs mb-1">Sessões {pKind === "package" ? "(obrigatório)" : "(pacote)"}</label><input id="pr-sess" type="number" min={1} value={pSessions} onChange={(e) => setPSessions(e.target.value)} /></div>
+        <div><label htmlFor="pr-val" className="block text-xs mb-1">Validade (dias)</label><input id="pr-val" type="number" min={1} value={pValidity} onChange={(e) => setPValidity(e.target.value)} /></div>
+        <button className={btnGhost + " sm:col-span-6 w-fit"}>Criar produto</button>
+      </form>
+      <p className="text-xs text-muted-foreground mb-3">Regras finas de consumo (falta consome sessão, prazo de cancelamento tardio) usam os valores padrão do sistema ao criar por aqui; para ajustá-las num produto específico, use o banco diretamente — essa tela cobre o que é preenchido com mais frequência.</p>
+      <State loading={products.isLoading} error={products.error} empty={products.data?.length === 0} emptyText="Nenhum produto cadastrado." />
+      {products.data && products.data.length > 0 && (
+        <Table head={["Nome", "Tipo", "Preço", "Sessões", "Estado", ""]}>
+          {products.data.map((p) => (
+            <tr key={p.id}>
+              <Td>{p.name}</Td><Td>{PRODUCT_KIND[p.kind] ?? p.kind}</Td><Td>{brl(p.price_cents)}</Td><Td>{p.sessions_count ?? "—"}</Td>
+              <Td>{p.active ? "Ativo" : "Inativo"}</Td>
+              <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => toggleProduct(p)}>{p.active ? "Desativar" : "Ativar"}</button></Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </div>
+  );
+};
+
+interface PipelineRow { id: string; name: string; kind: string; active: boolean }
+interface StageRow { id: string; name: string; position: number; kind: string }
+interface LossRow { id: string; name: string; active: boolean }
+const PIPELINE_KIND: Record<string, string> = { patients: "Pacientes", education: "Educação", partners: "Parceiros", companies: "Empresas", custom: "Personalizado" };
+
+const CrmSettings = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg();
+  const [plName, setPlName] = useState(""); const [plKind, setPlKind] = useState("custom");
+  const [selPipe, setSelPipe] = useState("");
+  const [stName, setStName] = useState(""); const [stKind, setStKind] = useState("open");
+  const [reasonName, setReasonName] = useState("");
+
+  const pipelines = useQuery({ queryKey: ["settings-pipelines"], queryFn: async () => (await supabase.from("pipelines").select("id, name, kind, active").order("name")).data as PipelineRow[] });
+  const stages = useQuery({ queryKey: ["settings-stages", selPipe], enabled: !!selPipe, queryFn: async () => (await supabase.from("pipeline_stages").select("id, name, position, kind").eq("pipeline_id", selPipe).order("position")).data as StageRow[] });
+  const reasons = useQuery({ queryKey: ["settings-loss"], queryFn: async () => (await supabase.from("loss_reasons").select("id, name, active").order("name")).data as LossRow[] });
+
+  const createPipeline = async (e: FormEvent) => {
+    e.preventDefault(); if (!plName.trim()) return m.err("Informe o nome do funil.");
+    const { data: org } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("pipelines").insert({ org_id: org?.id, name: plName.trim(), kind: plKind });
+    if (error) return m.err(errText(error));
+    m.ok("Funil criado."); setPlName(""); void qc.invalidateQueries({ queryKey: ["settings-pipelines"] });
+  };
+  const togglePipeline = async (p: PipelineRow) => {
+    const { error } = await supabase.from("pipelines").update({ active: !p.active }).eq("id", p.id);
+    if (error) return m.err(errText(error));
+    void qc.invalidateQueries({ queryKey: ["settings-pipelines"] });
+  };
+  const createStage = async (e: FormEvent) => {
+    e.preventDefault(); if (!selPipe) return m.err("Selecione um funil."); if (!stName.trim()) return m.err("Informe o nome da etapa.");
+    const { data: org } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("pipeline_stages").insert({ org_id: org?.id, pipeline_id: selPipe, name: stName.trim(), kind: stKind, position: (stages.data?.length ?? 0) + 1 });
+    if (error) return m.err(errText(error));
+    m.ok("Etapa criada."); setStName(""); void qc.invalidateQueries({ queryKey: ["settings-stages", selPipe] });
+  };
+  const createReason = async (e: FormEvent) => {
+    e.preventDefault(); if (!reasonName.trim()) return m.err("Informe o motivo.");
+    const { data: org } = await supabase.from("organizations").select("id").single();
+    const { error } = await supabase.from("loss_reasons").insert({ org_id: org?.id, name: reasonName.trim() });
+    if (error) return m.err(errText(error));
+    m.ok("Motivo criado."); setReasonName(""); void qc.invalidateQueries({ queryKey: ["settings-loss"] });
+  };
+  const toggleReason = async (r: LossRow) => {
+    const { error } = await supabase.from("loss_reasons").update({ active: !r.active }).eq("id", r.id);
+    if (error) return m.err(errText(error));
+    void qc.invalidateQueries({ queryKey: ["settings-loss"] });
+  };
+
+  return (
+    <div>
+      <Msg m={msg} />
+      <h3 className="text-sm font-medium mb-2">Funis</h3>
+      <form onSubmit={createPipeline} className="grid gap-3 sm:grid-cols-4 items-end mb-4" noValidate>
+        <div className="sm:col-span-2"><label htmlFor="pl-name" className="block text-xs mb-1">Nome</label><input id="pl-name" value={plName} onChange={(e) => setPlName(e.target.value)} placeholder="Ex.: Convênios" /></div>
+        <div><label htmlFor="pl-kind" className="block text-xs mb-1">Tipo</label><select id="pl-kind" value={plKind} onChange={(e) => setPlKind(e.target.value)}>{Object.entries(PIPELINE_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <button className={btnGhost + " sm:col-span-4 w-fit"}>Criar funil</button>
+      </form>
+      <State loading={pipelines.isLoading} error={pipelines.error} empty={pipelines.data?.length === 0} emptyText="Nenhum funil cadastrado." />
+      {pipelines.data && pipelines.data.length > 0 && (
+        <Table head={["Nome", "Tipo", "Estado", "", ""]}>
+          {pipelines.data.map((p) => (
+            <tr key={p.id}>
+              <Td>{p.name}</Td><Td>{PIPELINE_KIND[p.kind] ?? p.kind}</Td><Td>{p.active ? "Ativo" : "Inativo"}</Td>
+              <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => setSelPipe(selPipe === p.id ? "" : p.id)}>{selPipe === p.id ? "Fechar etapas" : "Ver etapas"}</button></Td>
+              <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => togglePipeline(p)}>{p.active ? "Desativar" : "Ativar"}</button></Td>
+            </tr>
+          ))}
+        </Table>
+      )}
+
+      {selPipe && (
+        <div className="mt-4 border-t border-border pt-4">
+          <h4 className="text-sm font-medium mb-2">Etapas — {pipelines.data?.find((p) => p.id === selPipe)?.name}</h4>
+          <form onSubmit={createStage} className="grid gap-3 sm:grid-cols-4 items-end mb-3" noValidate>
+            <div className="sm:col-span-2"><label htmlFor="st-name" className="block text-xs mb-1">Nome da etapa</label><input id="st-name" value={stName} onChange={(e) => setStName(e.target.value)} placeholder="Ex.: Proposta enviada" /></div>
+            <div><label htmlFor="st-kind" className="block text-xs mb-1">Tipo</label><select id="st-kind" value={stKind} onChange={(e) => setStKind(e.target.value)}><option value="open">Em andamento</option><option value="won">Ganha</option><option value="lost">Perdida</option></select></div>
+            <button className={btnGhost + " w-fit"}>Adicionar etapa</button>
+          </form>
+          <State loading={stages.isLoading} error={stages.error} empty={stages.data?.length === 0} emptyText="Nenhuma etapa cadastrada." />
+          {stages.data && stages.data.length > 0 && (
+            <Table head={["#", "Nome", "Tipo"]}>
+              {stages.data.map((s) => <tr key={s.id}><Td>{s.position}</Td><Td>{s.name}</Td><Td>{s.kind === "won" ? "Ganha" : s.kind === "lost" ? "Perdida" : "Em andamento"}</Td></tr>)}
+            </Table>
+          )}
+        </div>
+      )}
+
+      <h3 className="text-sm font-medium mb-2 mt-6">Motivos de perda</h3>
+      <form onSubmit={createReason} className="grid gap-3 sm:grid-cols-4 items-end mb-4" noValidate>
+        <div className="sm:col-span-3"><label htmlFor="rs-name" className="block text-xs mb-1">Motivo</label><input id="rs-name" value={reasonName} onChange={(e) => setReasonName(e.target.value)} placeholder="Ex.: Preço" /></div>
+        <button className={btnGhost + " w-fit"}>Adicionar motivo</button>
+      </form>
+      <State loading={reasons.isLoading} error={reasons.error} empty={reasons.data?.length === 0} emptyText="Nenhum motivo cadastrado." />
+      {reasons.data && reasons.data.length > 0 && (
+        <Table head={["Motivo", "Estado", ""]}>
+          {reasons.data.map((r) => <tr key={r.id}><Td>{r.name}</Td><Td>{r.active ? "Ativo" : "Inativo"}</Td><Td><button className={btnGhost + " hp-btn-sm"} onClick={() => toggleReason(r)}>{r.active ? "Desativar" : "Ativar"}</button></Td></tr>)}
         </Table>
       )}
     </div>

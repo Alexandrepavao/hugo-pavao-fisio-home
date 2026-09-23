@@ -5,7 +5,13 @@ import { brl, fmtDate, fmtDateTime } from "@/lib/format";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge, State, btnGhost, btnPrimary } from "@/lib/ui";
 
-export type CardKind = "receipts" | "overdue" | "new_patients" | "evaluations_scheduled" | "win_rate" | "overdue_tasks";
+export type CardKind =
+  | "receipts" | "overdue" | "new_patients" | "evaluations_scheduled" | "win_rate" | "overdue_tasks"
+  | "attended" | "active_students" | "average_ticket" | "attendance_rate"
+  | "sales_confirmed" | "forecast_receivables_30d" | "forecast_payables_30d" | "cash_result"
+  | "leads_sem_retorno" | "pacotes_fim" | "duplicidades" | "eventos_falhos"
+  | "mrr_month" | "recurring_clients" | "churn_clients"
+  | "active_packages" | "active_partners";
 
 interface DetailItem { id: string; title: string; subtitle?: string; amount_cents?: number; date?: string; tag?: string }
 interface CardDetail {
@@ -15,10 +21,18 @@ interface CardDetail {
 
 const FMT: Record<CardKind, "brl" | "pct" | "int"> = {
   receipts: "brl", overdue: "brl", new_patients: "int", evaluations_scheduled: "int", win_rate: "pct", overdue_tasks: "int",
+  attended: "int", active_students: "int", average_ticket: "brl", attendance_rate: "pct",
+  sales_confirmed: "int", forecast_receivables_30d: "brl", forecast_payables_30d: "brl", cash_result: "brl",
+  leads_sem_retorno: "int", pacotes_fim: "int", duplicidades: "int", eventos_falhos: "int",
+  mrr_month: "brl", recurring_clients: "int", churn_clients: "int",
+  active_packages: "int", active_partners: "int",
 };
 // "Situação atual" (hoje) — decidido estaticamente, sem esperar a resposta do servidor: evita disparar (e
 // exibir) uma comparação com "período anterior" que não faz sentido para um saldo/fila sempre calculado em cima de agora.
-const SNAPSHOT_KINDS = new Set<CardKind>(["overdue", "overdue_tasks"]);
+const SNAPSHOT_KINDS = new Set<CardKind>([
+  "overdue", "overdue_tasks", "active_students", "forecast_receivables_30d", "forecast_payables_30d",
+  "leads_sem_retorno", "pacotes_fim", "duplicidades", "eventos_falhos", "active_packages", "active_partners",
+]);
 const fmtValue = (kind: CardKind, v: number | null) => {
   if (v == null) return "Indisponível";
   if (FMT[kind] === "brl") return brl(v);
