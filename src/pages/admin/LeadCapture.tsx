@@ -72,29 +72,39 @@ const LeadCapture = () => {
   });
 
   const total = leads.data?.[0]?.total_count ?? 0;
+  const extraCount = (journey ? 1 : 0) + (status ? 1 : 0) + (needsReview ? 1 : 0) + (search ? 1 : 0);
+  const extraSummary = [journey && (journey === "atendimento" ? "Atendimento" : "Parceria"), status && statusLabel[status], needsReview === "true" && "Revisar", search && `"${search}"`].filter(Boolean).join(" · ");
 
   return (
     <div>
-      <PageHead eyebrow="Comercial" title="Captação de leads" hint="Submissões dos quizzes de avaliação (atendimento) e parceria — integradas automaticamente ao CRM. Respostas sobre saúde só aparecem para quem tem permissão de gestão." />
+      <PageHead eyebrow="Comercial" title="Captação de leads" hint="Submissões dos quizzes de avaliação (atendimento) e parceria — integradas automaticamente ao CRM. Respostas sobre saúde só aparecem para quem tem permissão de gestão."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit="" units={[]} compare={false}
+            onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }}
+            onFrom={(v) => setCustom({ ...custom, from: v })} onTo={(v) => setCustom({ ...custom, to: v })}
+            onUnit={() => {}} onCompare={() => {}} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setJourney(""); setStatus(""); setNeedsReview(""); setSearch(""); setPage(0); }}
+            extraCount={extraCount} extraSummary={extraSummary || undefined}
+            extra={
+              <div className="grid gap-3">
+                <div><label htmlFor="lc-journey" className="block text-xs mb-1">Jornada</label>
+                  <select id="lc-journey" value={journey} onChange={(e) => { setJourney(e.target.value); setPage(0); }}>
+                    <option value="">Todas</option><option value="atendimento">Atendimento</option><option value="parceria">Parceria</option>
+                  </select></div>
+                <div><label htmlFor="lc-status" className="block text-xs mb-1">Status</label>
+                  <select id="lc-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
+                    <option value="">Todos</option><option value="started">Iniciado</option><option value="partial">Em progresso</option><option value="completed">Concluído</option>
+                  </select></div>
+                <div><label htmlFor="lc-review" className="block text-xs mb-1">Revisão</label>
+                  <select id="lc-review" value={needsReview} onChange={(e) => { setNeedsReview(e.target.value); setPage(0); }}>
+                    <option value="">Todas</option><option value="true">Precisa revisar</option><option value="false">Sem pendência</option>
+                  </select></div>
+                <div><label htmlFor="lc-search" className="block text-xs mb-1">Buscar (nome, e-mail, telefone)</label>
+                  <input id="lc-search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} /></div>
+              </div>
+            } />
+        } />
 
-      <MetricsPanel metrics={metrics.data} loading={metrics.isLoading} preset={preset} custom={custom} setPreset={setPreset} setCustom={setCustom} />
-
-      <div className="hp-card p-4 mb-4 grid gap-3 sm:grid-cols-5 items-end">
-        <div><label htmlFor="lc-journey" className="block text-xs mb-1">Jornada</label>
-          <select id="lc-journey" value={journey} onChange={(e) => { setJourney(e.target.value); setPage(0); }}>
-            <option value="">Todas</option><option value="atendimento">Atendimento</option><option value="parceria">Parceria</option>
-          </select></div>
-        <div><label htmlFor="lc-status" className="block text-xs mb-1">Status</label>
-          <select id="lc-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
-            <option value="">Todos</option><option value="started">Iniciado</option><option value="partial">Em progresso</option><option value="completed">Concluído</option>
-          </select></div>
-        <div><label htmlFor="lc-review" className="block text-xs mb-1">Revisão</label>
-          <select id="lc-review" value={needsReview} onChange={(e) => { setNeedsReview(e.target.value); setPage(0); }}>
-            <option value="">Todas</option><option value="true">Precisa revisar</option><option value="false">Sem pendência</option>
-          </select></div>
-        <div className="sm:col-span-2"><label htmlFor="lc-search" className="block text-xs mb-1">Buscar (nome, e-mail, telefone)</label>
-          <input id="lc-search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} /></div>
-      </div>
+      <MetricsPanel metrics={metrics.data} loading={metrics.isLoading} />
 
       <State loading={leads.isLoading} error={leads.error} empty={leads.data?.length === 0} emptyText="Nenhuma captação encontrada com esses filtros." />
       {leads.data && leads.data.length > 0 && (
@@ -130,15 +140,8 @@ const LeadCapture = () => {
   );
 };
 
-const MetricsPanel = ({ metrics, loading, preset, custom, setPreset, setCustom }: {
-  metrics: Record<string, unknown> | undefined; loading: boolean; preset: RangePreset; custom: { from: string; to: string };
-  setPreset: (p: RangePreset) => void; setCustom: (c: { from: string; to: string }) => void;
-}) => (
+const MetricsPanel = ({ metrics, loading }: { metrics: Record<string, unknown> | undefined; loading: boolean }) => (
   <div className="mb-6">
-    <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit="" units={[]} compare={false}
-      onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }}
-      onFrom={(v) => setCustom({ ...custom, from: v })} onTo={(v) => setCustom({ ...custom, to: v })}
-      onUnit={() => {}} onCompare={() => {}} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); }} />
     <State loading={loading} error={undefined} />
     {metrics && (
       <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4 mt-3">

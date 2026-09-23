@@ -62,11 +62,12 @@ const Dashboard = () => {
 
   return (
     <div>
-      <Greeting />
-      <p className="text-muted-foreground mb-5 max-w-2xl">Resumo da operação. Toque em qualquer cartão de alerta para ver a lista completa.</p>
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+        <div className="min-w-0"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
+        <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+          onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
+          onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      </div>
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {alerts.data && (

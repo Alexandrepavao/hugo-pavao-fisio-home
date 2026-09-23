@@ -44,10 +44,12 @@ const Overview = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Visão geral" hint="Resumo financeiro do período. Cada cartão mostra a regra de cálculo — passe o mouse ou abra o detalhe para ver a origem exata." />
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <PageHead eyebrow="Financeiro" title="Visão geral" hint="Resumo financeiro do período. Cada cartão mostra a regra de cálculo — passe o mouse ou abra o detalhe para ver a origem exata."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+            onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
+            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+        } />
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {metrics.data && (

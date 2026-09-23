@@ -5,7 +5,8 @@ import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useDraggable, u
 import { CalendarClock, KanbanSquare, LayoutList, MoreHorizontal, Plus, Search, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, fmtDateTime } from "@/lib/format";
-import { Badge, EmptyState, errText, FilterBar, FilterField, Msg, PageHead, promptText, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { PeriodFilter } from "@/lib/PeriodFilter";
+import { Badge, EmptyState, errText, Msg, PageHead, promptText, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import OpportunitySheet from "./crm/OpportunitySheet";
@@ -74,6 +75,9 @@ const CRM = () => {
   const done = useMutation({ mutationFn: async (id: string) => { const { error } = await supabase.from("crm_tasks").update({ done_at: new Date().toISOString() }).eq("id", id); if (error) throw error; },
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ["tasks"] }); void qc.invalidateQueries({ queryKey: ["opp-tasks"] }); } });
 
+  const extraCount = (owner ? 1 : 0) + (stale ? 1 : 0);
+  const extraSummary = [owner && (owner === "none" ? "Sem responsável" : nameOf(owner)), stale && "Sem retorno"].filter(Boolean).join(" · ");
+
   return (
     <div>
       <PageHead eyebrow="Comercial" title="Oportunidades" hint="Funis, responsáveis, tarefas e histórico. Arraste os cards entre etapas ou use o menu ⋯ (teclado: Espaço para pegar, setas para mover)."
@@ -89,19 +93,28 @@ const CRM = () => {
       </>)}
 
       {tab === "funil" && (<>
-        <FilterBar right={
-          <div role="group" aria-label="Visualização" className="inline-flex rounded-md border border-input overflow-hidden">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <label className="sr-only" htmlFor="f-funil">Funil</label>
+          <select id="f-funil" value={pid} onChange={(e) => setPipeId(e.target.value)} className="!h-9 rounded-full !py-0 text-[13px] w-auto">{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
+          <div className="relative">
+            <label className="sr-only" htmlFor="f-q">Buscar</label>
+            <Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input id="f-q" style={{ paddingLeft: "2rem", paddingRight: q ? "2rem" : undefined }} placeholder="Pessoa ou título" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setQ("")} className="!h-9 rounded-full !py-0 text-[13px] min-w-[12rem]" />
+            {q && <button className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1" aria-label="Limpar busca" onClick={() => setQ("")}><X size={14} /></button>}
+          </div>
+          <PeriodFilter onClear={() => { setOwner(""); setSp({}); }} extraCount={extraCount} extraSummary={extraSummary || undefined}
+            extra={
+              <div className="grid gap-3">
+                <div><label htmlFor="f-owner" className="block text-xs mb-1">Responsável</label>
+                  <select id="f-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option><option value="none">Sem responsável</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
+                <label className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={stale} onChange={(e) => setSp(e.target.checked ? { filtro: "sem-retorno" } : {})} />Sem retorno há {STALE_H}h+</label>
+              </div>
+            } />
+          <div role="group" aria-label="Visualização" className="inline-flex rounded-full border border-input overflow-hidden ml-auto">
             <button aria-pressed={view === "kanban"} onClick={() => setView("kanban")} className={`hp-btn hp-btn-sm rounded-none border-0 ${view === "kanban" ? "hp-btn-primary" : "hp-btn-outline"}`}><KanbanSquare size={14} aria-hidden />Kanban</button>
             <button aria-pressed={view === "lista"} onClick={() => setView("lista")} className={`hp-btn hp-btn-sm rounded-none border-0 ${view === "lista" ? "hp-btn-primary" : "hp-btn-outline"}`}><LayoutList size={14} aria-hidden />Lista</button>
-          </div>}>
-          <FilterField label="Funil" htmlFor="f-funil"><select id="f-funil" value={pid} onChange={(e) => setPipeId(e.target.value)}>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></FilterField>
-          <FilterField label="Buscar" htmlFor="f-q" className="min-w-[14rem]">
-            <div className="relative"><Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input id="f-q" style={{ paddingLeft: "2rem", paddingRight: q ? "2rem" : undefined }} placeholder="Pessoa ou título" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setQ("")} />
-              {q && <button className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1" aria-label="Limpar busca" onClick={() => setQ("")}><X size={14} /></button>}</div></FilterField>
-          <FilterField label="Responsável" htmlFor="f-owner"><select id="f-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option><option value="none">Sem responsável</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></FilterField>
-          <label className="flex items-center gap-2 text-sm h-9"><input type="checkbox" checked={stale} onChange={(e) => setSp(e.target.checked ? { filtro: "sem-retorno" } : {})} />Sem retorno há {STALE_H}h+</label>
-        </FilterBar>
+          </div>
+        </div>
 
         <State loading={opps.isLoading || stages.isLoading} error={opps.error} />
         {stages.data && opps.data && view === "kanban" && (
