@@ -1,4 +1,4 @@
-import { Building2, CalendarDays, ClipboardList, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, ScrollText, ShieldCheck, Sunrise, Users, Wallet, type LucideIcon } from "lucide-react";
+import { Building2, CalendarDays, ClipboardList, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, MessageCircleQuestion, ScrollText, ShieldCheck, Sunrise, Users, Wallet, type LucideIcon } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 
 export interface NavChild { to: string; label: string; end?: boolean }
@@ -17,6 +17,7 @@ export const NAV: NavSection[] = [
   { label: "Comercial", items: [
     { to: "/admin/pessoas", label: "Pessoas", icon: Users, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "pacientes leads contatos" },
     { to: "/admin/crm", label: "CRM", icon: KanbanSquare, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "oportunidades funil kanban tarefas" },
+    { to: "/admin/captacao-leads", label: "Captação de leads", icon: MessageCircleQuestion, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "quiz avaliação parceria whatsapp academy" },
     { to: "/admin/paginas", label: "Páginas", icon: FileText, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "landing formulários site" },
     { to: "/admin/pesquisas", label: "Pesquisas", icon: ClipboardList, roles: ["manager", "ops_admin"], keywords: "perguntas respostas enquete satisfação" },
   ] },

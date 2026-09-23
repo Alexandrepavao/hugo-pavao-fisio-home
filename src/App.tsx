@@ -47,6 +47,9 @@ const Partner = lazy(() => import("./pages/portal/Partner"));
 const AcademyHome = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.AcademyHome })));
 const CourseView = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.CourseView })));
 const PortalResearch = lazy(() => import("./pages/portal/Research"));
+const Avaliacao = lazy(() => import("./pages/quiz/Avaliacao"));
+const SejaParceiro = lazy(() => import("./pages/quiz/SejaParceiro"));
+const LeadCapture = lazy(() => import("./pages/admin/LeadCapture"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -58,6 +61,7 @@ const R = {
   partners: ["manager", "ops_admin", "unit_manager", "finance", "sales"] as AppRole[],
   research: ["manager", "ops_admin"] as AppRole[],
   corporate: ["manager", "ops_admin", "unit_manager", "finance"] as AppRole[],
+  leads: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
   team: ["manager", "ops_admin"] as AppRole[],
   portal: ["member", "teacher", "manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "partner"] as AppRole[],
 };
@@ -76,6 +80,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/trabalhe-conosco" element={<TrabalheConosco />} />
+              <Route path="/avaliacao" element={<Avaliacao />} />
+              <Route path="/seja-parceiro" element={<SejaParceiro />} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
@@ -107,6 +113,7 @@ const App = () => (
                 <Route path="parceiros" element={g(R.partners, <Partners />)} />
                 <Route path="pesquisas" element={g(R.research, <Research />)} />
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
+                <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
               </Route>
