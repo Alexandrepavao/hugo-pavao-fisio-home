@@ -7,8 +7,8 @@ Regra: nada é apresentado como "conectado" sem configuração e validação rea
 | GitHub | ✅ | Repositório com escrita; branch + PR em rascunho |
 | Netlify | ✅ (infra) | Site `hp-group-hub`, deploy republicado a partir de `6cb26c1`, variáveis do Dev corrigidas (ver `docs/deployment.md`) |
 | Supabase | ✅ (Dev) | Produção vazia até o go-live |
-| **E-mail — autenticação (Supabase Edge Function → Resend)** | 🟡 hook habilitado e alcançado pelo Supabase; falta `RESEND_API_KEY`/`EMAIL_FROM` como secrets do projeto | Investigado ao vivo em 2026-09-23 — ver "Investigação: recuperação de senha sem e-mail" abaixo |
-| **E-mail — transacional da aplicação (Resend, backend)** | 🔒 código pronto, aguardando `RESEND_API_KEY` | `netlify/functions/send-email.mts`. Único call-site real hoje: convite de equipe (`Team.tsx`) |
+| **E-mail — autenticação (Supabase Edge Function → Resend)** | 🟡 as 3 credenciais confirmadas presentes; bloqueado agora só pelo rate limit de e-mails do Auth (ver "Rate limit" abaixo) | Investigado ao vivo em 2026-09-23 |
+| **E-mail — transacional da aplicação (Resend, backend)** | 🔒 código pronto, aguardando `RESEND_API_KEY` na Netlify | `netlify/functions/send-email.mts`. Único call-site real hoje: convite de equipe (`Team.tsx`) |
 | Pagamentos (checkout/webhook) | ⬜ | Provedor a definir. Acesso pago só por evento confirmado no servidor (já é assim: `payment_record` → evento → acesso) |
 | WhatsApp / e-mail no CRM | ⬜ | Registro manual de contatos por enquanto |
 | Vídeo privado externo | ⬜ | Hoje: Supabase Storage privado + URL assinada (1h) com política por acesso |
@@ -93,6 +93,31 @@ Você configurou o Send Email Hook e os secrets, testou "Esqueci minha senha" no
 - Limite de tentativas (429): "Muitas tentativas. Aguarde alguns minutos e tente novamente."
 - Qualquer outra falha do backend (ex.: o 500 encontrado nesta investigação): "Não foi possível processar sua solicitação agora. Tente novamente em instantes." — nunca mais mostrada como se fosse sucesso.
 - Falha de rede/conexão (exceção antes de chegar ao backend): "Não foi possível conectar agora. Verifique sua internet e tente novamente."
+
+### 🔎 Investigação: HTTP 429 na recuperação de senha (2026-09-23, ~02:08 UTC)
+
+**Qual limite é**: `error_code: "over_email_send_rate_limit"` (`error: "429: email rate limit exceeded"`) — este é o limite `GOTRUE_RATE_LIMIT_EMAIL_SENT` do Supabase Auth: um **balde único, por projeto, compartilhado por TODOS os tipos de e-mail de autenticação** (confirmação de conta, recuperação de senha, convite, etc. juntos). Confirmado com evidência, não suposição: o mesmo `error_code` apareceu tanto em `/recover` (para `jan.darioush@yahoo.com.br`, 01:45:41Z/01:55:19Z/01:58:46Z) quanto em `/signup` (para `novo.convite@hp-test.dev`, 21:07:12Z do dia anterior) — dois usuários, dois endpoints diferentes, mesmo balde.
+
+**Não é** limite por IP nem intervalo mínimo entre solicitações do mesmo usuário — não há evidência de nenhum outro `error_code` (`over_request_rate_limit`, etc.) em nenhuma das tentativas; o único mecanismo disparado, em todas as ocorrências, foi este balde de e-mail.
+
+**Valor atual**: os logs mostram um recarregamento de configuração às `2026-09-23T01:37:50Z`:
+```
+"msg":"env GOTRUE_RATE_LIMIT_EMAIL_SENT changed, updating Email limiter from 2/1h to 2"
+"rate_limit_old":"2/1h", "rate_limit_new":"2"
+```
+Valor anterior: `2/1h` (padrão do Supabase — 2 e-mails de autenticação por hora, para o projeto inteiro). Valor atual: `2` (mesma ordem de grandeza — 2 por janela). **Eu não fiz essa alteração** — o log é de antes desta investigação, provavelmente um recarregamento automático de configuração disparado quando o Send Email Hook foi habilitado. Essa cota de 2/hora foi consumida quase imediatamente pelos testes reais desta sessão (as duas tentativas de recuperação de `jan.darioush@yahoo.com.br` às 01:39/01:40Z, que chegaram a acionar o hook antes de falhar).
+
+**Não consegui ajustar isso sozinho**: rate limits do Supabase Auth (Authentication → Rate Limits no painel, ou a API de Management) não são expostos por nenhuma das minhas ferramentas — diferente de secrets/migrations/Edge Functions, que eu consigo manipular diretamente. **Ação sua, se quiser aumentar para facilitar os testes**: Painel do projeto Dev (`fsvtzowcwhvwtluwrhnb`) → Authentication → Rate Limits → "Rate limit for sending emails" → aumentar de `2` para um valor finito maior (sugiro `30`/hora — dá folga para testes ativos sem deixar ilimitado). Registre você mesmo o valor anterior (`2`) e o novo ao trocar.
+
+**Quando tentar de novo, sem ajustar nada**: hora atual do servidor no momento desta investigação: `2026-09-23T02:08:20Z`. As duas tentativas que provavelmente consumiram a cota foram às `01:39:22Z` e `01:40:09Z`. Se a janela for deslizante de 1 hora (comportamento padrão mais comum), o primeiro slot libera por volta de `02:39–02:40 UTC` — isto é uma estimativa baseada nos horários observados nos logs, não uma leitura direta do contador interno do GoTrue (não tenho essa introspecção). Não repeti a tentativa para não consumir mais cota nem gerar mais 429 desnecessários.
+
+**Confirmação das 3 credenciais, feita sem gastar a tentativa autorizada**: implantei uma Edge Function de diagnóstico temporária (`diag-email-config`, exige um JWT de usuário válido — mesma barreira do resto do app — e responde só com `true`/`false` por variável, nunca o valor) e chamei com um token de login real (login não consome a cota de e-mail, é um endpoint diferente):
+```
+{"SEND_EMAIL_HOOK_SECRET":true,"RESEND_API_KEY":true,"EMAIL_FROM":true}
+```
+As 3 estão presentes. **Não enviei a tentativa de teste autorizada ainda** — com o rate limit ainda bloqueando (confirmado pelas 3 ocorrências de 429 até `01:58:46Z`), enviar agora só geraria outro 429 e gastaria a tentativa autorizada à toa. Fica pendente até a janela liberar (ou até você aumentar o limite no painel).
+
+*Observação de limpeza*: a função `diag-email-config` não tem mais utilidade depois desta checagem; não tenho uma ferramenta de exclusão de Edge Function nesta sessão — se quiser removê-la, é no painel (Edge Functions → `diag-email-config` → excluir). Ela não expõe nenhum valor de secret, só presença (`true`/`false`), e exige login válido para responder.
 
 ### Teste de API feito em 2026-09-22 (sessão anterior, antes desta decisão)
 Chamei `POST /auth/v1/recover` diretamente na API do Supabase Auth (Dev): endereço de domínio inválido rejeitado corretamente (`email_address_invalid`); endereço autorizado (`jan.darioush@yahoo.com.br`) respondeu `200 OK` sem erro síncrono — isso usava o remetente padrão/SMTP não configurado do Supabase, **não** a arquitetura desta seção. Com o Send Email Hook ativo, esse remetente padrão deixa de ser usado (o Supabase chama o hook em vez de enviar ele mesmo).
