@@ -36,5 +36,12 @@ Buckets `academy-private` e `care-private` (não públicos). Política de Storag
 ## Testes
 `supabase/tests/001…010` (ver `test-report.md`) + teste de API direta com token de aluna + E2E (`e2e/`) contra o Dev real. Refazer a cada expansão do banco.
 
+## Captação de leads (quizzes) — respostas de saúde
+`quiz_leads` não tem `GRANT` direto para nenhum papel — toda leitura passa por `list_quiz_leads`/
+`get_quiz_lead_detail`, que mascaram as 3 respostas de saúde (dor, motivação de melhora, impacto na
+qualidade de vida) para quem não tem `manager`/`ops_admin`/`unit_manager`; o papel `sales` nunca as
+vê, mesmo enxergando a captação em si (mesmo precedente de `corporate_accounts`). Ver
+`docs/project-status.md` (sessão mais recente) e `docs/data-model.md` (migration 038).
+
 ## Decisões de privacidade que exigem validação do responsável pelo negócio
 Retenção e base legal de dados de saúde; texto de consentimento nos formulários; prazo de guarda de auditoria e de mensagens do canal de dúvidas; política de exclusão a pedido do titular (hoje: arquivar/anonimizar manualmente); necessidade de DPO. Este projeto não afirma conformidade jurídica automática.

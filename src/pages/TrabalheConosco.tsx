@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import WorkWithUs from "@/components/WorkWithUs";
 import Divider from "@/components/Divider";
+import QuizCta from "@/components/QuizCta";
+import QuizFloatButton from "@/components/QuizFloatButton";
 import { openProfissional } from "@/lib/contact";
 
 const criterios = [
@@ -55,6 +57,12 @@ const TrabalheConosco = () => {
 
         <WorkWithUs full />
 
+        <QuizCta
+          journey="parceria"
+          heading="Quero ser fisioterapeuta parceiro HP Group"
+          description="Responda um formulário rápido sobre sua formação e área de atuação — a aprovação e a verificação profissional acontecem depois, em um processo administrativo separado."
+        />
+
         <section className="section">
           <div className="container-hp grid lg:grid-cols-2 gap-14 lg:gap-20">
             <div>
@@ -94,8 +102,9 @@ const TrabalheConosco = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer highlightJourney="parceria" />
       <WhatsAppFloat />
+      <QuizFloatButton journey="parceria" label="Seja parceiro" />
     </div>
   );
 };

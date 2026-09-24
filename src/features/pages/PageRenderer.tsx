@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
-import { safeUrl, videoEmbed, type Block } from "./blocks";
+import { resolveCtaHref, safeUrl, videoEmbed, type Block } from "./blocks";
 
 export interface PublicForm {
   id: string; name: string; success_message: string;
@@ -81,7 +81,7 @@ const PublicFormBlock = ({ form, title, preview }: { form?: PublicForm; title: s
   );
 };
 
-export const BlockView = ({ block, forms, preview }: { block: Block; forms: PublicForm[]; preview?: boolean }) => {
+export const BlockView = ({ block, forms, preview, pageSlug }: { block: Block; forms: PublicForm[]; preview?: boolean; pageSlug?: string }) => {
   const b = block as Obj;
   switch (block.type) {
     case "hero": {
@@ -151,7 +151,7 @@ export const BlockView = ({ block, forms, preview }: { block: Block; forms: Publ
         </div></section>
       );
     case "cta": {
-      const href = safeUrl(b.url);
+      const href = resolveCtaHref(b, { pageSlug, utm: utmFromLocation() });
       return (
         <section className="section bg-primary text-primary-foreground"><div className="container-hp max-w-3xl text-center">
           <h2 className="text-3xl mb-3 !text-primary-foreground">{s(b.title)}</h2><p className="mb-6 opacity-90">{s(b.text)}</p>
@@ -166,6 +166,6 @@ export const BlockView = ({ block, forms, preview }: { block: Block; forms: Publ
   }
 };
 
-export const PageRenderer = ({ blocks, forms, preview }: { blocks: Block[]; forms: PublicForm[]; preview?: boolean }) => (
-  <>{blocks.map((b, i) => <BlockView key={i} block={b} forms={forms} preview={preview} />)}</>
+export const PageRenderer = ({ blocks, forms, preview, pageSlug }: { blocks: Block[]; forms: PublicForm[]; preview?: boolean; pageSlug?: string }) => (
+  <>{blocks.map((b, i) => <BlockView key={i} block={b} forms={forms} preview={preview} pageSlug={pageSlug} />)}</>
 );

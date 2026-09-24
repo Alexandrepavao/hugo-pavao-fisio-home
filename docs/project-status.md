@@ -1,5 +1,299 @@
 # HP Group Hub — Status do Projeto
 
+## Sessão mais recente (2026-09-24) — App HP CRM: dashboard, sidebar exclusiva, pipeline preservado
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+
+Substitui a entrada direta em Oportunidades por um app CRM próprio dentro do Hub. Clicar em "CRM" na sidebar
+geral abre `/admin/crm` (dashboard comercial) com **sidebar exclusiva** (`CrmShell`/`crmNav.ts`) — a sidebar
+geral do Hub nunca aparece junto; "Voltar ao Hub" e "Trocar de app" no cabeçalho trocam de contexto. Baseado
+numa inspeção funcional de um CRM de referência (relatório completo de 12 áreas obtido via agente de
+exploração antes de qualquer código — rotas, dashboard, leads vs. pipeline, contatos, listas, tarefas, metas,
+time/"view as", comunicação, relatórios, configurações, comissão), adaptado ao modelo de dados do HP — nunca
+copiou dados, credenciais, infraestrutura ou identidade visual da referência.
+
+**Backend novo:**
+- `crm_dashboard_metrics`/`crm_card_detail` (migration 042) — dashboard comercial com escopo próprio
+  (`private.crm_units`/`private.crm_effective_owner`): inclui o papel `sales` vendo os próprios negócios,
+  diferente de `dashboard_metrics` (só quem gerencia). 8 indicadores: novos leads (fluxo, por `created_at` —
+  propositalmente diferente de "na primeira etapa", que é a fila de Gestão de leads), total de negócios,
+  em aberto, valor em negociação, ganhos, conversão, sem retorno, comissão potencial (estimativa sobre negócios
+  abertos usando `commission_rules` já existente — nunca confundida com `commission_entries`, que só nasce de
+  pagamento real).
+- `crm_goal_progress`/`crm_team_snapshot` (migration 043, tabela `crm_goals` nova) — metas mensais por usuário,
+  progresso, ticket médio, negócios necessários, ritmo diário (R$/dia útil). O CRM de referência mede ritmo por
+  contagem de mensagens de WhatsApp — o HP não rastreia isso (ver Comunicação abaixo), então o ritmo aqui é
+  sobre negócios/valor reais, não uma métrica inventada.
+- `crm_lead_lists`/`crm_lead_list_members` (migration 044) — listas estáticas de pessoas (não filtro salvo),
+  nunca duplica o cadastro central.
+
+**Páginas novas** (`src/pages/admin/crm/`): Dashboard (8 cards clicáveis + gráficos + tarefas + atividades
+recentes), Gestão de leads (fila da primeira etapa — diferente do Pipeline), Contatos (lente comercial sobre
+Pessoas, sem duplicar cadastro), Listas, Pipeline (Kanban existente, movido de `/admin/crm` para
+`/admin/crm/oportunidades`, comportamento preservado), Tarefas, Minha meta/Ritmo do dia/Time, Relatórios
+(Análises: funil + motivos de perda; Desempenho comercial: por responsável). Conversas usa WhatsApp real
+(`wa.me` com mensagem pronta + registro automático de interação) — funcionalidade real, não um link decorativo.
+Mensagens agendadas e Disparo de mensagens mostram bloqueio explícito com o motivo real (exigem um provedor de
+envio automático — Evolution API/Chatwoot ou similar — que a organização não tem conectado hoje); nenhuma tela
+finge enviar mensagem. "Configurações do CRM" abre a mesma seção "Comercial e CRM" da central de Configurações
+já construída na sessão anterior (mesma implementação, mesma fonte de dados).
+
+**Testes novos:** `supabase/tests/022_crm_dashboard.sql` (5/5) — comercial só vê os próprios negócios mesmo
+tentando forçar o filtro de responsável; gestor de unidade vê o time inteiro e filtra por responsável
+específico. `supabase/tests/023_crm_goals_permissoes.sql` (3/3) — só quem gerencia cadastra meta; um comercial
+comum não cria a própria meta nem lê a meta de outra pessoa.
+
+**Regressão:** suíte E2E completa revalidada, 32/32 passando (um teste precisou de correção — a jornada
+Checkup verificava o Kanban em `/admin/crm`, endereço que virou o dashboard; corrigido para
+`/admin/crm/oportunidades`). `tsc`/`eslint`/`vite build` sem erros novos.
+
+**Pendências explícitas desta rodada:** matriz de equivalência formal (o relatório de 12 áreas foi produzido
+e usado para guiar a implementação, mas não foi entregue como documento separado); "Ritmo do dia" mede negócios
+reais em vez de contagem de conversas (dependência de log de mensagens ainda não existente); "view as"
+(visualizar como outro vendedor) não foi construído — a referência implementa isso só no frontend
+(`sessionStorage`, sem verificação real no servidor), incompatível com o padrão de segurança do HP; o filtro
+"Responsável" no dashboard e relatórios já é reforçado no banco (um comercial não vê dados de outra pessoa
+mesmo tentando forçar o parâmetro), então a ausência de "view as" não é uma lacuna de segurança, só de
+conveniência de gestor.
+
+## Sessão anterior (2026-09-23, continuação) — Lacunas do relatório do Mosaic: preview Netlify, cards restantes, Configurações reais, testes novos
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+> Esta seção fecha 4 lacunas apontadas no relatório da rodada anterior (a seção "Redesign Mosaic" abaixo).
+
+**1. Preview HTTPS da Netlify (Dev).** Deploy publicado em `https://hp-group-hub.netlify.app`, site `hp-group-hub`
+(id `2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`), conectado exclusivamente às env vars do Supabase Dev, com a
+proteção de SSO de equipe já existente preservada (`requiresSSOTeamLogin: all`, inalterada). O site de produção
+(`hp-group-hub-producao`, `hpfisioterapia.com.br`, sem SSO) não foi tocado.
+
+**2. Detalhamento dos demais cards (migration `20260924000041_dashboard_card_detail_expand.sql`).** Inventário
+completo dos ~40 `StatCard` do admin. `dashboard_card_detail(p_kind, ...)` ampliado de 6 para 23 tipos, todos
+reconciliando com a mesma tabela/filtro/escopo de unidade da métrica original (`dashboard_metrics`/
+`dashboard_alerts`/`mrr_report`). **Bug real corrigido**: nos 6 tipos originais (migration 039), `total_items`
+vinha de um `count(*)` sobre a subconsulta já limitada a 20 — subestimava o total real quando havia mais de 20
+registros. Corrigido em todos os ~23 tipos (agregado exato reaproveitado ou uma segunda consulta sem `LIMIT`).
+Cartões agora com detalhamento: Início (Recebimentos, Contas vencidas, Novos pacientes, Avaliações agendadas,
+Atendimentos realizados, Conversão comercial, Tarefas atrasadas, Alunos ativos no Academy, Ticket médio,
+Comparecimento, Pacientes com pacote ativo, Parceiros ativos, e os 6 alertas); Financeiro › Visão geral
+(+ Vendas confirmadas, Contas a receber/pagar 30 dias, Resultado de caixa); Financeiro › Recorrência (MRR do
+mês, Clientes recorrentes, Churn de clientes — mês de referência passou a ser o mês selecionado na tela, não
+mais fixo no mês corrente, pra respeitar o filtro de mês da própria tela).
+**Indisponíveis com motivo real documentado (não uma mensagem genérica de pendência):**
+- NPS (Início): sem detalhamento próprio — a pesquisa de satisfação já tem seu próprio painel com k-anonimato
+  em Pesquisas; abrir a lista de respondentes individuais aqui contradiria essa proteção de privacidade.
+- ARR, Receita média por cliente, Retenções bruta/líquida, Churn de receita (Recorrência): derivados da mesma
+  ponte de movimentação (`bridge`) de `mrr_report()`, que ainda não tem detalhamento por registro próprio —
+  precisaria de uma consulta nova sobre expansão/contração/cancelamento em R$, não construída nesta rodada.
+- Estornos, Resultado de caixa (DRE): usam `v_despesas`/`v_estornos` de `dre_report()`, que não é a mesma base
+  de `cash_result` do Financeiro › Visão geral (inclui despesas classificadas por categoria) — reaproveitar o
+  cartão existente mostraria um total incoerente; precisaria de uma branch própria, não construída nesta rodada.
+- Receita por paciente pagante, Receita por sessão, Taxa de recompra, CAC, LTV, Prazo de recuperação do CAC
+  (Relatórios): CAC/LTV/payback já eram honestamente `unavailable` desde antes (`efficiency_report()` — sem
+  fonte de custo de aquisição no sistema); os outros três são métricas de cohort sem uma lista de registros
+  única por trás — não construídas nesta rodada.
+- Contas corporativas / Pesquisas: os `StatCard` dessas telas são relatórios por conta/pesquisa individual
+  (já com k-anonimato próprio), não indicadores do painel geral — fora do escopo de `dashboard_card_detail`.
+
+**3. Configurações — reinvestigação das 6 categorias pendentes.** Duas tinham suporte real de backend não
+utilizado e ganharam telas funcionais nesta rodada:
+- **Operação**: `services` (nome/duração/preço) e `products` (nome/tipo/preço/sessões/validade) já tinham RLS
+  de escrita pra manager/ops_admin desde a migration 004, mas nenhuma tela em todo o app gravava nessas
+  tabelas — confirmado por busca no código. Tela nova em `SettingsHub.tsx` (`OperationSettings`).
+- **Comercial e CRM**: `pipelines`/`pipeline_stages`/`loss_reasons`, mesma situação (RLS pronta desde a
+  migration 004, zero tela de escrita). Tela nova (`CrmSettings`): criar funil, adicionar etapas, motivos de
+  perda.
+- **Academy**: achado um campo real sem UI (`courses.certificate_min_progress`, criador do certificado) —
+  exposto como campo editável na própria tela do curso (`AcademyAdmin.tsx`), já que é uma configuração por
+  curso, não uma configuração central. `SettingsHub` passou a linkar pra lá em vez de "pendente".
+- **Parceiros, Comunicação e integrações, Aparência**: reconfirmadas como pendências reais (não apenas
+  copiadas do relatório anterior) — não há coluna nem tabela de suporte no schema (ex.: nenhum campo de
+  percentual padrão de repasse em `partner_payouts`; `organizations` só tem `name`/`slug`, sem logo/remetente).
+  Continuam exibindo o motivo específico, nunca uma mensagem genérica.
+
+**4. Testes novos desta rodada** (nenhum reaproveita a suíte anterior como prova de cobertura nova):
+- `supabase/tests/020_dashboard_card_detail.sql` (novo, 9/9) — `total_items` sobe exatamente o esperado mesmo
+  acima de 20 (regressão do bug corrigido); lista trunca em 20; recebimentos reconciliam por delta; indicador
+  indisponível traz o motivo real; snapshot marcado corretamente; comercial (sales) bloqueado do painel inteiro;
+  gestor de unidade acessa cartão comum mas não `eventos_falhos` (exige manager); tipo desconhecido gera erro
+  explícito.
+- `supabase/tests/021_settings_operacao_crm.sql` (novo, 11/11) — manager cria/edita serviço, produto/pacote
+  (com `service_id` obrigatório pra pacote — constraint real do banco, corrigido na tela depois de o teste
+  pegar o erro), funil, etapa e motivo de perda; comercial (sales) e gestor de unidade bloqueados de escrever
+  em qualquer uma das 5 tabelas (`42501`), mas continuam lendo o catálogo normalmente.
+- Persistência de filtros: não existia (nem em Início, nem em Financeiro) — implementada nesta rodada
+  (`usePeriodFilterState` em `src/lib/period.ts`, período/unidade/comparação na URL) em vez de documentada como
+  pendência, já que era um ajuste pequeno e bem contido.
+- Regressão: `020`/`021` são adição pura (nenhum teste antigo foi alterado); `008_dashboard.sql` reexecutado
+  numa unidade nova isolada para confirmar que a expansão da migration 041 não quebrou `dashboard_metrics`/
+  `dashboard_alerts` (7/7 OK) — a suíte antiga passar sozinha não prova cobertura dos recursos novos, por isso
+  020/021 existem.
+
+## Sessão anterior (2026-09-23) — Redesign Mosaic: filtros, cards com detalhe, header financeiro, Configurações
+
+> Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge. Ordem de
+> implementação seguida à risca: filtros compactos → cards com detalhe → header financeiro → Configurações.
+
+**1. Filtros compactos** (`src/lib/PeriodFilter.tsx`, reescrito mantendo a mesma assinatura de props):
+pílula de período ("Mês atual") + seletor de unidade + botão "Filtros" com contador, todos abrindo o mesmo
+popover (drawer no celular) com atalhos de período, intervalo personalizado (só aplica em "Aplicar" — estado
+de rascunho local, não dispara consulta a cada tecla), comparação com período anterior e os filtros
+específicos da tela (`extra`). Período/unidade ficam ocultos quando a tela não tem essa dimensão (CRM).
+Aplicado a **Início, Financeiro (Visão geral/DRE/Relatórios), CRM e Captação de leads** — e de graça em
+Pesquisas/Contas corporativas, que já usavam o mesmo componente compartilhado.
+
+**2. Cards clicáveis com painel de detalhe**: nova função `dashboard_card_detail(p_kind,...)` (migration
+039) — reconcilia sempre com o mesmo escopo (tabelas/data/unidade/permissão) do cartão que abriu, via
+`private.dash_units()` (mesmo guard de `dashboard_metrics`/`dashboard_alerts`). Implementado para os 6
+cartões pedidos como exemplo: **Recebimentos, Contas vencidas, Novos pacientes, Avaliações agendadas,
+Conversão comercial, Tarefas atrasadas** (esta última via o alerta "Tarefas atrasadas"). Indisponível mostra
+"Indisponível: <motivo>" (nunca lista vazia como resultado); "Contas vencidas"/"Tarefas atrasadas" são
+sinalizadas como **situação atual** (não mudam com o período, e nunca calculam comparação — decidido
+estaticamente, sem esperar a resposta do servidor). `StatCard` ganhou `onClick` opcional (vira `<button>`,
+hover/foco visíveis, "Ver detalhes"). `CardDetailSheet` (`src/lib/CardDetailSheet.tsx`) é o painel lateral —
+Escape fecha e devolve o foco automaticamente (Radix). Aplicado ao **Início** (6 cartões de indicador + 2
+alertas) e ao **Financeiro › Visão geral** (Recebimentos, Vencidos). CRM e Captação de leads não ganharam
+esse painel nesta etapa — não têm uma função de detalhamento própria ainda (documentado como pendência).
+
+**3. Header financeiro sem "Mais"**: `AppShell` não separa mais os filhos de uma seção em "primeiros N" +
+dropdown — todos os 10 destinos do Financeiro aparecem direto, na ordem pedida (Visão geral, Vendas, Contas
+a pagar, Fluxo de caixa, Recorrência, DRE, Conciliação, Comissões e repasses, Relatórios, Configurações).
+"Contas a receber" não entrou como item próprio — não existe como destino/rota hoje (só como cartão de
+indicador dentro de Visão geral); criar uma tela dedicada ficou fora do escopo desta etapa. No celular a
+faixa rola horizontalmente sozinha (nunca a página — confirmado via `scrollWidth`/`clientWidth`), com
+degradê de continuidade e o item ativo sempre scrollado à vista; a partir de 768px, quebra para uma segunda
+linha organizada em vez de rolar. Estado ativo continua vindo só da URL (recarregar/voltar mantém o item).
+
+**4. Central de Configurações** (`/admin/configuracoes`, sidebar › Sistema, ícone de engrenagem): 10
+categorias. Só o que já tem suporte real no backend virou tela **gerenciável** agora:
+- **Organização e unidades**: lista/cria/edita unidades (nome, cidade, UF) — tabela `units` já existente, já
+  com trigger de auditoria (`private.audit_row`, migration 001). Dados institucionais gerais (contatos,
+  endereço, horários) não têm coluna no banco — documentado como pendência, não inventado.
+- **Captação**: números de WhatsApp por jornada/unidade (`quiz_whatsapp_numbers`, migration 038) — a mesma
+  tabela que `quiz_whatsapp_number()` já lê nos quizzes publicados; editar aqui muda o número real usado no
+  botão "Continuar pelo WhatsApp". Novo trigger de auditoria (migration 040).
+- **Equipe e acessos** e **Financeiro** linkam para as telas já existentes (`/admin/equipe`,
+  `/admin/financeiro/config`) — mesma implementação, mesma fonte de dados, nunca duplicada. O
+  "Configurações" do header financeiro já apontava para essa mesma rota — satisfeito automaticamente.
+- **Operação, Comercial e CRM, Academy, Parceiros, Comunicação e integrações, Aparência**: card
+  "Pendente" com o motivo real e específico de cada uma (ex.: segredos do Resend nunca são expostos ao
+  frontend por desenho; funis/etapas só existem via migration, sem tela de admin; logo é asset estático no
+  código) — nunca um switch ou formulário decorativo.
+
+**Testes**: suíte E2E completa **32/32**, sem regressão (inclui `07-finance-behaviors` — prova que
+`FinanceSettings` continua funcionando idêntico depois de virar destino também da central). `tsc`/`eslint`/
+`vite build` ok. Validado ao vivo no navegador: abrir cada painel de detalhe, abrir/aplicar/limpar os
+filtros no desktop e no celular (viewport emulado), navegar o header financeiro sem "Mais", editar uma
+unidade e um número de WhatsApp na central e confirmar o registro real em `audit_log` (valores antes/depois).
+
+**Preview para revisão**: `npm run dev -- --port 5181 --host 127.0.0.1` → `http://127.0.0.1:5181/admin`
+(login necessário — conta de gestor).
+
+**Pendências reais desta etapa** (nenhuma tela finge funcionar; tudo abaixo está documentado, não implementado):
+- CRM e Captação de leads sem painel de detalhamento de cartão (só Início e Financeiro › Visão geral).
+- "Contas a receber" sem rota própria no header financeiro.
+- Operação, Comercial/CRM, Academy, Parceiros, Comunicação/integrações e Aparência sem tela de configuração
+  centralizada — motivo específico documentado em cada card de `/admin/configuracoes`.
+
+---
+
+## Sessão anterior (2026-09-23) — Quizzes de captação (atendimento/parceria)
+
+> **Trabalho feito inteiramente no Dev e no preview**, por instrução explícita — produção
+> (`HP Group Core`, DNS, domínio oficial) **não foi tocada**. Branch `feature/lead-quizzes`
+> a partir da `main` (que já contém o cutover de produção executado em sessão anterior — ver
+> `docs/go-live-plan.md`/`docs/deployment.md`, ainda não refletido no restante deste arquivo).
+
+- **Duas jornadas de quiz** (`/avaliacao` — atendimento, `/seja-parceiro` — parceria), 10 perguntas
+  cada, texto e opções seguindo exatamente o que foi especificado. Nome/e-mail/WhatsApp juntos na
+  etapa 1 (com autorização de contato); cidade/UF na etapa 2; gate de consentimento específico de
+  dados de saúde antes das perguntas 5–7 do quiz de atendimento (a jornada de parceria não tem
+  pergunta de saúde); consentimento de marketing opcional e **desmarcado por padrão** no fim.
+- **Integração automática ao CRM**: reaproveita a mesma lógica de deduplicação de
+  `submit_public_form` (contato igual + nome semelhante reaproveita a pessoa; nome bem diferente
+  cria pessoa nova e sinaliza revisão via `crm_tasks` `dedupe_review` — nunca mescla sozinho).
+  Atendimento → funil "Pacientes"; parceria → funil "Parceiros" (ambos já semeados). "Quiz iniciado"
+  e "Quiz concluído — aguardando contato" registrados em `interactions`; tarefa `first_contact`
+  criada com `dedupe_key` (idempotente). Segmento **"Potencial Academy"**: toda captação de
+  parceria ganha a tag `Potencial Academy` (reaproveitando `tags`/`person_tags` já existentes) —
+  nunca matrícula, nunca acesso a curso, nunca uma segunda oportunidade.
+- **Schema novo** (migration `20260924000038_lead_quizzes.sql`, aplicada e testada só no Dev
+  `fsvtzowcwhvwtluwrhnb`): tabelas `quiz_leads` (sem GRANT direto a nenhum papel — acesso só pelas
+  funções abaixo, RLS habilitado como reforço) e `quiz_whatsapp_numbers` (seedada com os números já
+  reais em uso no site, `src/lib/contact.ts` — nunca inventados). Funções públicas (`anon`):
+  `quiz_start`, `quiz_save_progress`, `quiz_set_health_consent`, `quiz_complete`,
+  `quiz_log_whatsapp_click`, `quiz_whatsapp_number`. Funções administrativas (`authenticated`):
+  `list_quiz_leads`, `get_quiz_lead_detail` (mascara as 3 respostas de saúde para quem não tem papel
+  de gestão — `sales` nunca vê, `manager`/`ops_admin`/`unit_manager` veem), `quiz_lead_metrics`.
+- **Identificador da submissão = `id` (uuid aleatório)**: o navegador nunca informa
+  `person_id`/`opportunity_id` — só pode agir sobre a própria submissão. Idempotência por
+  `dedupe_key` (contato + jornada + dia): reenvio no mesmo dia retoma a mesma submissão, nunca
+  duplica. Validação de resposta é um allowlist rígido por jornada+chave
+  (`private.quiz_validate_answer`), igual ao padrão de `forms_validate`/`validate_blocks`.
+  Abandono/inatividade: **não há status "abandonado" gravado** — é calculado na leitura por
+  `quiz_lead_metrics` (>24h sem `last_activity_at` e status ≠ completed), documentado aqui como a
+  regra escolhida em vez de marcar abandono ao fechar a aba.
+- **WhatsApp obrigatório ao final**: mensagem gerada a partir das respostas, com prévia
+  editável, opção desmarcada por padrão para incluir dor/qualidade de vida (só atendimento) e
+  outra para incluir a faixa de investimento; "Copiar mensagem"; número vem de
+  `quiz_whatsapp_number()` (admin-configurável por jornada/unidade em `quiz_whatsapp_numbers`,
+  nunca inventado); clique registrado separadamente da conclusão (`whatsapp_clicked_at`).
+- **Admin "Gestão → Captação de leads"** (`/admin/captacao-leads`, mesmos papéis do CRM/Pessoas):
+  busca/filtros (jornada, status, revisão)/paginação, detalhe da submissão, indicadores reais
+  (capturados por jornada, taxa de conclusão, aguardando contato, tempo até 1º contato, conversão
+  em avaliação agendada/parceiro aprovado, segmento Academy, interesse por tema, origem/UF, cliques
+  no WhatsApp) com período explícito — nunca confunde clique com envio real.
+- **CTAs**: "Quero cuidar da minha dor" (home, bloco logo após o método + rodapé) e "Quero ser
+  fisioterapeuta parceiro" (`/trabalhe-conosco`, destacado + rodapé), componentes reutilizáveis
+  (`QuizCta`/`QuizFloatButton`), botão fixo discreto só no mobile, chamadas específicas existentes
+  preservadas.
+- **Testes**: `supabase/tests/019_lead_quizzes.sql` (21/21, transação sempre desfeita) + E2E novo
+  `e2e/08-lead-quizzes.spec.ts` (3/3 — as duas jornadas completas com WhatsApp interceptado via
+  `route.fulfill` nunca chegando ao servidor real, e reenvio same-day sem duplicar) — suíte E2E
+  completa **30/30**, sem regressão. `tsc`/`eslint`/`vite build` ok. Dados sintéticos de QA
+  removidos do Dev ao final de cada rodada de teste.
+- PR **#2 aberto em rascunho**, branch `feature/lead-quizzes`, sem merge na `main`.
+
+## Sessão seguinte (2026-09-23) — Destino do CTA no editor de páginas (finaliza a pendência acima)
+
+> Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+
+- **Bloco `cta` do editor** (`src/features/pages/blocks.ts`/`BlockEditor.tsx`) ganhou o campo
+  **"Destino do botão"**: *Avaliação de paciente* (`/avaliacao`), *Parceria profissional*
+  (`/seja-parceiro`) ou *Link personalizado* (comportamento anterior, inalterado). O texto do botão
+  (`label`) continua independente do destino. Blocos já existentes **não têm a chave `target`** —
+  tratados como `custom` automaticamente (`ctaTargetOf()`), então nenhum CTA/página antiga muda de
+  destino sozinha; testado publicando de propósito um bloco sem `target` e confirmando que o link
+  personalizado antigo continua intacto (`e2e/09-cta-block-quiz-target.spec.ts`, 2º teste).
+- **Mesma função resolve preview e publicada**: `resolveCtaHref()` (`blocks.ts`) é chamada pelo
+  `PageRenderer`/`BlockView` tanto na pré-visualização do editor quanto na página `/:slug` real —
+  nunca podem divergir. Link para link personalizado continua validado por `safeUrl()` (mesmos
+  protocolos seguros de sempre); link para jornada de quiz é sempre a rota interna confiável, sem
+  validação de URL externa (não é entrada do usuário).
+- **Origem registrada + campanha preservada, sem PII na URL**: `resolveCtaHref()` monta
+  `/avaliacao?from=/<slug-da-página>&utm_*` (só as 5 chaves `utm_` já usadas em `submit_public_form`
+  — nunca um parâmetro arbitrário, nunca dado pessoal). `QuizRunner` lê `from` e usa como
+  `origin_path`/`page_slug` no `quiz_start` (antes disto, esses campos só continham a própria rota
+  do quiz, "/avaliacao"/"/seja-parceiro" — agora registram de fato a landing page de origem). Os
+  CTAs fixos (`QuizCta`/`QuizFloatButton` — home, rodapé, `/trabalhe-conosco`) foram atualizados do
+  mesmo jeito, por consistência.
+- **Persistência**: como o destino é só mais uma chave dentro do JSON do bloco (`draft_content`/
+  `published_content`), salvar rascunho, reabrir, criar versão e publicar já funcionam de graça pelo
+  mecanismo existente (`page_save_draft`/`page_publish`/`add_version`) — nenhuma migration nova foi
+  necessária (`validate_blocks` já valida só o `type`, não os campos internos de cada bloco).
+- **Validado ao vivo no Dev** (não só em teste automatizado): criada e publicada uma landing page
+  com CTA → `/avaliacao` (clicado, quiz concluído, `origin_path`/`page_slug` corretos, oportunidade
+  no funil Pacientes) e outra com CTA → `/seja-parceiro` (mesma checagem, funil Parceiros); uma
+  terceira página com um bloco `cta` deliberadamente **sem** `target` (simulando dado legado)
+  confirmada apontando para o link personalizado original, sem alteração. As 3 páginas de teste e os
+  cadastros/oportunidades sintéticos foram removidos do Dev ao final.
+- **Testes**: `e2e/09-cta-block-quiz-target.spec.ts` (2/2) + suíte completa **32/32** (o
+  `04-agenda-concurrency` falhou uma vez em lote, como já documentado — passou isolado, flake de
+  timing conhecido, não é regressão desta mudança). `tsc`/`eslint`/`vite build` ok.
+- **Preview para revisão**: `npm run dev -- --port 5181 --host 127.0.0.1` → `http://127.0.0.1:5181/`
+  (editor em `/admin/paginas`, quizzes em `/avaliacao` e `/seja-parceiro`).
+
+---
+
 Atualizado: 2026-09-22 (sessão 7) · Branch `feature/hp-group-hub` · [PR #1](https://github.com/Alexandrepavao/hugo-pavao-fisio-home/pull/1) em rascunho (sem merge na `main`)
 
 > Todo o trabalho abaixo foi implementado e validado no ambiente **Dev** (banco + servidor local apontando para o Supabase Dev) e por **27 testes E2E automatizados** (Playwright, suíte anterior preservada) + **3 arquivos de teste SQL novos** (016–018, 32/32 asserções). O deploy publicado na Netlify **ainda não foi validado ao vivo** — segue atrás da proteção de equipe (bloqueio externo inalterado). Produção (`HP Group Core`) segue vazia e não foi tocada.

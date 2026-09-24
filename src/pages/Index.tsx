@@ -12,6 +12,8 @@ import WorkWithUs from "@/components/WorkWithUs";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import QuizCta from "@/components/QuizCta";
+import QuizFloatButton from "@/components/QuizFloatButton";
 
 const Index = () => {
   const { hash } = useLocation();
@@ -29,6 +31,11 @@ const Index = () => {
         <Hero />
         <TrustBar />
         <HowItWorks />
+        <QuizCta
+          journey="atendimento"
+          heading="Pronto para cuidar da sua dor com acompanhamento individualizado?"
+          description="Responda algumas perguntas rápidas e receba um retorno da nossa equipe — o plano sempre depende de uma avaliação individual."
+        />
         <Specialties />
         <Company />
         <Coverage />
@@ -38,6 +45,7 @@ const Index = () => {
       </main>
       <Footer />
       <WhatsAppFloat />
+      <QuizFloatButton journey="atendimento" label="Avaliação gratuita" />
     </div>
   );
 };

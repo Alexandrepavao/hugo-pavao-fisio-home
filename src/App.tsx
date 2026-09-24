@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
@@ -21,7 +21,19 @@ const People = lazy(() => import("./pages/admin/People"));
 const Audit = lazy(() => import("./pages/admin/Audit"));
 const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
-const CRM = lazy(() => import("./pages/admin/CRM"));
+const CrmDashboard = lazy(() => import("./pages/admin/crm/CrmDashboard"));
+const CrmLeads = lazy(() => import("./pages/admin/crm/Leads"));
+const CrmContacts = lazy(() => import("./pages/admin/crm/Contacts"));
+const CrmLists = lazy(() => import("./pages/admin/crm/Lists"));
+const CrmPipeline = lazy(() => import("./pages/admin/crm/Pipeline"));
+const CrmTasks = lazy(() => import("./pages/admin/crm/Tasks"));
+const CrmMinhaMeta = lazy(() => import("./pages/admin/crm/MinhaMeta"));
+const CrmRitmo = lazy(() => import("./pages/admin/crm/Ritmo"));
+const CrmTeam = lazy(() => import("./pages/admin/crm/CrmTeam"));
+const CrmConversas = lazy(() => import("./pages/admin/crm/Conversas"));
+const CrmMensagensAgendadas = lazy(() => import("./pages/admin/crm/MensagensAgendadas"));
+const CrmDisparo = lazy(() => import("./pages/admin/crm/Disparo"));
+const CrmReports = lazy(() => import("./pages/admin/crm/Reports"));
 const Agenda = lazy(() => import("./pages/admin/Agenda"));
 const FinanceOverview = lazy(() => import("./pages/admin/finance/Overview"));
 const FinanceSales = lazy(() => import("./pages/admin/finance/Sales"));
@@ -47,6 +59,10 @@ const Partner = lazy(() => import("./pages/portal/Partner"));
 const AcademyHome = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.AcademyHome })));
 const CourseView = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.CourseView })));
 const PortalResearch = lazy(() => import("./pages/portal/Research"));
+const Avaliacao = lazy(() => import("./pages/quiz/Avaliacao"));
+const SejaParceiro = lazy(() => import("./pages/quiz/SejaParceiro"));
+const LeadCapture = lazy(() => import("./pages/admin/LeadCapture"));
+const SettingsHub = lazy(() => import("./pages/admin/SettingsHub"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -58,7 +74,9 @@ const R = {
   partners: ["manager", "ops_admin", "unit_manager", "finance", "sales"] as AppRole[],
   research: ["manager", "ops_admin"] as AppRole[],
   corporate: ["manager", "ops_admin", "unit_manager", "finance"] as AppRole[],
+  leads: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
   team: ["manager", "ops_admin"] as AppRole[],
+  crmTeam: ["manager", "ops_admin", "unit_manager"] as AppRole[],
   portal: ["member", "teacher", "manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "partner"] as AppRole[],
 };
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
@@ -76,6 +94,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/trabalhe-conosco" element={<TrabalheConosco />} />
+              <Route path="/avaliacao" element={<Avaliacao />} />
+              <Route path="/seja-parceiro" element={<SejaParceiro />} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
@@ -88,7 +108,23 @@ const App = () => (
                 <Route path="pessoas" element={g(R.people, <People />)} />
                 <Route path="paginas" element={g(R.pages, <Pages />)} />
                 <Route path="paginas/:id" element={g(R.pages, <PageEditor />)} />
-                <Route path="crm" element={g(R.people, <CRM />)} />
+                <Route path="crm" element={g(R.people, <Outlet />)}>
+                  <Route index element={<CrmDashboard />} />
+                  <Route path="leads" element={<CrmLeads />} />
+                  <Route path="contatos" element={<CrmContacts />} />
+                  <Route path="listas" element={<CrmLists />} />
+                  <Route path="oportunidades" element={<CrmPipeline />} />
+                  <Route path="tarefas" element={<CrmTasks />} />
+                  <Route path="metas" element={<CrmMinhaMeta />} />
+                  <Route path="metas/ritmo" element={<CrmRitmo />} />
+                  <Route path="metas/time" element={g(R.crmTeam, <CrmTeam />)} />
+                  <Route path="conversas" element={<CrmConversas />} />
+                  <Route path="mensagens-agendadas" element={<CrmMensagensAgendadas />} />
+                  <Route path="disparo" element={<CrmDisparo />} />
+                  <Route path="relatorios" element={<CrmReports />} />
+                  <Route path="relatorios/desempenho" element={<CrmReports />} />
+                  <Route path="configuracoes" element={<Navigate to="/admin/configuracoes" replace />} />
+                </Route>
                 <Route path="agenda" element={g(R.agenda, <Agenda />)} />
                 <Route path="financeiro" element={g(R.finance, <Outlet />)}>
                   <Route index element={<FinanceOverview />} />
@@ -107,7 +143,9 @@ const App = () => (
                 <Route path="parceiros" element={g(R.partners, <Partners />)} />
                 <Route path="pesquisas" element={g(R.research, <Research />)} />
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
+                <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
+                <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
               </Route>
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />
