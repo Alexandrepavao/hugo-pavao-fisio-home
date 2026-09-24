@@ -11,7 +11,8 @@ export type CardKind =
   | "sales_confirmed" | "forecast_receivables_30d" | "forecast_payables_30d" | "cash_result"
   | "leads_sem_retorno" | "pacotes_fim" | "duplicidades" | "eventos_falhos"
   | "mrr_month" | "recurring_clients" | "churn_clients"
-  | "active_packages" | "active_partners";
+  | "active_packages" | "active_partners"
+  | "crm_new_leads" | "crm_open_deals" | "crm_open_value" | "crm_won_deals" | "crm_win_rate" | "crm_stale_deals" | "crm_commission_potential";
 
 interface DetailItem { id: string; title: string; subtitle?: string; amount_cents?: number; date?: string; tag?: string }
 interface CardDetail {
@@ -26,13 +27,18 @@ const FMT: Record<CardKind, "brl" | "pct" | "int"> = {
   leads_sem_retorno: "int", pacotes_fim: "int", duplicidades: "int", eventos_falhos: "int",
   mrr_month: "brl", recurring_clients: "int", churn_clients: "int",
   active_packages: "int", active_partners: "int",
+  crm_new_leads: "int", crm_open_deals: "int", crm_open_value: "brl", crm_won_deals: "int", crm_win_rate: "pct", crm_stale_deals: "int", crm_commission_potential: "brl",
 };
 // "Situação atual" (hoje) — decidido estaticamente, sem esperar a resposta do servidor: evita disparar (e
 // exibir) uma comparação com "período anterior" que não faz sentido para um saldo/fila sempre calculado em cima de agora.
 const SNAPSHOT_KINDS = new Set<CardKind>([
   "overdue", "overdue_tasks", "active_students", "forecast_receivables_30d", "forecast_payables_30d",
   "leads_sem_retorno", "pacotes_fim", "duplicidades", "eventos_falhos", "active_packages", "active_partners",
+  "crm_open_deals", "crm_open_value", "crm_stale_deals", "crm_commission_potential",
 ]);
+// Cartões que usam a RPC do CRM (crm_card_detail, escopo private.crm_units/crm_effective_owner) em vez da
+// RPC geral do painel administrativo (dashboard_card_detail, escopo private.dash_units).
+const CRM_KINDS = new Set<CardKind>(["crm_new_leads", "crm_open_deals", "crm_open_value", "crm_won_deals", "crm_win_rate", "crm_stale_deals", "crm_commission_potential"]);
 const fmtValue = (kind: CardKind, v: number | null) => {
   if (v == null) return "Indisponível";
   if (FMT[kind] === "brl") return brl(v);
@@ -40,28 +46,34 @@ const fmtValue = (kind: CardKind, v: number | null) => {
   return v.toLocaleString("pt-BR");
 };
 
-export interface CardDetailTrigger { kind: CardKind; from: string; to: string; unit: string; unitLabel: string; prevFrom?: string; prevTo?: string }
+export interface CardDetailTrigger { kind: CardKind; from: string; to: string; unit: string; unitLabel: string; prevFrom?: string; prevTo?: string; owner?: string; pipeline?: string }
 
-/** Painel lateral de detalhamento de um cartão de indicador (Início/Financeiro): reconcilia com o mesmo
- * escopo (data/unidade/permissão) do cartão que o abriu — nunca uma consulta separada e divergente. */
+/** Painel lateral de detalhamento de um cartão de indicador (Início/Financeiro/CRM): reconcilia com o mesmo
+ * escopo (data/unidade/permissão/responsável) do cartão que o abriu — nunca uma consulta separada e divergente.
+ * Cartões do CRM usam crm_card_detail (escopo próprio, inclui "sales" vendo os próprios negócios); os demais
+ * usam dashboard_card_detail (escopo manager/ops_admin/unit_manager/finance). */
 export const CardDetailSheet = ({ trigger, onClose }: { trigger: CardDetailTrigger | null; onClose: () => void }) => {
-  const { kind, from, to, unit, unitLabel, prevFrom, prevTo } = trigger ?? { kind: "receipts" as CardKind, from: "", to: "", unit: "", unitLabel: "" };
+  const { kind, from, to, unit, unitLabel, prevFrom, prevTo, owner, pipeline } = trigger ?? { kind: "receipts" as CardKind, from: "", to: "", unit: "", unitLabel: "" };
   const open = !!trigger;
+  const rpc = kind && CRM_KINDS.has(kind) ? "crm_card_detail" : "dashboard_card_detail";
+  const params = (f: string, t: string) => rpc === "crm_card_detail"
+    ? { p_kind: kind, p_from: f, p_to: t, p_unit: unit || null, p_owner: owner || null, p_pipeline: pipeline || null }
+    : { p_kind: kind, p_from: f, p_to: t, p_unit: unit || null };
 
   const detail = useQuery({
-    queryKey: ["card-detail", kind, from, to, unit],
+    queryKey: ["card-detail", rpc, kind, from, to, unit, owner, pipeline],
     enabled: open,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_card_detail", { p_kind: kind, p_from: from, p_to: to, p_unit: unit || null });
+      const { data, error } = await supabase.rpc(rpc, params(from, to));
       if (error) throw error;
       return data as CardDetail;
     },
   });
   const prev = useQuery({
-    queryKey: ["card-detail-prev", kind, prevFrom, prevTo, unit],
+    queryKey: ["card-detail-prev", rpc, kind, prevFrom, prevTo, unit, owner, pipeline],
     enabled: open && !!prevFrom && !!prevTo && !SNAPSHOT_KINDS.has(kind),
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_card_detail", { p_kind: kind, p_from: prevFrom, p_to: prevTo, p_unit: unit || null });
+      const { data, error } = await supabase.rpc(rpc, params(prevFrom!, prevTo!));
       if (error) throw error;
       return data as CardDetail;
     },
