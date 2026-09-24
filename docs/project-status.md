@@ -1,6 +1,62 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-23, continuação) — Lacunas do relatório do Mosaic: preview Netlify, cards restantes, Configurações reais, testes novos
+## Sessão mais recente (2026-09-24) — App HP CRM: dashboard, sidebar exclusiva, pipeline preservado
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+
+Substitui a entrada direta em Oportunidades por um app CRM próprio dentro do Hub. Clicar em "CRM" na sidebar
+geral abre `/admin/crm` (dashboard comercial) com **sidebar exclusiva** (`CrmShell`/`crmNav.ts`) — a sidebar
+geral do Hub nunca aparece junto; "Voltar ao Hub" e "Trocar de app" no cabeçalho trocam de contexto. Baseado
+numa inspeção funcional de um CRM de referência (relatório completo de 12 áreas obtido via agente de
+exploração antes de qualquer código — rotas, dashboard, leads vs. pipeline, contatos, listas, tarefas, metas,
+time/"view as", comunicação, relatórios, configurações, comissão), adaptado ao modelo de dados do HP — nunca
+copiou dados, credenciais, infraestrutura ou identidade visual da referência.
+
+**Backend novo:**
+- `crm_dashboard_metrics`/`crm_card_detail` (migration 042) — dashboard comercial com escopo próprio
+  (`private.crm_units`/`private.crm_effective_owner`): inclui o papel `sales` vendo os próprios negócios,
+  diferente de `dashboard_metrics` (só quem gerencia). 8 indicadores: novos leads (fluxo, por `created_at` —
+  propositalmente diferente de "na primeira etapa", que é a fila de Gestão de leads), total de negócios,
+  em aberto, valor em negociação, ganhos, conversão, sem retorno, comissão potencial (estimativa sobre negócios
+  abertos usando `commission_rules` já existente — nunca confundida com `commission_entries`, que só nasce de
+  pagamento real).
+- `crm_goal_progress`/`crm_team_snapshot` (migration 043, tabela `crm_goals` nova) — metas mensais por usuário,
+  progresso, ticket médio, negócios necessários, ritmo diário (R$/dia útil). O CRM de referência mede ritmo por
+  contagem de mensagens de WhatsApp — o HP não rastreia isso (ver Comunicação abaixo), então o ritmo aqui é
+  sobre negócios/valor reais, não uma métrica inventada.
+- `crm_lead_lists`/`crm_lead_list_members` (migration 044) — listas estáticas de pessoas (não filtro salvo),
+  nunca duplica o cadastro central.
+
+**Páginas novas** (`src/pages/admin/crm/`): Dashboard (8 cards clicáveis + gráficos + tarefas + atividades
+recentes), Gestão de leads (fila da primeira etapa — diferente do Pipeline), Contatos (lente comercial sobre
+Pessoas, sem duplicar cadastro), Listas, Pipeline (Kanban existente, movido de `/admin/crm` para
+`/admin/crm/oportunidades`, comportamento preservado), Tarefas, Minha meta/Ritmo do dia/Time, Relatórios
+(Análises: funil + motivos de perda; Desempenho comercial: por responsável). Conversas usa WhatsApp real
+(`wa.me` com mensagem pronta + registro automático de interação) — funcionalidade real, não um link decorativo.
+Mensagens agendadas e Disparo de mensagens mostram bloqueio explícito com o motivo real (exigem um provedor de
+envio automático — Evolution API/Chatwoot ou similar — que a organização não tem conectado hoje); nenhuma tela
+finge enviar mensagem. "Configurações do CRM" abre a mesma seção "Comercial e CRM" da central de Configurações
+já construída na sessão anterior (mesma implementação, mesma fonte de dados).
+
+**Testes novos:** `supabase/tests/022_crm_dashboard.sql` (5/5) — comercial só vê os próprios negócios mesmo
+tentando forçar o filtro de responsável; gestor de unidade vê o time inteiro e filtra por responsável
+específico. `supabase/tests/023_crm_goals_permissoes.sql` (3/3) — só quem gerencia cadastra meta; um comercial
+comum não cria a própria meta nem lê a meta de outra pessoa.
+
+**Regressão:** suíte E2E completa revalidada, 32/32 passando (um teste precisou de correção — a jornada
+Checkup verificava o Kanban em `/admin/crm`, endereço que virou o dashboard; corrigido para
+`/admin/crm/oportunidades`). `tsc`/`eslint`/`vite build` sem erros novos.
+
+**Pendências explícitas desta rodada:** matriz de equivalência formal (o relatório de 12 áreas foi produzido
+e usado para guiar a implementação, mas não foi entregue como documento separado); "Ritmo do dia" mede negócios
+reais em vez de contagem de conversas (dependência de log de mensagens ainda não existente); "view as"
+(visualizar como outro vendedor) não foi construído — a referência implementa isso só no frontend
+(`sessionStorage`, sem verificação real no servidor), incompatível com o padrão de segurança do HP; o filtro
+"Responsável" no dashboard e relatórios já é reforçado no banco (um comercial não vê dados de outra pessoa
+mesmo tentando forçar o parâmetro), então a ausência de "view as" não é uma lacuna de segurança, só de
+conveniência de gestor.
+
+## Sessão anterior (2026-09-23, continuação) — Lacunas do relatório do Mosaic: preview Netlify, cards restantes, Configurações reais, testes novos
 
 > Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
 > Esta seção fecha 4 lacunas apontadas no relatório da rodada anterior (a seção "Redesign Mosaic" abaixo).
