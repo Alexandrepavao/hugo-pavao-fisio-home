@@ -34,6 +34,8 @@ const CrmConversas = lazy(() => import("./pages/admin/crm/Conversas"));
 const CrmMensagensAgendadas = lazy(() => import("./pages/admin/crm/MensagensAgendadas"));
 const CrmDisparo = lazy(() => import("./pages/admin/crm/Disparo"));
 const CrmReports = lazy(() => import("./pages/admin/crm/Reports"));
+const AdmDashboard = lazy(() => import("./pages/admin/adm/AdmDashboard"));
+const AdmDiretorio = lazy(() => import("./pages/admin/adm/Diretorio"));
 const Agenda = lazy(() => import("./pages/admin/Agenda"));
 const FinanceOverview = lazy(() => import("./pages/admin/finance/Overview"));
 const FinanceSales = lazy(() => import("./pages/admin/finance/Sales"));
@@ -124,6 +126,10 @@ const App = () => (
                   <Route path="relatorios" element={<CrmReports />} />
                   <Route path="relatorios/desempenho" element={<CrmReports />} />
                   <Route path="configuracoes" element={<Navigate to="/admin/configuracoes" replace />} />
+                </Route>
+                <Route path="adm" element={g(R.people, <Outlet />)}>
+                  <Route index element={<AdmDashboard />} />
+                  <Route path="diretorio" element={<AdmDiretorio />} />
                 </Route>
                 <Route path="agenda" element={g(R.agenda, <Agenda />)} />
                 <Route path="financeiro" element={g(R.finance, <Outlet />)}>
