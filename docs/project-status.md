@@ -1,6 +1,49 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-24) — App HP CRM: dashboard, sidebar exclusiva, pipeline preservado
+## Sessão mais recente (2026-09-29) — Novos apps do Hub: ADM (etapa 1 de 5) concluído
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+> Pedido: ampliar o Hub com 5 apps (ADM, Contábil, Marketing, Jurídico, RH), seguindo a navegação contextual do
+> CRM, executados em etapas com entrega funcional completa antes de avançar. Esta rodada cobre a etapa de
+> inspeção e a etapa 1 (ADM). Contábil, Marketing, Jurídico, RH e a validação conjunta final ainda não foram
+> construídos — ficam para as próximas rodadas, na mesma ordem pedida.
+
+**Inspeção prévia** (antes de qualquer código): conferido o schema de `people`/`person_kinds`/`person_contacts`,
+o modelo de papéis (`app_role`, sem papéis dedicados a contábil/jurídico/RH ainda), `corporate_accounts`
+(contas corporativas de bem-estar — propósito mais estreito que "empresa genérica") e a infraestrutura de
+dedup/mesclagem/importação já existente (`create_person`, `merge_preview`/`merge_people`,
+`import_people_check`/`import_people_commit`) para reutilizar em vez de duplicar.
+
+**ADM** (`/admin/adm`): consolida a área de Gestão existente numa planilha PF/PJ sobre o cadastro central —
+nunca uma base paralela. Sidebar exclusiva via um shell genérico novo (`ContextualAppShell`, também usado pelo
+CRM a partir de agora — os próximos apps reaproveitam o mesmo componente). PF = `people` (estendida com CEP/
+endereço/status cadastral/origem/responsável interno/unidades extras via `person_units`); PJ = tabela nova
+`legal_entities` (razão social, CNPJ, inscrições estadual/municipal, CNAE, regime tributário, endereço,
+representantes sempre vinculados a `people` existentes via `legal_entity_representatives`, documentos em bucket
+privado `legal-documents`). `corporate_accounts` não virou "empresa genérica" — ganhou um link opcional
+(`corporate_account_id`) para quando uma PJ do ADM também for uma conta corporativa.
+
+Backend: `private.is_valid_cpf`/`is_valid_cnpj` (dígito verificador — formato, não identidade);
+`adm_directory` (busca/filtro/ordenação/paginação no servidor, união PF+PJ, documento mascarado por padrão,
+completo só para manager/ops_admin); `adm_directory_indicators` (total/PF/PJ/novos/incompletos);
+`legal_entity_upsert` (valida CNPJ e duplicidade). Dois bugs reais encontrados e corrigidos durante os próprios
+testes: `can_adm(unit)` usava `has_unit_role(roles, null)`, que só bate com atribuição SEM unidade — um
+comercial ou gestor de unidade com papel POR unidade ficava bloqueado (mesma armadilha já documentada em
+`private.dash_units`/`crm_units`); e o filtro de busca por documento virava `%%` (batendo com qualquer
+documento não nulo) quando o termo buscado não tinha nenhum dígito, misturando resultados de PF e PJ sem
+relação com a busca.
+
+**Pendências explícitas desta etapa**: importação CSV de PJ (PF já reutiliza `import_people_check`/
+`import_people_commit` existentes; PJ não foi construído); seleção/reordenação de colunas e preferências de
+visualização por usuário (a tabela tem um conjunto fixo de colunas, sem customização); papéis dedicados de
+contábil/jurídico/RH/marketing (ainda não existem no `app_role` — entram junto com os apps correspondentes).
+
+**Testes**: verificação manual completa no navegador com sessão real de QA (busca, filtros, indicadores,
+criar/editar PF e PJ, vincular representante, máscara de documento por permissão, todos confirmados via banco
+depois). Suíte E2E completa revalidada, 32/32 (uma falha de concorrência de agenda, não relacionada, confirmada
+como flaky ao rodar isolada). `tsc`/`eslint`/`vite build` sem erros novos.
+
+## Sessão anterior (2026-09-24) — App HP CRM: dashboard, sidebar exclusiva, pipeline preservado
 
 > Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
 
