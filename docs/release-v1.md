@@ -38,7 +38,25 @@
 | 7 | Função temporária `diag-email-config` ainda no Dev | Superfície desnecessária | Removida |
 
 ## 3. Resultados dos testes
-Ver a seção *Resultados* ao final deste arquivo (preenchida na execução final).
+Executados contra o **Supabase Dev** (dados de QA), com o front local da branch `release/v1`. Comando de cada camada entre parênteses.
+
+| Camada | Resultado |
+|---|---|
+| **Aceite — jornada operacional** `R01` (`npm run test:e2e:release`) | **8/8**: lead→CRM/cadastro sem duplicar→responsável→agenda (remarcar, comparecer)→venda de pacote→parcelas→recebimento parcial/duplo clique/excedente/estorno/comissão→sessões (comparecimento, falta, cancelamentos, esgotamento)→dashboard e histórico |
+| **Aceite — permissões por papel** `R02` | **7/7** (5 papéis: menu + rotas proibidas; recursos incompletos fora; backend por chamada direta para comercial, financeiro, fisioterapeuta, gestor de unidade, parceiro e paciente) |
+| **Aceite — portais** `R03` | **2/2** (paciente e parceiro, inclusive indicação rastreada pelo quiz) |
+| ADM novos `N10`/`N11` (`npm run test:e2e:novos`) | **4/4** |
+| **Regressão E2E 01–09** (`npm run test:e2e:regressao`) | **32/32** — 31 na bateria final + o `08` (1 teste) que esbarrou no limitador de segurança do quiz (8 inícios/10 min por IP) por causa das baterias seguidas; reexecutado após a janela virar: **passou** (junto com 02 e 09) |
+| **SQL — isolamento por unidade** `S01` (`npm run test:sql:release`) | **16/16** |
+| **SQL — vendas e financeiro** `S02` | **32/32** |
+| SQL — ADM `N01`/`N02` (`npm run test:sql:novos`) | **39/39** |
+| SQL legado reexecutado: agenda e pacotes `004` / Academy e acompanhamento `006` | **26/26** (com a trava nova) / `006` sem falhas |
+| Unit (`npm test`) | **25/25** |
+| `tsc` · `eslint` · `vite build` | tsc limpo · eslint = base (1 erro anterior em `auth-email-hook`, 19 avisos, **0 novos**) · build ok (`version.json` com commit/ambiente/banco) |
+| Salvaguarda de ambiente | 4 cenários verificados: produção→Dev **recusado**; preview→produção **recusado**; produção→produção ok; dev→Dev ok |
+| Revisão de desktop e celular (`e2e/tools/shots-release.mjs`) | 38 capturas (gestor, fisioterapeuta, paciente, parceiro, telas públicas) em 1440 px e 390 px: **0 px de overflow horizontal e 0 erros de console**. Ressalva: no celular, nas tabelas largas (Vendas, Agenda) as ações ficam à direita e exigem rolar a tabela |
+
+**Não coberto / não provado:** entrega e clique dos e-mails (§7); convite por e-mail via Netlify; migrations numa cópia de produção; SQL legado 001–023 inteiro em base limpa (002, 003, 010, 012 falham por fixtures próprias; 001/005 têm cópias independentes de volume em `supabase/tests/release`); carga/concorrência além da restrição de exclusão da agenda.
 
 ## 4. Migrations para produção (ordem exata)
 Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 12 (Dev já as tem):
