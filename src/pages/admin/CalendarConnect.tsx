@@ -11,6 +11,7 @@ const DETAIL_TXT: Record<Detail, string> = { minimal: "Mínimo (“Atendimento H
 const GOOGLE_MSG: Record<string, [string, "ok" | "err"]> = {
   conectado: ["Google Calendar conectado. Clique em “Sincronizar agora” para a primeira sincronização.", "ok"], erro: ["Não foi possível concluir a conexão com o Google. Tente novamente.", "err"],
   permissao: ["A conexão exige a permissão de calendário solicitada. Autorize todas as permissões para conectar.", "err"], indisponivel: ["Conexão com o Google indisponível: as credenciais OAuth ainda não foram cadastradas no servidor.", "err"],
+  estado: ["O pedido de conexão venceu ou já foi usado. Clique em “Conectar Google Calendar” para começar de novo.", "err"],
 };
 
 /** Conectar calendários do próprio usuário. (1) Assinatura somente leitura para Apple/iPhone e Google "por URL" — link secreto, revogável, mostrado UMA vez.

@@ -59,7 +59,7 @@ Executados contra o **Supabase Dev** (dados de QA), com o front local da branch 
 **Não coberto / não provado:** entrega e clique dos e-mails (§7); convite por e-mail via Netlify; migrations numa cópia de produção; SQL legado 001–023 inteiro em base limpa (002, 003, 010, 012 falham por fixtures próprias; 001/005 têm cópias independentes de volume em `supabase/tests/release`); carga/concorrência além da restrição de exclusão da agenda.
 
 ## 4. Migrations para produção (ordem exata)
-Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 19 (o Dev tem 054 e 055; **056–060 ainda pendentes no Dev**):
+Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 20 (todas já aplicadas no Dev e testadas por SQL; produção não foi tocada):
 
 | Ordem | Arquivo | O que faz |
 |---|---|---|
@@ -82,9 +82,18 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 17 | `20260930000058_patient_journey.sql` | Jornada do paciente: objetivos, plano, avaliações, reavaliação, vídeos privados, renovação — `docs/jornada-do-paciente.md` |
 | 18 | `20260930000059_calendars.sql` | Calendários: visão por intervalo, assinatura .ics, conexão Google — `docs/calendarios.md` |
 | 19 | `20260930000060_business_lines_recurrence_efficiency_bank.sql` | Linhas de negócio em Recorrência (MRR/ARR), Relatórios de eficiência e Conciliação bancária (camada de alocação separada do extrato) — `docs/financeiro-linhas-de-negocio.md` |
+| 20 | `20260930000061_google_oauth_state.sql` | `state` do OAuth do Google de **uso único** (nonce guardado no servidor e consumido no callback) — `docs/calendarios.md` |
+
+**Contagem de migrations — Dev × produção (conferida em 2026-09-30 contra `supabase_migrations.schema_migrations` do Dev e contra os arquivos do repositório):**
+| | Registros | Composição |
+|---|---|---|
+| Produção hoje | **37** | 001–037 |
+| **Dev hoje** | **62** | 47 arquivos (001–047) + **1** (a 045 está registrada em duas partes: `adm_directory` e `adm_legal_entities`) + **4 só do Dev** (048–051: papel `accountant`/Contábil, sem arquivo nesta branch) + 10 (052–061) |
+| **Produção depois da release** | **57** | 37 + 10 (038–047, um registro por arquivo) + 10 (052–061) |
+**Diferença Dev − produção = 5**: as 4 migrations **048–051** (exclusivas do Dev; não há dependência da v1 nelas) + **1** registro extra porque a 045 foi aplicada no Dev em duas partes (o conteúdo é o mesmo do arquivo `045`, que entra em produção inteiro e de uma vez). Os números 61, 62 e 56/57 que aparecem nos relatórios são de bancos e momentos diferentes: 61 = Dev **antes** da 061 · 62 = Dev agora · 56 = produção prevista **antes** da 061 · **57 = produção prevista agora**. As **20 migrations a aplicar em produção** são as da tabela acima; 056–061 são do escopo ampliado (a 061 surgiu nesta rodada, ao tornar o `state` do Google de uso único).
 
 **NÃO aplicar 048–051** (papel `accountant` e Contábil): existem no Dev e ficam na branch de desenvolvimento. Não há dependência da v1 nelas. Como a 052/053 têm versão maior que a 051, a ordem de aplicação em produção (…047 → 052 → 053) e a futura chegada de 048–051 são compatíveis (são independentes).
-Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 56 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
+Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 57 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
 
 ## 5. Variáveis e configurações (somente nomes; valores ficam nos painéis)
 | Onde | Nome | Observação |
@@ -114,7 +123,7 @@ Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), con
 
 Publicação (banco → configuração → front → verificação):
 1. Backup/inventário (§6). Congelar mudanças de schema.
-2. Aplicar as 19 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 56; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
+2. Aplicar as 20 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 57; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
 3. Configurar o Supabase de produção (§5): secrets, hook, Site URL/Redirect URLs, limite de e-mail, senha mínima.
 4. **Conectar o site Netlify de produção ao repositório**, branch `release/v1` (ou `main` após o merge), com as variáveis de produção — assim o **Netlify** compila (não a máquina de alguém) e cada deploy carrega o `COMMIT_REF`. Sem `.env.local` no build.
 5. Deploy. Verificar `GET /version.json`: `commit` = commit aprovado, `environment` = `production`, `backend` = `produção`. Se não bater, **não abrir para a equipe**. A tela *Configurações* mostra a mesma linha e, fora de produção, aparece o selo "AMBIENTE DE TESTE".
@@ -128,7 +137,7 @@ Reversão:
 ## 9. Pendências que IMPEDEM o uso × melhorias futuras
 **Impedem colocar em produção (precisam de ação sua/painéis):**
 1. Republicar o front de produção com o banco de produção (hoje aponta para o Dev — §2 #5) e conectá-lo ao repositório.
-2. Aplicar as 19 migrations em produção.
+2. Aplicar as 20 migrations em produção.
 3. Configurar e-mail em produção: Resend (domínio, DKIM/SPF), secrets e hook do Supabase, Site URL/Redirect URLs, limite de e-mails (§5). Sem isso ninguém completa o primeiro acesso.
 4. DNS de `hpfisioterapia.com.br` continua no GitHub Pages (HTTPS válido); o app não está no domínio oficial. Decidir subdomínio do app (ex.: `app.hpfisioterapia.com.br`) e apontar o DNS quando aprovado.
 5. Proteger ou desligar o site Dev público `hp-group-hub` (§2 #6) e resolver o site Netlify não documentado `leafy-cascaron-325147` (ver `docs/deployment.md`).

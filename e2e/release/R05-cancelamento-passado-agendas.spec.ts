@@ -1,9 +1,12 @@
 // ACEITE da release v1 — cancelamento pelo paciente no portal (prazo e consumo de sessão), bloqueio de remarcar para o passado
 // (interface e servidor) e agendas de outros profissionais em "Meu dia" somente por permissão. Não depende de token de gestão do Dev.
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { api, collectErrors, loginAs, QA, rest, runId, signIn, spDate } from "./helpers-release";
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
+
+// No portal do paciente o mesmo atendimento aparece em "Meus atendimentos" e, como consulta futura, em "Minha jornada": a ação de cancelar/remarcar é a da primeira lista.
+const mine = (p: Page) => p.locator("section").filter({ has: p.getByRole("heading", { name: "Meus atendimentos" }) }).getByRole("listitem");
 
 test.describe.serial("@release Cancelamento pelo paciente, horário passado e agendas por permissão", () => {
   test.setTimeout(150_000);
@@ -41,7 +44,7 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
   test("paciente cancela pelo portal: avisado antes; dentro do prazo não consome, dentro das 24 h consome", async ({ page, context }) => {
     const pac = await loginAs(context, QA.paciente); const errors = collectErrors(page); void pac;
     await page.goto("/paciente");
-    const rowE = page.getByRole("listitem").filter({ hasText: svcName("E") }); await expect(rowE).toHaveCount(1);
+    const rowE = mine(page).filter({ hasText: svcName("E") }); await expect(rowE).toHaveCount(1);
     await expect(rowE.getByText(/Sem custo até 24 h antes/)).toBeVisible();
     await rowE.getByRole("button", { name: "Cancelar atendimento" }).click();
     const dlg = page.getByRole("dialog"); await expect(dlg.getByText(/nenhuma sessão será descontada/)).toBeVisible();
@@ -50,7 +53,7 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
     await expect(rowE.getByText(/Cancelado dentro do prazo/)).toBeVisible();
     expect(await status(S.E)).toBe("cancelled_by_patient"); expect(await bal(), "cancelamento dentro do prazo não consome").toBe(4);
 
-    const rowL = page.getByRole("listitem").filter({ hasText: svcName("L") }); await expect(rowL).toHaveCount(1);
+    const rowL = mine(page).filter({ hasText: svcName("L") }); await expect(rowL).toHaveCount(1);
     await expect(rowL.getByText(/Cancelar agora desconta 1 sessão/)).toBeVisible();
     await rowL.getByRole("button", { name: "Cancelar atendimento" }).click();
     await expect(page.getByRole("dialog").getByText(/SERÁ DESCONTADA/)).toBeVisible();
@@ -79,8 +82,12 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
     const person = ((await g.get(`appointments?select=person_id,service_id&id=eq.${S.F}`)).body as { person_id: string; service_id: string }[])[0];
     const direct = await g.rpc("book_appointment", { p_person: person.person_id, p_unit: S.unit, p_professional: S.prof, p_service: person.service_id, p_start: past, p_package: null, p_opportunity: null, p_notes: null, p_rescheduled_from: S.F });
     expect(direct.status).not.toBe(200); expect(JSON.stringify(direct.body)).toMatch(/passado/);
-    // futuro: funciona
-    await row.getByRole("button", { name: "Remarcar" }).click(); await page.locator("#ask-input").fill(`${S.day} 20:00`); await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click();
+    // futuro: funciona — num horário livre do paciente e da profissional (execuções anteriores deixam atendimentos remarcados e a data é sorteada)
+    const busy = ((await g.get(`appointments?select=period&status=in.(scheduled,confirmed,attended)&or=(person_id.eq.${person.person_id},professional_id.eq.${S.prof})&limit=2000`)).body as { period: string }[])
+      .map((a) => [...a.period.matchAll(/(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)(?:\.\d+)?([+-]\d\d)/g)].map((m) => Date.parse(m[1].replace(" ", "T") + m[2] + ":00")));
+    const free = Array.from({ length: 21 }, (_, i) => `${String(12 + Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}`).find((h) => { const a = Date.parse(`${S.day}T${h}:00-03:00`), b = a + 30 * 60_000; return !busy.some(([x, y]) => a < y && b > x); });
+    expect(free, "há horário livre na data sorteada").toBeTruthy();
+    await row.getByRole("button", { name: "Remarcar" }).click(); await page.locator("#ask-input").fill(`${S.day} ${free}`); await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText("Remarcado.")).toBeVisible();
     expect(errors).toEqual([]);
   });

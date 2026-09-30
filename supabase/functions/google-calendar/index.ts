@@ -16,6 +16,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
  *   Tarefas pessoais NUNCA são enviadas ao Google. Por padrão o evento publicado é "Atendimento HP" + unidade, sem nome de paciente (o usuário pode optar por incluir).
  *
  * Rotas (path após o nome da função):  POST /start · GET /callback · POST /disconnect · POST /sync   (+ /sync com x-cron-secret para rodar agendado)
+ * Autenticação: /start, /disconnect e /sync exigem o JWT do usuário (validado aqui com auth.getUser); /callback é autenticado pelo "state" assinado de USO ÚNICO (migration 061).
  * Secrets (Supabase → Edge Functions → Secrets; nunca no navegador/repositório):
  *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET   — cliente OAuth "Aplicativo da Web" do Google Cloud; redirect URI autorizado:
  *                                              https://<ref-do-projeto>.supabase.co/functions/v1/google-calendar/callback
@@ -42,10 +43,11 @@ async function encrypt(text: string) { const iv = crypto.getRandomValues(new Uin
 async function decrypt(s: string) { const [iv, ct] = s.split("."); return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, await aesKey(), unb64(ct))); }
 async function hmacKey() { const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("oauth-state:" + env("GOOGLE_TOKEN_ENC_KEY"))); return crypto.subtle.importKey("raw", d, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]); }
 async function signState(payload: object) { const body = b64url(JSON.stringify(payload)); const sig = new Uint8Array(await crypto.subtle.sign("HMAC", await hmacKey(), new TextEncoder().encode(body))); return `${body}.${b64url(String.fromCharCode(...sig))}`; }
-async function verifyState(state: string): Promise<{ u: string; exp: number } | null> {
+async function verifyState(state: string): Promise<{ u: string; exp: number; n: string } | null> {
   const [body, sig] = state.split("."); if (!body || !sig) return null;
   const ok = await crypto.subtle.verify("HMAC", await hmacKey(), Uint8Array.from(unb64url(sig), (c) => c.charCodeAt(0)), new TextEncoder().encode(body)); if (!ok) return null;
-  const p = JSON.parse(unb64url(body)); return p.exp > Date.now() ? p : null;
+  let p: { u?: unknown; exp?: unknown; n?: unknown }; try { p = JSON.parse(unb64url(body)); } catch { return null; }
+  return typeof p.u === "string" && typeof p.n === "string" && typeof p.exp === "number" && p.exp > Date.now() ? { u: p.u, exp: p.exp, n: p.n } : null;
 }
 
 // @ts-ignore
@@ -147,14 +149,23 @@ Deno.serve(async (req: Request) => {
     if (route === "start" && req.method === "POST") {
       const user = await userFromRequest(req); if (!user) return json(401, { error: "unauthenticated" });
       if (!(await orgOf(sb, user.id))) return json(403, { error: "forbidden" });
-      const state = await signState({ u: user.id, exp: Date.now() + 10 * 60_000, n: crypto.randomUUID() });
+      // o nonce é guardado no servidor e só vale uma vez (consumido no callback); estados vencidos são limpos aqui
+      const nonce = crypto.randomUUID(); const exp = Date.now() + 10 * 60_000;
+      await sb.from("google_oauth_states").delete().lt("expires_at", new Date().toISOString());
+      const ins = await sb.from("google_oauth_states").insert({ nonce, user_id: user.id, expires_at: new Date(exp).toISOString() });
+      if (ins.error) return json(500, { error: "state_unavailable", message: "Não foi possível iniciar a conexão. Tente novamente." });
+      const state = await signState({ u: user.id, exp, n: nonce });
       const qs = new URLSearchParams({ client_id: env("GOOGLE_CLIENT_ID"), redirect_uri: redirectUri(), response_type: "code", scope: SCOPES, access_type: "offline", prompt: "consent", include_granted_scopes: "true", state });
       return json(200, { url: `https://accounts.google.com/o/oauth2/v2/auth?${qs}` });
     }
 
     if (route === "callback" && req.method === "GET") {
       const back = (r: string) => Response.redirect(`${env("PUBLIC_SITE_URL")}/admin/meu-dia?google=${r}`, 302);
-      const q = new URL(req.url).searchParams; const st = await verifyState(q.get("state") ?? ""); if (!st || q.get("error") || !q.get("code")) return back("erro");
+      const q = new URL(req.url).searchParams; const st = await verifyState(q.get("state") ?? ""); if (!st) return back("estado");
+      // uso único: apaga o nonce e só segue se ele existia, era deste usuário e não tinha vencido — repetir o mesmo state cai aqui
+      const used = await sb.from("google_oauth_states").delete().eq("nonce", st.n).eq("user_id", st.u).gt("expires_at", new Date().toISOString()).select("nonce");
+      if (used.error || !used.data || used.data.length !== 1) return back("estado");
+      if (q.get("error") || !q.get("code")) return back("erro");
       const org = await orgOf(sb, st.u); if (!org) return back("erro");
       const tr = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ code: q.get("code")!, client_id: env("GOOGLE_CLIENT_ID"), client_secret: env("GOOGLE_CLIENT_SECRET"), redirect_uri: redirectUri(), grant_type: "authorization_code" }) });

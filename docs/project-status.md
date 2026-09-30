@@ -45,11 +45,11 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ## Sessão mais recente (2026-09-30, 5ª rodada) — Escopo ampliado aplicado no Dev e testado no banco
 
-> `release/v1`, Dev apenas; sem merge, produção ou DNS. Com a credencial do Dev disponível: **migrations 056–060 aplicadas e registradas** (`list_migrations` = 61 registros, última `20260930000060`), **suíte SQL de release S01–S09 = 438 OK, 0 FALHA**, e as Edge Functions `calendar-feed` (sem JWT), `bunny-playback` (JWT) e `google-calendar` (sem JWT) **publicadas no Dev**.
+> `release/v1`, Dev apenas; sem merge, produção ou DNS. Com a credencial do Dev disponível: **migrations 056–060 aplicadas e registradas** (`list_migrations` = 61 registros na época; hoje 62 com a 061), **suíte SQL de release S01–S09 = 438 OK, 0 FALHA**, e as Edge Functions `calendar-feed` (sem JWT), `bunny-playback` (JWT) e `google-calendar` (sem JWT) **publicadas no Dev**.
 - **O que os testes acharam e foi corrigido**: (1) o relatório de eficiência consolidado (`efficiency_report`, migration 020) **falhava sempre** — função de janela dentro de agregado; corrigido na 060 (mesma assinatura); (2) auxiliares internos do schema `private` (`journey_payload` — dado clínico —, `bank_line_split`, divisões de vendas/despesas, escopo de indicadores) estavam executáveis por `anon`/`authenticated` dentro do banco (o schema não é exposto pela API); revogado nas próprias migrations 056–060; (3) expectativas erradas de fixtures nos testes S05/S06/S07/S09.
 - **Assinatura .ics testada de verdade** contra a função publicada (criação, download, unicidade de UID, UTC, conteúdo mínimo, novo link derruba o antigo, revogação, token inválido, método, anônimo).
 - **Ainda NÃO feito**: (a) **E2E das telas novas e regressão das jornadas afetadas** — não executado porque a máquina está com ~0,7 GB de RAM livre e o navegador do Playwright + servidor de desenvolvimento não cabem (o sistema já encerrou o servidor local por falta de memória); (b) preview do `hp-group-hub` não republicado por (a); (c) Bunny e Google: **pendentes de configuração e de teste real**; (d) teste manual do `.ics` num iPhone/Google Agenda.
-- **Migrations para produção:** 19 (038→047, 052→060); `list_migrations` final = 56.
+- **Migrations para produção:** 20 (038→047, 052→061); `list_migrations` final = **57**. O Dev tem **62** registros: a diferença de 5 são as 4 migrations 048–051 (só do Dev) e a 045, registrada no Dev em duas partes — detalhes em `docs/release-v1.md` §4.
 
 ## Sessão anterior (2026-09-30, 3ª rodada) — Cancelamento pelo paciente, horário passado, agendas por permissão, Administrativo
 
