@@ -55,7 +55,7 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
     await rowL.getByRole("button", { name: "Cancelar atendimento" }).click();
     await expect(page.getByRole("dialog").getByText(/SERÁ DESCONTADA/)).toBeVisible();
     await page.getByRole("dialog").getByRole("button", { name: "Cancelar atendimento" }).click();
-    await expect(page.getByText(/a sessão foi descontada do seu pacote/)).toBeVisible();
+    await expect(page.getByText("Atendimento cancelado. A sessão foi descontada do seu pacote, conforme a regra de cancelamento tardio.")).toBeVisible();
     await expect(rowL.getByText(/a sessão foi descontada/)).toBeVisible();
     expect(await status(S.L)).toBe("cancelled_by_patient"); expect(await bal(), "cancelamento tardio consome 1 sessão").toBe(3);
     // repetir pela API não consome de novo; equipe e outros pacientes não usam essa via

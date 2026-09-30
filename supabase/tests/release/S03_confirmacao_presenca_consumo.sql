@@ -47,7 +47,6 @@ begin
   a4 := public.book_appointment(p1, v_ua, pr,  svc, t14, pkg);
   a5 := public.book_appointment(p3, v_ua, pr2, svc, t10, pkg_free);
   a6 := public.book_appointment(p1, v_ua, pr2, svc, t11, pkg);
-  a7 := public.book_appointment(p1, v_ua, pr2, svc, t10 + interval '1 day', pkg);
   a8 := public.book_appointment(p2, v_ua, pr,  svc, t10 + interval '2 days');
   a9 := public.book_appointment(p2, v_ua, pr2, svc, t10 + interval '4 days');
 
@@ -129,6 +128,7 @@ begin
   select private.package_balance(pkg) into n;
   rep := rep || format(E'\n[%s] paciente confirmado que faltou sem cancelar fica como no_show (%s), não como realizado', case when s1 = 'no_show' then 'OK' else 'FALHA' end, s1);
   rep := rep || format(E'\n[%s] a falta consome 1 sessão conforme a política do produto (saldo=%s)', case when n = 3 then 'OK' else 'FALHA' end, n);
+  perform set_config('request.jwt.claims', json_build_object('sub', u_mgr, 'role','authenticated')::text, true);   -- livro e tarefas de CRM não são legíveis pelo fisioterapeuta (RLS): conferir como gestor
   select count(*) into n from public.session_ledger where appointment_id = a4 and reason = 'consume' and note like 'Falta%';
   rep := rep || format(E'\n[%s] o livro registra a falta (não "Atendimento realizado")', case when n = 1 then 'OK' else 'FALHA' end);
   select count(*) into n from public.crm_tasks where kind = 'no_show' and person_id = p1;
@@ -182,6 +182,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', u_mgr, 'role','authenticated')::text, true);
 
   -- 6b) correção: falta marcada como do paciente por engano (consumiu) e depois corrigida para falta do profissional => devolve
+  a7 := public.book_appointment(p1, v_ua, pr2, svc, t10 + interval '1 day', pkg);   -- reservado só agora: a regra de saldo não deixa reservar mais atendimentos ativos do que sessões
   reset role; update public.appointments set period = tstzrange(now() - interval '15 hours', now() - interval '14 hours') where id = a7; set local role authenticated;
   perform set_config('request.jwt.claims', json_build_object('sub', u_mgr, 'role','authenticated')::text, true);
   perform public.set_appointment_status(a7, 'no_show');

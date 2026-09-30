@@ -62,7 +62,7 @@ const Day = () => {
   };
   const setStatus = async (a: Appt, s: string) => {
     const reason = s.startsWith("cancelled") ? (await promptText("Cancelar agendamento", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar agendamento", danger: true })) ?? "" : null; if (s.startsWith("cancelled") && !reason) return;
-    const { error } = await supabase.rpc("set_appointment_status", { p_id: a.id, p_status: s, p_reason: reason }); if (error) m.err(errText(error)); else { m.ok("Status atualizado."); void qc.invalidateQueries({ queryKey: ["appts"] }); }
+    const { error } = await supabase.rpc("set_appointment_status", { p_id: a.id, p_status: s, p_reason: reason }); if (error) m.err(errText(error)); else { m.ok("Status atualizado."); void qc.invalidateQueries({ queryKey: ["appts"] }); void qc.invalidateQueries({ queryKey: ["appt-ledger"] }); }
   };
   const confirmFor = async (a: Appt, who: "patient" | "professional") => {
     const { error } = await supabase.rpc(who === "patient" ? "appointment_confirm_for_patient" : "professional_appointment_confirm", { p_id: a.id });

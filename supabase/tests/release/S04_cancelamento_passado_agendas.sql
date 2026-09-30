@@ -33,8 +33,8 @@ begin
     select v_org, pr2, u, w, '08:00', '18:00' from unnest(array[v_ua, v_ub]) u, generate_series(0, 6) w;
   insert into public.services (org_id, name, duration_min) values (v_org, 'Sessão S04', 60) returning id into svc;
   insert into public.products (org_id, kind, name, sessions_count, service_id, consume_on_no_show, late_cancel_hours) values (v_org, 'package', 'Pacote 4 (S04)', 4, svc, true, 24) returning id into prod;
-  insert into public.client_packages (org_id, unit_id, person_id, product_id, total_sessions) values (v_org, v_ua, p1, prod, 4) returning id into pkg;
-  insert into public.session_ledger (org_id, client_package_id, delta, reason) values (v_org, pkg, 4, 'grant');
+  insert into public.client_packages (org_id, unit_id, person_id, product_id, total_sessions) values (v_org, v_ua, p1, prod, 8) returning id into pkg;
+  insert into public.session_ledger (org_id, client_package_id, delta, reason) values (v_org, pkg, 8, 'grant');
   t10 := (d + time '10:00') at time zone 'America/Sao_Paulo'; t11 := (d + time '11:00') at time zone 'America/Sao_Paulo';
   t12 := (d + time '12:00') at time zone 'America/Sao_Paulo'; t14 := (d + time '14:00') at time zone 'America/Sao_Paulo'; t15 := (d + time '15:00') at time zone 'America/Sao_Paulo';
 
@@ -69,7 +69,7 @@ begin
   j := public.my_appointment_cancel(a1, null);
   select status, cancel_reason into r from public.appointments where id = a1; select private.package_balance(pkg) into n;
   rep := rep || format(E'\n[%s] cancelamento antecipado: status cancelled_by_patient, motivo padrão preenchido (%s)', case when r.status = 'cancelled_by_patient' and r.cancel_reason is not null then 'OK' else 'FALHA' end, r.status);
-  rep := rep || format(E'\n[%s] cancelamento antecipado NÃO consome sessão (saldo=%s) e a resposta diz session_consumed=false', case when n = 4 and (j ->> 'session_consumed')::boolean is false then 'OK' else 'FALHA' end, n);
+  rep := rep || format(E'\n[%s] cancelamento antecipado NÃO consome sessão (saldo=%s) e a resposta diz session_consumed=false', case when n = 8 and (j ->> 'session_consumed')::boolean is false then 'OK' else 'FALHA' end, n);
   perform set_config('request.jwt.claims', json_build_object('sub', u_mgr, 'role','authenticated')::text, true);
   ok := false; begin perform public.book_appointment(p1, v_ua, pr, svc, t10); ok := true; exception when others then ok := false; end;
   rep := rep || format(E'\n[%s] o horário cancelado volta a ficar livre', case when ok then 'OK' else 'FALHA' end);
@@ -81,11 +81,11 @@ begin
   rep := rep || format(E'\n[%s] dentro do prazo de 24 h o portal avisa que cancelar CONSUME sessão', case when r.can_cancel and r.cancel_consumes then 'OK' else 'FALHA' end);
   j := public.my_appointment_cancel(a2, 'imprevisto de trabalho');
   select private.package_balance(pkg) into n;
-  rep := rep || format(E'\n[%s] cancelamento tardio consome 1 sessão (saldo=%s) e a resposta diz session_consumed=true', case when n = 3 and (j ->> 'session_consumed')::boolean is true then 'OK' else 'FALHA' end, n);
+  rep := rep || format(E'\n[%s] cancelamento tardio consome 1 sessão (saldo=%s) e a resposta diz session_consumed=true', case when n = 7 and (j ->> 'session_consumed')::boolean is true then 'OK' else 'FALHA' end, n);
   select cancel_reason into s1 from public.appointments where id = a2;
   rep := rep || format(E'\n[%s] o motivo informado pelo paciente é guardado', case when s1 = 'imprevisto de trabalho' then 'OK' else 'FALHA' end);
   perform public.my_appointment_cancel(a2, null); select private.package_balance(pkg) into n;
-  rep := rep || format(E'\n[%s] cancelar de novo é idempotente e não consome outra sessão (saldo=%s)', case when n = 3 then 'OK' else 'FALHA' end, n);
+  rep := rep || format(E'\n[%s] cancelar de novo é idempotente e não consome outra sessão (saldo=%s)', case when n = 7 then 'OK' else 'FALHA' end, n);
   select count(*) into n from public.session_ledger where appointment_id = a2 and reason = 'consume' and note like 'Cancelamento tardio%';
   rep := rep || format(E'\n[%s] o livro registra "Cancelamento tardio" uma única vez (%s)', case when n = 1 then 'OK' else 'FALHA' end, n);
   select session_consumed, status into r from public.my_appointments() where id = a2;

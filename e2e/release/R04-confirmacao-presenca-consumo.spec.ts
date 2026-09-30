@@ -107,7 +107,9 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     expect((await g.rpc("set_appointment_status", { p_id: S.B, p_status: "no_show", p_reason: null })).status).not.toBe(204);
     expect((await g.rpc("set_appointment_status", { p_id: S.C, p_status: "professional_no_show", p_reason: null })).status).not.toBe(204);
     // o tempo passa (Dev): B (paciente confirmou e não veio) e C (o profissional não veio) ocorreram ontem
-    const past = spDate(-1); await moveAppointment(S.B, `${past}T10:00:00-03:00`); await moveAppointment(S.C, `${past}T12:00:00-03:00`);
+    // horários únicos por execução: o profissional é compartilhado e a regra de não sobreposição vale também para o passado
+    const past = spDate(-1); const hh = 1 + (parseInt(runId, 36) % 20); const at = (h: number) => `${past}T${String(h).padStart(2, "0")}:00:00-03:00`;
+    await moveAppointment(S.B, at(hh)); await moveAppointment(S.C, at(hh + 2));
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/agenda"); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(past);
     const rowB = page.getByRole("row").filter({ hasText: svcName("B") });
