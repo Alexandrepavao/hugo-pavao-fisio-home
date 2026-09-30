@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { btnDanger, btnGhost, btnPrimary, confirmDialog, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
 import PortalShell from "./PortalShell";
+import Journey from "./Journey";
 
 interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean; can_cancel: boolean; cancel_consumes: boolean; late_cancel_hours: number | null }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
@@ -51,6 +52,8 @@ const Patient = () => {
           {a.status === "no_show" && a.uses_package && <span className="basis-full text-sm text-muted-foreground">{a.session_consumed ? "Como não houve cancelamento, esta sessão foi descontada do seu pacote." : "Esta falta não descontou sessão do seu pacote."}</span>}
           {a.status === "professional_no_show" && <span className="basis-full text-sm text-muted-foreground">Sua sessão não foi descontada. A equipe entrará em contato para reagendar sem custo.</span>}
           {a.status === "attended" && !a.survey_answered && survey.data && <span className="basis-full text-sm">Como foi? {[...Array(11).keys()].map((n) => <button key={n} className="w-7 h-7 border border-border mx-0.5 text-xs hover:bg-primary hover:text-primary-foreground" onClick={() => rate(a, n)} aria-label={`Nota ${n}`}>{n}</button>)}</span>}</li>)}</ul></section>
+
+      <Journey />
 
       <section className="mb-10"><h2 className="text-xl mb-3">Meus pacotes</h2>
         {pkgs.data && pkgs.data.length > 0 ? <ul className="space-y-2">{pkgs.data.map((p) => <li key={p.id} className="hp-card p-3 flex justify-between"><span>{p.product_name}</span><span className="tabular">{p.balance} de {p.total_sessions} sessões {p.valid_until ? `· válido até ${new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR")}` : ""}</span></li>)}</ul> : <p className="text-muted-foreground">Nenhum pacote.</p>}</section>

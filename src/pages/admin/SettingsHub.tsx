@@ -1,3 +1,4 @@
+import JourneySettings from "./JourneySettings";
 import { useState, type FormEvent } from "react";
 import { BUILD_INFO, RELEASE_PROFILE, featureOn } from "@/lib/release";
 import { Link } from "react-router-dom";
@@ -292,6 +293,7 @@ const OperationSettings = () => {
           ))}
         </Table>
       )}
+      <JourneySettings />
     </div>
   );
 };
