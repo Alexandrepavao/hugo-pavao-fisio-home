@@ -44,6 +44,8 @@ Site Dev/preview: `2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`. Site de produção: `3
 | Produção | `HP Group Core` (`wfqkjrpqkaarpavjheoj`) | site `hp-group-hub-producao` (público) | estrutura pronta; sem dados reais; DNS do domínio final pendente |
 
 ## Migrations
+> **Estado em 2026-09-29:** o **Dev** está na 051 (`20260929000051_private_function_privileges.sql`); a **produção** segue na 037 — 038→051 (captação de leads, CRM, ADM, Contábil) ainda **não** foram aplicadas lá e só devem ir, em ordem, quando autorizado.
+
 Ordem 001→037 (última: `20260924000037_reserved_slug_confirmar.sql`) — **todas aplicadas em produção** nesta sessão. Aplicar sempre no Dev primeiro → testes SQL → advisors → só então produção. Nunca `reset` em remoto.
 
 ## Pendências de deploy (ver `docs/go-live-plan.md` para o passo a passo completo)

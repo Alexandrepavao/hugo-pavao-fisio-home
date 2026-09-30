@@ -30,5 +30,19 @@ Nota sobre advisors: os avisos remanescentes de "funções `SECURITY DEFINER` ex
 | Recuperação de link inválido/expirado | UI | ✅ |
 | **API direta** com token de aluna: `people`=só a própria; outras 14 tabelas 0 linhas; RPCs administrativas 403; auto-promoção a gestor 403; inserir acesso 403 | API | ✅ |
 
+## Etapa ADM + Contábil (2026-09-29) — testes NOVOS, separados da regressão
+Como rodar: `SUPABASE_ACCESS_TOKEN=… npm run test:sql:novos` (SQL, só Dev, transação desfeita) · `npm run test:novos` (Unit) · `npm run test:e2e:novos` (E2E, tag `@novo`, pasta `e2e/novos/`). Regressão: `npm run test:regressao` e `npm run test:e2e:regressao`.
+
+| Arquivo | Escopo | Resultado |
+|---|---|---|
+| supabase/tests/novos/N01_adm_importacao_pj | validação por linha, CNPJ repetido no arquivo, reimportação sem duplicar, sem sobrescrita silenciosa, atualização só por decisão e só dos campos do diff, arquivado, auditoria, permissão | ✅ 18/18 |
+| N02_adm_colunas_permissoes | preferência por usuário, reordenar/ocultar/restaurar, colunas sensíveis barradas no servidor (salvar/listar/exportar), papel rebaixado, RLS, auditoria da exportação | ✅ 21/21 |
+| N03_contabil_permissoes | acesso ao app, isolamento entre unidades, RLS de escrita direta, concessões de fechar/reabrir (papel sozinho não basta), revogação de papel, pseudônimo, bucket privado, acesso a documento auditado | ✅ 38/38 |
+| N04_contabil_jornada | livro sem duplicar, caixa ≠ competência, classificação/sugestão/dispensa, comprovantes, revisão → fechamento com bloqueios, competência fechada imutável, alteração posterior sinalizada (e o que não sinaliza), aceitar, reabrir com justificativa e auditoria, refechar, exportação | ✅ 59/59 |
+| src/lib/pjImport.novo.test.ts · accExport.novo.test.ts | mapeamento de colunas, linhas físicas, modelo; CSV por base, neutralização de fórmulas, LEIAME/provisório, manifesto SHA-256 | ✅ 20/20 |
+| e2e/novos N10–N13 | importação PJ na interface; colunas/permissão de campo; jornada completa do Contábil (incl. ZIP inspecionado, contador, comercial, aluno); navegação Hub⇄apps, cards→telas filtradas, celular | ✅ 9/9 |
+| Regressão E2E 01–09 | inalterada | ✅ 32/32 |
+| Regressão SQL 001–023 | reexecutada no Dev acumulado | ⚠️ 269 OK / 28 FALHA / 4 sem relatório — pressupostos de banco vazio e `anon`=3 RPCs (hoje há as `quiz_*`); ver `docs/project-status.md`. Não provado contra base limpa |
+
 ## Não executado / não validado
 Recuperação de senha e primeiro acesso **com e-mail real**; envio Resend; webhooks/eventos repetidos vindos de provedor real; concorrência entre conexões simultâneas (só a restrição de exclusão foi comprovada dentro de uma sessão); E2E automatizado (Playwright); acessibilidade por leitor de tela; testes no deploy publicado atrás do login Netlify; produção.

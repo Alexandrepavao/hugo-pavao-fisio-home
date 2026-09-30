@@ -33,6 +33,22 @@
 ## Arquivos privados
 Buckets `academy-private` e `care-private` (não públicos). Política de Storage por acesso real: curso (`can_read_course`) ou conteúdo liberado (`care_assignment_active`). O navegador usa **URL assinada de 1 h**, gerada só se a política permitir. Revogação bloqueia novas assinaturas imediatamente (URLs já emitidas expiram em até 1 h — limitação conhecida).
 
+## Contábil (`/admin/contabil`) e ADM — papéis e concessões (2026-09-29)
+Novo papel **`accountant`** (Contador(a); migration 048): pode estar em escopo de organização ou de unidade. Vê e prepara a competência (classificar, anexar, dispensar, exportar) **somente nas unidades atribuídas**; não vê nome de paciente (pseudônimo `Paciente XXXXXX`); não fecha nem reabre sem concessão.
+
+| Ação | manager | ops_admin | unit_manager | finance | accountant | sales / outros |
+|---|---|---|---|---|---|---|
+| Abrir o app Contábil / consultar lançamentos | org | org | unidade | unidade | unidade | **não** (RPC nega com 42501) |
+| Classificar, anexar comprovante, dispensar com justificativa, exportar | ✔ | ✔ | unidade | unidade | unidade | — |
+| Nome real do paciente nos lançamentos e no pacote | ✔ | ✔ | ✔ | ✔ | **pseudônimo** | — |
+| Configurar (regras, classificações, mapeamento, empresa da unidade, **conceder** fechar/reabrir) | ✔ | ✔ | — | — | — | — |
+| **Fechar competência** e **aceitar alteração posterior** | só com concessão `close` | só com concessão `close` | só com concessão `close` | só com concessão `close` | só com concessão `close` | — |
+| **Reabrir competência** (justificativa obrigatória) | só com concessão `reopen` | idem | idem | idem | idem | — |
+
+Regras: (1) a concessão (`acc_grants`) só vale enquanto a pessoa mantém papel contábil/financeiro na unidade — revogar o papel revoga o poder na hora; (2) toda concessão/revogação, fechamento, reabertura, aceitação de alteração, classificação, dispensa, documento e exportação vai para `audit_log`; (3) tabelas `acc_*` têm só leitura por RLS (por unidade) — toda escrita é RPC `SECURITY DEFINER` com checagem explícita; (4) arquivos no bucket privado `accounting-private`, pasta `{org}/{unidade}/{aaaa-mm}/…`: a política confere organização **e** unidade, não há UPDATE/DELETE, e abrir um arquivo passa por `acc_documents_access` (autoriza + audita) antes da URL assinada de 60 s.
+
+**ADM — campos sensíveis (047):** regime tributário, inscrição estadual e e-mail financeiro de PJ só para manager/ops_admin; o servidor devolve `null` (listagem), descarta (exportação e preferência de colunas) e filtra na leitura pela permissão atual. Importar PJ exige manager/ops_admin (`legal_entity_import_check/commit`). Preferências de colunas (`adm_view_prefs`) são por usuário, sem escrita direta.
+
 ## Testes
 `supabase/tests/001…010` (ver `test-report.md`) + teste de API direta com token de aluna + E2E (`e2e/`) contra o Dev real. Refazer a cada expansão do banco.
 

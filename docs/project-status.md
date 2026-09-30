@@ -1,6 +1,107 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-29) — Novos apps do Hub: ADM (etapa 1 de 5) concluído
+## Sessão mais recente (2026-09-29, continuação) — ADM concluído + app Contábil entregue
+
+> Mesma branch `feature/lead-quizzes` (PR #2, **rascunho**), mesmo escopo Dev/preview — sem produção, DNS, merge ou dados reais.
+> Pedido: fechar as pendências do ADM (importação CSV de PJ e personalização da planilha) e, em seguida, entregar o
+> **Contábil** completo. Marketing, Jurídico e RH continuam no roteiro das próximas etapas (não foram tocados).
+
+**Acesso ao banco Dev.** O MCP do Supabase e o CLI desta máquina estavam em outras contas (só enxergavam projetos de outros
+produtos), então nada podia ser aplicado. Com um token da conta dona do projeto, as migrations e os testes SQL foram
+executados pela Management API **somente no projeto Dev (`fsvtzowcwhvwtluwrhnb`)**; o executor de testes
+(`supabase/tests/run-sql.mjs`) recusa a produção. O token foi usado apenas em variável de ambiente por comando, nunca gravado
+em arquivo — **revogue-o** em supabase.com/dashboard/account/tokens.
+
+### 1. ADM — o que faltava (migration 047)
+- **Importação CSV de PJ** (`Importar PJ (CSV)`, só manager/ops_admin): modelo para download (linha de exemplo com CNPJ
+  inválido de propósito) → **mapeamento de colunas** (reconhece sinônimos com acento/caixa; o usuário corrige à mão; bloqueia
+  se faltar CNPJ/razão social ou se a mesma coluna alimentar dois campos) → **prévia sem gravar** (validação e duplicidade por
+  CNPJ feitas **no servidor**: `legal_entity_import_check`) → confirmação → **relatório por linha** (número da linha física do
+  arquivo, CSV para baixar). Reimportar o mesmo arquivo não duplica (aparece "sem alteração"). CNPJ já cadastrado com dados
+  diferentes vira **conflito**: nada é marcado por padrão e só os campos que o usuário marcar são atualizados
+  (`fill` = campo vazio, `overwrite` = valor existente); sem decisão, o cadastro fica intacto. Cadastro arquivado não é
+  reativado. A gravação recalcula a análise no servidor (não confia no status enviado pelo navegador), registra lote
+  (`adm_import_batches`) e auditoria com valores antigos e novos. Reaproveita `legal_entities`/`legal_entity_units`,
+  `is_valid_cnpj` e o padrão do `ImportDialog` de PF (que também ganhou botão na planilha).
+- **Personalização da planilha**: diálogo `Colunas` (mostrar/ocultar/reordenar; "Nome" fixa), salvo **por usuário**
+  (`adm_view_prefs`, escrita só via RPC), "Restaurar padrão", 16 colunas no catálogo (`private.adm_column_catalog`).
+- **Permissão de campo no servidor** (não só na interface): 3 colunas sensíveis (regime tributário, inscrição estadual, e-mail
+  financeiro) só para manager/ops_admin — o servidor as descarta ao salvar a preferência, devolve `null` na listagem
+  (`adm_directory`), remove da exportação (`adm_export`) e filtra na leitura pela permissão **atual** (papel rebaixado perde a
+  coluna). Documento continua mascarado para quem não é manager/ops_admin. A exportação CSV da planilha usa as colunas
+  escolhidas e é auditada.
+- Achados corrigidos no caminho: `legal_entities` não tinha trigger de auditoria (faltava desde a 045); `parseCsv` perdia a
+  contagem de linhas em branco (o relatório apontava a linha errada → `parseCsvWithLines`); os filtros da planilha ocupavam a
+  linha inteira (contra a diretriz de filtros compactos, herdado da etapa 1).
+
+### 2. Contábil (`/admin/contabil`) — migrations 048–051
+Reaproveita `ContextualAppShell` (sidebar exclusiva, seletor de apps, retorno ao Hub), o cadastro central (ADM), autenticação,
+papéis e o Financeiro. **Nenhuma transação é copiada**: o livro (`private.acc_ledger`) só **lê** `receivables`, `payables` e
+`payments`; as tabelas do Contábil guardam classificação, documentos, dispensas, períodos e o "carimbo" do fechamento.
+- **Escopo**: organização (cliente da plataforma, `organizations`) → **unidade operacional** → competência (URL `?u=&m=`). A
+  unidade pode apontar para uma PJ do ADM (`units.legal_entity_id`, o CNPJ que responde por ela, mostrado no pacote).
+- **Caixa ≠ competência**: base "Competência" (recebíveis/contas a pagar pelo `competence_month`) e base "Caixa" (recebimentos,
+  estornos e contas pagas pela data, no fuso da unidade). Nunca somadas; telas, totais e exportação mostram a base.
+- **Menus (todos com função real)**: Visão geral (9 indicadores clicáveis + jornada de 7 passos), Competências (13 meses),
+  Lançamentos e classificações (filtros, lote, sugestão por categoria do Financeiro, dispensa com justificativa), Documentos e
+  comprovantes (bucket privado `accounting-private`, URL assinada de 60 s após autorização + auditoria), Pendências (calculadas
+  ao vivo: sem classificação, sem comprovante, alteração após fechamento), Fechamentos (revisar → fechar → reabrir, condições,
+  histórico), Exportações (CSV e ZIP com LEIAME, manifesto SHA-256 e documentos; histórico), Configurações contábeis.
+- **Fechamento**: exige status "Em revisão", mês encerrado, tudo classificado/dispensado e despesas pagas com comprovante ou
+  dispensa (regras configuráveis por organização). **Fechar e reabrir são permissões específicas** (`acc_grants`) além do
+  papel — nem gestor fecha/reabre sem concessão; a concessão perde efeito no instante em que o papel é revogado. Reabrir exige
+  justificativa (mínimo configurável) e fica em `acc_period_events` + `audit_log`.
+- **Alteração posterior ao fechamento**: o fechamento grava uma impressão digital (MD5) de cada lançamento das duas bases.
+  Mudanças no Financeiro **não são bloqueadas**: viram "alterado / incluído / removido após o fechamento" no dashboard,
+  Pendências e Fechamentos, até serem **aceitas** (justificativa + permissão de fechar) ou tratadas com reabertura. Mudar só o
+  status de recebimento não sinaliza (competência e valor intactos). Refechar cria nova versão e preserva os snapshots antigos.
+- **Privacidade**: o papel novo `accountant` (048) vê pacientes como pseudônimo (`Paciente 1A2B3C`) na tela e no pacote;
+  nomes reais só para manager/ops_admin/unit_manager/finance. Arquivos nunca ficam públicos; sem DELETE físico (remoção lógica).
+- **Não implementado (declarado na tela de Configurações)**: apuração de tributos, emissão fiscal, escrituração oficial
+  (SPED/ECD/ECF), integração direta com o sistema do contador, envio automático do pacote por e-mail.
+- **Endurecimento (051)**: funções internas do schema `private` sem EXECUTE para `anon`/`authenticated` (exceto as usadas por
+  RLS/invoker); confirmado que o schema não é exposto pela API (PGRST106) e que `anon` não executa nenhuma função `acc_`/`adm_`.
+
+### 3. Testes — novos × regressão (separados)
+| Camada | Novos (`@novo` / `novos/`) | Resultado |
+|---|---|---|
+| SQL (`supabase/tests/novos`, `npm run test:sql:novos`) | N01 importação PJ · N02 colunas/permissão de campo · N03 permissões do Contábil · N04 jornada e fechamento | **136/136** |
+| Unit (`npm run test:novos`) | `pjImport.novo.test.ts` (9) · `accExport.novo.test.ts` (11) | **20/20** |
+| E2E (`npm run test:e2e:novos`) | N10 importação PJ · N11 colunas · N12 jornada do Contábil · N13 navegação entre apps | **9/9** (N12 repetida 4× seguidas) |
+| Regressão Unit (`npm run test:regressao`) | csv, format | 15/15 |
+| Regressão E2E (`npm run test:e2e:regressao`) | 01–09 | **32/32** |
+| `tsc` · `eslint` · `vite build` | — | tsc limpo · eslint = baseline (1 erro anterior em `auth-email-hook`, 19 avisos, **0 novos**) · build ok |
+
+Evidências visuais: `docs/screenshots/etapa-adm-contabil/` (17 capturas da jornada + `varredura/` com todas as telas em 1440 px
+e 390 px; overflow horizontal 0 px e 0 erros de console em todas).
+
+**Regressão SQL legada (001–023) — atenção.** Reexecutada no Dev atual: 269 OK / 28 FALHA / 4 sem relatório. As falhas são de
+pressupostos que o Dev acumulado não atende mais (ex.: "gestor vê 3 pessoas", obtido 210 — o Dev tem centenas de registros dos
+E2E; 007/009 contam "3 RPCs públicas" e hoje há 6 por causa das `quiz_*` da captação de leads, públicas de propósito). **Não rodei
+uma base limpa para provar a linha de base**, então isto é uma leitura das mensagens, não uma prova; nenhuma falha toca objetos das
+migrations 047–051 e a superfície de `anon` foi conferida diretamente. Para essa suíte voltar a ser confiável ela precisa de um
+banco descartável (branch do Supabase) ou de fixtures isoladas.
+
+### 4. Pendências e bloqueios concretos
+1. **Preview publicado (URL)**: não consegui publicar em `hp-group-hub` (Netlify) — o CLI não está autenticado e não há MCP da
+   Netlify nesta sessão. Validado em `http://127.0.0.1:5180` (Vite local contra o Dev). Para publicar: `netlify login` (ou
+   `NETLIFY_AUTH_TOKEN`) e `npm run build && netlify deploy --prod --dir dist --site 2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`.
+   O deploy automático do PR (`deploy-preview-2--leafy-cascaron-325147.netlify.app`) é do site não documentado descrito em
+   `docs/deployment.md` e não tem backend configurado.
+2. **Produção não recebeu nada**: as migrations 047–051 estão só no Dev. Ordem para produção (quando autorizado): 047 → 051.
+3. **Dados de teste no Dev** (deixados de propósito, rotulados `E2E`/`QA`): contas `qa.contador|financeiro|comercial@hp-test.dev`
+   (mesma senha de QA), contas a pagar/documentos/exportações/versões de fechamento nos meses −3…−10 e PJs `importacao_csv`
+   arquivadas. Os testes SQL rodam em `hoje−12 meses`/2019 e não colidem com eles.
+4. **Limites conhecidos**: sem visão consolidada de várias unidades (cada competência é por unidade); a classificação de
+   recebíveis é manual/em lote (a sugestão automática existe só para contas a pagar, por categoria); permissões de fechar/reabrir
+   na interface são por pessoa para todas as unidades (a API já aceita por unidade); o envio do arquivo antes do registro pode
+   deixar arquivo órfão no bucket se o registro falhar (sem DELETE físico por política); a visão de Competências recalcula o
+   livro por mês em tempo real (ok no volume atual; materializar se crescer); tabelas rolam na horizontal dentro do cartão no
+   celular.
+5. **White label**: as regras (fechamento, comprovante, classificações, mapeamento, empresa da unidade, concessões) são dados da
+   organização, não código. Continua no código: logotipo/identidade HP (ver `docs/white-label-roadmap.md`).
+
+## Sessão anterior (2026-09-29) — Novos apps do Hub: ADM (etapa 1 de 5) concluído
 
 > Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
 > Pedido: ampliar o Hub com 5 apps (ADM, Contábil, Marketing, Jurídico, RH), seguindo a navegação contextual do
@@ -33,7 +134,7 @@ comercial ou gestor de unidade com papel POR unidade ficava bloqueado (mesma arm
 documento não nulo) quando o termo buscado não tinha nenhum dígito, misturando resultados de PF e PJ sem
 relação com a busca.
 
-**Pendências explícitas desta etapa**: importação CSV de PJ (PF já reutiliza `import_people_check`/
+**Pendências explícitas desta etapa (RESOLVIDAS na sessão seguinte, acima: importação de PJ e personalização de colunas; papel de contábil entregue como `accountant`; jurídico/RH/marketing seguem pendentes)**: importação CSV de PJ (PF já reutiliza `import_people_check`/
 `import_people_commit` existentes; PJ não foi construído); seleção/reordenação de colunas e preferências de
 visualização por usuário (a tabela tem um conjunto fixo de colunas, sem customização); papéis dedicados de
 contábil/jurídico/RH/marketing (ainda não existem no `app_role` — entram junto com os apps correspondentes).
