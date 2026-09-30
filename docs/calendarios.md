@@ -46,7 +46,8 @@
 
 ## Verificação
 - SQL: `supabase/tests/release/S08_calendarios.sql` (visão por intervalo, permissões, privacidade, token só como hash, revogação, conteúdo mínimo, isolamento, anon).
-- **Não testado**: o OAuth e a API do Google (sem credenciais), a entrega real do .ics a um iPhone/Google e a função `calendar-feed` publicada. Até publicar/configurar, a tela mostra “indisponível por configuração” nos pontos que dependem disso.
+- **Testado no Dev (2026-09-30)**: `calendar-feed` publicada (sem JWT) e exercitada de verdade — criar link, baixar o VCALENDAR (UID único, UTC, conteúdo mínimo, sem nome de paciente), gerar outro link derruba o antigo (404), revogar derruba o novo (404), token inválido 404, POST 405, anônimo não cria link. `google-calendar` publicada: sem credenciais responde 503 `google_not_configured`.
+- **Não testado**: o OAuth e a API do Google (**pendente de credenciais e de teste real**) e a entrega do .ics a um iPhone/Google Agenda de verdade (teste manual com o link gerado na tela). Até configurar, a tela mostra “indisponível por configuração” nos pontos que dependem disso.
 
 ## Limitações conhecidas
 - Eventos recorrentes do Google são lidos expandidos (`singleEvents`); o HP não cria recorrências.

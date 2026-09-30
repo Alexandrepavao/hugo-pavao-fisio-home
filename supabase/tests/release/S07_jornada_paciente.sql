@@ -50,8 +50,8 @@ begin
   ok := false; begin perform public.patient_goal_save(p1, null, 'ab'); exception when others then ok := true; end;
   rep := rep || format(E'\n[%s] objetivo com título curto demais é recusado', case when ok then 'OK' else 'FALHA' end);
   perform public.patient_goal_save(p1, g1, 'Voltar a correr 5 km sem dor', null, null, 'achieved');
-  select status, closed_at is not null into r from public.patient_goals where id = g1;
-  rep := rep || format(E'\n[%s] objetivo alcançado guarda a data de encerramento', case when r.status = 'achieved' and r.closed_at then 'OK' else 'FALHA' end);
+  select status, closed_at is not null as closed into r from public.patient_goals where id = g1;
+  rep := rep || format(E'\n[%s] objetivo alcançado guarda a data de encerramento', case when r.status = 'achieved' and r.closed then 'OK' else 'FALHA' end);
 
   -- ============ 3) plano: modelo padrão configurável; um plano ativo por paciente
   plan1 := public.patient_plan_save(p1, null, null, 'Plano inicial');
@@ -133,8 +133,8 @@ begin
   select count(*) into n from jsonb_array_elements(d -> 'reassessments') x where x ->> 'clinical_note' is not null;
   rep := rep || format(E'\n[%s] o profissional vinculado vê a nota clínica (%s)', case when n = 1 then 'OK' else 'FALHA' end, n);
   perform public.patient_reassess(p1, 'alta', null, 'Alta! Parabéns pelo esforço.', null);
-  select status, closed_at is not null into r from public.patient_plans where id = plan1;
-  rep := rep || format(E'\n[%s] alta encerra o plano (status %s)', case when r.status = 'completed' and r.closed_at then 'OK' else 'FALHA' end, r.status);
+  select status, closed_at is not null as closed into r from public.patient_plans where id = plan1;
+  rep := rep || format(E'\n[%s] alta encerra o plano (status %s)', case when r.status = 'completed' and r.closed then 'OK' else 'FALHA' end, r.status);
   ok := false; begin perform public.patient_reassess(p1, 'alta'); exception when others then ok := sqlerrm like '%plano ativo%'; end;
   rep := rep || format(E'\n[%s] depois da alta não há plano ativo para reavaliar', case when ok then 'OK' else 'FALHA' end);
 

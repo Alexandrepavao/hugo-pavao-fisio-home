@@ -13,7 +13,7 @@ declare
   c1 uuid; c2 uuid; c3 uuid; c4 uuid; c5 uuid; e1 uuid; e3 uuid; acc uuid; imp jsonb; l1 uuid; l2 uuid; l3 uuid; l4 uuid; l5 uuid; l6 uuid; l7 uuid;
   a1 uuid; a2 uuid; d date := current_date + 3; t10 timestamptz; t11 timestamptz;
   m0 date := date_trunc('month', current_date)::date; m1 date := (date_trunc('month', current_date) - interval '1 month')::date; m2 date := (date_trunc('month', current_date) - interval '2 month')::date; m3 date := (date_trunc('month', current_date) - interval '3 month')::date;
-  j jsonb; j2 jsonb; n bigint; n2 bigint; n3 bigint; a bigint; ok boolean; rep text := ''; h1 text; h2 text; x jsonb; k text;
+  j jsonb; j2 jsonb; n bigint; n2 bigint; n3 bigint; a bigint; ok boolean; rep text := ''; h1 text; h2 text; k text;
   p_from timestamptz := now() - interval '1 day'; p_to timestamptz := now() + interval '30 days';
 begin
   select id into v_org from public.organizations where slug = 'hp-group';
@@ -119,6 +119,9 @@ begin
   set local role authenticated;
   a1 := public.book_appointment(pa, uz, prof, svc, t10, pkg);
   a2 := public.book_appointment(pb, uz, prof, svc, t11);
+  -- comparecimento só existe para horário que já passou: leva os dois atendimentos para poucas horas atrás (dentro da janela do relatório)
+  reset role; update public.appointments set period = tstzrange(now() - interval '3 hours', now() - interval '2 hours') where id = a1;
+  update public.appointments set period = tstzrange(now() - interval '5 hours', now() - interval '4 hours') where id = a2; set local role authenticated;
   perform public.set_appointment_status(a1, 'attended'); perform public.set_appointment_status(a2, 'attended');
 
   j := public.efficiency_by_line(p_from, p_to, uz);

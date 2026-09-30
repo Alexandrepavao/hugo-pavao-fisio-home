@@ -173,7 +173,7 @@ Decisões: `professional_no_show` é estado final (corrigir pela marcação só 
 - **Limites**: a URL do rascunho é protegida pelo login de equipe do Netlify (abre só para quem está logado no time), por isso não foi aberta de fora. O Supabase Auth do Dev tem como Redirect URLs só `hp-group-hub.netlify.app` e `localhost`: **login por senha funciona no preview; e-mails de recuperação/convite apontam para outro endereço** e não devem ser testados ali.
 - **Produção**: não tocada (site `hp-group-hub-producao`, domínio e DNS intactos).
 
-## 12. Edge Functions e segredos do escopo ampliado (nada disto está publicado/configurado ainda)
+## 12. Edge Functions e segredos do escopo ampliado (publicadas no Dev em 2026-09-30; segredos do Bunny e do Google **ainda não cadastrados**; produção não tocada)
 | Função | Publicar | Precisa de |
 |---|---|---|
 | `bunny-playback` (vídeos privados) | `supabase functions deploy bunny-playback` (JWT ligado) | Secret `BUNNY_EMBED_TOKEN_KEY` (+ opcional `BUNNY_TOKEN_TTL_SECONDS`); ID da biblioteca em Configurações › Operação — `docs/jornada-do-paciente.md` |

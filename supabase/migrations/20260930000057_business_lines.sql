@@ -188,3 +188,6 @@ end $$;
 -- ---------------------------------------------------------------- privilégios
 revoke all on function public.product_set_line(uuid, text), public.payable_set_line(uuid, text, jsonb), public.sale_line_shares(uuid[]), public.finance_by_line(timestamptz, timestamptz, uuid) from public, anon;
 grant execute on function public.product_set_line(uuid, text), public.payable_set_line(uuid, text, jsonb), public.sale_line_shares(uuid[]), public.finance_by_line(timestamptz, timestamptz, uuid) to authenticated;
+
+-- Auxiliares internos de divisão: só as funções públicas (security definer) os chamam.
+revoke all on function private.split_sale_amount(uuid, bigint), private.split_payable(uuid, bigint) from public, anon, authenticated;

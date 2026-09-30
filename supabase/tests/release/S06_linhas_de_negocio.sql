@@ -135,8 +135,9 @@ begin
   select count(*) into n from public.sale_line_shares(array[s1]);
   rep := rep || format(E'\n[%s] comercial da unidade vê a linha das vendas (2 linhas na V1)', case when n = 2 then 'OK' else 'FALHA' end);
   perform set_config('request.jwt.claims', json_build_object('sub', u_fin, 'role','authenticated')::text, true);
-  ok := false; begin perform public.finance_by_line(p_from, p_to, uz); exception when others then ok := sqlstate = '42501'; end;
-  rep := rep || format(E'\n[%s] financeiro NÃO abre o quadro (mesmo escopo do painel financeiro existente: gestor, administrador operacional e gestor de unidade)', case when ok then 'OK' else 'FALHA' end);
+  ok := false; begin j := public.finance_by_line(p_from, p_to, uz); ok := (j -> 'reconciliation' ->> 'ok')::boolean and (j -> 'total' ->> 'sales_cents')::bigint = 15500; exception when others then ok := false; end;
+  rep := rep || format(E'
+[%s] financeiro da unidade abre o quadro da própria unidade (mesmo escopo do painel financeiro existente, migration 026) e os números batem', case when ok then 'OK' else 'FALHA' end);
   select count(*) into n from public.sale_line_shares(array[s1]);
   rep := rep || format(E'\n[%s] financeiro da unidade vê a linha das vendas (2 linhas na V1)', case when n = 2 then 'OK' else 'FALHA' end);
   perform public.payable_set_line(e5, 'academy');

@@ -261,3 +261,42 @@ revoke all on function public.bank_line_set_allocation(uuid, jsonb), public.bank
   public.mrr_by_line(date, uuid), public.mrr_history_by_line(int, uuid), public.efficiency_by_line(timestamptz, timestamptz, uuid) from public, anon;
 grant execute on function public.bank_line_set_allocation(uuid, jsonb), public.bank_line_shares(uuid[]), public.bank_by_line(date, date, uuid, uuid),
   public.mrr_by_line(date, uuid), public.mrr_history_by_line(int, uuid), public.efficiency_by_line(timestamptz, timestamptz, uuid) to authenticated;
+
+-- Auxiliar interno: devolve a divisão de qualquer movimento bancário por id — só as funções públicas (security definer, com checagem de permissão) o chamam.
+revoke all on function private.bank_line_split(uuid) from public, anon, authenticated;
+
+-- ---------------------------------------------------------------- correção do relatório de eficiência consolidado (bug da migration 020)
+-- A concentração por produto usava sum(...) over () DENTRO de jsonb_agg — o PostgreSQL recusa ("aggregate function calls cannot contain window function calls"),
+-- então efficiency_report falhava toda vez que era executado e a tela Financeiro › Relatórios ficava com erro. Mesma assinatura e mesmo formato de retorno.
+create or replace function public.efficiency_report(p_from timestamptz, p_to timestamptz, p_unit uuid default null) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  u uuid[] := private.dash_units(p_unit);
+  v_recognized bigint; v_paying_patients bigint; v_attended bigint; v_repeat_pct numeric; v_total_buyers bigint; v_repeat_buyers bigint;
+  v_top_products jsonb; v_top_clients_share numeric;
+begin
+  select coalesce(sum(case kind when 'payment' then amount_cents else -amount_cents end), 0) into v_recognized from public.payments where unit_id = any (u) and paid_at >= p_from and paid_at < p_to;
+  select count(distinct person_id) into v_paying_patients from public.sales where unit_id = any (u) and status = 'confirmed' and sold_at >= p_from and sold_at < p_to;
+  select count(*) into v_attended from public.appointments where unit_id = any (u) and status = 'attended' and lower(period) >= p_from and lower(period) < p_to;
+  select count(distinct person_id) into v_total_buyers from public.sales where unit_id = any (u) and status = 'confirmed';
+  select count(*) into v_repeat_buyers from (select person_id from public.sales where unit_id = any (u) and status = 'confirmed' group by person_id having count(*) > 1) x;
+  -- a participação é sobre o total de TODOS os produtos; só a lista é limitada aos 10 maiores (a versão anterior misturava função de janela dentro do agregado e falhava sempre)
+  select coalesce(jsonb_agg(jsonb_build_object('product_name', t.name, 'received_cents', t.total, 'share_pct', t.share) order by t.total desc), '[]')
+    into v_top_products from (
+      select y.name, y.total, round(y.total * 100.0 / nullif(sum(y.total) over (), 0), 1) share
+        from (select p.name, sum(case py.kind when 'payment' then py.amount_cents else -py.amount_cents end) total
+                from public.payments py join public.receivables r on r.id = py.receivable_id join public.products p on p.id = r.product_id
+               where py.unit_id = any (u) and py.paid_at >= p_from and py.paid_at < p_to group by p.name) y
+       order by y.total desc limit 10) t;
+  return jsonb_build_object(
+    'receita_por_paciente_pagante_cents', private.metric(case when v_paying_patients > 0 then round(v_recognized::numeric / v_paying_patients, 0) end, v_paying_patients > 0, 'recebido no período ÷ pacientes com venda confirmada no período'),
+    'receita_por_sessao_cents', private.metric(case when v_attended > 0 then round(v_recognized::numeric / v_attended, 0) end, v_attended > 0, 'recebido no período ÷ atendimentos realizados no período'),
+    'taxa_recompra_pct', private.metric(case when v_total_buyers > 0 then round(v_repeat_buyers * 100.0 / v_total_buyers, 1) end, v_total_buyers > 0, 'pessoas com mais de uma venda confirmada (histórico) ÷ total de compradores (%)'),
+    'concentracao_por_produto', v_top_products,
+    'cac_cents', jsonb_build_object('value', null, 'available', false, 'basis', 'indisponível: não há dados de investimento em mídia/aquisição no sistema'),
+    'ltv_cents', jsonb_build_object('value', null, 'available', false, 'basis', 'indisponível: depende de CAC e de histórico de retenção mais longo que o disponível'),
+    'cac_payback_months', jsonb_build_object('value', null, 'available', false, 'basis', 'indisponível: depende do CAC')
+  );
+end $$;
+revoke all on function public.efficiency_report(timestamptz, timestamptz, uuid) from public, anon;
+grant execute on function public.efficiency_report(timestamptz, timestamptz, uuid) to authenticated;

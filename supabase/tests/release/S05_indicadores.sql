@@ -34,7 +34,7 @@ begin
   select array_agg(id order by position) into v_open from public.pipeline_stages where pipeline_id = v_pipe and kind = 'open';
   select id into s_won from public.pipeline_stages where pipeline_id = v_pipe and kind = 'won' limit 1;
   select id into s_lost from public.pipeline_stages where pipeline_id = v_pipe and kind = 'lost' limit 1;
-  select id into v_reason from public.loss_reasons where org_id = v_org order by created_at limit 1;
+  select id into v_reason from public.loss_reasons where org_id = v_org order by name limit 1;
   if v_reason is null then insert into public.loss_reasons (org_id, name) values (v_org, 'Motivo S05') returning id into v_reason; end if;
   -- o1: s1 (20d atrás) -> s2 (10d) -> s3 (3d), em aberto, origem quiz
   insert into public.opportunities (org_id, unit_id, person_id, pipeline_id, stage_id, owner_user_id, title, source) values (v_org, uz, pa, v_pipe, v_open[1], u_sales, 'Opp 1 S05', 'quiz') returning id into o1;

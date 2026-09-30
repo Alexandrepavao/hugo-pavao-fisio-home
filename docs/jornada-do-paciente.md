@@ -33,7 +33,8 @@ A reprodução **não é pública**. O navegador nunca recebe a chave nem os IDs
 
 ## Como testar
 - SQL: `supabase/tests/release/S07_jornada_paciente.sql` (privacidade, plano, avaliações, reavaliação, vídeos, renovação, anon).
-- A reprodução ponta a ponta depende de configurar o Bunny e publicar a função (acima); até lá o comportamento correto é “indisponível por configuração”.
+- **Executado no Dev (2026-09-30)**: `S07` = 60 OK (inclui autorização de reprodução, log de acesso, revogação e validade, com biblioteca Bunny fictícia). A função `bunny-playback` está **publicada no Dev** e, sem `BUNNY_EMBED_TOKEN_KEY`, responde 503 `bunny_not_configured` (confirmado).
+- **NÃO testado**: a reprodução real ponta a ponta — depende de você cadastrar a chave e configurar a biblioteca no Bunny (acima); **pendente de configuração e de teste real**. Até lá o comportamento correto é “indisponível por configuração”.
 
 ## Limitações conhecidas
 - O gráfico traz três escalas de autorrelato 0–10 (dor, funcionalidade, bem-estar) e os registros de dor já existentes de `care_activity`; **não há escalas clínicas validadas específicas** (ex.: DASH, WOMAC) — o profissional escolhe o que registrar e interpreta.

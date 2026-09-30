@@ -349,3 +349,6 @@ grant execute on function public.journey_settings_get(), public.journey_settings
   public.professional_assessment_add(uuid, text, numeric, text, timestamptz), public.patient_reassess(uuid, text, int, text, text), public.patient_video_assign(uuid, text, text, text, text, timestamptz),
   public.patient_video_revoke(uuid), public.my_assessment_add(text, numeric, text), public.my_renewal_request(text, text), public.renewal_request_set_status(uuid, text), public.renewal_requests_open(),
   public.video_playback_authorize(uuid), public.my_journey(), public.professional_journey(uuid) to authenticated;
+
+-- Auxiliares internos: journey_payload devolve dado clínico e require_care é a checagem de vínculo — só as funções públicas (security definer) os chamam.
+revoke all on function private.journey_default_sessions(), private.care_unit(uuid), private.require_care(uuid), private.journey_payload(uuid, boolean) from public, anon, authenticated;

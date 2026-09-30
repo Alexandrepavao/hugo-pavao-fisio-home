@@ -423,3 +423,6 @@ revoke all on function public.adm_dashboard(timestamptz, timestamptz, uuid), pub
 grant execute on function public.adm_dashboard(timestamptz, timestamptz, uuid), public.adm_indicator_detail(text, text, timestamptz, timestamptz, uuid),
   public.crm_analytics(timestamptz, timestamptz, uuid, uuid, uuid, int), public.crm_indicator_detail(text, text, text, timestamptz, timestamptz, uuid, uuid, uuid, int),
   public.capture_analytics(timestamptz, timestamptz, uuid), public.capture_indicator_detail(text, text, text, timestamptz, timestamptz, uuid) to authenticated;
+
+-- Auxiliares internos: só as funções públicas (security definer) os chamam. Sem isto, anon/authenticated poderiam executá-los direto dentro do banco (o schema private não é exposto pela API).
+revoke all on function private.adm_scope_units(uuid), private.crm_opp_base(uuid, uuid[], uuid), private.cap_rows(uuid[], timestamptz, timestamptz) from public, anon, authenticated;
