@@ -56,7 +56,7 @@ test.describe.serial("@release Jornada do paciente (objetivos, evolução, víde
     await expect(box.getByText(/Dor 4/).first()).toBeVisible({ timeout: 20_000 });
     // pedir contato: sem cobrança automática
     await box.getByRole("button", { name: "Quero falar com a equipe" }).click();
-    await expect(box.getByText(/nenhuma cobrança é feita automaticamente/i)).toBeVisible({ timeout: 20_000 });
+    await expect(box.getByText(/nenhuma cobrança é feita automaticamente/i).first()).toBeVisible({ timeout: 20_000 });
     const salesAfter = ((await api(await signIn(QA.manager)).get(`sales?select=id&person_id=eq.${S.person}`)).body as unknown[]).length;
     expect(salesAfter).toBe(salesBefore);
     await expectNoFatal(page);
