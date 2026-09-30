@@ -13,7 +13,7 @@
 ## Matriz (resumo do que está implementado)
 | Área | manager | ops_admin | unit_manager | sales | finance | physio | teacher | partner | member |
 |---|---|---|---|---|---|---|---|---|---|
-| Pessoas | org | org | unidade | unidade | — | — | — | — | própria |
+| Pessoas | org | org | unidade | unidade | **unidade (leitura, para identificar quem paga; sem tela de Pessoas)** | — | — | — | própria |
 | Páginas/CRM/oportunidades | org | org | unidade | unidade | — | — | — | — | — |
 | Agenda (agendar) | org | org | unidade | unidade | ler | própria agenda | — | — | ver as suas |
 | Vendas / recebíveis (ler) | org | org | unidade | unidade | unidade | — | — | — | próprias parcelas |
