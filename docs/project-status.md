@@ -1,6 +1,15 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-30) — Mudança de prioridade: release v1 (primeira versão operacional)
+## Sessão mais recente (2026-09-30, continuação) — Confirmação de paciente/profissional, presença e consumo (release v1)
+
+> Branch `release/v1`, Dev apenas — sem merge, publicação em produção, DNS ou push. Detalhes e regras em **`docs/release-v1.md` §10**.
+
+- **Implementado** (migration `054`, telas e testes): confirmação antecipada **independente** do paciente (portal) e do fisioterapeuta ("Meu dia"), registro pela recepção do que o paciente confirmou por telefone, falta do profissional (`professional_no_show`, nunca consome e devolve sessão descontada por engano), e leitura de "sessão consumida" no portal e na Agenda. Confirmar não muda status, não consome e não prova presença; presença e consumo seguem separados. Permissões no servidor e auditoria do autor.
+- **Testado**: verificação interina pela API (38/39; a falha era do script), telas conferidas com dados reais, regressão E2E 33/33. **Pendentes por falta do token do Dev**: `S03` (SQL), `R04` e `R01` (E2E) — escritos e compilando, não executados.
+- **Migrations para produção**: agora 13 (038→047, 052, 053, **054**); `list_migrations` final = 50. Nada foi aplicado em produção.
+- **Observação aberta**: o gestor consegue remarcar um atendimento para um horário **passado** (`reschedule_appointment` dispensa a checagem de "horário no passado"); usado na verificação interina. Não alterado — decidir se deve ser restringido.
+
+## Sessão anterior (mesmo dia) (2026-09-30) — Mudança de prioridade: release v1 (primeira versão operacional)
 
 > Expansão de Contábil (já pronto), Marketing, Jurídico, RH e provisionamento white label **pausada**; nada foi apagado. Prioridade: operação real do
 > HP Group, com jornada de aceite completa, separação entrega × desenvolvimento e plano de publicação. **Nada foi publicado, nem em produção, DNS ou dados reais.**

@@ -5,12 +5,12 @@ import { fmtDateTime } from "@/lib/format";
 import { btnGhost, btnPrimary, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
 import PortalShell from "./PortalShell";
 
-interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean }
+interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
 interface Me { full_name: string; preferred_name: string | null; birth_date: string | null; city: string | null; state_uf: string | null }
 interface Contact { type: string; value: string; is_primary: boolean }
 const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
-const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Faltou", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
+const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Você faltou", professional_no_show: "O profissional não compareceu", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
 const PHASE: Record<string, string> = { before: "Antes do atendimento", after: "Depois do atendimento", program: "Programa de acompanhamento" };
 
 const Patient = () => {
@@ -20,6 +20,8 @@ const Patient = () => {
   const assigns = useQuery({ queryKey: ["my-care"], queryFn: async () => (await supabase.from("care_assignments").select("id, phase, note, released_at, content:care_contents(id, title, kind, body, storage_path, questions)").order("released_at", { ascending: false })).data as unknown as Assign[] });
   const survey = useQuery({ queryKey: ["survey"], queryFn: async () => (await supabase.from("surveys").select("id").eq("active", true).limit(1).maybeSingle()).data });
 
+  const confirm = async (a: Appt) => { const { error } = await supabase.rpc("my_appointment_confirm", { p_id: a.id });
+    if (error) m.err(errText(error)); else { m.ok("Presença confirmada. Obrigado!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
   const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null });
     if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
 
@@ -29,6 +31,11 @@ const Patient = () => {
       <section className="mb-10"><h2 className="text-xl mb-3">Meus atendimentos</h2>
         <State loading={appts.isLoading} error={appts.error} empty={appts.data?.length === 0} emptyText="Você ainda não tem atendimentos agendados." />
         <ul className="space-y-2">{appts.data?.map((a) => <li key={a.id} className="hp-card p-3 flex flex-wrap justify-between gap-2"><span>{fmtDateTime(a.starts_at, a.timezone)} — {a.service_name} com {a.professional_name} <span className="text-muted-foreground">({a.unit_name})</span></span><span className="text-sm">{ST[a.status]}</span>
+          {["scheduled", "confirmed"].includes(a.status) && new Date(a.starts_at) > new Date() && <span className="basis-full text-sm flex flex-wrap items-center gap-2">
+            {a.patient_confirmed_at ? <span>Você confirmou presença em {fmtDateTime(a.patient_confirmed_at, a.timezone)}.</span> : a.can_confirm ? <button className={btnPrimary} onClick={() => confirm(a)}>Confirmar minha presença</button> : null}
+            <span className="text-muted-foreground">{a.professional_confirmed_at ? "O profissional confirmou o atendimento." : "Aguardando confirmação do profissional."}</span></span>}
+          {a.status === "no_show" && a.uses_package && <span className="basis-full text-sm text-muted-foreground">{a.session_consumed ? "Como não houve cancelamento, esta sessão foi descontada do seu pacote." : "Esta falta não descontou sessão do seu pacote."}</span>}
+          {a.status === "professional_no_show" && <span className="basis-full text-sm text-muted-foreground">Sua sessão não foi descontada. A equipe entrará em contato para reagendar sem custo.</span>}
           {a.status === "attended" && !a.survey_answered && survey.data && <span className="basis-full text-sm">Como foi? {[...Array(11).keys()].map((n) => <button key={n} className="w-7 h-7 border border-border mx-0.5 text-xs hover:bg-primary hover:text-primary-foreground" onClick={() => rate(a, n)} aria-label={`Nota ${n}`}>{n}</button>)}</span>}</li>)}</ul></section>
 
       <section className="mb-10"><h2 className="text-xl mb-3">Meus pacotes</h2>

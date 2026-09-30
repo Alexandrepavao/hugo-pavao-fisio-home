@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 interface MyDayTask { id: string; title: string; start_time: string | null; category: string; urgency: string; importance: string; completed: boolean; person: string | null; opportunity_title: string | null }
 interface CrmTaskRow { id: string; title: string; due_at: string; kind: string; person: string | null }
-interface ApptRow { id: string; starts_at: string; ends_at: string; status: string; person: string; service: string }
+interface ApptRow { id: string; starts_at: string; ends_at: string; status: string; person: string; service: string; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean }
 interface MyDay { tasks: MyDayTask[]; crm_tasks: CrmTaskRow[]; appointments: ApptRow[] }
 interface FocusSession { id: string; started_at: string; ended_at: string | null; planned_minutes: number }
 interface TeamItem { id: string; title: string; owner: string; start_time: string | null; category: string }
@@ -31,6 +31,7 @@ const Productivity = () => {
   const focus = useQuery({ queryKey: ["focus-open"], queryFn: async () => ((await supabase.from("focus_sessions").select("id, started_at, ended_at, planned_minutes").is("ended_at", null).order("started_at", { ascending: false }).limit(1)).data?.[0] ?? null) as FocusSession | null });
 
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["my-day"] }); void qc.invalidateQueries({ queryKey: ["focus-open"] }); };
+  const confirmAppt = async (id: string) => { const { error } = await supabase.rpc("professional_appointment_confirm", { p_id: id }); if (error) m.err(errText(error)); else { m.ok("Atendimento confirmado."); refresh(); } };
   const toggle = async (id: string) => { const { error } = await supabase.rpc("staff_task_toggle", { p_id: id }); error ? m.err(errText(error)) : refresh(); };
 
   const pending = useMemo(() => (day.data?.tasks ?? []).filter((t) => !t.completed).length + (day.data?.crm_tasks ?? []).length, [day.data]);
@@ -55,8 +56,13 @@ const Productivity = () => {
               <>
                 <Section title="Agenda clínica" empty={day.data.appointments.length === 0} emptyText="Nenhum atendimento seu hoje.">
                   <ul className="grid gap-2">{day.data.appointments.map((a) => (
-                    <li key={a.id} className="hp-card p-3 flex items-center justify-between gap-3 text-sm">
-                      <span><b className="tabular">{fmtDateTime(a.starts_at).split(" ")[1]}</b> — {a.person} · {a.service}</span><Badge tone="info">{{ scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu" }[a.status] ?? a.status}</Badge>
+                    <li key={a.id} className="hp-card p-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                      <span><b className="tabular">{fmtDateTime(a.starts_at).split(" ")[1]}</b> — {a.person} · {a.service}</span>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {["scheduled", "confirmed"].includes(a.status) && <span className="text-xs text-muted-foreground">Paciente: {a.patient_confirmed_at ? "confirmou" : "não confirmou"}</span>}
+                        {a.can_confirm && <button className="hp-btn hp-btn-ghost hp-btn-sm" onClick={() => confirmAppt(a.id)}>Confirmo o atendimento</button>}
+                        {["scheduled", "confirmed"].includes(a.status) && a.professional_confirmed_at && <span className="text-xs text-muted-foreground">Você confirmou</span>}
+                        <Badge tone={a.status === "no_show" || a.status === "professional_no_show" ? "warning" : "info"}>{{ scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu", no_show: "Paciente faltou", professional_no_show: "Profissional ausente" }[a.status] ?? a.status}</Badge></span>
                     </li>))}</ul>
                 </Section>
                 <Section title="Tarefas de CRM atribuídas" empty={day.data.crm_tasks.length === 0} emptyText="Nenhuma tarefa de CRM vencendo até esta data.">

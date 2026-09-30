@@ -2,13 +2,22 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
+import { useAuth } from "@/auth/AuthProvider";
 import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Unit { id: string; name: string; timezone: string }
 interface Prof { id: string; display_name: string }
 interface Svc { id: string; name: string; duration_min: number }
-interface Appt { id: string; period: string; status: string; person_id: string; opportunity_id: string | null; client_package_id: string | null; person: { full_name: string } | null; service: { name: string } | null; professional: { display_name: string } | null }
-const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu", no_show: "Faltou", cancelled_by_patient: "Cancelado (paciente)", cancelled_by_clinic: "Cancelado (clínica)", rescheduled: "Remarcado" };
+interface Appt { id: string; period: string; status: string; person_id: string; opportunity_id: string | null; client_package_id: string | null; patient_confirmed_at: string | null; patient_confirmed_via: string | null; professional_confirmed_at: string | null; person: { full_name: string } | null; service: { name: string } | null; professional: { display_name: string; user_id: string | null } | null }
+const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu", no_show: "Faltou", professional_no_show: "Profissional ausente", cancelled_by_patient: "Cancelado (paciente)", cancelled_by_clinic: "Cancelado (clínica)", rescheduled: "Remarcado" };
+/** Sessão do pacote por atendimento, lida do livro (separada da presença): consumida | devolvida | não consumida. */
+const ledgerLabel = (rows: { appointment_id: string; reason: string }[] | undefined, a: Appt) => {
+  if (!a.client_package_id) return "—";
+  const r = (rows ?? []).filter((x) => x.appointment_id === a.id);
+  return r.some((x) => x.reason === "refund") ? "Devolvida" : r.some((x) => x.reason === "consume") ? "Consumida" : "Não consumida";
+};
+/** Confirmação antecipada só existe enquanto o atendimento está ativo e ainda não começou; depois disso "pendente" deixa de fazer sentido. */
+const confirmable = (a: Appt) => ["scheduled", "confirmed"].includes(a.status) && new Date(parsePeriod(a.period)[0]) > new Date();
 const DOW = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const parsePeriod = (p: string): [string, string] => { const [a, b] = p.replace(/[[\]()"]/g, "").split(","); return [a.trim(), b.trim()]; };
 
@@ -28,7 +37,8 @@ const useBase = () => {
 };
 
 const Day = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg(); const { units, services } = useBase();
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const { units, services } = useBase(); const { user, hasRole } = useAuth();
+  const canConfirmForPatient = hasRole("manager", "ops_admin", "unit_manager", "sales");
   const [unitId, setUnitId] = useState(""); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [profId, setProfId] = useState(""); const [svcId, setSvcId] = useState("");
   const [search, setSearch] = useState(""); const [person, setPerson] = useState<{ id: string; full_name: string } | null>(null); const [slot, setSlot] = useState(""); const [pkg, setPkg] = useState(""); const [busy, setBusy] = useState(false);
   const unit = units.data?.find((u) => u.id === (unitId || units.data?.[0]?.id));
@@ -39,8 +49,10 @@ const Day = () => {
   const opps = useQuery({ queryKey: ["opps-p", person?.id], enabled: !!person, queryFn: async () => (await supabase.from("opportunities").select("id, title").eq("person_id", person!.id).eq("status", "open")).data ?? [] });
   const [oppId, setOppId] = useState("");
   const dayStart = new Date(`${date}T00:00:00`); const dayEnd = new Date(dayStart.getTime() + 864e5 * 1);
-  const day = useQuery({ queryKey: ["appts", uid, date], enabled: !!uid, queryFn: async () => (await supabase.from("appointments").select("id, period, status, person_id, opportunity_id, client_package_id, person:people(full_name), service:services(name), professional:professionals(display_name)").eq("unit_id", uid).overlaps("period", `[${new Date(dayStart.getTime() - 864e5).toISOString()},${new Date(dayEnd.getTime() + 864e5).toISOString()})`).limit(500)).data as unknown as Appt[] });
+  const day = useQuery({ queryKey: ["appts", uid, date], enabled: !!uid, queryFn: async () => (await supabase.from("appointments").select("id, period, status, person_id, opportunity_id, client_package_id, patient_confirmed_at, patient_confirmed_via, professional_confirmed_at, person:people(full_name), service:services(name), professional:professionals(display_name, user_id)").eq("unit_id", uid).overlaps("period", `[${new Date(dayStart.getTime() - 864e5).toISOString()},${new Date(dayEnd.getTime() + 864e5).toISOString()})`).limit(500)).data as unknown as Appt[] });
   const inDay = (day.data ?? []).filter((a) => { const [s] = parsePeriod(a.period); const t = new Date(s).getTime(); return t >= dayStart.getTime() - 864e5 && t < dayEnd.getTime() + 864e5 && new Date(s).toLocaleDateString("sv-SE", { timeZone: unit?.timezone }) === date; }).sort((a, b) => parsePeriod(a.period)[0].localeCompare(parsePeriod(b.period)[0]));
+  const ids = inDay.map((a) => a.id);
+  const ledger = useQuery({ queryKey: ["appt-ledger", ids.join(",")], enabled: ids.length > 0, queryFn: async () => (await supabase.from("session_ledger").select("appointment_id, reason").in("appointment_id", ids)).data as { appointment_id: string; reason: string }[] });
   const slots = useQuery({ queryKey: ["slots", profId, uid, svcId, date], enabled: !!profId && !!uid && !!svcId, queryFn: async () => { const { data, error } = await supabase.rpc("available_slots", { p_professional: profId, p_unit: uid, p_service: svcId, p_date: date }); if (error) throw error; return (data as { slot_start: string }[]).map((r) => r.slot_start); } });
 
   const book = async (e: FormEvent) => {
@@ -51,6 +63,10 @@ const Day = () => {
   const setStatus = async (a: Appt, s: string) => {
     const reason = s.startsWith("cancelled") ? (await promptText("Cancelar agendamento", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar agendamento", danger: true })) ?? "" : null; if (s.startsWith("cancelled") && !reason) return;
     const { error } = await supabase.rpc("set_appointment_status", { p_id: a.id, p_status: s, p_reason: reason }); if (error) m.err(errText(error)); else { m.ok("Status atualizado."); void qc.invalidateQueries({ queryKey: ["appts"] }); }
+  };
+  const confirmFor = async (a: Appt, who: "patient" | "professional") => {
+    const { error } = await supabase.rpc(who === "patient" ? "appointment_confirm_for_patient" : "professional_appointment_confirm", { p_id: a.id });
+    if (error) m.err(errText(error)); else { m.ok(who === "patient" ? "Confirmação do paciente registrada." : "Atendimento confirmado."); void qc.invalidateQueries({ queryKey: ["appts"] }); }
   };
   const resched = async (a: Appt) => {
     const v = await promptText("Remarcar", "Novo horário (AAAA-MM-DD HH:MM, no fuso do seu navegador)", { defaultValue: "" }); if (!v) return; const d = new Date(v.replace(" ", "T") + ":00");
@@ -79,11 +95,14 @@ const Day = () => {
       <div className="sm:col-span-3"><button disabled={busy} className="hp-btn hp-btn-primary disabled:opacity-60">{busy ? "Agendando…" : "Agendar"}</button></div>
     </form>
     <State loading={day.isLoading} error={day.error} empty={inDay.length === 0} emptyText="Nenhum agendamento neste dia." />
-    {inDay.length > 0 && <Table head={["Horário", "Paciente", "Profissional", "Serviço", "Estado", "Ações"]}>
+    {inDay.length > 0 && <Table head={["Horário", "Paciente", "Profissional", "Serviço", "Estado", "Confirmações", "Sessão do pacote", "Ações"]}>
       {inDay.map((a) => <tr key={a.id}><Td>{new Date(parsePeriod(a.period)[0]).toLocaleTimeString("pt-BR", { timeZone: unit?.timezone, hour: "2-digit", minute: "2-digit" })}</Td><Td>{a.person?.full_name}</Td><Td>{a.professional?.display_name}</Td><Td>{a.service?.name}</Td><Td>{ST[a.status]}</Td>
+        <Td><span className="text-xs grid gap-0.5"><span title={a.patient_confirmed_at ? `Confirmado em ${fmtDateTime(a.patient_confirmed_at, unit?.timezone)} ${a.patient_confirmed_via === "staff" ? "(registrado pela equipe)" : "(pelo paciente)"}` : undefined}>Paciente: {a.patient_confirmed_at ? (a.patient_confirmed_via === "staff" ? "✓ (equipe)" : "✓") : confirmable(a) ? "pendente" : "—"}</span><span title={a.professional_confirmed_at ? `Confirmado em ${fmtDateTime(a.professional_confirmed_at, unit?.timezone)}` : undefined}>Profissional: {a.professional_confirmed_at ? "✓" : confirmable(a) ? "pendente" : "—"}</span></span></Td>
+        <Td>{ledgerLabel(ledger.data, a)}</Td>
         <Td>{["scheduled", "confirmed"].includes(a.status) && <div className="flex flex-wrap gap-1 text-sm">
-          {a.status === "scheduled" && <button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "confirmed")}>Confirmar</button>}
-          <button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "attended")}>Compareceu</button><button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "no_show")}>Faltou</button>
+          {!a.patient_confirmed_at && canConfirmForPatient && new Date(parsePeriod(a.period)[0]) > new Date() && <button className={btnGhost + " hp-btn-sm"} onClick={() => confirmFor(a, "patient")}>Registrar confirmação do paciente</button>}
+          {!a.professional_confirmed_at && a.professional?.user_id === user?.id && new Date(parsePeriod(a.period)[0]) > new Date() && <button className={btnGhost + " hp-btn-sm"} onClick={() => confirmFor(a, "professional")}>Confirmo o atendimento</button>}
+          <button className={btnGhost + " hp-btn-sm"} onClick={() => setStatus(a, "attended")}>Compareceu</button><button className={btnGhost + " hp-btn-sm"} title="O paciente não compareceu e não cancelou" onClick={() => setStatus(a, "no_show")}>Faltou</button><button className={btnGhost + " hp-btn-sm"} title="O profissional não compareceu: não desconta sessão do paciente" onClick={() => setStatus(a, "professional_no_show")}>Profissional ausente</button>
           <button className={btnGhost + " hp-btn-sm"} onClick={() => resched(a)}>Remarcar</button>
           <button className={btnDanger + " hp-btn-sm"} onClick={() => setStatus(a, "cancelled_by_patient")}>Cancelou</button><button className={btnDanger + " hp-btn-sm"} onClick={() => setStatus(a, "cancelled_by_clinic")}>Clínica cancelou</button></div>}</Td></tr>)}</Table>}
   </>);
@@ -98,7 +117,7 @@ const Packages = () => {
   const bal = (id: string) => (pk.data?.ledger ?? []).filter((x) => x.client_package_id === id).reduce((a, x) => a + x.delta, 0);
   const adjust = async (id: string) => { const d = Number(await promptText("Ajustar saldo", "Ajuste de sessões (use + ou −, ex.: 2 ou -1)", { kind: "number" })); if (!d) return; const n = await promptText("Motivo do ajuste", "Motivo (obrigatório)", { multiline: true }); if (!n) return;
     const { error } = await supabase.rpc("adjust_package", { p_pkg: id, p_delta: d, p_note: n }); if (error) m.err(errText(error)); else { m.ok("Ajuste registrado no livro."); void qc.invalidateQueries({ queryKey: ["all-pkgs"] }); } };
-  return (<><Msg m={msg} /><p className="text-sm text-muted-foreground mb-3">Regras: comparecimento consome 1 sessão; falta consome conforme o produto; cancelamento tardio consome; cancelamento com antecedência e da clínica não consome. Cada agendamento consome no máximo uma vez.</p>
+  return (<><Msg m={msg} /><p className="text-sm text-muted-foreground mb-3">Regras: comparecimento consome 1 sessão; falta do paciente consome conforme o produto; falta do profissional nunca consome; cancelamento tardio consome; cancelamento com antecedência e da clínica não consome. Cada agendamento consome no máximo uma vez.</p>
     <State loading={pk.isLoading} error={pk.error} empty={pk.data?.pkgs.length === 0} emptyText="Nenhum pacote vendido." />
     {pk.data && pk.data.pkgs.length > 0 && <Table head={["Paciente", "Pacote", "Saldo", "Total", "Validade", "Estado", ""]} right={[2, 3]}>
       {pk.data.pkgs.map((p) => <tr key={p.id}><Td>{p.person.full_name}</Td><Td>{p.product.name}</Td><Td num>{bal(p.id)}</Td><Td num>{p.total_sessions}</Td><Td>{p.valid_until ? new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR") : "—"}</Td><Td>{{ active: "Ativo", exhausted: "Esgotado", expired: "Vencido", cancelled: "Cancelado" }[p.status]}</Td><Td><button className="text-accent text-sm" onClick={() => adjust(p.id)}>Ajustar saldo</button></Td></tr>)}</Table>}</>);
