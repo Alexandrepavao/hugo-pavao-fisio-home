@@ -7,10 +7,14 @@ import { brl, fmtDate, parseCents } from "@/lib/format";
 import { btnGhost, errText, FilterBar, FilterField, Msg, PageHead, promptText, State, StatCard, Table, Tabs, Td, useMsg } from "@/lib/ui";
 import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { axisBrl, mfmt, useUnits, type Metric } from "./shared";
+import { LineSelector } from "./LineBreakdown";
+import { BUCKET_LABEL, lineFilterLabel, useLineFilter, type LineFilter } from "./lineFilter";
+import MrrLineSection from "./MrrByLine";
+import { useMrrByLine, useMrrHistoryByLine, useProductLines, type MrrHistoryByLine, type MrrLine } from "./lineReports";
 
 interface Bridge { mrr_inicial_cents: number; novo_cents: number; expansao_cents: number; reativacao_cents: number; contracao_cents: number; cancelamento_cents: number; mrr_final_cents: number; fecha: boolean }
 interface MrrReport { month: string; mrr_cents: Metric; arr_cents: Metric; bridge: Bridge; churn_clientes_pct: Metric; churn_receita_pct: Metric; retencao_bruta_pct: Metric; retencao_liquida_pct: Metric; receita_media_cliente_cents: Metric; clientes_recorrentes: number }
-interface ForecastRow { person_id: string; person_name: string; product_name: string; projected_amount_cents: number; origin_paid_at: string; origin_competence: string }
+interface ForecastRow { person_id: string; person_name: string; product_id: string; product_name: string; projected_amount_cents: number; origin_paid_at: string; origin_competence: string }
 
 const BridgeRow = ({ label, cents, tone }: { label: string; cents: number; tone?: "success" | "danger" }) => (
   <li className="flex items-center justify-between py-2 border-b border-border last:border-0 text-sm">
@@ -18,6 +22,48 @@ const BridgeRow = ({ label, cents, tone }: { label: string; cents: number; tone?
     <span className={`tabular font-medium ${tone === "success" ? "text-[hsl(var(--success))]" : tone === "danger" ? "text-destructive" : ""}`}>{tone === "success" && cents > 0 ? "+" : ""}{brl(cents)}</span>
   </li>
 );
+
+const pctOrDash = (v: number | null) => (v == null ? "indisponível" : `${String(v).replace(".", ",")}%`);
+const centsOrDash = (v: number | null) => (v == null ? "indisponível" : brl(v));
+
+/** Visão de UMA linha de negócio: mesmos cartões e ponte do consolidado, calculados só com os contratos cujo produto é da linha. */
+const LineView = ({ row, line, history }: { row: MrrLine; line: Exclude<LineFilter, "geral">; history?: MrrHistoryByLine[] }) => {
+  const hist = (history ?? []).map((h) => ({ mes: fmtDate(h.month).slice(0, 5), MRR: Number(h[line]) / 100 }));
+  const name = BUCKET_LABEL[line];
+  return (<>
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+      <StatCard label={`MRR do mês — ${name}`} value={brl(row.mrr_cents)} basis="soma dos contratos ativos no fim do mês cujo produto é desta linha (detalhe por contrato: use os cartões do Geral)" />
+      <StatCard label={`ARR — ${name}`} value={brl(row.arr_cents)} basis="MRR da linha × 12" />
+      <StatCard label={`Clientes recorrentes — ${name}`} value={row.clientes.toLocaleString("pt-BR")} basis="pessoas distintas com contrato ativo nesta linha" />
+      <StatCard label={`Receita média por cliente — ${name}`} value={centsOrDash(row.receita_media_cliente_cents)} basis="MRR da linha ÷ clientes da linha" />
+      <StatCard label="Retenção bruta de receita" value={pctOrDash(row.retencao_bruta_pct)} basis="(MRR inicial − contração − cancelamento) ÷ MRR inicial, da linha" />
+      <StatCard label="Retenção líquida de receita" value={pctOrDash(row.retencao_liquida_pct)} basis="(MRR inicial − contração − cancelamento + expansão) ÷ MRR inicial, da linha" />
+      <StatCard label="Churn de clientes" value={pctOrDash(row.churn_clientes_pct)} basis="clientes da linha no mês anterior que não seguem ativos nela ÷ clientes da linha no mês anterior" tone={row.churn_clientes_pct && row.churn_clientes_pct > 0 ? "danger" : undefined} />
+      <StatCard label="Churn de receita" value={pctOrDash(row.churn_receita_pct)} basis="(contração + cancelamento) ÷ MRR inicial, da linha" tone={row.churn_receita_pct && row.churn_receita_pct > 0 ? "danger" : undefined} />
+    </ul>
+    <section className="mb-8"><h2 className="text-xl mb-3">MRR — {name}, últimos 12 meses</h2>
+      {hist.length > 0 && (
+        <div className="hp-card p-4" style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={hist}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
+            <Tooltip formatter={(v: number) => brl(Math.round(v * 100))} /><Area type="monotone" dataKey="MRR" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / .15)" strokeWidth={2} /></AreaChart></ResponsiveContainer></div>
+      )}
+    </section>
+    <section className="mb-8"><h2 className="text-xl mb-3">Ponte de movimentação do MRR — {name}</h2>
+      <div className="hp-card p-4 max-w-xl">
+        <ul>
+          <BridgeRow label="MRR inicial (mês anterior)" cents={row.mrr_inicial_cents} />
+          <BridgeRow label="+ Novo" cents={row.novo_cents} tone="success" />
+          <BridgeRow label="+ Expansão" cents={row.expansao_cents} tone="success" />
+          <BridgeRow label="+ Reativação" cents={row.reativacao_cents} tone="success" />
+          <BridgeRow label="− Contração" cents={row.contracao_cents} tone="danger" />
+          <BridgeRow label="− Cancelamento" cents={row.cancelamento_cents} tone="danger" />
+        </ul>
+        <div className="flex items-center justify-between pt-3 mt-1 border-t-2 border-border"><span className="font-semibold">MRR final</span><span className="tabular font-bold text-lg">{brl(row.mrr_cents)}</span></div>
+        {!row.ponte_fecha && <p role="alert" className="text-xs text-destructive mt-2">A ponte desta linha não fechou matematicamente — reporte este caso.</p>}
+      </div>
+    </section>
+  </>);
+};
 
 const FinanceRecurrence = () => {
   const [tab, setTab] = useState("relatorio");
@@ -38,6 +84,9 @@ const Report = () => {
   const setMonth = (v: string) => { setMonthState(v); setSp((p) => { const n = new URLSearchParams(p); n.set("mes", v); return n; }, { replace: true }); };
   const setUnit = (v: string) => { setUnitState(v); setSp((p) => { const n = new URLSearchParams(p); if (v) n.set("unidade", v); else n.delete("unidade"); return n; }, { replace: true }); };
   const units = useUnits();
+  const [line, setLine] = useLineFilter();
+  const byLine = useMrrByLine(month, unit); const histLine = useMrrHistoryByLine(unit); const prodLines = useProductLines();
+  const lineRow = line === "geral" ? undefined : byLine.data?.lines.find((l) => l.key === line);
   const report = useQuery({ queryKey: ["mrr", month, unit], queryFn: async () => {
     const { data, error } = await supabase.rpc("mrr_report", { p_month: `${month}-01`, p_unit: unit || null }); if (error) throw error; return data as MrrReport;
   } });
@@ -50,7 +99,9 @@ const Report = () => {
     const next = new Date(); next.setMonth(next.getMonth() + 1);
     const { data, error } = await supabase.rpc("subscription_forecast", { p_month: next.toISOString().slice(0, 10) }); if (error) throw error; return data as ForecastRow[];
   } });
-  const forecastTotal = (forecast.data ?? []).reduce((a, r) => a + r.projected_amount_cents, 0);
+  // a projeção já traz o produto de cada mensalidade: a linha vem do produto (sem a classificação disponível, não se filtra)
+  const forecastRows = (forecast.data ?? []).filter((r) => line === "geral" || !prodLines.data || (prodLines.data[r.product_id] ?? "unclassified") === line);
+  const forecastTotal = forecastRows.reduce((a, r) => a + r.projected_amount_cents, 0);
   const unitLabel = units.data?.find((u2) => u2.id === unit)?.name ?? "Todas as unidades";
   const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
   const monthFrom = `${month}-01T00:00:00.000Z`;
@@ -61,9 +112,13 @@ const Report = () => {
       <FilterBar>
         <FilterField label="Mês" htmlFor="rm"><input id="rm" type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></FilterField>
         <FilterField label="Unidade" htmlFor="ru"><select id="ru" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></FilterField>
+        <FilterField label="Linha de negócio" htmlFor="rline"><LineSelector value={line} onChange={setLine} /></FilterField>
       </FilterBar>
       <State loading={report.isLoading} error={report.error} />
-      {report.data && (<>
+      {line !== "geral" && byLine.isLoading && <State loading />}
+      {line !== "geral" && byLine.error && <State error={byLine.error} />}
+      {line !== "geral" && lineRow && <LineView row={lineRow} line={line} history={histLine.data} />}
+      {line === "geral" && report.data && (<>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           <StatCard label="MRR do mês" value={mfmt(report.data.mrr_cents)} basis={report.data.mrr_cents.basis} onClick={() => setDetail({ kind: "mrr_month", from: monthFrom, to: monthTo, unit, unitLabel })} />
           <StatCard label="ARR" value={mfmt(report.data.arr_cents)} basis="ARR = MRR do mês × 12 — sem detalhamento próprio de registros (é uma projeção direta do MRR, não uma nova consulta); abra o cartão MRR do mês para ver os contratos de origem" />
@@ -107,11 +162,13 @@ const Report = () => {
         </section>
       </>)}
 
-      <section><h2 className="text-xl mb-1">Projeção de mensalidades (mês seguinte)</h2>
+      {byLine.data !== undefined || byLine.error ? <MrrLineSection q={byLine} line={line} /> : null}
+
+      <section><h2 className="text-xl mb-1">Projeção de mensalidades (mês seguinte){line !== "geral" && <> — {lineFilterLabel(line)}</>}</h2>
         <p className="bg-accent/10 border border-accent/40 p-3 text-sm mb-4"><strong>Forecast por pagamentos — não é MRR contratual nem conta a receber.</strong> É uma projeção heurística baseada em quem pagou a mensalidade na competência anterior, separada do MRR contratual acima. Mensalidade paga na competência anterior contribui para a projeção do próximo mês; quem pagou só antes disso não entra; estornos e cancelamentos saem; já contratado no mês não é duplicado.</p>
-        <State loading={forecast.isLoading} error={forecast.error} empty={forecast.data?.length === 0} emptyText="Sem mensalidades pagas no mês anterior para projetar." />
-        {forecast.data && forecast.data.length > 0 && <><p className="mb-3">Total projetado: <strong className="tabular">{brl(forecastTotal)}</strong></p>
-          <Table head={["Pessoa", "Produto", "Valor projetado", "Origem (pagamento em)", "Competência de origem"]} right={[2]}>{forecast.data.map((r) => <tr key={r.person_id + r.product_name}><Td>{r.person_name}</Td><Td>{r.product_name}</Td><Td num>{brl(r.projected_amount_cents)}</Td><Td>{fmtDate(r.origin_paid_at)}</Td><Td>{fmtDate(r.origin_competence + "T12:00:00Z").slice(3)}</Td></tr>)}</Table></>}
+        <State loading={forecast.isLoading} error={forecast.error} empty={forecastRows.length === 0 && !forecast.isLoading} emptyText="Sem mensalidades pagas no mês anterior para projetar." />
+        {forecastRows.length > 0 && <><p className="mb-3">Total projetado: <strong className="tabular">{brl(forecastTotal)}</strong>{line !== "geral" && <span className="text-xs text-muted-foreground"> · só mensalidades de produtos da linha {lineFilterLabel(line)}</span>}</p>
+          <Table head={["Pessoa", "Produto", "Valor projetado", "Origem (pagamento em)", "Competência de origem"]} right={[2]}>{forecastRows.map((r) => <tr key={r.person_id + r.product_name}><Td>{r.person_name}</Td><Td>{r.product_name}</Td><Td num>{brl(r.projected_amount_cents)}</Td><Td>{fmtDate(r.origin_paid_at)}</Td><Td>{fmtDate(r.origin_competence + "T12:00:00Z").slice(3)}</Td></tr>)}</Table></>}
       </section>
       <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </>

@@ -4,6 +4,10 @@ import { supabase } from "@/lib/supabase";
 import { brl } from "@/lib/format";
 import { PageHead, State, StatCard, Table, Td } from "@/lib/ui";
 import { PeriodFilter } from "./PeriodFilter";
+import { LineSelector } from "./LineBreakdown";
+import EfficiencyLineSection from "./EfficiencyByLine";
+import { useLineFilter } from "./lineFilter";
+import { useEfficiencyByLine } from "./lineReports";
 import { mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./shared";
 
 interface ProductShare { product_name: string; received_cents: number; share_pct: number }
@@ -24,6 +28,8 @@ const FinanceReports = () => {
   const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const units = useUnits();
+  const [line, setLine] = useLineFilter();
+  const effLine = useEfficiencyByLine(`${from}T00:00:00.000Z`, toExclusive(to), unit);
   const eff = useQuery({ queryKey: ["eff", from, to, unit], queryFn: async () => {
     const { data, error } = await supabase.rpc("efficiency_report", { p_from: `${from}T00:00:00.000Z`, p_to: toExclusive(to), p_unit: unit || null }); if (error) throw error; return data as Efficiency;
   } });
@@ -50,7 +56,12 @@ const FinanceReports = () => {
           <StatCard label="LTV estimado" value={mfmt(eff.data.ltv_cents)} basis={eff.data.ltv_cents.basis} unavailable />
           <StatCard label="Prazo de recuperação do CAC" value={mfmt(eff.data.cac_payback_months)} basis={eff.data.cac_payback_months.basis} unavailable />
         </ul>
-        <section className="mb-8"><h2 className="text-xl mb-3">Concentração de receita por produto</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <p className="text-xs text-muted-foreground">Os cartões acima são o consolidado (Geral). Abaixo, a mesma leitura por linha de negócio.</p>
+          <LineSelector value={line} onChange={setLine} />
+        </div>
+        <EfficiencyLineSection q={effLine} line={line} />
+        <section className="mb-8"><h2 className="text-xl mb-3">Concentração de receita por produto — Geral</h2>
           <State empty={eff.data.concentracao_por_produto.length === 0} emptyText="Sem recebimentos no período." />
           {eff.data.concentracao_por_produto.length > 0 && <Table head={["Produto", "Recebido", "Participação"]} right={[1, 2]}>
             {eff.data.concentracao_por_produto.map((p) => <tr key={p.product_name}><Td>{p.product_name}</Td><Td num>{brl(p.received_cents)}</Td><Td num>{p.share_pct}%</Td></tr>)}</Table>}
