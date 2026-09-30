@@ -1,6 +1,7 @@
 # Indicadores — fórmulas, período e denominadores
 
 > Escopo: Administrativo (`/admin/adm`), CRM › Relatórios (`/admin/crm/relatorios`) e Captação de leads › Indicadores (`/admin/captacao-leads`).
+> A **central de pendências administrativas** (cartões prioritários, pendências, documentos, contratos, requisitos) está documentada em `docs/indicadores-administrativo.md`.
 > Tudo é calculado **no servidor** (RPCs `adm_dashboard`, `crm_analytics`, `capture_analytics`), com os mesmos escopos de unidade/permissão das telas.
 > Cada cartão, barra ou número de tabela abre os **registros** por trás dele (`adm_indicator_detail`, `crm_indicator_detail`, `capture_indicator_detail`): o total da lista e o
 > número do indicador usam a mesma regra. Nada é estimado ou inventado retroativamente.

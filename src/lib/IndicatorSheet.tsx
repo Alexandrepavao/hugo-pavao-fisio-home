@@ -5,7 +5,7 @@ import { brl, fmtDateTime } from "@/lib/format";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge, State, btnGhost, btnPrimary } from "@/lib/ui";
 
-type DetailRpc = "adm_indicator_detail" | "crm_indicator_detail" | "capture_indicator_detail";
+type DetailRpc = "adm_indicator_detail" | "adm_central_detail" | "crm_indicator_detail" | "capture_indicator_detail";
 interface DetailItem { id: string; title: string; subtitle?: string; amount_cents?: number; date?: string; tag?: string }
 interface Detail { kind: string; label: string; value: number | null; basis: string; is_current_snapshot: boolean; items: DetailItem[]; total_items: number; list_route: string }
 

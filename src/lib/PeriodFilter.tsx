@@ -80,7 +80,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
           <DrawerContent>
             <DrawerHeader className="text-left"><DrawerTitle>Filtros</DrawerTitle>
               <DrawerDescription>{[periodLabel, showUnit && unit ? unitLabel : "", extraSummary].filter(Boolean).join(" · ") || "Nenhum filtro ativo"}</DrawerDescription></DrawerHeader>
-            <div className="px-4 pb-2">{body}
+            <div className="px-4 pb-2 max-h-[55vh] overflow-y-auto">{body}
               {showUnit && (
                 <div className="mt-3">
                   <label htmlFor="pf-unit-m" className="block text-xs text-muted-foreground mb-1">Unidade</label>
@@ -121,9 +121,10 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
           </PopoverTrigger>
         )}
       </div>
-      <PopoverContent align="end" className="w-80">
-        {body}
-        <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-border">
+      <PopoverContent align="end" collisionPadding={12} className="w-80 flex flex-col max-h-[var(--radix-popover-content-available-height)]">
+        {/* com muitos filtros o conteúdo passa da altura da janela: rola aqui dentro e os botões Limpar/Aplicar continuam à vista */}
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">{body}</div>
+        <div className="shrink-0 flex justify-between gap-2 mt-4 pt-3 border-t border-border">
           <button type="button" className={btnGhost + " hp-btn-sm"} onClick={clear}><X size={13} aria-hidden />Limpar</button>
           <button type="button" className={btnPrimary + " hp-btn-sm"} onClick={apply}>Aplicar</button>
         </div>

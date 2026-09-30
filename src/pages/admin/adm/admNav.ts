@@ -1,4 +1,4 @@
-import { LayoutDashboard, Table2, type LucideIcon } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Table2, type LucideIcon } from "lucide-react";
 
 export interface AdmNavItem { to: string; label: string; icon: LucideIcon; end?: boolean }
 export interface AdmNavSection { label: string; items: AdmNavItem[] }
@@ -8,6 +8,7 @@ export interface AdmNavSection { label: string; items: AdmNavItem[] }
 export const ADM_NAV: AdmNavSection[] = [
   { label: "Principal", items: [
     { to: "/admin/adm", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/admin/adm/pendencias", label: "Pendências", icon: ClipboardList },
   ] },
   { label: "Cadastro", items: [
     { to: "/admin/adm/diretorio", label: "Planilha administrativa", icon: Table2 },
