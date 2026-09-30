@@ -36,6 +36,14 @@ const CrmDisparo = lazy(() => import("./pages/admin/crm/Disparo"));
 const CrmReports = lazy(() => import("./pages/admin/crm/Reports"));
 const AdmDashboard = lazy(() => import("./pages/admin/adm/AdmDashboard"));
 const AdmDiretorio = lazy(() => import("./pages/admin/adm/Diretorio"));
+const AccDashboard = lazy(() => import("./pages/admin/contabil/AccDashboard"));
+const AccCompetencias = lazy(() => import("./pages/admin/contabil/Competencias"));
+const AccLancamentos = lazy(() => import("./pages/admin/contabil/Lancamentos"));
+const AccDocumentos = lazy(() => import("./pages/admin/contabil/Documentos"));
+const AccPendencias = lazy(() => import("./pages/admin/contabil/Pendencias"));
+const AccFechamentos = lazy(() => import("./pages/admin/contabil/Fechamentos"));
+const AccExportacoes = lazy(() => import("./pages/admin/contabil/Exportacoes"));
+const AccConfig = lazy(() => import("./pages/admin/contabil/ConfiguracoesContabeis"));
 const Agenda = lazy(() => import("./pages/admin/Agenda"));
 const FinanceOverview = lazy(() => import("./pages/admin/finance/Overview"));
 const FinanceSales = lazy(() => import("./pages/admin/finance/Sales"));
@@ -78,6 +86,7 @@ const R = {
   corporate: ["manager", "ops_admin", "unit_manager", "finance"] as AppRole[],
   leads: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
   team: ["manager", "ops_admin"] as AppRole[],
+  accounting: ["manager", "ops_admin", "unit_manager", "finance", "accountant"] as AppRole[],
   crmTeam: ["manager", "ops_admin", "unit_manager"] as AppRole[],
   portal: ["member", "teacher", "manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "partner"] as AppRole[],
 };
@@ -130,6 +139,16 @@ const App = () => (
                 <Route path="adm" element={g(R.people, <Outlet />)}>
                   <Route index element={<AdmDashboard />} />
                   <Route path="diretorio" element={<AdmDiretorio />} />
+                </Route>
+                <Route path="contabil" element={g(R.accounting, <Outlet />)}>
+                  <Route index element={<AccDashboard />} />
+                  <Route path="competencias" element={<AccCompetencias />} />
+                  <Route path="lancamentos" element={<AccLancamentos />} />
+                  <Route path="documentos" element={<AccDocumentos />} />
+                  <Route path="pendencias" element={<AccPendencias />} />
+                  <Route path="fechamentos" element={<AccFechamentos />} />
+                  <Route path="exportacoes" element={<AccExportacoes />} />
+                  <Route path="configuracoes" element={<AccConfig />} />
                 </Route>
                 <Route path="agenda" element={g(R.agenda, <Agenda />)} />
                 <Route path="financeiro" element={g(R.finance, <Outlet />)}>

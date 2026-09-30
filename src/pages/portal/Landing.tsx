@@ -7,7 +7,7 @@ const Landing = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground" role="status">Carregando…</div>;
   if (!session) return <Navigate to="/login" replace />;
   if (noAccess) return <Navigate to="/admin" replace />;         // exibe a mensagem "Acesso não liberado"
-  if (hasRole("manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "teacher")) return <Navigate to="/admin" replace />;
+  if (hasRole("manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "teacher", "accountant")) return <Navigate to="/admin" replace />;
   if (hasRole("partner")) return <Navigate to="/parceiro" replace />;
   return <Navigate to="/paciente" replace />;
 };

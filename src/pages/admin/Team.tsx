@@ -5,7 +5,7 @@ import { fmtDate } from "@/lib/format";
 import { btnDanger, btnGhost, confirmDialog, promptText, errText, inputCls, Msg, PageHead, State, Table, Td, useMsg } from "@/lib/ui";
 
 interface Member { user_id: string; email: string; display_name: string; status: string; roles: { id: string; role: string; unit_id: string | null; unit: string | null; valid_until: string | null }[] }
-const ROLES: Record<string, string> = { manager: "Gestor", ops_admin: "Administrador operacional", unit_manager: "Gestor de unidade", sales: "Comercial", finance: "Financeiro", physio: "Fisioterapeuta", teacher: "Professor/mentor", partner: "Parceiro", member: "Paciente/aluno" };
+const ROLES: Record<string, string> = { manager: "Gestor", ops_admin: "Administrador operacional", unit_manager: "Gestor de unidade", sales: "Comercial", finance: "Financeiro", physio: "Fisioterapeuta", teacher: "Professor/mentor", partner: "Parceiro", member: "Paciente/aluno", accountant: "Contador(a)" };
 const ORG_WIDE = ["manager", "ops_admin", "member", "partner"];
 
 const Team = () => {

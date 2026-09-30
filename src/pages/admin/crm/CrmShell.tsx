@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ChevronsLeft, ChevronsRight, GraduationCap, Grid2x2, Handshake, LayoutDashboard, LogOut, Menu, MessageCircleQuestion, Search, Settings, Table2, Wallet, type LucideIcon } from "lucide-react";
+import { Calculator, ChevronsLeft, ChevronsRight, GraduationCap, Grid2x2, Handshake, LayoutDashboard, LogOut, Menu, MessageCircleQuestion, Search, Settings, Table2, Wallet, type LucideIcon } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -18,6 +18,7 @@ const OTHER_APPS: AppLink[] = [
   { to: "/admin", label: "Início (Hub)", icon: Grid2x2 },
   { to: "/admin/adm", label: "ADM", icon: Table2 },
   { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
+  { to: "/admin/contabil", label: "Contábil", icon: Calculator },
   { to: "/admin/academy", label: "Academy", icon: GraduationCap },
   { to: "/admin/parceiros", label: "Parceiros", icon: Handshake },
   { to: "/admin/captacao-leads", label: "Captação de leads", icon: MessageCircleQuestion },

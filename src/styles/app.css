@@ -104,7 +104,7 @@ html.hp-app table { font-size: 0.875rem; }
 html.hp-app table tbody tr:hover { background: hsl(var(--muted) / .6); }
 
 /* badges de estado */
-.hp-badge { display: inline-flex; align-items: center; gap: .25rem; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; line-height: 1.25rem; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+.hp-badge { white-space: nowrap; display: inline-flex; align-items: center; gap: .25rem; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; line-height: 1.25rem; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
 .hp-badge-success { background: hsl(var(--success-soft)); color: hsl(var(--success)); }
 .hp-badge-warning { background: hsl(var(--warning-soft)); color: hsl(var(--warning)); }
 .hp-badge-danger { background: hsl(var(--destructive-soft)); color: hsl(var(--destructive)); }
@@ -123,7 +123,7 @@ html.hp-app table tbody tr:hover { background: hsl(var(--muted) / .6); }
 .hp-sb-group { margin-bottom: .75rem; }
 .hp-sb-group-label { padding: .5rem .75rem .25rem; font-size: .6875rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: hsl(210 20% 62%); white-space: nowrap; }
 .hp-sidebar[data-collapsed="true"] .hp-sb-group-label { visibility: hidden; height: .5rem; padding: 0; }
-.hp-sb-link { position: relative; display: flex; align-items: center; gap: .75rem; height: 2.25rem; padding: 0 .75rem; margin: 1px 0; border-radius: .375rem; font-size: .875rem; font-weight: 500; color: hsl(var(--sb-fg)); white-space: nowrap; transition: background-color .12s, color .12s; }
+.hp-sb-link { position: relative; display: flex; align-items: center; gap: .75rem; min-height: 2.25rem; padding: .3rem .75rem; margin: 1px 0; border-radius: .375rem; font-size: .875rem; font-weight: 500; line-height: 1.2; color: hsl(var(--sb-fg)); white-space: normal; transition: background-color .12s, color .12s; }
 .hp-sb-link:hover { background: hsl(var(--sb-hover)); color: hsl(var(--sb-fg-strong)); }
 .hp-sb-link[aria-current="page"] { background: hsl(var(--sb-active)); color: hsl(var(--sb-fg-strong)); }
 .hp-sb-link[aria-current="page"]::before { content: ""; position: absolute; left: -.5rem; top: .5rem; bottom: .5rem; width: 3px; border-radius: 0 3px 3px 0; background: hsl(38 65% 58%); }

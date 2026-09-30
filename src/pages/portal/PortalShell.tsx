@@ -11,7 +11,7 @@ const PortalShell = ({ title, subtitle, actions, children }: { title: string; su
   useAppTheme();
   const { user, roles, hasRole, signOut } = useAuth();
   const link = ({ isActive }: { isActive: boolean }) => `px-3 h-[3.5rem] inline-flex items-center text-sm font-medium border-b-2 ${isActive ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`;
-  const isStaff = hasRole("manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "teacher");
+  const isStaff = hasRole("manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "teacher", "accountant");
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-card focus:px-3 focus:py-2 focus:rounded">Ir para o conteúdo</a>

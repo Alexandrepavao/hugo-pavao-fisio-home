@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import AppShell from "@/components/hp/AppShell";
 import CrmShell from "./crm/CrmShell";
 import AdmShell from "./adm/AdmShell";
+import AccShell from "./contabil/AccShell";
 
 /** Layout da área de gestão: sidebar geral do Hub (sidebar persistente e recolhível, header compacto, drawer
  *  no mobile), exceto dentro de /admin/crm ou /admin/adm — ali cada um é um app próprio com sua própria
@@ -12,6 +13,7 @@ const AdminLayout = () => {
   const under = (base: string) => location.pathname === base || location.pathname.startsWith(base + "/");
   if (under("/admin/crm")) return <CrmShell><Outlet /></CrmShell>;
   if (under("/admin/adm")) return <AdmShell><Outlet /></AdmShell>;
+  if (under("/admin/contabil")) return <AccShell><Outlet /></AccShell>;
   return <AppShell><Outlet /></AppShell>;
 };
 

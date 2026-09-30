@@ -1,4 +1,4 @@
-import { Building2, CalendarDays, ClipboardList, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, MessageCircleQuestion, ScrollText, Settings, ShieldCheck, Sunrise, Table2, Users, Wallet, type LucideIcon } from "lucide-react";
+import { Building2, Calculator, CalendarDays, ClipboardList, FileText, GraduationCap, Handshake, HeartPulse, KanbanSquare, LayoutDashboard, ListChecks, MessageCircleQuestion, ScrollText, Settings, ShieldCheck, Sunrise, Table2, Users, Wallet, type LucideIcon } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 
 export interface NavChild { to: string; label: string; end?: boolean }
@@ -38,6 +38,7 @@ export const NAV: NavSection[] = [
       { to: "/admin/financeiro/relatorios", label: "Relatórios" },
       { to: "/admin/financeiro/config", label: "Configurações" },
     ] },
+    { to: "/admin/contabil", label: "Contábil", icon: Calculator, roles: ["manager", "ops_admin", "unit_manager", "finance", "accountant"], keywords: "contabilidade competência fechamento contador classificação comprovantes exportar" },
     { to: "/admin/parceiros", label: "Parceiros", icon: Handshake, roles: ["manager", "ops_admin", "unit_manager", "finance", "sales"], keywords: "indicações repasses" },
     { to: "/admin/contas-corporativas", label: "Contas corporativas", icon: Building2, roles: ["manager", "ops_admin", "unit_manager", "finance"], keywords: "empresas contratos corporativo convênio" },
   ] },
@@ -55,7 +56,7 @@ export const NAV: NavSection[] = [
 export const ROLE_LABEL: Record<AppRole, string> = {
   manager: "Gestor", ops_admin: "Administrador operacional", unit_manager: "Gestor de unidade",
   sales: "Comercial", finance: "Financeiro", physio: "Fisioterapeuta", teacher: "Professor/mentor",
-  partner: "Parceiro", member: "Paciente/aluno",
+  partner: "Parceiro", member: "Paciente/aluno", accountant: "Contador(a)",
 };
 
 export const flatNav = (allowed: (item: NavItem) => boolean) => NAV.flatMap((s) => s.items).filter(allowed);
