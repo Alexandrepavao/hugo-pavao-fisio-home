@@ -46,6 +46,7 @@ const RENDER: Record<string, { sort?: SortKey; cell: (r: Row) => ReactNode; csv:
   email_finance: { cell: (r) => dash(r.email_finance), csv: (r) => r.email_finance },
 };
 
+const UFS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"];
 /** Planilha administrativa: interface sobre o cadastro central (people = PF, legal_entities = PJ) — nunca uma
  *  base paralela. Busca, filtros, ordenação, colunas e exportação passam pelo servidor; campos sensíveis e
  *  documento completo dependem da permissão, não da interface. */
@@ -58,6 +59,7 @@ const Diretorio = () => {
   const [unit, setUnit] = useState(sp.get("unidade") ?? "");
   const [status, setStatus] = useState(sp.get("status") ?? "");
   const [incompleteOnly, setIncompleteOnly] = useState(sp.get("incompleto") === "1");
+  const [uf, setUf] = useState((sp.get("uf") ?? "").toUpperCase());
   const [sort, setSort] = useState<SortKey>("created_at");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
@@ -82,10 +84,10 @@ const Diretorio = () => {
   const view = useQuery({ queryKey: ["adm-view"], queryFn: async () => {
     const { data, error } = await supabase.rpc("adm_view_get", { p_view: "diretorio" }); if (error) throw error; return data as View;
   } });
-  const dir_ = useQuery({ queryKey: ["adm-directory", search, type, kind, unit, status, incompleteOnly, sort, dir, page], queryFn: async () => {
+  const dir_ = useQuery({ queryKey: ["adm-directory", search, type, kind, unit, status, incompleteOnly, uf, sort, dir, page], queryFn: async () => {
     const { data, error } = await supabase.rpc("adm_directory", {
       p_search: search || null, p_type: type || null, p_kind: kind || null, p_unit: unit || null,
-      p_status: status || null, p_incomplete_only: incompleteOnly, p_sort: sort, p_dir: dir, p_page: page, p_page_size: pageSize,
+      p_status: status || null, p_incomplete_only: incompleteOnly, p_sort: sort, p_dir: dir, p_page: page, p_page_size: pageSize, p_uf: uf || null,
     });
     if (error) throw error; return data as { rows: Row[]; total: number; page: number; page_size: number };
   } });
@@ -105,7 +107,7 @@ const Diretorio = () => {
     mutationFn: async () => {
       const { data, error } = await supabase.rpc("adm_export", {
         p_search: search || null, p_type: type || null, p_kind: kind || null, p_unit: unit || null, p_status: status || null,
-        p_incomplete_only: incompleteOnly, p_columns: cols,
+        p_incomplete_only: incompleteOnly, p_columns: cols, p_uf: uf || null,
       });
       if (error) throw error; return data as { columns: string[]; rows: Record<string, unknown>[]; total: number; truncated: boolean; masked_document: boolean };
     },
@@ -176,9 +178,12 @@ const Diretorio = () => {
         <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Status">
           <option value="">Todos os status</option>{Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
+        <select value={uf} onChange={(e) => { setUf(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Estado">
+          <option value="">Todos os estados</option>{UFS.map((x) => <option key={x} value={x}>{x}</option>)}
+        </select>
         <label className="flex items-center gap-1.5 text-[13px]"><input type="checkbox" checked={incompleteOnly} onChange={(e) => { setIncompleteOnly(e.target.checked); setPage(0); }} />Só incompletos</label>
-        {(search || type || kind || unit || status || incompleteOnly) && (
-          <button className={btnGhost + " hp-btn-sm"} onClick={() => { setSearch(""); setType(""); setKind(""); setUnit(""); setStatus(""); setIncompleteOnly(false); setSp({}); setPage(0); }}>Limpar</button>
+        {(search || type || kind || unit || status || incompleteOnly || uf) && (
+          <button className={btnGhost + " hp-btn-sm"} onClick={() => { setSearch(""); setType(""); setKind(""); setUnit(""); setStatus(""); setIncompleteOnly(false); setUf(""); setSp({}); setPage(0); }}>Limpar</button>
         )}
       </div>
 

@@ -72,7 +72,7 @@ test.describe.serial("@release Central de pendências administrativas (desktop)"
     // o detalhe respeita o mesmo filtro
     await page.keyboard.press("Escape");
     await openAndCompare(page, /^Cadastros incompletos/);
-    await page.getByRole("button", { name: /^Filtros/ }).click(); await page.getByRole("button", { name: "Limpar" }).click();
+    await page.getByRole("button", { name: /^Filtros/ }).click(); await page.getByRole("button", { name: "Limpar", exact: true }).click();
     await expect(cardBtn(page, /^Cadastros incompletos/).locator("p.tabular")).toHaveText(fmt(base.cards.incomplete.value), { timeout: 30_000 });
   });
 

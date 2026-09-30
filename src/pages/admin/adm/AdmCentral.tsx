@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDate } from "@/lib/format";
-import { Badge, State, StatCard, Table, Td, btnGhost, errText, promptText, useMsg, Msg } from "@/lib/ui";
+import { Badge, LevelSection, State, StatCard, Table, Td, btnGhost, errText, promptText, useMsg, Msg } from "@/lib/ui";
 import { BarBlock, Formula, LineBlock } from "@/lib/IndicatorCharts";
 import type { IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { KIND_LABEL, PEND_KIND, fmtHours, subjectRoute, useAdmCentral, usePendencies, type Central, type Filters, type Metric } from "./central";
@@ -27,7 +27,8 @@ const Group = ({ title, when, rows, note }: { title: string; when: "hoje" | "per
 const Unavailable = ({ m }: { m: Metric }) => <span className="text-muted-foreground font-normal text-xs">indisponível — {m.basis.replace(/^indisponível:\s*/, "")}</span>;
 
 /** Central de pendências administrativas: cartões prioritários, indicadores complementares, gráficos e lista de prioridades. Base: adm_central / adm_central_detail (docs/indicadores-administrativo.md). */
-const AdmCentral = ({ from, to, unit, unitName, filters, onOpen }: { from: string; to: string; unit: string; unitName: string; filters: Filters; onOpen: (t: IndicatorTrigger) => void }) => {
+/** `cadastroResumo` e `cadastroAnalise` são os blocos do cadastro central (números e gráficos), encaixados nos níveis Resumo e Análise. `mapa` entra no nível Análise. */
+const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, cadastroResumo, cadastroAnalise, mapa }: { from: string; to: string; unit: string; unitName: string; filters: Filters; onOpen: (t: IndicatorTrigger) => void; cadastroResumo?: ReactNode; cadastroAnalise?: ReactNode; mapa?: ReactNode }) => {
   const q = useAdmCentral(from, to, unit, filters);
   const prio = usePendencies(unit, filters, filters.status === "overdue" ? "overdue" : "open", 15);
   const qc = useQueryClient(); const [msg, m] = useMsg();
@@ -49,25 +50,21 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen }: { from: strin
   const card = (mt: Metric) => n(mt.value);
 
   return (
-    <div className="grid gap-6">
+    <div>
       <Msg m={msg} />
-      <section aria-label="Prioridades administrativas">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-          <h2 className="text-xl">Prioridades administrativas</h2>
-          <p className="text-xs text-muted-foreground">Cartões = situação de hoje (não mudam com o período). Clique para abrir os registros.</p>
-        </div>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard label="Pendências administrativas vencidas" value={card(c.overdue_pendencies)} basis={c.overdue_pendencies.basis} tone={(c.overdue_pendencies.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("overdue_pendencies")} />
-          <StatCard label="Cadastros incompletos" value={card(c.incomplete)} basis={c.incomplete.basis} tone={(c.incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("incomplete")} />
-          <StatCard label={`Documentos vencendo em ${d.settings.expiring_days} dias`} value={card(c.docs_expiring)} basis={c.docs_expiring.basis} onClick={() => open("docs_expiring")} />
-          <StatCard label="Contratos aguardando assinatura" value={card(c.contracts_awaiting)} basis={c.contracts_awaiting.basis} onClick={() => open("contracts_awaiting")} />
-          <StatCard label="Pacientes aguardando agendamento" value={card(c.patients_waiting)} basis={c.patients_waiting.basis} onClick={() => open("patients_waiting")} />
-          <StatCard label="Profissionais com integração administrativa incompleta" value={card(c.professionals_incomplete)} basis={c.professionals_incomplete.basis} tone={(c.professionals_incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("professionals_incomplete")} />
+      <LevelSection level="attention" title="Prioridades administrativas" hint="Situação de hoje (não muda com o período). Clique para abrir os registros.">
+        <ul className="hp-kpi-grid hp-kpi-grid-lg">
+          <StatCard level="attention" label="Pendências administrativas vencidas" value={card(c.overdue_pendencies)} unit="pendências" period="Hoje" basis={c.overdue_pendencies.basis} tone={(c.overdue_pendencies.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("overdue_pendencies")} />
+          <StatCard level="attention" label="Cadastros incompletos" value={card(c.incomplete)} unit="cadastros" period="Hoje" basis={c.incomplete.basis} tone={(c.incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("incomplete")} />
+          <StatCard level="attention" label={`Documentos vencendo em ${d.settings.expiring_days} dias`} value={card(c.docs_expiring)} unit="documentos" period="Hoje" basis={c.docs_expiring.basis} tone={(c.docs_expiring.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("docs_expiring")} />
+          <StatCard level="attention" label="Contratos aguardando assinatura" value={card(c.contracts_awaiting)} unit="contratos" period="Hoje" basis={c.contracts_awaiting.basis} tone={(c.contracts_awaiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("contracts_awaiting")} />
+          <StatCard level="attention" label="Pacientes aguardando agendamento" value={card(c.patients_waiting)} unit="pacientes" period="Hoje" basis={c.patients_waiting.basis} tone={(c.patients_waiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("patients_waiting")} />
+          <StatCard level="attention" label="Profissionais com integração administrativa incompleta" value={card(c.professionals_incomplete)} unit="profissionais" period="Hoje" basis={c.professionals_incomplete.basis} tone={(c.professionals_incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("professionals_incomplete")} />
         </ul>
-      </section>
+      </LevelSection>
 
-      <section aria-label="Indicadores complementares">
-        <h2 className="text-xl mb-3">Indicadores complementares</h2>
+      <LevelSection level="summary" title="Indicadores complementares" hint="Totais e situação atual, por assunto.">
+        {cadastroResumo}
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <section className="hp-card p-4 md:col-span-2 xl:col-span-2" aria-label="Cadastros completos">
             <div className="flex items-start justify-between gap-2"><h3 className="text-[0.9375rem] font-semibold">Cadastros completos</h3><Badge>Situação de hoje</Badge></div>
@@ -126,9 +123,10 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen }: { from: strin
             { label: "Atrasadas", value: n(k.pendencies.overdue), onClick: () => open("overdue_pendencies"), tone: k.pendencies.overdue > 0 ? "danger" : undefined },
             { label: "Concluídas no período", value: n(k.pendencies.resolved_period), onClick: () => open("resolved_pendencies") }]} note={k.pendencies.basis} />
         </div>
-      </section>
+      </LevelSection>
 
-      <section aria-label="Gráficos das pendências" className="grid gap-4 lg:grid-cols-2">
+      <LevelSection level="analysis" title="Gráficos e evolução" hint="Evolução, tempos e distribuição; clique numa barra para abrir os registros." label="Gráficos das pendências">
+        <div className="grid gap-4 lg:grid-cols-2">
         <LineBlock title="Evolução de pendências abertas e concluídas" hint={d.evolution_basis} data={evo} xKey="semana" series={[{ key: "Abertas", label: "Abertas na semana" }, { key: "Concluídas", label: "Concluídas na semana" }, { key: "Em aberto ao fim", label: "Em aberto ao fim da semana" }]} empty="Ainda não há pendências registradas no período." />
         <BarBlock title="Tempo de resolução por tipo" hint="Média e mediana, em horas, das pendências concluídas no período (por tipo)." data={k.resolution_by_kind.map((r) => ({ tipo: PEND_KIND[r.kind] ?? r.kind, "Média (h)": r.avg_hours, "Mediana (h)": r.median_hours }))} xKey="tipo"
           series={[{ key: "Média (h)", label: "Média (h)" }, { key: "Mediana (h)", label: "Mediana (h)" }]} empty="Nenhuma pendência concluída no período — ainda não há base para calcular." />
@@ -137,7 +135,10 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen }: { from: strin
           onBarClick={(r) => { if (r.id) onOpen({ rpc: "adm_central_detail", title: `Pendências abertas de ${r.nome}`, params: { p_kind: "open_pendencies", p_value: null, p_from: from, p_to: to, p_unit: unit || null, p_owner: r.id, p_type: filters.type || null, p_kind_filter: filters.kind || null, p_status: null }, scope: unitName }); }} empty="Nenhuma pendência registrada." />
         <BarBlock title="Pendências por unidade" hint="Abertas, atrasadas e concluídas no período." data={k.by_unit.map((r) => ({ unidade: r.name, Abertas: r.open, Atrasadas: r.overdue, Concluídas: r.resolved }))} xKey="unidade"
           series={[{ key: "Abertas", label: "Abertas" }, { key: "Atrasadas", label: "Atrasadas", color: "hsl(var(--destructive))" }, { key: "Concluídas", label: "Concluídas", color: "hsl(var(--success))" }]} empty="Nenhuma pendência registrada." />
-      </section>
+          {cadastroAnalise}
+        </div>
+        {mapa}
+      </LevelSection>
 
       <section aria-label="Lista de prioridades">
         <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">

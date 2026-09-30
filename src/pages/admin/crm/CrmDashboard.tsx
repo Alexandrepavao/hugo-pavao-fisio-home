@@ -1,16 +1,18 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Legend, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDateTime } from "@/lib/format";
-import { PageHead, State, StatCard } from "@/lib/ui";
+import { LevelSection, PageHead, State, StatCard } from "@/lib/ui";
+import { ChartCard, CHART_COLORS, tooltipStyle } from "@/lib/IndicatorCharts";
+import { makeDelta } from "@/lib/kpi";
 import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "../finance/shared";
-import Greeting from "../Greeting";
+import { RANGE_LABEL } from "@/lib/period";
 import type { StaffUser, Task } from "./types";
 
-const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(38 65% 58%)", "hsl(var(--muted-foreground))"];
+const PIE_COLORS = CHART_COLORS;
 
 const CrmDashboard = () => {
   const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
@@ -110,104 +112,100 @@ const CrmDashboard = () => {
   const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
   const openDetail = (kind: CardKind) => setDetail({ kind, from: range.from, to: range.to, unit, unitLabel, prevFrom: prevRange.from, prevTo: prevRange.to, owner, pipeline });
 
+  const per = RANGE_LABEL[preset];
+  const m = metrics.data; const pm = prevMetrics.data;
+
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
-        <div className="min-w-0"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo comercial. Toque em qualquer cartão para ver o detalhamento.</p></div>
-        <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-          onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare}
-          onClear={() => { onClear(); setOwner(""); setPipeline(""); }}
-          extraCount={(owner ? 1 : 0) + (pipeline ? 1 : 0)} extraSummary={[owner && (users.data?.find((u) => u.user_id === owner)?.name ?? "Responsável"), pipeline && (pipes.data?.find((p) => p.id === pipeline)?.name ?? "Funil")].filter(Boolean).join(" · ") || undefined}
-          extra={
-            <div className="grid gap-3">
-              <div><label htmlFor="crm-owner" className="block text-xs mb-1">Responsável</label>
-                <select id="crm-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos (conforme sua permissão)</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
-              <div><label htmlFor="crm-pipe" className="block text-xs mb-1">Funil</label>
-                <select id="crm-pipe" value={pipeline} onChange={(e) => setPipeline(e.target.value)}><option value="">Todos</option>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-            </div>
-          } />
-      </div>
+      <PageHead eyebrow="CRM" title="Painel comercial" hint="Resumo comercial. Toque em qualquer cartão para ver o detalhamento."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+            onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare}
+            onClear={() => { onClear(); setOwner(""); setPipeline(""); }}
+            extraCount={(owner ? 1 : 0) + (pipeline ? 1 : 0)} extraSummary={[owner && (users.data?.find((u) => u.user_id === owner)?.name ?? "Responsável"), pipeline && (pipes.data?.find((p) => p.id === pipeline)?.name ?? "Funil")].filter(Boolean).join(" · ") || undefined}
+            extra={
+              <div className="grid gap-3">
+                <div><label htmlFor="crm-owner" className="block text-xs mb-1">Responsável</label>
+                  <select id="crm-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos (conforme sua permissão)</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
+                <div><label htmlFor="crm-pipe" className="block text-xs mb-1">Funil</label>
+                  <select id="crm-pipe" value={pipeline} onChange={(e) => setPipeline(e.target.value)}><option value="">Todos</option>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+              </div>
+            } />
+        } />
 
       <State loading={metrics.isLoading} error={metrics.error} />
-      {metrics.data && (
-        <section className="mb-8">
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi label="Novos leads no período" m={metrics.data.new_leads} prev={prevMetrics.data?.new_leads} onOpen={() => openDetail("crm_new_leads")} />
-            <Kpi label="Total de negócios no recorte" m={metrics.data.total_deals} />
-            <Kpi label="Negócios em aberto" m={metrics.data.open_deals} onOpen={() => openDetail("crm_open_deals")} />
-            <Kpi label="Valor em negociação" m={metrics.data.open_value} kind="brl" onOpen={() => openDetail("crm_open_value")} />
-            <Kpi label="Negócios ganhos" m={metrics.data.won_deals} prev={prevMetrics.data?.won_deals} onOpen={() => openDetail("crm_won_deals")} />
-            <Kpi label="Conversão comercial" m={metrics.data.win_rate} kind="pct" prev={prevMetrics.data?.win_rate} onOpen={() => openDetail("crm_win_rate")} />
-            <Kpi label="Oportunidades sem retorno" m={metrics.data.stale_deals} tone="danger" onOpen={() => openDetail("crm_stale_deals")} />
-            <Kpi label="Comissão potencial" m={metrics.data.commission_potential} kind="brl" onOpen={() => openDetail("crm_commission_potential")} />
+      {m && (
+        <LevelSection level="attention" title="Atenção" hint="O que precisa de ação comercial agora.">
+          <ul className="hp-kpi-grid hp-kpi-grid-lg">
+            <Kpi level="attention" label="Oportunidades sem retorno" m={m.stale_deals} unit="oportunidades" period="Hoje" tone={(Number(m.stale_deals?.value) || 0) > 0 ? "danger" : undefined} onOpen={() => openDetail("crm_stale_deals")} />
+            <Kpi level="attention" label="Negócios em aberto" m={m.open_deals} unit="negócios" period="Hoje" onOpen={() => openDetail("crm_open_deals")} />
+            <Kpi level="attention" label="Valor em negociação" m={m.open_value} kind="brl" period="Hoje" onOpen={() => openDetail("crm_open_value")} />
           </ul>
-        </section>
+        </LevelSection>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2 mb-8">
-        <section><h2 className="text-xl mb-3">Tarefas</h2>
-          <div className="hp-card p-4">
-            <State loading={myTasks.isLoading} error={myTasks.error} empty={myTasks.data?.length === 0} emptyText="Nenhuma tarefa pendente." />
-            {myTasks.data && myTasks.data.length > 0 && (
-              <ul className="grid gap-2">
-                {myTasks.data.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-2 text-sm py-1.5 border-b border-border last:border-0">
-                    <span className={new Date(t.due_at) < new Date() ? "text-destructive" : ""}>{t.title}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">{fmtDateTime(t.due_at)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-        <section><h2 className="text-xl mb-3">Atividades recentes</h2>
-          <div className="hp-card p-4">
-            <State loading={activities.isLoading} error={activities.error} empty={activities.data?.length === 0} emptyText="Nenhuma atividade registrada." />
-            {activities.data && activities.data.length > 0 && (
-              <ul className="grid gap-2">
-                {activities.data.map((a) => (
-                  <li key={a.id} className="text-sm py-1.5 border-b border-border last:border-0">
-                    <p className="truncate"><strong>{a.person?.full_name ?? "—"}</strong> — {a.summary}</p>
-                    <p className="text-xs text-muted-foreground">{a.channel} · {fmtDateTime(a.created_at)}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      </div>
+      {m && (
+        <LevelSection level="summary" title="Resumo do período" hint="Números do período e do recorte selecionados.">
+          <ul className="hp-kpi-grid">
+            <Kpi label="Novos leads no período" m={m.new_leads} prev={pm?.new_leads} unit="leads" period={per} onOpen={() => openDetail("crm_new_leads")} />
+            <Kpi label="Negócios ganhos" m={m.won_deals} prev={pm?.won_deals} unit="negócios" period={per} onOpen={() => openDetail("crm_won_deals")} />
+            <Kpi label="Conversão comercial" m={m.win_rate} kind="pct" prev={pm?.win_rate} period={per} onOpen={() => openDetail("crm_win_rate")} />
+            <Kpi level="compact" label="Total de negócios no recorte" m={m.total_deals} unit="negócios" period={per} />
+            <Kpi level="compact" label="Comissão potencial" m={m.commission_potential} kind="brl" period="Hoje" onOpen={() => openDetail("crm_commission_potential")} />
+          </ul>
+        </LevelSection>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-2 mb-8">
-        <section><h2 className="text-xl mb-3">Negócios por etapa (em aberto)</h2>
-          {byStage.data && byStage.data.length > 0 ? (
-            <div className="hp-card p-4" style={{ height: 260 }}><ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byStage.data}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="etapa" fontSize={11} interval={0} angle={-15} textAnchor="end" height={50} /><YAxis fontSize={12} allowDecimals={false} />
-                <Tooltip /><Bar dataKey="Quantidade" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div>
-          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem oportunidades em aberto neste funil.</p>}
+      <LevelSection level="analysis" title="Evolução, funil e origem" hint="Gráficos com dados reais; sem dado, o espaço mostra o aviso.">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ChartCard title="Negócios por etapa (em aberto)" isEmpty={!(byStage.data && byStage.data.length > 0)} empty="Sem oportunidades em aberto neste funil.">
+            <BarChart data={byStage.data ?? []} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} /><XAxis dataKey="etapa" fontSize={11} interval={0} angle={-15} textAnchor="end" height={50} /><YAxis fontSize={12} allowDecimals={false} />
+              <Tooltip {...tooltipStyle} /><Bar dataKey="Quantidade" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} /></BarChart>
+          </ChartCard>
+          <ChartCard title="Evolução de negócios ganhos (6 meses)" isEmpty={!(evolution.data && evolution.data.some((e) => e.Negócios > 0))} empty="Sem negócios ganhos nos últimos 6 meses.">
+            <LineChart data={evolution.data ?? []} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
+              <Tooltip {...tooltipStyle} formatter={(v: number, n: string) => n === "Valor" ? brl(Math.round(v * 100)) : v} /><Line type="monotone" dataKey="Valor" stroke="hsl(var(--success))" strokeWidth={2} dot /></LineChart>
+          </ChartCard>
+          <ChartCard title="Origem dos leads (período)" isEmpty={!(bySource.data && bySource.data.length > 0)} empty="Sem leads no período.">
+            <PieChart><Pie data={bySource.data ?? []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(e: { value: number }) => e.value}>
+              {(bySource.data ?? []).map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="hsl(var(--card))" />)}</Pie><Tooltip {...tooltipStyle} /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart>
+          </ChartCard>
+          {isManagerLike && (
+            <ChartCard title="Desempenho por responsável (período)" isEmpty={!(byRep.data && byRep.data.length > 0)} empty="Sem negócios ganhos no período (ou você só vê os próprios números).">
+              <BarChart data={byRep.data ?? []} layout="vertical" margin={{ top: 4, right: 8, left: 0, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" horizontal={false} /><XAxis type="number" fontSize={12} tickFormatter={axisBrl} /><YAxis type="category" dataKey="nome" fontSize={11} width={96} />
+                <Tooltip {...tooltipStyle} formatter={(v: number) => brl(Math.round(v * 100))} /><Bar dataKey="Valor ganho" fill="hsl(var(--chart-2))" radius={[0, 3, 3, 0]} /></BarChart>
+            </ChartCard>
+          )}
+        </div>
+      </LevelSection>
+
+      <div className="grid gap-4 lg:grid-cols-2 mb-8">
+        <section className="hp-card p-4" aria-label="Tarefas"><h3 className="text-[0.9375rem] font-semibold mb-2">Tarefas</h3>
+          <State loading={myTasks.isLoading} error={myTasks.error} empty={myTasks.data?.length === 0} emptyText="Nenhuma tarefa pendente." />
+          {myTasks.data && myTasks.data.length > 0 && (
+            <ul className="grid gap-2">
+              {myTasks.data.map((t) => (
+                <li key={t.id} className="flex items-center justify-between gap-2 text-sm py-1.5 border-b border-border last:border-0">
+                  <span className={`min-w-0 truncate ${new Date(t.due_at) < new Date() ? "text-destructive" : ""}`}>{t.title}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">{fmtDateTime(t.due_at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
-        <section><h2 className="text-xl mb-3">Evolução de negócios ganhos (6 meses)</h2>
-          {evolution.data && evolution.data.some((e) => e.Negócios > 0) ? (
-            <div className="hp-card p-4" style={{ height: 260 }}><ResponsiveContainer width="100%" height="100%">
-              <LineChart data={evolution.data}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
-                <Tooltip formatter={(v: number, n: string) => n === "Valor" ? brl(Math.round(v * 100)) : v} /><Line type="monotone" dataKey="Valor" stroke="hsl(var(--success))" strokeWidth={2} dot /></LineChart></ResponsiveContainer></div>
-          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem negócios ganhos nos últimos 6 meses.</p>}
+        <section className="hp-card p-4" aria-label="Atividades recentes"><h3 className="text-[0.9375rem] font-semibold mb-2">Atividades recentes</h3>
+          <State loading={activities.isLoading} error={activities.error} empty={activities.data?.length === 0} emptyText="Nenhuma atividade registrada." />
+          {activities.data && activities.data.length > 0 && (
+            <ul className="grid gap-2">
+              {activities.data.map((a) => (
+                <li key={a.id} className="text-sm py-1.5 border-b border-border last:border-0">
+                  <p className="truncate"><strong>{a.person?.full_name ?? "—"}</strong> — {a.summary}</p>
+                  <p className="text-xs text-muted-foreground">{a.channel} · {fmtDateTime(a.created_at)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
-        <section><h2 className="text-xl mb-3">Origem dos leads (período)</h2>
-          {bySource.data && bySource.data.length > 0 ? (
-            <div className="hp-card p-4" style={{ height: 260 }}><ResponsiveContainer width="100%" height="100%">
-              <PieChart><Pie data={bySource.data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e: { name: string; value: number }) => `${e.name} (${e.value})`}>
-                {bySource.data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer></div>
-          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem leads no período.</p>}
-        </section>
-        {isManagerLike && (
-          <section><h2 className="text-xl mb-3">Desempenho por responsável (período)</h2>
-            {byRep.data && byRep.data.length > 0 ? (
-              <div className="hp-card p-4" style={{ height: 260 }}><ResponsiveContainer width="100%" height="100%">
-                <BarChart data={byRep.data} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" fontSize={12} tickFormatter={axisBrl} /><YAxis type="category" dataKey="nome" fontSize={11} width={110} />
-                  <Tooltip formatter={(v: number) => brl(Math.round(v * 100))} /><Bar dataKey="Valor ganho" fill="hsl(var(--accent))" radius={[0, 3, 3, 0]} /></BarChart></ResponsiveContainer></div>
-            ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem negócios ganhos no período (ou você só vê os próprios números).</p>}
-          </section>
-        )}
       </div>
 
       <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
@@ -215,14 +213,9 @@ const CrmDashboard = () => {
   );
 };
 
-const Kpi = ({ label, m, kind = "int", tone, prev, onOpen }: { label: string; m?: Metric; kind?: "brl" | "pct" | "int"; tone?: "danger"; prev?: Metric; onOpen?: () => void }) => {
-  const shown = mfmt(m, kind);
-  const delta = prev && m?.available && prev.available && Number(prev.value) !== 0 ? Math.round(((Number(m.value) - Number(prev.value)) / Number(prev.value)) * 1000) / 10 : null;
-  return (
-    <StatCard label={label} value={shown} tone={tone}
-      basis={delta != null ? `${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta).toString().replace(".", ",")}% vs. período anterior` : (prev !== undefined ? "Sem base de comparação" : m?.basis)}
-      unavailable={m ? !m.available || m.value == null : false} onClick={onOpen} />
-  );
-};
+const Kpi = ({ label, m, kind = "int", tone, prev, unit, period, level, onOpen }: { label: string; m?: Metric; kind?: "brl" | "pct" | "int"; tone?: "danger"; prev?: Metric; unit?: string; period?: string; level?: "attention" | "summary" | "compact"; onOpen?: () => void }) => (
+  <StatCard level={level} label={label} value={mfmt(m, kind)} unit={kind === "int" ? unit : undefined} period={period} tone={tone} delta={makeDelta(m, prev)}
+    basis={m?.basis} unavailable={m ? !m.available || m.value == null : false} onClick={onOpen} />
+);
 
 export default CrmDashboard;

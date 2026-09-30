@@ -52,6 +52,28 @@ html.hp-app {
   --shadow-pop: 0 8px 24px -8px hsl(212 45% 15% / 0.22);
   --shadow-card: none;
 
+  /* gráficos: paleta própria do HP (azul institucional primeiro; dourado só como contraste) */
+  --chart-1: 212 55% 32%;
+  --chart-2: 38 58% 44%;
+  --chart-3: 152 45% 34%;
+  --chart-4: 200 60% 46%;
+  --chart-5: 262 34% 50%;
+  --chart-6: 213 17% 58%;
+  --chart-grid: 214 24% 89%;
+  /* mapa coroplético: escala sequencial azul (5 passos) + estado sem dado */
+  --map-0: 214 30% 93%;
+  --map-1: 210 55% 82%;
+  --map-2: 210 55% 64%;
+  --map-3: 212 55% 44%;
+  --map-4: 212 60% 26%;
+  --map-none: 214 18% 92%;
+  --map-stroke: 0 0% 100%;
+  /* níveis dos cartões: atenção (âmbar/vermelho), resumo (neutro), análise (azul) */
+  --lvl-attention: 32 90% 30%;
+  --lvl-attention-bg: 38 90% 96%;
+  --lvl-critical: 0 66% 40%;
+  --lvl-critical-bg: 0 70% 97%;
+
   /* medidas */
   --sb-w: 15rem;
   --sb-w-collapsed: 4rem;
@@ -119,6 +141,8 @@ html.hp-app table tbody tr:hover { background: hsl(var(--muted) / .6); }
 /* logo original sobre base branca: contraste garantido sem alterar o arquivo da marca */
 .hp-sb-brand a { display: inline-flex; align-items: center; background: #fff; border-radius: .375rem; padding: .25rem .5rem; }
 .hp-sb-brand img { height: 1.75rem; width: auto; }
+html.hp-app .recharts-cartesian-grid line { stroke: hsl(var(--chart-grid)); }
+html.hp-app .recharts-text, html.hp-app .recharts-legend-item-text { fill: hsl(var(--muted-foreground)); }
 .hp-sb-nav { flex: 1; overflow-y: auto; padding: .75rem .5rem; scrollbar-width: thin; scrollbar-color: hsl(var(--sb-line)) transparent; }
 .hp-sb-group { margin-bottom: .75rem; }
 .hp-sb-group-label { padding: .5rem .75rem .25rem; font-size: .6875rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: hsl(210 20% 62%); white-space: nowrap; }
@@ -132,7 +156,19 @@ html.hp-app table tbody tr:hover { background: hsl(var(--muted) / .6); }
 .hp-sidebar[data-collapsed="true"] .hp-sb-link { justify-content: center; padding: 0; }
 .hp-sidebar[data-collapsed="true"] .hp-sb-text { display: none; }
 .hp-sb-foot { border-top: 1px solid hsl(var(--sb-line)); padding: .5rem; flex-shrink: 0; }
-.hp-header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: .75rem; height: var(--header-h); padding: 0 1rem; background: hsl(var(--card) / .96); backdrop-filter: none; border-bottom: 1px solid hsl(var(--border)); }
+.hp-header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: .5rem; height: var(--header-h); padding: 0 1rem; background: hsl(var(--card) / .96); backdrop-filter: none; border-bottom: 1px solid hsl(var(--border)); }
+.hp-hd-icon { width: 2.25rem; padding: 0 !important; flex-shrink: 0; }
+.hp-hd-title { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem !important; line-height: 1.5rem !important; }
+.hp-hd-brand { display: inline-flex; align-items: center; flex-shrink: 0; }
+.hp-hd-brand img { height: 1.5rem; width: auto; }
+.hp-hd-search { align-items: center; gap: .5rem; height: 2.25rem; min-width: 13rem; padding: 0 .625rem; border: 1px solid hsl(var(--border)); border-radius: 9999px; background: hsl(var(--muted) / .6); color: hsl(var(--muted-foreground)); font-size: .8125rem; cursor: pointer; transition: border-color .12s, background-color .12s; }
+.hp-hd-search:hover { border-color: hsl(var(--input)); background: hsl(var(--muted)); }
+.hp-hd-search span { flex: 1; text-align: left; }
+.hp-hd-search kbd { font-size: .6875rem; border: 1px solid hsl(var(--border)); border-radius: .25rem; padding: 0 .25rem; background: hsl(var(--card)); }
+.hp-hd-dot { position: absolute; top: .125rem; right: .125rem; min-width: 1rem; height: 1rem; padding: 0 .25rem; border-radius: 9999px; background: hsl(var(--destructive)); color: #fff; font-size: .625rem; font-weight: 700; line-height: 1rem; text-align: center; }
+.hp-env-pill { flex-shrink: 0; border-radius: 9999px; background: hsl(var(--warning-soft)); color: hsl(var(--warning)); border: 1px solid hsl(var(--warning) / .35); font-size: .625rem; font-weight: 700; letter-spacing: .05em; padding: .125rem .5rem; white-space: nowrap; }
+/* o selo fixo antigo some quando o cabeçalho já o mostra (sem sobrepor a barra lateral) */
+html[data-env-in-header] [data-env-fixed] { display: none; }
 /* Sub-navegação de uma seção com "children" (ex.: Financeiro) — presa logo abaixo do header. Todos os
    destinos ficam sempre diretos (sem menu "Mais"): rolagem horizontal contida no celular (com indicação de
    continuidade via degradê), quebra para uma segunda linha organizada a partir do desktop. */
@@ -150,3 +186,98 @@ html.hp-app table tbody tr:hover { background: hsl(var(--muted) / .6); }
 .hp-content { flex: 1; min-width: 0; padding: 1.25rem 1.5rem 2rem; max-width: 90rem; width: 100%; margin: 0 auto; }
 @media (max-width: 767px) { .hp-content { padding: 1rem; } .hp-sidebar-desktop { display: none; } }
 @media (min-width: 768px) { .hp-menu-mobile { display: none; } }
+
+/* ---------- tema escuro (escolha da pessoa, no cabeçalho) ---------- */
+html.hp-app[data-theme="dark"] {
+  color-scheme: dark;
+  --background: 212 40% 9%;
+  --foreground: 210 25% 92%;
+  --card: 212 36% 12%;
+  --card-foreground: 210 25% 92%;
+  --popover: 212 36% 13%;
+  --popover-foreground: 210 25% 92%;
+  --muted: 212 28% 17%;
+  --muted-foreground: 213 18% 70%;
+  --border: 212 26% 22%;
+  --input: 212 22% 30%;
+  --ring: 212 70% 62%;
+  --primary: 212 60% 56%;
+  --primary-foreground: 212 50% 8%;
+  --secondary: 212 28% 17%;
+  --secondary-foreground: 210 25% 92%;
+  --accent: 38 62% 58%;
+  --accent-foreground: 212 50% 8%;
+  --navy-900: 212 60% 66%;
+  --navy-700: 212 55% 60%;
+  --navy-400: 213 18% 70%;
+  --success: 152 50% 58%;
+  --success-soft: 152 35% 16%;
+  --warning: 38 85% 62%;
+  --warning-soft: 38 50% 16%;
+  --destructive: 0 75% 66%;
+  --destructive-soft: 0 40% 17%;
+  --info: 212 75% 68%;
+  --info-soft: 212 40% 18%;
+  --sb-bg: 212 45% 7%;
+  --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
+  --shadow-pop: 0 8px 24px -8px hsl(0 0% 0% / 0.7);
+  --chart-1: 212 70% 62%;
+  --chart-2: 38 62% 58%;
+  --chart-3: 152 45% 50%;
+  --chart-4: 200 65% 58%;
+  --chart-5: 262 45% 68%;
+  --chart-6: 213 18% 62%;
+  --chart-grid: 212 26% 22%;
+  --map-0: 212 28% 18%;
+  --map-1: 212 45% 28%;
+  --map-2: 212 55% 40%;
+  --map-3: 212 65% 54%;
+  --map-4: 210 75% 72%;
+  --map-none: 212 22% 16%;
+  --map-stroke: 212 36% 12%;
+  --lvl-attention: 38 85% 62%;
+  --lvl-attention-bg: 38 40% 14%;
+  --lvl-critical: 0 75% 66%;
+  --lvl-critical-bg: 0 35% 15%;
+}
+html.hp-app[data-theme="dark"] .hp-hd-brand, html.hp-app[data-theme="dark"] .hp-sb-brand a { background: #fff; border-radius: .375rem; padding: .125rem .375rem; }
+html.hp-app[data-theme="dark"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23a9b6c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); }
+html.hp-app[data-theme="dark"] input::placeholder, html.hp-app[data-theme="dark"] textarea::placeholder { color: hsl(213 14% 55%); }
+
+/* ---------- cartões de indicador e seções por nível ---------- */
+.hp-kpi { display: block; padding: .875rem 1rem; position: relative; }
+.hp-kpi-label { font-size: .75rem; line-height: 1.125rem; font-weight: 500; color: hsl(var(--muted-foreground)); }
+.hp-kpi-period { flex-shrink: 0; font-size: .6875rem; line-height: 1.125rem; color: hsl(var(--muted-foreground)); background: hsl(var(--muted)); border-radius: 9999px; padding: 0 .5rem; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hp-kpi-more { color: hsl(var(--muted-foreground)); opacity: .55; transition: opacity .12s, transform .12s; }
+.group:hover .hp-kpi-more, .group:focus-visible .hp-kpi-more { opacity: 1; transform: translateX(2px); color: hsl(var(--primary)); }
+.hp-kpi-value { margin-top: .25rem; font: 700 1.5rem/2rem Manrope, Inter, system-ui, sans-serif; letter-spacing: -.01em; }
+.hp-kpi-unit { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.hp-kpi-delta { margin-top: .125rem; font-size: .75rem; font-weight: 600; line-height: 1rem; }
+.hp-kpi-basis { margin-top: .5rem; font-size: .6875rem; line-height: 1rem; color: hsl(var(--muted-foreground)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hp-kpi-attention { padding: 1rem 1.125rem; border-left: 3px solid hsl(var(--lvl-attention) / .55); }
+.hp-kpi-attention .hp-kpi-value { font-size: 2rem; line-height: 2.5rem; }
+.hp-kpi-attention .hp-kpi-label { font-size: .8125rem; font-weight: 600; color: hsl(var(--foreground)); }
+.hp-kpi-attention.hp-kpi-critical { border-left-color: hsl(var(--lvl-critical)); background: hsl(var(--lvl-critical-bg)); }
+.hp-kpi-attention.hp-kpi-warn { border-left-color: hsl(var(--lvl-attention)); background: hsl(var(--lvl-attention-bg)); }
+.hp-kpi-compact { padding: .625rem .875rem; }
+.hp-kpi-compact .hp-kpi-value { font-size: 1.125rem; line-height: 1.5rem; margin-top: 0; }
+.hp-kpi-compact .hp-kpi-basis { margin-top: .25rem; -webkit-line-clamp: 1; }
+.hp-level { margin-bottom: 1.75rem; }
+.hp-level-head { display: flex; flex-wrap: wrap; align-items: center; gap: .125rem .625rem; margin-bottom: .75rem; }
+.hp-level-head h2 { font-size: 1rem; line-height: 1.5rem; }
+.hp-level-head p { flex: 1 1 14rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.hp-level-tag { display: inline-flex; align-items: center; gap: .375rem; height: 1.375rem; padding: 0 .5rem; border-radius: 9999px; background: hsl(var(--muted)); font-size: .6875rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+.hp-level-mark { width: .5rem; height: .5rem; border-radius: 9999px; background: hsl(var(--muted-foreground)); }
+.hp-level-attention .hp-level-mark { background: hsl(var(--lvl-attention)); }
+.hp-level-summary .hp-level-mark { background: hsl(var(--chart-1)); }
+.hp-level-analysis .hp-level-mark { background: hsl(var(--chart-3)); }
+.hp-kpi-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); }
+.hp-kpi-grid-lg { grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
+
+/* itens de grade nunca alargam a coluna além da tela (textos longos e gráficos encolhem em vez de gerar rolagem horizontal) */
+html.hp-app .grid > * { min-width: 0; }
+
+/* .hp-btn define display próprio e vence as utilidades responsivas do Tailwind: estas regras devolvem o "hidden sm:inline-flex" / "md:hidden" nos botões do cabeçalho */
+html.hp-app .hp-btn.hidden { display: none; }
+@media (min-width: 640px) { html.hp-app .hp-btn.sm\:inline-flex { display: inline-flex; } }
+@media (min-width: 768px) { html.hp-app .hp-btn.md\:hidden { display: none; } }

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ChevronsLeft, ChevronsRight, Grid2x2, LayoutDashboard, LogOut, Menu, Search, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, type LucideIcon } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import CommandMenu from "./CommandMenu";
 import { useAppTheme } from "./AppShell";
-import { ROLE_LABEL } from "./nav";
+import HeaderBar from "./HeaderBar";
 
 export interface ContextualNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean }
 export interface ContextualNavSection { label: string; items: ContextualNavItem[] }
@@ -22,7 +22,7 @@ const ContextualAppShell = ({ appId, appLabel, nav, managerRoles, otherApps, chi
   appId: string; appLabel: string; nav: ContextualNavSection[]; managerRoles: AppRole[]; otherApps: AppLink[]; children: ReactNode;
 }) => {
   useAppTheme();
-  const { user, roles, signOut, hasRole } = useAuth();
+  const { hasRole } = useAuth();
   const location = useLocation();
   const storageKey = STORAGE_PREFIX + appId;
   const readCollapsed = () => { try { return localStorage.getItem(storageKey) === "1"; } catch { return false; } };
@@ -42,8 +42,6 @@ const ContextualAppShell = ({ appId, appLabel, nav, managerRoles, otherApps, chi
   const flatItems = useMemo(() => nav.flatMap((s) => s.items), [nav]);
   const activeItem = useMemo(() => flatItems.find((i) => (i.end ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"))) ?? flatItems[0], [flatItems, location.pathname]);
   const title = `${appLabel} · ${activeItem?.label ?? ""}`;
-  const roleNames = [...new Set(roles.map((r) => ROLE_LABEL[r.role]))].join(", ");
-  const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   const SidebarNav = ({ collapsedNow, onNavigate }: { collapsedNow: boolean; onNavigate?: () => void }) => (
     <nav aria-label={`Navegação do ${appLabel}`} className="hp-sb-nav">
@@ -86,38 +84,8 @@ const ContextualAppShell = ({ appId, appLabel, nav, managerRoles, otherApps, chi
       </Sheet>
 
       <div className="hp-main">
-        <header className="hp-header">
-          <button className="hp-btn hp-btn-ghost hp-menu-mobile" style={{ width: "2.25rem", padding: 0 }} onClick={() => setDrawer(true)} aria-label="Abrir menu" aria-expanded={drawer}><Menu size={18} /></button>
-          <button className="hp-btn hp-btn-ghost hp-sidebar-desktop" style={{ width: "2.25rem", padding: 0 }} onClick={() => setCollapsed((v) => !v)} aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"} aria-pressed={collapsed}>
-            {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}</button>
-          <h1 className="!text-[1rem] !leading-6" style={{ margin: 0 }} id="titulo-secao">{title}</h1>
-          <div style={{ flex: 1 }} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="hp-btn hp-btn-outline hp-btn-sm" aria-label="Trocar de aplicativo"><Grid2x2 size={15} /><span className="hidden md:inline">Trocar de app</span></button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Aplicativos</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {otherApps.map((a) => <DropdownMenuItem key={a.to} asChild><Link to={a.to}><a.icon className="mr-2 h-4 w-4" aria-hidden />{a.label}</Link></DropdownMenuItem>)}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => setCmd(true)} aria-label="Buscar (Ctrl+K)" style={{ color: "hsl(var(--muted-foreground))", minWidth: "2.25rem" }}>
-            <Search size={15} /><span className="hidden md:inline">Buscar</span><kbd className="hidden md:inline text-[11px] border border-border rounded px-1 ml-1 text-muted-foreground">Ctrl K</kbd></button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="hp-btn hp-btn-ghost" style={{ padding: "0 .25rem", gap: ".5rem" }} aria-label="Menu do usuário">
-                <span aria-hidden className="grid place-items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold" style={{ width: "1.875rem", height: "1.875rem" }}>{initials}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel><span className="block text-sm font-medium break-all">{user?.email}</span><span className="block text-xs font-normal text-muted-foreground">{roleNames}</span></DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild><Link to="/admin">Voltar ao Hub</Link></DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void signOut()}><LogOut className="mr-2 h-4 w-4" aria-hidden />Sair</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </header>
+        <HeaderBar title={title} collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} drawerOpen={drawer} onOpenDrawer={() => setDrawer(true)} onSearch={() => setCmd(true)}
+          homeTo={flatItems[0]?.to ?? "/admin"} otherApps={otherApps} profileExtra={<DropdownMenuItem asChild><Link to="/admin">Voltar ao Hub</Link></DropdownMenuItem>} />
         <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao">{children}</main>
       </div>
       <CommandMenu open={cmd} onOpenChange={setCmd} />

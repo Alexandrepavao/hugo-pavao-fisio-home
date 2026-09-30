@@ -151,7 +151,7 @@ test.describe.serial("Financeiro — comportamentos", () => {
 
     await useSession(page.context(), m);
     await page.goto("/admin/financeiro/conciliacao");
-    await page.getByLabel("Conta bancária").selectOption({ label: `Conta E2E ${runId}` });
+    await page.locator("#rec-acc").selectOption({ label: `Conta E2E ${runId}` });
     await page.setInputFiles("#rec-file", csvPath);
     await expect(page.getByText("1 linha(s) importada(s).", { exact: false })).toBeVisible();
     await expect(page.getByText(desc)).toBeVisible();

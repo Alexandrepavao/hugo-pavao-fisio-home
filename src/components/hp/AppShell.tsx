@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ChevronsLeft, ChevronsRight, HeartPulse, LogOut, Menu, Search } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import HeaderBar from "./HeaderBar";
+import { applyTheme, readTheme } from "./theme";
 import CommandMenu from "./CommandMenu";
-import { NAV, ROLE_LABEL, type NavItem } from "./nav";
+import { NAV, type NavItem } from "./nav";
 
 /** Aplica o escopo visual da área logada no <html> (portais do Radix renderizam fora do container). */
 export const useAppTheme = () => {
   useEffect(() => {
-    document.documentElement.classList.add("hp-app");
-    return () => document.documentElement.classList.remove("hp-app");
+    document.documentElement.classList.add("hp-app"); applyTheme(readTheme());
+    return () => { document.documentElement.classList.remove("hp-app"); delete document.documentElement.dataset.theme; };
   }, []);
 };
 
@@ -53,7 +55,7 @@ const SidebarFoot = ({ collapsed }: { collapsed: boolean }) => {
 
 const AppShell = ({ children }: { children: ReactNode }) => {
   useAppTheme();
-  const { user, roles, signOut, hasRole } = useAuth();
+  const { hasRole } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [drawer, setDrawer] = useState(false);
@@ -75,8 +77,6 @@ const AppShell = ({ children }: { children: ReactNode }) => {
     return items.find((i) => (i.end ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"))) ?? items[0];
   }, [location.pathname]);
   const title = activeItem.label;
-  const roleNames = [...new Set(roles.map((r) => ROLE_LABEL[r.role]))].join(", ");
-  const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   return (
     <div className="hp-shell">
@@ -99,29 +99,8 @@ const AppShell = ({ children }: { children: ReactNode }) => {
       </Sheet>
 
       <div className="hp-main">
-        <header className="hp-header">
-          <button className="hp-btn hp-btn-ghost hp-menu-mobile" style={{ width: "2.25rem", padding: 0 }} onClick={() => setDrawer(true)} aria-label="Abrir menu" aria-expanded={drawer}><Menu size={18} /></button>
-          <button className="hp-btn hp-btn-ghost hp-sidebar-desktop" style={{ width: "2.25rem", padding: 0 }} onClick={() => setCollapsed((v) => !v)} aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"} aria-pressed={collapsed}>
-            {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}</button>
-          <h1 className="!text-[1rem] !leading-6" style={{ margin: 0 }} id="titulo-secao">{title}</h1>
-          <div style={{ flex: 1 }} />
-          <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => setCmd(true)} aria-label="Buscar (Ctrl+K)" style={{ color: "hsl(var(--muted-foreground))", minWidth: "2.25rem" }}>
-            <Search size={15} /><span className="hidden md:inline">Buscar</span><kbd className="hidden md:inline text-[11px] border border-border rounded px-1 ml-1 text-muted-foreground">Ctrl K</kbd></button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="hp-btn hp-btn-ghost" style={{ padding: "0 .25rem", gap: ".5rem" }} aria-label="Menu do usuário">
-                <span aria-hidden className="grid place-items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold" style={{ width: "1.875rem", height: "1.875rem" }}>{initials}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel><span className="block text-sm font-medium break-all">{user?.email}</span><span className="block text-xs font-normal text-muted-foreground">{roleNames}</span></DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild><Link to="/academy">Academy</Link></DropdownMenuItem>
-              {hasRole("member") && <DropdownMenuItem asChild><Link to="/paciente">Área do paciente</Link></DropdownMenuItem>}
-              <DropdownMenuItem onSelect={() => void signOut()}><LogOut className="mr-2 h-4 w-4" aria-hidden />Sair</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </header>
+        <HeaderBar title={title} collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} drawerOpen={drawer} onOpenDrawer={() => setDrawer(true)} onSearch={() => setCmd(true)} homeTo="/admin"
+          profileExtra={<><DropdownMenuItem asChild><Link to="/academy">Academy</Link></DropdownMenuItem>{hasRole("member") && <DropdownMenuItem asChild><Link to="/paciente">Área do paciente</Link></DropdownMenuItem>}</>} />
         {activeItem.children && activeItem.children.length > 0 && (
           <div className="hp-subnav-wrap">
             <nav aria-label={`Navegação de ${title}`} className="hp-subnav">

@@ -4,11 +4,11 @@ import { useAuth } from "@/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { PageHead, State, StatCard } from "@/lib/ui";
 import { PeriodFilter } from "@/lib/PeriodFilter";
-import { presetRange, toExclusive, usePeriodFilterState, useUnits } from "@/lib/period";
+import { presetRange, RANGE_LABEL, toExclusive, usePeriodFilterState, useUnits } from "@/lib/period";
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { BarBlock } from "@/lib/IndicatorCharts";
-import Greeting from "../Greeting";
 import AdmCentral from "./AdmCentral";
+import AdmMapa from "./AdmMapa";
 import { KIND_LABEL as VINCULO_LABEL, useAssignable, useFilters } from "./central";
 
 interface Metric { value: number | null; available: boolean; basis: string }
@@ -48,8 +48,7 @@ const AdmDashboard = () => {
 
   return (
     <div>
-      <div className="mb-5"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo administrativo — cadastro central (pessoas físicas e jurídicas).</p></div>
-      <PageHead eyebrow="Administrativo" title="Visão geral"
+      <PageHead eyebrow="Administrativo" title="Visão geral" hint="Pendências, situação do cadastro central (pessoas físicas e jurídicas) e análises."
         actions={<PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onClear={() => { onClear(); setFilters({ owner: "", type: "", kind: "", status: "" }); }}
           extraCount={activeFilters} extraSummary={activeFilters > 0 ? `${activeFilters} filtro(s) da central` : undefined}
           extra={<div className="grid gap-3">
@@ -59,20 +58,23 @@ const AdmDashboard = () => {
             <div><label htmlFor="adm-f-status" className="block text-xs text-muted-foreground mb-1">Status das pendências</label><select id="adm-f-status" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">Todas</option><option value="open">Abertas</option><option value="overdue">Atrasadas</option><option value="resolved">Concluídas</option></select></div>
             <p className="text-[11px] text-muted-foreground">Estes filtros valem para a central de pendências (cartões, indicadores complementares, gráficos e prioridades). Quando um filtro não se aplica a um conjunto (ex.: vínculo em pessoa jurídica), esse conjunto fica de fora. Os totais PF/PJ abaixo usam só período e unidade.</p>
           </div>} />} />
-      <div className="mb-8"><AdmCentral from={range.from} to={range.to} unit={unit} unitName={unitName} filters={filters} onOpen={setSheet} /></div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3"><h2 className="text-xl">Cadastro central — pessoas físicas e jurídicas</h2><p className="text-xs text-muted-foreground">Totais e distribuições do cadastro (período e unidade).</p></div>
       <State loading={dash.isLoading} error={dash.error} />
-      {d && (<>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total de cadastros" value={n(d.total.value ?? 0)} basis={d.total.basis} onClick={() => open("total")} />
-          <StatCard label="Pessoas físicas" value={n(d.pf.value ?? 0)} basis={d.pf.basis} onClick={() => open("pf")} />
-          <StatCard label="Pessoas jurídicas" value={n(d.pj.value ?? 0)} basis={d.pj.basis} onClick={() => open("pj")} />
-          <StatCard label="Novos no período" value={n(d.new.value ?? 0)} basis={`${d.new.basis} · PF ${d.new_pf} · PJ ${d.new_pj}`} onClick={() => open("new")} />
-          <StatCard label="Ativos" value={n(statusSum("ativo"))} basis="status cadastral “ativo” (PF + PJ)" onClick={() => open("status", "ativo")} />
-          <StatCard label="Pendentes" value={n(statusSum("pendente"))} basis="status cadastral “pendente” (PF + PJ)" onClick={() => open("status", "pendente")} />
-          <StatCard label="Inativos" value={n(statusSum("inativo"))} basis="status cadastral “inativo” (PF + PJ)" onClick={() => open("status", "inativo")} />
-        </ul>
-        <div className="grid gap-4 lg:grid-cols-2 mt-5">
+      <AdmCentral mapa={<AdmMapa unit={unit} />} from={range.from} to={range.to} unit={unit} unitName={unitName} filters={filters} onOpen={setSheet}
+        cadastroResumo={d && (
+          <div className="mb-4">
+            <h3 className="text-[0.9375rem] font-semibold mb-1">Cadastro central — pessoas físicas e jurídicas</h3>
+            <p className="text-xs text-muted-foreground mb-2">Totais e distribuições do cadastro; “novos” segue o período selecionado.</p>
+            <ul className="hp-kpi-grid">
+              <StatCard label="Total de cadastros" value={n(d.total.value ?? 0)} unit="cadastros" period="Hoje" basis={d.total.basis} onClick={() => open("total")} />
+              <StatCard label="Pessoas físicas" value={n(d.pf.value ?? 0)} unit="pessoas" period="Hoje" basis={d.pf.basis} onClick={() => open("pf")} />
+              <StatCard label="Pessoas jurídicas" value={n(d.pj.value ?? 0)} unit="empresas" period="Hoje" basis={d.pj.basis} onClick={() => open("pj")} />
+              <StatCard label="Novos no período" value={n(d.new.value ?? 0)} unit="cadastros" period={RANGE_LABEL[preset]} basis={`${d.new.basis} · PF ${d.new_pf} · PJ ${d.new_pj}`} onClick={() => open("new")} />
+              <StatCard level="compact" label="Ativos" value={n(statusSum("ativo"))} basis="status cadastral “ativo” (PF + PJ)" onClick={() => open("status", "ativo")} />
+              <StatCard level="compact" label="Pendentes" value={n(statusSum("pendente"))} basis="status cadastral “pendente” (PF + PJ)" onClick={() => open("status", "pendente")} />
+              <StatCard level="compact" label="Inativos" value={n(statusSum("inativo"))} basis="status cadastral “inativo” (PF + PJ)" onClick={() => open("status", "inativo")} />
+            </ul>
+          </div>)}
+        cadastroAnalise={d && (<>
           <BarBlock title="Campos faltantes" hint="Cadastros sem cada dado mínimo (um cadastro pode faltar em vários campos). Clique numa barra para ver os registros."
             data={d.missing.map((m) => ({ campo: m.label, field: m.field, PF: m.pf, PJ: m.pj }))} xKey="campo" stacked
             series={[{ key: "PF", label: "Pessoas físicas" }, { key: "PJ", label: "Pessoas jurídicas" }]} onBarClick={(r) => open("missing", String(r.field))} empty="Nenhum campo faltante." />
@@ -85,8 +87,7 @@ const AdmDashboard = () => {
           <BarBlock title="Distribuição por unidade" hint="PF pela unidade principal; PJ em cada unidade vinculada (uma PJ em duas unidades aparece nas duas)."
             data={d.by_unit.map((u) => ({ unidade: u.unit, id: u.unit_id, PF: u.pf, PJ: u.pj }))} xKey="unidade" stacked
             series={[{ key: "PF", label: "Pessoas físicas" }, { key: "PJ", label: "Pessoas jurídicas" }]} onBarClick={(r) => open("unit", String(r.id))} />
-        </div>
-      </>)}
+        </>)} />
       <IndicatorSheet trigger={sheet} onClose={() => setSheet(null)} />
     </div>
   );

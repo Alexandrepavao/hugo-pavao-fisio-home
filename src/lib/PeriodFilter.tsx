@@ -40,9 +40,11 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
   const apply = () => { if (showPeriod && preset === "personalizado") { onFrom!(draftFrom); onTo!(draftTo); } setOpen(false); };
   const clear = () => { onClear(); setOpen(false); };
 
-  const totalActive = extraCount + (compare ? 1 : 0);
+  // "ativo" = diferente do padrão da tela (mês atual, todas as unidades, sem comparação, sem filtros específicos)
+  const totalActive = extraCount + (compare ? 1 : 0) + (showUnit && unit ? 1 : 0) + (showPeriod && preset !== "mes" ? 1 : 0);
   const periodLabel = showPeriod ? RANGE_LABEL[preset!] : "";
   const unitLabel = showUnit ? (units!.find((u) => u.id === unit)?.name ?? "Todas as unidades") : "";
+  const activeChips = [showPeriod && preset !== "mes" ? `Período: ${periodLabel}` : "", showUnit && unit ? `Unidade: ${unitLabel}` : "", compare ? "Comparando com o período anterior" : "", ...(extraSummary ? extraSummary.split(" · ") : [])].filter(Boolean);
   const rangeText = showPeriod ? `${new Date(from! + "T12:00:00Z").toLocaleDateString("pt-BR")} – ${new Date(to! + "T12:00:00Z").toLocaleDateString("pt-BR")}` : "";
 
   const body = (
@@ -72,54 +74,60 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
 
   if (isMobile) {
     return (
-      <div className="flex items-center gap-2">
-        <Drawer open={open} onOpenChange={syncDraft}>
-          <DrawerTrigger asChild>
-            <button type="button" className={pillCls}><SlidersHorizontal size={14} aria-hidden />Filtrar{totalActive > 0 && <span className="hp-badge">{totalActive}</span>}</button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader className="text-left"><DrawerTitle>Filtros</DrawerTitle>
-              <DrawerDescription>{[periodLabel, showUnit && unit ? unitLabel : "", extraSummary].filter(Boolean).join(" · ") || "Nenhum filtro ativo"}</DrawerDescription></DrawerHeader>
-            <div className="px-4 pb-2 max-h-[55vh] overflow-y-auto">{body}
-              {showUnit && (
-                <div className="mt-3">
-                  <label htmlFor="pf-unit-m" className="block text-xs text-muted-foreground mb-1">Unidade</label>
-                  <select id="pf-unit-m" value={unit} onChange={(e) => onUnit!(e.target.value)} className="w-full"><option value="">Todas</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
-                </div>
-              )}
-            </div>
-            <DrawerFooter className="flex-row gap-2">
-              <button type="button" className={btnGhost + " flex-1"} onClick={clear}>Limpar</button>
-              <DrawerClose asChild><button type="button" className={btnPrimary + " flex-1"} onClick={apply}>Aplicar</button></DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-        {(periodLabel || unitLabel) && <p className="text-[12px] text-muted-foreground truncate">{periodLabel}{showUnit && unit ? ` · ${unitLabel}` : ""}</p>}
+      <div className="grid gap-1.5 w-full" data-testid="period-filter">
+        <div className="flex items-center gap-2">
+          <Drawer open={open} onOpenChange={syncDraft}>
+            <DrawerTrigger asChild>
+              <button type="button" className={pillCls}><SlidersHorizontal size={14} aria-hidden />Filtrar{totalActive > 0 && <span className="hp-badge">{totalActive}</span>}</button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader className="text-left"><DrawerTitle>Filtros</DrawerTitle>
+                <DrawerDescription>{activeChips.length ? activeChips.join(" · ") : [periodLabel, "Nenhum filtro adicional"].filter(Boolean).join(" · ")}</DrawerDescription></DrawerHeader>
+              <div className="px-4 pb-2 max-h-[55vh] overflow-y-auto">{body}
+                {showUnit && (
+                  <div className="mt-3">
+                    <label htmlFor="pf-unit-m" className="block text-xs text-muted-foreground mb-1">Unidade</label>
+                    <select id="pf-unit-m" value={unit} onChange={(e) => onUnit!(e.target.value)} className="w-full"><option value="">Todas</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
+                  </div>
+                )}
+              </div>
+              <DrawerFooter className="flex-row gap-2">
+                <button type="button" className={btnGhost + " flex-1"} onClick={clear}>Limpar</button>
+                <DrawerClose asChild><button type="button" className={btnPrimary + " flex-1"} onClick={apply}>Aplicar</button></DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+          {periodLabel && <p className="text-[12px] text-muted-foreground truncate min-w-0">{periodLabel}{showUnit && unit ? ` · ${unitLabel}` : ""}</p>}
+          {totalActive > 0 && <button type="button" className="ml-auto text-[12px] font-medium text-primary underline underline-offset-2 whitespace-nowrap" onClick={onClear}>Limpar filtros</button>}
+        </div>
+        {activeChips.length > 0 && <ul className="flex flex-wrap gap-1" aria-label="Filtros ativos">{activeChips.map((c) => <li key={c} className="hp-badge hp-badge-info max-w-full truncate">{c}</li>)}</ul>}
       </div>
     );
   }
 
   return (
     <Popover open={open} onOpenChange={syncDraft}>
-      <div className="flex flex-wrap items-center gap-2 justify-end">
-        {showPeriod && (
-          <PopoverTrigger asChild>
-            <button type="button" className={pillCls}><CalendarDays size={14} aria-hidden />{periodLabel}<ChevronDown size={13} aria-hidden /></button>
-          </PopoverTrigger>
-        )}
+      <div className="grid gap-1 justify-items-end" data-testid="period-filter">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          {showPeriod && (
+            <PopoverTrigger asChild>
+              <button type="button" className={pillCls} aria-label={`Período: ${periodLabel} (${rangeText})`} title={rangeText}><CalendarDays size={14} aria-hidden />{periodLabel}<ChevronDown size={13} aria-hidden /></button>
+            </PopoverTrigger>
+          )}
 
-        {showUnit && (<>
-          <label className="sr-only" htmlFor="pf-unit">Unidade</label>
-          <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 rounded-full !py-0 text-[13px]" aria-label="Unidade">
-            <option value="">Todas as unidades</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
-        </>)}
+          {showUnit && (<>
+            <label className="sr-only" htmlFor="pf-unit">Unidade</label>
+            <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 !w-auto max-w-[14rem] rounded-full !py-0 text-[13px]" aria-label="Unidade">
+              <option value="">Todas as unidades</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </>)}
 
-        {(extra || !showPeriod) && (
           <PopoverTrigger asChild>
-            <button type="button" className={pillCls}><SlidersHorizontal size={14} aria-hidden />Filtros{totalActive > 0 && <span className="hp-badge">{totalActive}</span>}</button>
+            <button type="button" className={pillCls}><SlidersHorizontal size={14} aria-hidden />Filtros{totalActive > 0 && <span className="hp-badge hp-badge-info">{totalActive}</span>}</button>
           </PopoverTrigger>
-        )}
+          {totalActive > 0 && <button type="button" className="hp-btn hp-btn-ghost hp-btn-sm" onClick={onClear}><X size={13} aria-hidden />Limpar filtros</button>}
+        </div>
+        {(extraSummary || compare) && <p className="text-[11px] text-muted-foreground text-right max-w-full truncate" aria-label="Filtros ativos">{[compare ? "Comparando com o período anterior" : "", extraSummary].filter(Boolean).join(" · ")}</p>}
       </div>
       <PopoverContent align="end" collisionPadding={12} className="w-80 flex flex-col max-h-[var(--radix-popover-content-available-height)]">
         {/* com muitos filtros o conteúdo passa da altura da janela: rola aqui dentro e os botões Limpar/Aplicar continuam à vista */}

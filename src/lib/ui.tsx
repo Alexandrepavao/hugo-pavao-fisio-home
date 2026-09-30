@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Inbox } from "lucide-react";
+import { ChevronRight, Inbox } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // ---- classes compartilhadas (definidas em src/styles/app.css) ----
@@ -73,24 +73,45 @@ export const Badge = ({ tone = "neutral", children }: { tone?: Tone; children: R
   return <span className={`hp-badge ${cls}`}>{children}</span>;
 };
 
-export const StatCard = ({ label, value, basis, tone, unavailable, onClick }: { label: string; value: ReactNode; basis?: string; tone?: Tone; unavailable?: boolean; onClick?: () => void }) => {
+/** Nível visual do cartão: "attention" (pendências, atrasos, riscos — destaque), "summary" (totais e situação atual) ou "compact" (apoio, menor). */
+export type CardLevel = "attention" | "summary" | "compact";
+export interface CardDelta { dir: "up" | "down" | "flat"; text: string; /** true = variação boa (verde), false = ruim (vermelho), omitido = neutra */ good?: boolean }
+/** Cartão de indicador: nome, número principal, unidade, período analisado, comparação (só com base real), descrição curta e, se clicável, detalhe ao clicar.
+ *  O número fica num <p class="tabular"> dentro do botão (contrato usado pelos testes de aceite). */
+export const StatCard = ({ label, value, unit, period, delta, basis, tone, unavailable, onClick, level = "summary" }: {
+  label: string; value: ReactNode; unit?: string; period?: string; delta?: CardDelta | null; basis?: string; tone?: Tone; unavailable?: boolean; onClick?: () => void; level?: CardLevel;
+}) => {
+  const valueTone = unavailable ? "text-muted-foreground" : tone === "danger" ? "text-destructive" : tone === "warning" ? "text-[hsl(var(--lvl-attention))]" : "text-foreground";
+  const cls = `hp-kpi hp-kpi-${level}${tone === "danger" ? " hp-kpi-critical" : tone === "warning" ? " hp-kpi-warn" : ""}`;
   const body = (<>
     <div className="flex items-start justify-between gap-2">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      {onClick && <span aria-hidden className="text-[11px] text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">Ver detalhes</span>}
+      <p className="hp-kpi-label">{label}</p>
+      {period ? <span className="hp-kpi-period">{period}</span> : onClick && <span aria-hidden className="hp-kpi-more"><ChevronRight size={14} /></span>}
     </div>
-    <p className={`mt-1 text-[1.5rem] leading-8 font-bold tabular ${unavailable ? "text-muted-foreground" : tone === "danger" ? "text-destructive" : "text-foreground"}`} style={{ fontFamily: "Inter, system-ui, sans-serif" }}>{value}</p>
-    {basis && <p className="text-[11px] leading-4 text-muted-foreground mt-2">{basis}</p>}
+    <div className="flex items-baseline gap-1.5 flex-wrap">
+      <p className={`hp-kpi-value tabular ${valueTone}`}>{value}</p>
+      {unit && !unavailable && <span className="hp-kpi-unit">{unit}</span>}
+    </div>
+    {delta && <p className={`hp-kpi-delta ${delta.good === true ? "text-success" : delta.good === false ? "text-destructive" : "text-muted-foreground"}`}>{delta.dir === "up" ? "▲" : delta.dir === "down" ? "▼" : "■"} {delta.text}</p>}
+    {basis && <p className="hp-kpi-basis" title={basis}>{basis}</p>}
   </>);
-  if (!onClick) return <li className="hp-card p-4 list-none">{body}</li>;
+  if (!onClick) return <li className={`${cls} hp-card list-none`}>{body}</li>;
   return (
     <li className="list-none">
-      <button type="button" onClick={onClick} className="group hp-card p-4 w-full text-left hover:border-accent/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all">
+      <button type="button" onClick={onClick} className={`${cls} hp-card group w-full text-left hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all`}>
         {body}
       </button>
     </li>
   );
 };
+
+/** Seção de dashboard com nível: Atenção (o que exige ação), Resumo (situação atual) ou Análise (gráficos, evolução, comparações). */
+export const LevelSection = ({ level, title, hint, children, label }: { level: "attention" | "summary" | "analysis"; title: string; hint?: string; children: ReactNode; label?: string }) => (
+  <section aria-label={label ?? title} className={`hp-level hp-level-${level}`}>
+    <div className="hp-level-head"><span className="hp-level-tag"><span aria-hidden className="hp-level-mark" />{level === "attention" ? "Atenção" : level === "summary" ? "Resumo" : "Análise"}</span><h2>{title}</h2>{hint && <p>{hint}</p>}</div>
+    {children}
+  </section>
+);
 
 export const Msg = ({ m }: { m: { kind: "ok" | "err"; text: string } | null }) =>
   m ? (

@@ -44,7 +44,19 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-09-30, 8ª rodada) — Google Calendar concluído até a autorização
+## Sessão mais recente (2026-09-30, 9ª rodada) — nova interface (Hub, Administrativo, CRM, Financeiro)
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho. Detalhes, decisões e capturas: `docs/interface-v2.md`; atribuições: `docs/creditos.md`.
+- **Tokens próprios do HP** (`src/styles/app.css`): paleta de gráficos, escala do mapa, níveis dos cartões e **tema escuro** (escolha da pessoa, guardada no navegador).
+- **Cabeçalho único** (`HeaderBar`) nos três shells: logo + aplicativo e seção atuais, busca discreta (Ctrl K), troca de app, **notificações com dados reais** (tarefas comerciais e pendências administrativas atrasadas *do próprio usuário*), tema e perfil; selo de ambiente no cabeçalho (não sobrepõe mais a barra lateral). Busca global ganhou título acessível.
+- **Filtro único** (`PeriodFilter`): período e unidade visíveis, contador de filtros ativos, “Limpar filtros”, resumo dos ativos; no celular, gaveta com Aplicar/Limpar sempre à vista e chips dos filtros ativos.
+- **Cartões em três níveis** (`StatCard` + `LevelSection`): Atenção, Resumo e Análise, com nome, número, unidade, período, comparação **só com base real** (`makeDelta`) e descrição curta; aplicado em Hub, Administrativo, CRM e Financeiro (que agora também compara de verdade com o período anterior).
+- **Mapa do Brasil** (`BrazilMap`, geometria `@svg-maps/brazil`, CC BY 4.0 — atribuição só na documentação): Administrativo (“Cadastros por estado”, migration **064** `adm_geo`) e Hub; balão com nome/quantidade/percentual, estado sem dado neutro, clique lista os cadastros do estado e abre o Diretório já filtrado (`uf`). A migration 064 também fez a listagem do Diretório respeitar o escopo de unidade do gestor de unidade.
+- **Estouro horizontal** no celular corrigido (Administrativo 151 px e CRM 188 px → 0); botões do cabeçalho voltaram a esconder/mostrar por tamanho de tela.
+- **Testado:** SQL S01–S12 (S12 novo: 26), N02; E2E da release inteiro + `R12` (10 novos: cabeçalho/tema/ambiente, filtro, níveis, comparação, mapa com dado real, Diretório por UF, permissões, celular).
+- **Migrations para produção:** 23 (038→047, 052→064); `list_migrations` final = **60**; o Dev tem **65**.
+
+## Sessão anterior (2026-09-30, 8ª rodada) — Google Calendar concluído até a autorização
 
 > `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho.
 - **Configurado no Dev (sem exibir valores):** `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (seus), `GOOGLE_TOKEN_ENC_KEY` (gerada: 32 bytes aleatórios, não substituiu nada), `GOOGLE_RETURN_URL` = `https://release-v1--hp-group-hub.netlify.app` (**só do calendário**; `PUBLIC_SITE_URL` dos e-mails intocado), `CALENDAR_SYNC_SECRET` e os itens `calendar_sync_url`/`calendar_sync_secret` do Vault. O `GOOGLE_CLIENT_ID` tinha uma quebra de linha no meio (vinda da colagem): a função agora ignora espaços nas credenciais (o Google já o aceitava).
@@ -71,7 +83,7 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 - **`cash_flow_monthly`** reexecutada com os parâmetros corretos (`p_from`, `p_to`, `p_unit`): 200.
 - **`google-calendar` (publicada sem JWT na plataforma):** `start`, `sync` e `disconnect` exigem sessão de usuário validada dentro da função (sem token, só a chave pública ou JWT inválido → 401). Achado: o `state` era assinado e expirava em 10 min, mas **não era de uso único**. Corrigido com a migration **061** (`google_oauth_state`, nonce guardado e consumido no callback). 25 verificações com segredos **fictícios temporários** (já removidos do Dev): state adulterado/forjado/vencido/de outro usuário/repetido → `google=estado`; só o 1º uso do state legítimo segue. Script: `supabase/tests/functions/google-calendar-auth.mjs`.
 - **Preview:** `https://release-v1--hp-group-hub.netlify.app` (deploy `6abd3c27ec571eb924ec12b2`, branch-deploy, `ready`, sem `--prod`). **Bloqueio de acesso:** o endereço exige login da equipe Netlify (401 sem sessão), então o `version.json` servido e as telas não puderam ser abertos por HTTP. Verificação alternativa: o `dist/` gerado pelo próprio build do deploy foi servido localmente e 32 E2E (R01, R02, R07–R10) passaram; o `version.json` desse bundle diz commit `bcc6db8f649f`, perfil `v1`, ambiente `preview`, backend `Dev` (`fsvtzowcwhvwtluwrhnb`). Para conferir no endereço publicado: abrir a URL **logado na Netlify** e ver `/version.json`.
-- **Contagem de migrations:** Dev 64 × produção prevista 59 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
+- **Contagem de migrations:** Dev 65 × produção prevista 60 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
 - **Ainda pendente (não declarado concluído):** Bunny e Google em **configuração e teste reais**; `.ics` num iPhone/Google Agenda de verdade.
 
 ## Sessão anterior (2026-09-30, 5ª rodada) — Escopo ampliado aplicado no Dev e testado no banco
