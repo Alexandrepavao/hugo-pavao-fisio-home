@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
 import { btnGhost, errText, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { SALE_LINE_FILTERS, saleLineLabel, saleLineMatches, useSaleLines, type SaleLineFilter } from "./saleLines";
 
 interface Rule { id: string; name: string; product_id: string | null; beneficiary_user_id: string | null; percent_bp: number; active: boolean; product: { name: string } | null }
 interface Member { user_id: string; display_name: string; email: string; roles: unknown[] }
@@ -22,10 +23,15 @@ const FinanceCommissions = () => {
 const Entries = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const list = useQuery({ queryKey: ["commissions"], queryFn: async () => (await supabase.from("commission_entries").select("id, amount_cents, status, created_at, sale_id").order("created_at", { ascending: false }).limit(200)).data ?? [] });
+  const [lineFilter, setLineFilter] = useState<SaleLineFilter>("");
+  const lines = useSaleLines((list.data ?? []).map((c) => c.sale_id));
+  const shown = (list.data ?? []).filter((c) => saleLineMatches(lines.data?.[c.sale_id], lineFilter));
   const set = async (id: string, s: string) => { const { error } = await supabase.rpc("commission_set_status", { p_entry: id, p_status: s }); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["commissions"] }); };
   return (<><Msg m={msg} />
     <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhuma comissão gerada." />
-    {list.data && list.data.length > 0 && <Table head={["Data", "Valor", "Estado", ""]} right={[1]}>{list.data.map((c) => <tr key={c.id}><Td>{fmtDate(c.created_at)}</Td><Td num>{brl(c.amount_cents)}</Td><Td>{{ pending: "Pendente", authorized: "Autorizada", paid: "Paga", reversed: "Estornada" }[c.status as string]}</Td>
+    {list.data && list.data.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-2 text-sm"><label htmlFor="comm-line" className="text-xs text-muted-foreground">Linha de negócio da venda</label>
+      <select id="comm-line" className="!w-auto" value={lineFilter} onChange={(e) => setLineFilter(e.target.value as SaleLineFilter)}>{SALE_LINE_FILTERS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>}
+    {shown.length > 0 && <Table head={["Data", "Valor", "Linha (da venda)", "Estado", ""]} right={[1]}>{shown.map((c) => <tr key={c.id}><Td>{fmtDate(c.created_at)}</Td><Td num>{brl(c.amount_cents)}</Td><Td>{saleLineLabel(lines.data?.[c.sale_id])}</Td><Td>{{ pending: "Pendente", authorized: "Autorizada", paid: "Paga", reversed: "Estornada" }[c.status as string]}</Td>
       <Td>{c.status === "pending" && <button className={btnGhost + " hp-btn-sm"} onClick={() => set(c.id, "authorized")}>Autorizar</button>}{c.status === "authorized" && <button className={btnGhost + " hp-btn-sm"} onClick={() => set(c.id, "paid")}>Marcar paga</button>}</Td></tr>)}</Table>}</>);
 };
 

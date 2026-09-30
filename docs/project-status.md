@@ -27,10 +27,10 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 | 1b | Indicadores CRM (tempo/etapa, conversão, ciclo, perdas, responsável/origem) | ✅ código + migration 056 | ❌ | idem 1a (`S05` cobre fórmulas e permissões) |
 | 1c | Indicadores Captação (quiz/formulário, conversão até venda) | ✅ código + migration 056 | ❌ | idem 1a. Limitação: formulário não registra início/abandono (só envio) |
 | 1d | `docs/indicadores.md` (fórmula, período, denominador) | ✅ | — | revisar depois dos testes |
-| 2a | Linha de negócio no modelo (Fisioterapia / Academy / Não classificado) | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
-| 2b | Seletor Geral/Fisioterapia/Academy em vendas, recebíveis, despesas, comissões, relatórios, DRE | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
-| 2c | Venda com itens das duas linhas; parcial/desconto/estorno reconciliam | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
-| 2d | Despesas compartilhadas com rateio / não alocadas; Geral reconcilia sem duplicar | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 2a | Linha de negócio no modelo (Fisioterapia / Academy / Não classificado) | ✅ código + migration 057 | ❌ | **aplicar a 057 no Dev** e rodar `S06`; classificar os produtos em Configurações › Operação |
+| 2b | Seletor Geral/Fisioterapia/Academy em vendas, recebíveis, despesas, comissões, relatórios, DRE | 🟡 Visão geral, DRE, Vendas, Recebíveis, Comissões, Contas a pagar, Produtos | ❌ | aplicar 057 e testar; **sem seletor ainda** em Recorrência (MRR), Relatórios de eficiência (conciliação bancária não pertence a uma linha) |
+| 2c | Venda com itens das duas linhas; parcial/desconto/estorno reconciliam | ✅ divisão proporcional exata (venda mista, desconto, parcial, estorno) | ❌ | `S06` escrito (valores calculados à mão), não executado |
+| 2d | Despesas compartilhadas com rateio / não alocadas; Geral reconcilia sem duplicar | ✅ rateio explícito + compartilhado/não alocado + quadro de conferência | ❌ | `S06` escrito, não executado; ver `docs/financeiro-linhas-de-negocio.md` |
 | 3a | Objetivos, plano de sessões, próximas consultas, histórico, saldo separado | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
 | 3b | Avaliações de evolução (registro com data/autoria) e gráficos | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
 | 3c | Vídeos Bunny atribuídos pelo profissional | ❌ | ❌ | 🔒 plano em `docs/plano-escopo-ampliado.md`; **não existe integração Bunny hoje**; proteção por token exige chave da biblioteca (decisão/credencial do usuário) |

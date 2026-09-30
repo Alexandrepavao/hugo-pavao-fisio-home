@@ -177,6 +177,8 @@ const QuizWhatsAppSettings = () => {
 };
 
 interface ServiceRow { id: string; name: string; duration_min: number; price_cents: number; active: boolean }
+type ProductLine = "unclassified" | "physio" | "academy";
+const PRODUCT_LINE: Record<ProductLine, string> = { unclassified: "Não classificado", physio: "HP Fisioterapia", academy: "HP Academy" };
 interface ProductRow { id: string; kind: string; name: string; price_cents: number; sessions_count: number | null; validity_days: number | null; active: boolean }
 const PRODUCT_KIND: Record<string, string> = { service: "Serviço avulso", course: "Curso", mentoring: "Mentoria", package: "Pacote", plan: "Plano/assinatura" };
 
@@ -186,6 +188,16 @@ const OperationSettings = () => {
   const [pKind, setPKind] = useState("package"); const [pName, setPName] = useState(""); const [pPrice, setPPrice] = useState(""); const [pSessions, setPSessions] = useState(""); const [pValidity, setPValidity] = useState(""); const [pService, setPService] = useState("");
 
   const services = useQuery({ queryKey: ["settings-services"], queryFn: async () => (await supabase.from("services").select("id, name, duration_min, price_cents, active").order("name")).data as ServiceRow[] });
+  // Linha de negócio por produto: consulta tolerante (a coluna só existe depois da migration de linhas de negócio)
+  const productLines = useQuery({ queryKey: ["settings-product-lines"], retry: false, queryFn: async () => {
+    const { data, error } = await supabase.from("products").select("id, business_line"); if (error) throw error;
+    return Object.fromEntries((data as { id: string; business_line: ProductLine }[]).map((r) => [r.id, r.business_line]));
+  } });
+  const setProductLine = async (p: ProductRow, line: ProductLine) => {
+    const { error } = await supabase.rpc("product_set_line", { p_product: p.id, p_line: line });
+    if (error) return m.err(errText(error));
+    m.ok(`“${p.name}” agora é ${PRODUCT_LINE[line]} (vale para todo o histórico do produto).`); void qc.invalidateQueries({ queryKey: ["settings-product-lines"] });
+  };
   const products = useQuery({ queryKey: ["settings-products"], queryFn: async () => (await supabase.from("products").select("id, kind, name, price_cents, sessions_count, validity_days, active").order("name")).data as ProductRow[] });
 
   const createService = async (e: FormEvent) => {
@@ -265,13 +277,15 @@ const OperationSettings = () => {
         <div><label htmlFor="pr-val" className="block text-xs mb-1">Validade (dias)</label><input id="pr-val" type="number" min={1} value={pValidity} onChange={(e) => setPValidity(e.target.value)} /></div>
         <button className={btnGhost + " sm:col-span-6 w-fit"}>Criar produto</button>
       </form>
+      {productLines.data && <p className="text-xs text-muted-foreground mb-3">Linha de negócio (HP Fisioterapia / HP Academy) alimenta o financeiro por linha. Produtos “Não classificados” aparecem assim nos relatórios; reclassificar um produto reclassifica todo o histórico dele.</p>}
       <p className="text-xs text-muted-foreground mb-3">Regras finas de consumo (falta consome sessão, prazo de cancelamento tardio) usam os valores padrão do sistema ao criar por aqui; para ajustá-las num produto específico, use o banco diretamente — essa tela cobre o que é preenchido com mais frequência.</p>
       <State loading={products.isLoading} error={products.error} empty={products.data?.length === 0} emptyText="Nenhum produto cadastrado." />
       {products.data && products.data.length > 0 && (
-        <Table head={["Nome", "Tipo", "Preço", "Sessões", "Estado", ""]}>
+        <Table head={["Nome", "Tipo", "Preço", "Sessões", ...(productLines.data ? ["Linha de negócio"] : []), "Estado", ""]}>
           {products.data.map((p) => (
             <tr key={p.id}>
               <Td>{p.name}</Td><Td>{PRODUCT_KIND[p.kind] ?? p.kind}</Td><Td>{brl(p.price_cents)}</Td><Td>{p.sessions_count ?? "—"}</Td>
+              {productLines.data && <Td><select className="!w-auto" aria-label={`Linha de negócio de ${p.name}`} value={productLines.data[p.id] ?? "unclassified"} onChange={(e) => setProductLine(p, e.target.value as ProductLine)}>{(Object.keys(PRODUCT_LINE) as ProductLine[]).map((k) => <option key={k} value={k}>{PRODUCT_LINE[k]}</option>)}</select></Td>}
               <Td>{p.active ? "Ativo" : "Inativo"}</Td>
               <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => toggleProduct(p)}>{p.active ? "Desativar" : "Ativar"}</button></Td>
             </tr>

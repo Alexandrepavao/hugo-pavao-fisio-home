@@ -6,6 +6,8 @@ import { fmtDate } from "@/lib/format";
 import { PageHead, State, StatCard } from "@/lib/ui";
 import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { PeriodFilter } from "./PeriodFilter";
+import LineBreakdown, { LineSelector } from "./LineBreakdown";
+import { useLineFilter } from "./lineFilter";
 import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./shared";
 
 const brl0 = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(cents / 100);
@@ -42,6 +44,7 @@ const Overview = () => {
   const overdueTotal = aging.data ? Object.values(aging.data).reduce((a, b) => a + b, 0) : 0;
   const unitLabel = units.data?.find((u2) => u2.id === unit)?.name ?? "Todas as unidades";
   const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
+  const [line, setLine] = useLineFilter();
 
   return (
     <div>
@@ -64,6 +67,14 @@ const Overview = () => {
           <StatCard label="Projeção de mensalidades (próx. mês)" value={mfmt(metrics.data.forecast_subscriptions_next_month_cents)} basis="sem detalhamento por registro ainda — a projeção soma contratos futuros que não têm uma única tabela de origem por parcela; ver docs/project-status.md" />
         </ul>
       )}
+
+      <section className="mb-8" aria-label="Linhas de negócio">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div><h2 className="text-xl">Por linha de negócio</h2><p className="text-xs text-muted-foreground">Mesma organização: HP Fisioterapia e HP Academy, com compartilhados e não classificados — o “Geral” acima continua sendo o consolidado.</p></div>
+          <LineSelector value={line} onChange={setLine} />
+        </div>
+        <LineBreakdown mode="overview" fromIso={range.fromIso} toIso={range.toIso} unit={unit} line={line} />
+      </section>
 
       <section className="mb-8">
         <h2 className="text-xl mb-3">Vencidos por faixa de atraso</h2>
