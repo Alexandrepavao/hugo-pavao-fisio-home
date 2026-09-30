@@ -59,7 +59,7 @@ Executados contra o **Supabase Dev** (dados de QA), com o front local da branch 
 **Não coberto / não provado:** entrega e clique dos e-mails (§7); convite por e-mail via Netlify; migrations numa cópia de produção; SQL legado 001–023 inteiro em base limpa (002, 003, 010, 012 falham por fixtures próprias; 001/005 têm cópias independentes de volume em `supabase/tests/release`); carga/concorrência além da restrição de exclusão da agenda.
 
 ## 4. Migrations para produção (ordem exata)
-Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 14 (Dev já as tem):
+Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 18 (o Dev tem 054 e 055; **056–059 ainda pendentes no Dev**):
 
 | Ordem | Arquivo | O que faz |
 |---|---|---|
@@ -77,9 +77,13 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 12 | `20260930000053_quiz_partner_referral.sql` | Indicação de parceiro pelo quiz (+ GRANT) |
 | 13 | `20260930000054_appointment_confirmations.sql` | Confirmação antecipada (paciente/profissional), falta do profissional, `my_appointments`/`my_day` ampliados (+ GRANT/REVOKE) |
 | 14 | `20260930000055_patient_cancel_past_guard_team_day.sql` | Cancelamento pelo paciente no portal (prazo/consumo), bloqueio de horário passado em `book_appointment`/`reschedule_appointment`, `my_agenda_professionals`/`professional_day` (agendas por permissão), `my_appointments` ampliado (+ GRANT/REVOKE) |
+| 15 | `20260930000056_indicators.sql` | Indicadores ampliados: Administrativo, CRM (tempo/conversão/ciclo/perdas/desempenho) e Captação — `docs/indicadores.md` |
+| 16 | `20260930000057_business_lines.sql` | Financeiro por linha de negócio (HP Fisioterapia / HP Academy), rateio e conferência — `docs/financeiro-linhas-de-negocio.md` |
+| 17 | `20260930000058_patient_journey.sql` | Jornada do paciente: objetivos, plano, avaliações, reavaliação, vídeos privados, renovação — `docs/jornada-do-paciente.md` |
+| 18 | `20260930000059_calendars.sql` | Calendários: visão por intervalo, assinatura .ics, conexão Google — `docs/calendarios.md` |
 
 **NÃO aplicar 048–051** (papel `accountant` e Contábil): existem no Dev e ficam na branch de desenvolvimento. Não há dependência da v1 nelas. Como a 052/053 têm versão maior que a 051, a ordem de aplicação em produção (…047 → 052 → 053) e a futura chegada de 048–051 são compatíveis (são independentes).
-Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 51 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
+Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 55 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
 
 ## 5. Variáveis e configurações (somente nomes; valores ficam nos painéis)
 | Onde | Nome | Observação |
@@ -109,7 +113,7 @@ Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), con
 
 Publicação (banco → configuração → front → verificação):
 1. Backup/inventário (§6). Congelar mudanças de schema.
-2. Aplicar as 14 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 51; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
+2. Aplicar as 18 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 55; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
 3. Configurar o Supabase de produção (§5): secrets, hook, Site URL/Redirect URLs, limite de e-mail, senha mínima.
 4. **Conectar o site Netlify de produção ao repositório**, branch `release/v1` (ou `main` após o merge), com as variáveis de produção — assim o **Netlify** compila (não a máquina de alguém) e cada deploy carrega o `COMMIT_REF`. Sem `.env.local` no build.
 5. Deploy. Verificar `GET /version.json`: `commit` = commit aprovado, `environment` = `production`, `backend` = `produção`. Se não bater, **não abrir para a equipe**. A tela *Configurações* mostra a mesma linha e, fora de produção, aparece o selo "AMBIENTE DE TESTE".
@@ -123,7 +127,7 @@ Reversão:
 ## 9. Pendências que IMPEDEM o uso × melhorias futuras
 **Impedem colocar em produção (precisam de ação sua/painéis):**
 1. Republicar o front de produção com o banco de produção (hoje aponta para o Dev — §2 #5) e conectá-lo ao repositório.
-2. Aplicar as 14 migrations em produção.
+2. Aplicar as 18 migrations em produção.
 3. Configurar e-mail em produção: Resend (domínio, DKIM/SPF), secrets e hook do Supabase, Site URL/Redirect URLs, limite de e-mails (§5). Sem isso ninguém completa o primeiro acesso.
 4. DNS de `hpfisioterapia.com.br` continua no GitHub Pages (HTTPS válido); o app não está no domínio oficial. Decidir subdomínio do app (ex.: `app.hpfisioterapia.com.br`) e apontar o DNS quando aprovado.
 5. Proteger ou desligar o site Dev público `hp-group-hub` (§2 #6) e resolver o site Netlify não documentado `leafy-cascaron-325147` (ver `docs/deployment.md`).
@@ -167,3 +171,11 @@ Decisões: `professional_no_show` é estado final (corrigir pela marcação só 
 - **Verificação**: `version.json` = `commit 86f50f4 · profile v1 · environment preview · backend Dev (fsvtzowcwhvwtluwrhnb)`; o bundle enviado contém só a referência do Dev. Login, rotas, menus por papel e portais (`01`, `R02`, `R03`: 14/14) foram exercitados contra esse mesmo `dist/` servido localmente com o Supabase Dev.
 - **Limites**: a URL do rascunho é protegida pelo login de equipe do Netlify (abre só para quem está logado no time), por isso não foi aberta de fora. O Supabase Auth do Dev tem como Redirect URLs só `hp-group-hub.netlify.app` e `localhost`: **login por senha funciona no preview; e-mails de recuperação/convite apontam para outro endereço** e não devem ser testados ali.
 - **Produção**: não tocada (site `hp-group-hub-producao`, domínio e DNS intactos).
+
+## 12. Edge Functions e segredos do escopo ampliado (nada disto está publicado/configurado ainda)
+| Função | Publicar | Precisa de |
+|---|---|---|
+| `bunny-playback` (vídeos privados) | `supabase functions deploy bunny-playback` (JWT ligado) | Secret `BUNNY_EMBED_TOKEN_KEY` (+ opcional `BUNNY_TOKEN_TTL_SECONDS`); ID da biblioteca em Configurações › Operação — `docs/jornada-do-paciente.md` |
+| `calendar-feed` (assinatura .ics) | `supabase functions deploy calendar-feed --no-verify-jwt` | nada além da migration 059 |
+| `google-calendar` (OAuth/sincronização) | `supabase functions deploy google-calendar --no-verify-jwt` | Secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_TOKEN_ENC_KEY`, `PUBLIC_SITE_URL` (+ opcional `CALENDAR_SYNC_SECRET`); cliente OAuth e tela de consentimento no Google Cloud — `docs/calendarios.md` |
+Nenhum segredo é digitado no chat, gravado no repositório ou exposto ao navegador (`VITE_*`). Em produção, repetir no projeto `HP Group Core` só na hora da publicação.

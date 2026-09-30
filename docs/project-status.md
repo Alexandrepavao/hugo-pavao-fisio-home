@@ -38,11 +38,19 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 | 4a | Meu dia: visões diária/semanal/mensal; agenda conjunta por autorização | ✅ visões Dia/Semana/Mês, agenda própria por padrão, outras agendas só por permissão/unidade, sem confirmar por outro | ❌ | aplicar a 059 e testar (`S08` escrito); telas conferidas só por typecheck |
 | 4b | Assinatura de calendário (Apple/iPhone, Google "por URL"): somente leitura | ✅ assinatura .ics somente leitura (token só como hash, revogável, conteúdo mínimo, UID estável, cancelamento, UTC) + Edge Function `calendar-feed` | ❌ | aplicar a 059, **publicar a função** (`--no-verify-jwt`) e testar num iPhone/Google; `S08` escrito |
 | 4c | Google Calendar do próprio usuário (sincronização) | 🟡 código preparado: OAuth com escopo mínimo, tokens criptografados, HP→Google (calendário próprio, id determinístico) e Google→HP (só compromissos externos), desconexão | ❌ | 🔒 **bloqueado por credenciais** (Client ID/Secret, `GOOGLE_TOKEN_ENC_KEY`, `PUBLIC_SITE_URL`, publicar `google-calendar`); **não testado contra o Google**; lista em `docs/calendarios.md` |
-| 5 | PR #3 e preview `hp-group-hub` atualizados | ❌ | ❌ | ao fim de cada etapa |
+| 5 | PR #3 e preview `hp-group-hub` atualizados | 🟡 PR #3 atualizado por push a cada etapa | ❌ | preview `hp-group-hub`: **não republicado** (depende de aplicar 056–059 e verificar as jornadas) |
 
 ---
 
-## Sessão mais recente (2026-09-30, 3ª rodada) — Cancelamento pelo paciente, horário passado, agendas por permissão, Administrativo
+## Sessão mais recente (2026-09-30, 4ª rodada) — Escopo ampliado: indicadores, financeiro por linha, jornada do paciente, calendários
+
+> `release/v1`, Dev apenas; sem merge, produção ou DNS. **Todo o código das 4 etapas está escrito e commitado, mas NADA do escopo ampliado foi aplicado no Dev nem testado no banco**: não havia credencial do Dev nesta sessão (sem `SUPABASE_ACCESS_TOKEN`; o CLI da máquina está logado em outra conta) e `setx` ainda não foi feito. Typecheck, lint, build e sintaxe/tipos das Edge Functions passaram — isso **não** é teste do banco.
+- **Pendências de banco (aplicar nesta ordem no SQL Editor do Dev):** `056` indicadores · `057` linhas de negócio · `058` jornada do paciente · `059` calendários. Depois rodar `S05`–`S08` (`npm run test:sql:release`, ou colar no SQL Editor) e os E2E.
+- **Telas que dependem das migrations pendentes:** painel do Administrativo, CRM › Relatórios e aba Indicadores da Captação (056) mostram erro até aplicar; seção “Por linha de negócio” da Visão geral/DRE (057) mostra erro, e as colunas “Linha” de Vendas/Recebíveis/Comissões/Contas a pagar mostram “—”/“Não classificado”; “Minha jornada” no portal, painel de jornada do fisioterapeuta e fila de renovação (058) aparecem como indisponíveis; visões Semana/Mês e “Conectar calendários” (059) não funcionam/não aparecem. O restante do app segue normal (as telas novas foram feitas para não quebrar as antigas antes da migration).
+- **Depende de configuração sua:** Bunny (`BUNNY_EMBED_TOKEN_KEY` + publicar `bunny-playback`), Google (credenciais OAuth + publicar `google-calendar`) e publicar `calendar-feed` — passo a passo em `docs/jornada-do-paciente.md` e `docs/calendarios.md`; lista consolidada em `docs/release-v1.md` §12.
+- **Migrations para produção:** 18 (038→047, 052→059); `list_migrations` final = 55.
+
+## Sessão anterior (2026-09-30, 3ª rodada) — Cancelamento pelo paciente, horário passado, agendas por permissão, Administrativo
 
 > Branch `release/v1`, Dev apenas — sem merge e sem produção/DNS. Detalhes em **`docs/release-v1.md` §10.1**.
 
