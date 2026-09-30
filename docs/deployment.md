@@ -30,6 +30,9 @@ O GitHub App oficial da Netlify (app id 13473) está conectado a este repositór
 - Hoje ele não expõe dados reais (build sem backend configurado), mas é uma superfície pública não intencional que replica o código da aplicação a cada push, incluindo agora a app inteira pós-merge. **Não consigo corrigir isto** — não tenho acesso a essa conta/site.
 - **Ação necessária do usuário**: acessar a conta Netlify dona de `leafy-cascaron-325147` (verificar em https://app.netlify.com em cada conta Netlify que você usa) e decidir: desconectar a integração GitHub App dessa conta, ou mover o site para o time "Hp Group" e aplicar a mesma proteção, ou confirmar que é intencional e documentar.
 
+## ⚠️ Correção (2026-09-30): o bundle de produção aponta para o banco DEV
+Conferido no arquivo JavaScript publicado em `hp-group-hub-producao.netlify.app`: contém somente `fsvtzowcwhvwtluwrhnb` (Dev) e nunca `wfqkjrpqkaarpavjheoj` (Core/produção) — o deploy manual usou o `dist` compilado localmente, que lê o `.env.local` (Dev). O item "Env vars apontando para HP Group Core" acima descrevia a intenção, não o que foi publicado. **Não use esse site para operar.** A partir da release v1 o build recusa esse cenário (`vite.config.ts`) e a publicação passa a ser feita pelo Netlify a partir do repositório — ver `docs/release-v1.md`.
+
 ## Como publicar um novo deploy manual
 ```bash
 npm run build && npx -y @netlify/mcp@latest --site-id <ID_DO_SITE> --proxy-path "<URL fornecida pelo MCP da Netlify>"
@@ -44,6 +47,8 @@ Site Dev/preview: `2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`. Site de produção: `3
 | Produção | `HP Group Core` (`wfqkjrpqkaarpavjheoj`) | site `hp-group-hub-producao` (público) | estrutura pronta; sem dados reais; DNS do domínio final pendente |
 
 ## Migrations
+> **Estado em 2026-09-29:** o **Dev** está na 051 (`20260929000051_private_function_privileges.sql`); a **produção** segue na 037 — 038→051 (captação de leads, CRM, ADM, Contábil) ainda **não** foram aplicadas lá e só devem ir, em ordem, quando autorizado.
+
 Ordem 001→037 (última: `20260924000037_reserved_slug_confirmar.sql`) — **todas aplicadas em produção** nesta sessão. Aplicar sempre no Dev primeiro → testes SQL → advisors → só então produção. Nunca `reset` em remoto.
 
 ## Pendências de deploy (ver `docs/go-live-plan.md` para o passo a passo completo)

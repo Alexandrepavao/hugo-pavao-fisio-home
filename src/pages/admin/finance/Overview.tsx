@@ -4,15 +4,14 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import { supabase } from "@/lib/supabase";
 import { fmtDate } from "@/lib/format";
 import { PageHead, State, StatCard } from "@/lib/ui";
+import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { PeriodFilter } from "./PeriodFilter";
-import { axisBrl, mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./shared";
+import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./shared";
 
 const brl0 = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(cents / 100);
 
 const Overview = () => {
-  const [preset, setPreset] = useState<RangePreset>("mes");
-  const [custom, setCustom] = useState(presetRange("mes"));
-  const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
+  const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const units = useUnits();
 
@@ -41,25 +40,28 @@ const Overview = () => {
   } });
 
   const overdueTotal = aging.data ? Object.values(aging.data).reduce((a, b) => a + b, 0) : 0;
+  const unitLabel = units.data?.find((u2) => u2.id === unit)?.name ?? "Todas as unidades";
+  const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Visão geral" hint="Resumo financeiro do período. Cada cartão mostra a regra de cálculo — passe o mouse ou abra o detalhe para ver a origem exata." />
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <PageHead eyebrow="Financeiro" title="Visão geral" hint="Resumo financeiro do período. Cada cartão mostra a regra de cálculo — passe o mouse ou abra o detalhe para ver a origem exata."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+            onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
+        } />
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {metrics.data && (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <StatCard label="Vendas confirmadas" value={metrics.data.average_ticket_cents?.sales != null ? (metrics.data.average_ticket_cents.sales as number).toLocaleString("pt-BR") : "0"} basis="quantidade de vendas confirmadas no período" />
-          <StatCard label="Recebimentos" value={mfmt(metrics.data.receipts_cents)} basis={metrics.data.receipts_cents?.basis} />
-          <StatCard label="Contas a receber (30 dias)" value={mfmt(metrics.data.forecast_receivables_30d_cents)} basis={metrics.data.forecast_receivables_30d_cents?.basis} />
-          <StatCard label="Vencidos" value={mfmt(metrics.data.overdue_cents)} tone="danger" basis={metrics.data.overdue_cents?.basis} />
-          <StatCard label="Contas a pagar (30 dias)" value={mfmt(metrics.data.forecast_payables_30d_cents)} basis={metrics.data.forecast_payables_30d_cents?.basis} />
-          <StatCard label="Resultado de caixa" value={mfmt(metrics.data.cash_result_cents)} basis={metrics.data.cash_result_cents?.basis} />
-          <StatCard label="Ticket médio" value={mfmt(metrics.data.average_ticket_cents)} basis={metrics.data.average_ticket_cents?.basis} />
-          <StatCard label="Projeção de mensalidades (próx. mês)" value={mfmt(metrics.data.forecast_subscriptions_next_month_cents)} basis={metrics.data.forecast_subscriptions_next_month_cents?.basis} />
+          <StatCard label="Vendas confirmadas" value={metrics.data.average_ticket_cents?.sales != null ? (metrics.data.average_ticket_cents.sales as number).toLocaleString("pt-BR") : "0"} basis="quantidade de vendas confirmadas no período" onClick={() => setDetail({ kind: "sales_confirmed", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Recebimentos" value={mfmt(metrics.data.receipts_cents)} basis={metrics.data.receipts_cents?.basis} onClick={() => setDetail({ kind: "receipts", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Contas a receber (30 dias)" value={mfmt(metrics.data.forecast_receivables_30d_cents)} basis={metrics.data.forecast_receivables_30d_cents?.basis} onClick={() => setDetail({ kind: "forecast_receivables_30d", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Vencidos" value={mfmt(metrics.data.overdue_cents)} tone="danger" basis={metrics.data.overdue_cents?.basis} onClick={() => setDetail({ kind: "overdue", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Contas a pagar (30 dias)" value={mfmt(metrics.data.forecast_payables_30d_cents)} basis={metrics.data.forecast_payables_30d_cents?.basis} onClick={() => setDetail({ kind: "forecast_payables_30d", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Resultado de caixa" value={mfmt(metrics.data.cash_result_cents)} basis={metrics.data.cash_result_cents?.basis} onClick={() => setDetail({ kind: "cash_result", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Ticket médio" value={mfmt(metrics.data.average_ticket_cents)} basis={metrics.data.average_ticket_cents?.basis} onClick={() => setDetail({ kind: "average_ticket", from: range.fromIso, to: range.toIso, unit, unitLabel })} />
+          <StatCard label="Projeção de mensalidades (próx. mês)" value={mfmt(metrics.data.forecast_subscriptions_next_month_cents)} basis="sem detalhamento por registro ainda — a projeção soma contratos futuros que não têm uma única tabela de origem por parcela; ver docs/project-status.md" />
         </ul>
       )}
 
@@ -104,6 +106,7 @@ const Overview = () => {
           ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem recebimentos por produto no período.</p>}
         </section>
       </div>
+      <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
   );
 };

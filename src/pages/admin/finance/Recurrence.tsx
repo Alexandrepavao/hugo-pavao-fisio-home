@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, parseCents } from "@/lib/format";
 import { btnGhost, errText, FilterBar, FilterField, Msg, PageHead, promptText, State, StatCard, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { axisBrl, mfmt, useUnits, type Metric } from "./shared";
 
 interface Bridge { mrr_inicial_cents: number; novo_cents: number; expansao_cents: number; reativacao_cents: number; contracao_cents: number; cancelamento_cents: number; mrr_final_cents: number; fecha: boolean }
@@ -30,8 +32,11 @@ const FinanceRecurrence = () => {
 };
 
 const Report = () => {
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [unit, setUnit] = useState("");
+  const [sp, setSp] = useSearchParams();
+  const [month, setMonthState] = useState(sp.get("mes") ?? new Date().toISOString().slice(0, 7));
+  const [unit, setUnitState] = useState(sp.get("unidade") ?? "");
+  const setMonth = (v: string) => { setMonthState(v); setSp((p) => { const n = new URLSearchParams(p); n.set("mes", v); return n; }, { replace: true }); };
+  const setUnit = (v: string) => { setUnitState(v); setSp((p) => { const n = new URLSearchParams(p); if (v) n.set("unidade", v); else n.delete("unidade"); return n; }, { replace: true }); };
   const units = useUnits();
   const report = useQuery({ queryKey: ["mrr", month, unit], queryFn: async () => {
     const { data, error } = await supabase.rpc("mrr_report", { p_month: `${month}-01`, p_unit: unit || null }); if (error) throw error; return data as MrrReport;
@@ -46,6 +51,10 @@ const Report = () => {
     const { data, error } = await supabase.rpc("subscription_forecast", { p_month: next.toISOString().slice(0, 10) }); if (error) throw error; return data as ForecastRow[];
   } });
   const forecastTotal = (forecast.data ?? []).reduce((a, r) => a + r.projected_amount_cents, 0);
+  const unitLabel = units.data?.find((u2) => u2.id === unit)?.name ?? "Todas as unidades";
+  const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
+  const monthFrom = `${month}-01T00:00:00.000Z`;
+  const monthTo = (() => { const d = new Date(`${month}-01T00:00:00.000Z`); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString(); })();
 
   return (
     <>
@@ -56,14 +65,14 @@ const Report = () => {
       <State loading={report.isLoading} error={report.error} />
       {report.data && (<>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <StatCard label="MRR do mês" value={mfmt(report.data.mrr_cents)} basis={report.data.mrr_cents.basis} />
-          <StatCard label="ARR" value={mfmt(report.data.arr_cents)} basis={report.data.arr_cents.basis} />
-          <StatCard label="Clientes recorrentes" value={report.data.clientes_recorrentes.toLocaleString("pt-BR")} />
-          <StatCard label="Receita média por cliente" value={mfmt(report.data.receita_media_cliente_cents)} basis={report.data.receita_media_cliente_cents.basis} />
-          <StatCard label="Retenção bruta de receita" value={mfmt(report.data.retencao_bruta_pct, "pct")} basis={report.data.retencao_bruta_pct.basis} />
-          <StatCard label="Retenção líquida de receita" value={mfmt(report.data.retencao_liquida_pct, "pct")} basis={report.data.retencao_liquida_pct.basis} />
-          <StatCard label="Churn de clientes" value={mfmt(report.data.churn_clientes_pct, "pct")} basis={report.data.churn_clientes_pct.basis} tone={report.data.churn_clientes_pct.available && Number(report.data.churn_clientes_pct.value) > 0 ? "danger" : undefined} />
-          <StatCard label="Churn de receita" value={mfmt(report.data.churn_receita_pct, "pct")} basis={report.data.churn_receita_pct.basis} tone={report.data.churn_receita_pct.available && Number(report.data.churn_receita_pct.value) > 0 ? "danger" : undefined} />
+          <StatCard label="MRR do mês" value={mfmt(report.data.mrr_cents)} basis={report.data.mrr_cents.basis} onClick={() => setDetail({ kind: "mrr_month", from: monthFrom, to: monthTo, unit, unitLabel })} />
+          <StatCard label="ARR" value={mfmt(report.data.arr_cents)} basis="ARR = MRR do mês × 12 — sem detalhamento próprio de registros (é uma projeção direta do MRR, não uma nova consulta); abra o cartão MRR do mês para ver os contratos de origem" />
+          <StatCard label="Clientes recorrentes" value={report.data.clientes_recorrentes.toLocaleString("pt-BR")} onClick={() => setDetail({ kind: "recurring_clients", from: monthFrom, to: monthTo, unit, unitLabel })} />
+          <StatCard label="Receita média por cliente" value={mfmt(report.data.receita_media_cliente_cents)} basis="receita média = MRR do mês ÷ clientes recorrentes — sem detalhamento próprio de registros; abra o cartão Clientes recorrentes para ver a lista" />
+          <StatCard label="Retenção bruta de receita" value={mfmt(report.data.retencao_bruta_pct, "pct")} basis="indisponível nesta rodada: retenção de receita é calculada por private.mrr_report() a partir da ponte de movimentação (bridge), que ainda não tem um detalhamento por registro próprio — precisaria de uma nova consulta específica sobre expansão/contração/cancelamento" />
+          <StatCard label="Retenção líquida de receita" value={mfmt(report.data.retencao_liquida_pct, "pct")} basis="indisponível nesta rodada: mesma dependência da retenção bruta (ponte de movimentação sem detalhamento por registro)" />
+          <StatCard label="Churn de clientes" value={mfmt(report.data.churn_clientes_pct, "pct")} basis={report.data.churn_clientes_pct.basis} tone={report.data.churn_clientes_pct.available && Number(report.data.churn_clientes_pct.value) > 0 ? "danger" : undefined} onClick={() => setDetail({ kind: "churn_clients", from: monthFrom, to: monthTo, unit, unitLabel })} />
+          <StatCard label="Churn de receita" value={mfmt(report.data.churn_receita_pct, "pct")} basis="indisponível nesta rodada: churn de receita usa a mesma ponte de movimentação (contração + cancelamento em R$) e ainda não tem detalhamento por registro — Churn de clientes já mostra a lista de contratos perdidos" tone={report.data.churn_receita_pct.available && Number(report.data.churn_receita_pct.value) > 0 ? "danger" : undefined} />
         </ul>
 
         <section className="mb-8"><h2 className="text-xl mb-3">MRR — últimos 12 meses</h2>
@@ -104,6 +113,7 @@ const Report = () => {
         {forecast.data && forecast.data.length > 0 && <><p className="mb-3">Total projetado: <strong className="tabular">{brl(forecastTotal)}</strong></p>
           <Table head={["Pessoa", "Produto", "Valor projetado", "Origem (pagamento em)", "Competência de origem"]} right={[2]}>{forecast.data.map((r) => <tr key={r.person_id + r.product_name}><Td>{r.person_name}</Td><Td>{r.product_name}</Td><Td num>{brl(r.projected_amount_cents)}</Td><Td>{fmtDate(r.origin_paid_at)}</Td><Td>{fmtDate(r.origin_competence + "T12:00:00Z").slice(3)}</Td></tr>)}</Table></>}
       </section>
+      <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </>
   );
 };

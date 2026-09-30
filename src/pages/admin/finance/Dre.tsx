@@ -70,10 +70,12 @@ const FinanceDre = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Rentabilidade e DRE" hint="Receita de caixa ≠ receita reconhecida. Quando faltar classificação, o lançamento aparece separado como 'sem classificação' — nunca vira despesa operacional por padrão, e o total consolidado não é travado por isso." />
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <PageHead eyebrow="Financeiro" title="Rentabilidade e DRE" hint="Receita de caixa ≠ receita reconhecida. Quando faltar classificação, o lançamento aparece separado como 'sem classificação' — nunca vira despesa operacional por padrão, e o total consolidado não é travado por isso."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+            onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
+            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+        } />
       <State loading={dre.isLoading} error={dre.error} />
       {dre.data && (<>
         {dre.data.cobertura_classificacao_pct.available && (

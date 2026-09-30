@@ -2,12 +2,14 @@ import { MessageCircle, Instagram, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
 import Divider from "./Divider";
+import QuizCta from "./QuizCta";
 import {
   linkPaciente,
   linkProfissional,
   WHATSAPP_PACIENTES_DISPLAY,
   WHATSAPP_PROFISSIONAIS_DISPLAY,
 } from "@/lib/contact";
+import type { Journey } from "@/lib/quiz";
 
 const menu = [
   { label: "Sobre", href: "/#sobre" },
@@ -18,8 +20,16 @@ const menu = [
   { label: "Perguntas Frequentes", href: "/#faq" },
 ];
 
-const Footer = () => (
+const Footer = ({ highlightJourney = "atendimento" }: { highlightJourney?: Journey }) => (
   <footer className="bg-card border-t border-border">
+    <div className="container-hp px-6 sm:px-8 pt-12">
+      <QuizCta
+        variant="banner"
+        journey={highlightJourney}
+        heading={highlightJourney === "atendimento" ? "Quer cuidar da sua dor com acompanhamento individualizado?" : "Quer ser um fisioterapeuta parceiro HP Group?"}
+        description={highlightJourney === "atendimento" ? "Responda algumas perguntas rápidas e receba um retorno da nossa equipe." : "Conte sua experiência e área de atuação — aprovação e verificação seguem em processo separado."}
+      />
+    </div>
     <div className="container-hp px-6 sm:px-8 py-16 grid lg:grid-cols-[1.2fr_1fr_1fr] gap-12">
       <div>
         <Logo className="h-16" />

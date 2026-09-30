@@ -4,7 +4,7 @@ import { supabase, backendConfigured } from "@/lib/supabase";
 
 export type AppRole =
   | "manager" | "ops_admin" | "unit_manager" | "sales" | "finance"
-  | "physio" | "teacher" | "partner" | "member";
+  | "physio" | "teacher" | "partner" | "member" | "accountant";
 
 export interface RoleAssignment { role: AppRole; unit_id: string | null }
 
@@ -85,4 +85,4 @@ export const useAuth = () => {
   return ctx;
 };
 
-export const STAFF_ROLES: AppRole[] = ["manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "teacher"];
+export const STAFF_ROLES: AppRole[] = ["manager", "ops_admin", "unit_manager", "sales", "finance", "physio", "teacher", "accountant"];

@@ -34,10 +34,12 @@ const FinanceReports = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Relatórios" hint="Eficiência do negócio: só indicadores com base cadastrada real. CAC/LTV ficam indisponíveis sem dados de investimento em mídia." />
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <PageHead eyebrow="Financeiro" title="Relatórios" hint="Eficiência do negócio: só indicadores com base cadastrada real. CAC/LTV ficam indisponíveis sem dados de investimento em mídia."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+            onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
+            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+        } />
       <State loading={eff.isLoading} error={eff.error} />
       {eff.data && (<>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">

@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -35,3 +37,32 @@ export const axisBrl = (v: number) => (v === 0 ? "0" : Math.abs(v) >= 1000 ? `${
 /** Fim exclusivo (00:00 do dia seguinte) para consultas timestamptz [from, to). */
 export const toExclusive = (dateStr: string) => new Date(new Date(dateStr + "T00:00:00").getTime() + 864e5).toISOString();
 export const fromInclusive = (dateStr: string) => new Date(dateStr + "T00:00:00").toISOString();
+
+/** Estado do filtro de período/unidade/comparação persistido na URL (?periodo=&de=&ate=&unidade=&comparar=) —
+ * sobrevive a reload, voltar/avançar e a compartilhar o link. Usado por qualquer tela com o PeriodFilter compacto. */
+export const usePeriodFilterState = () => {
+  const [sp, setSp] = useSearchParams();
+  const spPreset = sp.get("periodo") as RangePreset | null;
+  const [preset, setPresetState] = useState<RangePreset>(spPreset && RANGE_PRESETS.includes(spPreset) ? spPreset : "mes");
+  const [custom, setCustom] = useState(preset === "personalizado" && sp.get("de") && sp.get("ate") ? { from: sp.get("de")!, to: sp.get("ate")! } : presetRange(preset));
+  const [unit, setUnit] = useState(sp.get("unidade") ?? "");
+  const [compare, setCompare] = useState(sp.get("comparar") === "1");
+
+  const sync = (next: { preset?: RangePreset; from?: string; to?: string; unit?: string; compare?: boolean }) => {
+    const p = next.preset ?? preset; const u = next.unit ?? unit; const c = next.compare ?? compare;
+    const range = p === "personalizado" ? { from: next.from ?? custom.from, to: next.to ?? custom.to } : presetRange(p);
+    const params: Record<string, string> = { periodo: p };
+    if (p === "personalizado") { params.de = range.from; params.ate = range.to; }
+    if (u) params.unidade = u;
+    if (c) params.comparar = "1";
+    setSp(params, { replace: true });
+  };
+  const onPreset = (p: RangePreset) => { setPresetState(p); if (p !== "personalizado") setCustom(presetRange(p)); sync({ preset: p }); };
+  const onFrom = (v: string) => { setCustom((c) => ({ ...c, from: v })); sync({ preset: "personalizado", from: v }); };
+  const onTo = (v: string) => { setCustom((c) => ({ ...c, to: v })); sync({ preset: "personalizado", to: v }); };
+  const onUnit = (v: string) => { setUnit(v); sync({ unit: v }); };
+  const onCompare = (v: boolean) => { setCompare(v); sync({ compare: v }); };
+  const onClear = () => { setPresetState("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); setSp({}, { replace: true }); };
+
+  return { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear };
+};

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ChevronDown, ChevronsLeft, ChevronsRight, HeartPulse, LogOut, Menu, Search } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, HeartPulse, LogOut, Menu, Search } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CommandMenu from "./CommandMenu";
-import { HEADER_PRIMARY, NAV, ROLE_LABEL, type NavItem } from "./nav";
+import { NAV, ROLE_LABEL, type NavItem } from "./nav";
 
 /** Aplica o escopo visual da área logada no <html> (portais do Radix renderizam fora do container). */
 export const useAppTheme = () => {
@@ -61,6 +61,10 @@ const AppShell = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => { try { localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0"); } catch { /* sem storage */ } }, [collapsed]);
   useEffect(() => { setDrawer(false); }, [location.pathname]);
+  // Mantém o destino ativo da sub-navegação visível quando ela rola horizontalmente (celular).
+  useEffect(() => {
+    document.querySelector('.hp-subnav-link[aria-current="page"]')?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [location.pathname]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd((v) => !v); } };
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
@@ -71,9 +75,6 @@ const AppShell = ({ children }: { children: ReactNode }) => {
     return items.find((i) => (i.end ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"))) ?? items[0];
   }, [location.pathname]);
   const title = activeItem.label;
-  const primaryChildren = activeItem.children?.slice(0, HEADER_PRIMARY) ?? [];
-  const moreChildren = activeItem.children?.slice(HEADER_PRIMARY) ?? [];
-  const moreActive = moreChildren.some((c) => (c.end ? location.pathname === c.to : location.pathname === c.to || location.pathname.startsWith(c.to + "/")));
   const roleNames = [...new Set(roles.map((r) => ROLE_LABEL[r.role]))].join(", ");
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
@@ -122,23 +123,13 @@ const AppShell = ({ children }: { children: ReactNode }) => {
           </DropdownMenu>
         </header>
         {activeItem.children && activeItem.children.length > 0 && (
-          <nav aria-label={`Navegação de ${title}`} className="hp-subnav">
-            {primaryChildren.map((c) => (
-              <NavLink key={c.to} to={c.to} end={c.end} className="hp-subnav-link">{c.label}</NavLink>
-            ))}
-            {moreChildren.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={`hp-subnav-link hp-subnav-more ${moreActive ? "hp-subnav-link-active" : ""}`} aria-label="Mais destinos">Mais<ChevronDown size={13} aria-hidden /></button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {moreChildren.map((c) => (
-                    <DropdownMenuItem key={c.to} asChild><NavLink to={c.to} end={c.end}>{c.label}</NavLink></DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </nav>
+          <div className="hp-subnav-wrap">
+            <nav aria-label={`Navegação de ${title}`} className="hp-subnav">
+              {activeItem.children.map((c) => (
+                <NavLink key={c.to} to={c.to} end={c.end} className="hp-subnav-link">{c.label}</NavLink>
+              ))}
+            </nav>
+          </div>
         )}
         <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao">{children}</main>
       </div>

@@ -32,6 +32,9 @@ sem pagar o custo de generalizar algo que ainda não se sabe se vai ser reaprove
   usadas em módulos de domínios bem diferentes (Financeiro, Pesquisas, Contas corporativas) — não são
   específicos de fisioterapia e já se provaram reaproveitáveis nesta sessão.
 
+- **Configuração da organização separada do código (Contábil/ADM, 2026-09-29)**: regras de fechamento, exigência de comprovante, classificação gerencial, mapeamento de categorias, empresa (PJ) de cada unidade e concessões de fechar/reabrir são **dados por organização** (`acc_settings`, `acc_accounts`, `acc_category_map`, `units.legal_entity_id`, `acc_grants`) — outra organização configura as suas sem mexer no código. **Unidade operacional ≠ cliente da plataforma**: o cliente é a `organizations`; a unidade é um recorte operacional dela, e a empresa (CNPJ) é um cadastro do ADM ligado à unidade.
+- **Papel de contador(a) (`accountant`)** entrou no enum como papel genérico de qualquer operação (não é específico de fisioterapia).
+
 ## O que é claramente específico da fisioterapia/HP Group hoje (não generalizado, e tudo bem)
 
 - Papel `physio`, `person_kind` incluindo `patient`, textos/copy em toda a interface ("paciente",

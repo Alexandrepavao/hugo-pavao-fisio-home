@@ -5,18 +5,17 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
 import { State, StatCard } from "@/lib/ui";
+import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
 import Greeting from "./Greeting";
 import GeoSection from "./GeoSection";
 import { PeriodFilter } from "./finance/PeriodFilter";
-import { axisBrl, mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./finance/shared";
+import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./finance/shared";
 
 type Metrics = Record<string, Metric | { items: { reason: string; count: number }[]; basis: string }>;
 interface Alert { kind: string; label: string; link: string; count: number }
 
 const Dashboard = () => {
-  const [preset, setPreset] = useState<RangePreset>("mes");
-  const [custom, setCustom] = useState(presetRange("mes"));
-  const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
+  const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const range = { from: `${from}T00:00:00.000Z`, to: toExclusive(to) };
   const prevRange = (() => {
@@ -59,42 +58,64 @@ const Dashboard = () => {
   } });
 
   const alertsTotal = (alerts.data ?? []).reduce((a, x) => a + x.count, 0);
+  const unitLabel = units.data?.find((u) => u.id === unit)?.name ?? "Todas as unidades";
+  const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
+  const openDetail = (kind: CardKind) => setDetail({ kind, from: range.from, to: range.to, unit, unitLabel, prevFrom: prevRange.from, prevTo: prevRange.to });
+  const ALERT_DETAIL: Record<string, CardKind> = {
+    cobrancas_vencidas: "overdue", tarefas_atrasadas: "overdue_tasks",
+    leads_sem_retorno: "leads_sem_retorno", pacotes_fim: "pacotes_fim",
+    duplicidades: "duplicidades", eventos_falhos: "eventos_falhos",
+  };
 
   return (
     <div>
-      <Greeting />
-      <p className="text-muted-foreground mb-5 max-w-2xl">Resumo da operação. Toque em qualquer cartão de alerta para ver a lista completa.</p>
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+        <div className="min-w-0"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
+        <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+          onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
+      </div>
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {alerts.data && (
         <section aria-label="Alertas" className="mb-8">
           <h2 className="text-xl mb-3">Alertas e ações prioritárias {alertsTotal === 0 && <span className="text-sm font-normal text-muted-foreground">— tudo em dia</span>}</h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {alerts.data.map((a) => (
-              <li key={a.kind}><Link to={a.link} className="hp-card flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors">
+            {alerts.data.map((a) => {
+              const dKind = ALERT_DETAIL[a.kind];
+              const inner = (<>
                 <span className={`grid place-items-center rounded-md tabular font-bold ${a.count > 0 ? "hp-badge-warning" : "bg-muted text-muted-foreground"}`} style={{ width: "2.5rem", height: "2.5rem", fontSize: "1.125rem" }}>{a.count}</span>
-                <span className="text-sm">{a.label}</span></Link></li>))}
+                <span className="text-sm">{a.label}</span>
+              </>);
+              return (
+                <li key={a.kind}>
+                  {dKind ? (
+                    <button type="button" onClick={() => openDetail(dKind)} className="group hp-card flex items-center gap-3 p-3 w-full text-left hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors">
+                      {inner}<span className="ml-auto text-[11px] text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">Ver detalhes</span>
+                    </button>
+                  ) : (
+                    <Link to={a.link} className="hp-card flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors">{inner}</Link>
+                  )}
+                </li>
+              );
+            })}
           </ul></section>
       )}
 
       {metrics.data && patients.data && (
         <section className="mb-8"><h2 className="text-xl mb-3">Visão executiva</h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Exec label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" />
-            <Exec label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" />
-            <Exec label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} />
-            <Exec label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} basis="pessoas com ao menos um pacote em status ativo (hoje)" />
-            <Exec label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} />
-            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} />
-            <Exec label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" />
-            <Exec label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} />
-            <Exec label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} />
-            <Exec label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" />
-            <Exec label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" />
-            <Exec label="NPS" m={metrics.data.nps as Metric} />
+            <Exec label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" onOpen={() => openDetail("receipts")} />
+            <Exec label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" onOpen={() => openDetail("overdue")} />
+            <Exec label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} onOpen={() => openDetail("new_patients")} />
+            <Exec label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} onOpen={() => openDetail("active_packages")} />
+            <Exec label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} onOpen={() => openDetail("evaluations_scheduled")} />
+            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} onOpen={() => openDetail("attended")} />
+            <Exec label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" onOpen={() => openDetail("win_rate")} />
+            <Exec label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} onOpen={() => openDetail("active_partners")} />
+            <Exec label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} onOpen={() => openDetail("active_students")} />
+            <Exec label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" onOpen={() => openDetail("average_ticket")} />
+            <Exec label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" onOpen={() => openDetail("attendance_rate")} />
+            <Exec label="NPS" m={metrics.data.nps as Metric} basis="pesquisas de satisfação (NPS) têm detalhamento próprio em Pesquisas — não incluído neste cartão para preservar o k-anonimato já aplicado lá" />
           </ul>
         </section>
       )}
@@ -119,17 +140,18 @@ const Dashboard = () => {
       </div>
 
       <GeoSection unit={unit} />
+      <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
   );
 };
 
-const Exec = ({ label, m, value, basis, kind = "int", prev, tone }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; prev?: Metric; tone?: "danger" }) => {
+const Exec = ({ label, m, value, basis, kind = "int", prev, tone, onOpen }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; prev?: Metric; tone?: "danger"; onOpen?: () => void }) => {
   const shown = value ?? mfmt(m, kind);
   const delta = prev && m?.available && prev.available && Number(prev.value) !== 0 ? Math.round(((Number(m.value) - Number(prev.value)) / Number(prev.value)) * 1000) / 10 : null;
   return (
     <StatCard label={label} value={shown} tone={tone ?? (m && !m.available ? undefined : undefined)}
       basis={delta != null ? `${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta).toString().replace(".", ",")}% vs. período anterior` : prev !== undefined ? "Sem base de comparação" : (basis ?? m?.basis)}
-      unavailable={m ? !m.available || m.value == null : false} />
+      unavailable={m ? !m.available || m.value == null : false} onClick={onOpen} />
   );
 };
 

@@ -13,7 +13,7 @@
 ## Matriz (resumo do que está implementado)
 | Área | manager | ops_admin | unit_manager | sales | finance | physio | teacher | partner | member |
 |---|---|---|---|---|---|---|---|---|---|
-| Pessoas | org | org | unidade | unidade | — | — | — | — | própria |
+| Pessoas | org | org | unidade | unidade | **unidade (leitura, para identificar quem paga; sem tela de Pessoas)** | — | — | — | própria |
 | Páginas/CRM/oportunidades | org | org | unidade | unidade | — | — | — | — | — |
 | Agenda (agendar) | org | org | unidade | unidade | ler | própria agenda | — | — | ver as suas |
 | Vendas / recebíveis (ler) | org | org | unidade | unidade | unidade | — | — | — | próprias parcelas |
@@ -33,8 +33,31 @@
 ## Arquivos privados
 Buckets `academy-private` e `care-private` (não públicos). Política de Storage por acesso real: curso (`can_read_course`) ou conteúdo liberado (`care_assignment_active`). O navegador usa **URL assinada de 1 h**, gerada só se a política permitir. Revogação bloqueia novas assinaturas imediatamente (URLs já emitidas expiram em até 1 h — limitação conhecida).
 
+## Contábil (`/admin/contabil`) e ADM — papéis e concessões (2026-09-29)
+Novo papel **`accountant`** (Contador(a); migration 048): pode estar em escopo de organização ou de unidade. Vê e prepara a competência (classificar, anexar, dispensar, exportar) **somente nas unidades atribuídas**; não vê nome de paciente (pseudônimo `Paciente XXXXXX`); não fecha nem reabre sem concessão.
+
+| Ação | manager | ops_admin | unit_manager | finance | accountant | sales / outros |
+|---|---|---|---|---|---|---|
+| Abrir o app Contábil / consultar lançamentos | org | org | unidade | unidade | unidade | **não** (RPC nega com 42501) |
+| Classificar, anexar comprovante, dispensar com justificativa, exportar | ✔ | ✔ | unidade | unidade | unidade | — |
+| Nome real do paciente nos lançamentos e no pacote | ✔ | ✔ | ✔ | ✔ | **pseudônimo** | — |
+| Configurar (regras, classificações, mapeamento, empresa da unidade, **conceder** fechar/reabrir) | ✔ | ✔ | — | — | — | — |
+| **Fechar competência** e **aceitar alteração posterior** | só com concessão `close` | só com concessão `close` | só com concessão `close` | só com concessão `close` | só com concessão `close` | — |
+| **Reabrir competência** (justificativa obrigatória) | só com concessão `reopen` | idem | idem | idem | idem | — |
+
+Regras: (1) a concessão (`acc_grants`) só vale enquanto a pessoa mantém papel contábil/financeiro na unidade — revogar o papel revoga o poder na hora; (2) toda concessão/revogação, fechamento, reabertura, aceitação de alteração, classificação, dispensa, documento e exportação vai para `audit_log`; (3) tabelas `acc_*` têm só leitura por RLS (por unidade) — toda escrita é RPC `SECURITY DEFINER` com checagem explícita; (4) arquivos no bucket privado `accounting-private`, pasta `{org}/{unidade}/{aaaa-mm}/…`: a política confere organização **e** unidade, não há UPDATE/DELETE, e abrir um arquivo passa por `acc_documents_access` (autoriza + audita) antes da URL assinada de 60 s.
+
+**ADM — campos sensíveis (047):** regime tributário, inscrição estadual e e-mail financeiro de PJ só para manager/ops_admin; o servidor devolve `null` (listagem), descarta (exportação e preferência de colunas) e filtra na leitura pela permissão atual. Importar PJ exige manager/ops_admin (`legal_entity_import_check/commit`). Preferências de colunas (`adm_view_prefs`) são por usuário, sem escrita direta.
+
 ## Testes
 `supabase/tests/001…010` (ver `test-report.md`) + teste de API direta com token de aluna + E2E (`e2e/`) contra o Dev real. Refazer a cada expansão do banco.
+
+## Captação de leads (quizzes) — respostas de saúde
+`quiz_leads` não tem `GRANT` direto para nenhum papel — toda leitura passa por `list_quiz_leads`/
+`get_quiz_lead_detail`, que mascaram as 3 respostas de saúde (dor, motivação de melhora, impacto na
+qualidade de vida) para quem não tem `manager`/`ops_admin`/`unit_manager`; o papel `sales` nunca as
+vê, mesmo enxergando a captação em si (mesmo precedente de `corporate_accounts`). Ver
+`docs/project-status.md` (sessão mais recente) e `docs/data-model.md` (migration 038).
 
 ## Decisões de privacidade que exigem validação do responsável pelo negócio
 Retenção e base legal de dados de saúde; texto de consentimento nos formulários; prazo de guarda de auditoria e de mensagens do canal de dúvidas; política de exclusão a pedido do titular (hoje: arquivar/anonimizar manualmente); necessidade de DPO. Este projeto não afirma conformidade jurídica automática.

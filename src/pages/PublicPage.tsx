@@ -69,14 +69,14 @@ const PublicPage = () => {
     <div className="min-h-screen">
       <Header />
       <main>
-        {res.status === "published" && <PageRenderer blocks={res.page.content} forms={res.page.forms} />}
+        {res.status === "published" && <PageRenderer blocks={res.page.content} forms={res.page.forms} pageSlug={slug} />}
         {res.status === "closed" && (
           <section className="section"><div className="container-hp max-w-2xl text-center">
             <h1 className="text-3xl text-navy-900 mb-4">{res.title ?? "Página encerrada"}</h1><p className="text-navy-400">{res.message}</p>
           </div></section>
         )}
         {res.status === "waitlist" && (
-          <PageRenderer blocks={[{ type: "hero", title: res.page.title, subtitle: "No momento estamos com a lista de espera aberta." }, { type: "form", title: "Entrar na lista de espera", form_id: res.page.forms[0]?.id }]} forms={res.page.forms} />
+          <PageRenderer blocks={[{ type: "hero", title: res.page.title, subtitle: "No momento estamos com a lista de espera aberta." }, { type: "form", title: "Entrar na lista de espera", form_id: res.page.forms[0]?.id }]} forms={res.page.forms} pageSlug={slug} />
         )}
       </main>
       <Footer />

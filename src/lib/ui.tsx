@@ -73,13 +73,24 @@ export const Badge = ({ tone = "neutral", children }: { tone?: Tone; children: R
   return <span className={`hp-badge ${cls}`}>{children}</span>;
 };
 
-export const StatCard = ({ label, value, basis, tone, unavailable }: { label: string; value: ReactNode; basis?: string; tone?: Tone; unavailable?: boolean }) => (
-  <li className="hp-card p-4 list-none">
-    <p className="text-xs text-muted-foreground">{label}</p>
+export const StatCard = ({ label, value, basis, tone, unavailable, onClick }: { label: string; value: ReactNode; basis?: string; tone?: Tone; unavailable?: boolean; onClick?: () => void }) => {
+  const body = (<>
+    <div className="flex items-start justify-between gap-2">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      {onClick && <span aria-hidden className="text-[11px] text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">Ver detalhes</span>}
+    </div>
     <p className={`mt-1 text-[1.5rem] leading-8 font-bold tabular ${unavailable ? "text-muted-foreground" : tone === "danger" ? "text-destructive" : "text-foreground"}`} style={{ fontFamily: "Inter, system-ui, sans-serif" }}>{value}</p>
     {basis && <p className="text-[11px] leading-4 text-muted-foreground mt-2">{basis}</p>}
-  </li>
-);
+  </>);
+  if (!onClick) return <li className="hp-card p-4 list-none">{body}</li>;
+  return (
+    <li className="list-none">
+      <button type="button" onClick={onClick} className="group hp-card p-4 w-full text-left hover:border-accent/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all">
+        {body}
+      </button>
+    </li>
+  );
+};
 
 export const Msg = ({ m }: { m: { kind: "ok" | "err"; text: string } | null }) =>
   m ? (
