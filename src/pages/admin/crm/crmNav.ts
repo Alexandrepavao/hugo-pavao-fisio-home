@@ -1,7 +1,8 @@
 import { BarChart3, CalendarClock, Contact, KanbanSquare, LayoutDashboard, ListChecks, MessageCircle, Send, Settings, Target, Timer, Users, type LucideIcon } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 
-export interface CrmNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean }
+import type { FeatureKey } from "@/lib/release";
+export interface CrmNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; feature?: FeatureKey }
 export interface CrmNavSection { label: string; items: CrmNavItem[] }
 
 // O CRM é uma área própria dentro do Hub — sidebar exclusiva (ver CrmShell), navegação nunca mistura com
@@ -24,8 +25,8 @@ export const CRM_NAV: CrmNavSection[] = [
   ] },
   { label: "Comunicação", items: [
     { to: "/admin/crm/conversas", label: "Conversas", icon: MessageCircle },
-    { to: "/admin/crm/mensagens-agendadas", label: "Mensagens agendadas", icon: CalendarClock },
-    { to: "/admin/crm/disparo", label: "Disparo de mensagens", icon: Send },
+    { to: "/admin/crm/mensagens-agendadas", label: "Mensagens agendadas", icon: CalendarClock, feature: "crm_scheduled_messages" },
+    { to: "/admin/crm/disparo", label: "Disparo de mensagens", icon: Send, feature: "crm_broadcast" },
   ] },
   { label: "Relatórios", items: [
     { to: "/admin/crm/relatorios", label: "Análises", icon: BarChart3, end: true },

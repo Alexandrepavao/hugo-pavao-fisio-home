@@ -10,13 +10,15 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:regressao": "vitest run --exclude \"**/*.novo.test.ts\"",
-    "test:novos": "vitest run novo",
-    "test:sql:novos": "node supabase/tests/run-sql.mjs supabase/tests/novos",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "test:e2e": "playwright test",
-    "test:e2e:regressao": "playwright test --grep-invert @novo",
-    "test:e2e:novos": "playwright test --grep @novo"
+    "test:regressao": "vitest run --exclude \"**/*.novo.test.ts\"",
+    "test:novos": "vitest run novo",
+    "test:e2e:regressao": "playwright test --grep-invert \"@novo|@release\"",
+    "test:e2e:novos": "playwright test --grep @novo",
+    "test:e2e:release": "playwright test --grep @release",
+    "test:sql:novos": "node supabase/tests/run-sql.mjs supabase/tests/novos",
+    "test:sql:release": "node supabase/tests/run-sql.mjs supabase/tests/release"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
