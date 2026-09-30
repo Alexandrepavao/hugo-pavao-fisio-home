@@ -72,7 +72,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
                   <input id="nc" type="datetime-local" defaultValue={opp.next_contact_at ? opp.next_contact_at.slice(0, 16) : ""} onBlur={(e) => e.target.value && patch({ next_contact_at: new Date(e.target.value).toISOString() }, "Próximo contato agendado.")} /></div>
                 <dl className="grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs text-muted-foreground">Valor</dt><dd className="tabular">{opp.value_cents > 0 ? brl(opp.value_cents) : "—"}</dd></div>
                   <div><dt className="text-xs text-muted-foreground">Criada em</dt><dd>{fmtDateTime(opp.created_at)}</dd></div><div><dt className="text-xs text-muted-foreground">Último contato</dt><dd>{fmtDateTime(opp.last_contact_at)}</dd></div></dl>
-                {opp.status === "open" && <Link className="hp-btn hp-btn-primary" to={`/admin/financeiro?venda=${opp.id}&pessoa=${opp.person_id}&unidade=${opp.unit_id}`}>Converter em venda</Link>}
+                {opp.status === "open" && <Link className="hp-btn hp-btn-primary" to={`/admin/financeiro/vendas?venda=${opp.id}&pessoa=${opp.person_id}&unidade=${opp.unit_id}`}>Converter em venda</Link>}
               </div>
             )}
             {tab === "historico" && (<div className="grid gap-4">
