@@ -57,7 +57,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
 
   const utm = useMemo(() => {
     const o: Record<string, string> = {};
-    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach((k) => { const v = params.get(k); if (v) o[k] = v; });
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "ref"].forEach((k) => { const v = params.get(k); if (v) o[k] = v; });
     return o;
   }, [params]);
   // `from` = a landing page de origem (registrada pelo CTA que trouxe o visitante até aqui); sem ela,

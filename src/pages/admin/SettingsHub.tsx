@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { BUILD_INFO, RELEASE_PROFILE, featureOn } from "@/lib/release";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -31,7 +32,7 @@ const SettingsHub = () => {
     <div>
       <PageHead eyebrow="Sistema" title="Configurações" hint="Central de configurações do sistema, por categoria. Só o que já tem suporte real no backend aparece como gerenciável — o resto é uma pendência documentada, nunca uma tela que finge funcionar." />
       <ul className="grid gap-3">
-        {CATEGORIES.map((c) => (
+        {CATEGORIES.filter((c) => c.status !== "pending" || featureOn("settings_pending_cards")).map((c) => (
           <li key={c.key} className="hp-card p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
@@ -60,6 +61,7 @@ const SettingsHub = () => {
           </li>
         ))}
       </ul>
+      <p className="text-xs text-muted-foreground mt-6" data-testid="build-info">Versão {RELEASE_PROFILE === "v1" ? "de entrega (v1)" : "de desenvolvimento"} · commit <code>{BUILD_INFO.commit}</code>{BUILD_INFO.builtAt ? ` · construída em ${new Date(BUILD_INFO.builtAt).toLocaleString("pt-BR")}` : ""}</p>
     </div>
   );
 };

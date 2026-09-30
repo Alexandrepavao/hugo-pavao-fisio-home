@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom
 import Index from "./pages/Index";
 import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
+import FeatureGate from "./components/hp/FeatureGate";
 import { AuthProvider, STAFF_ROLES, type AppRole } from "./auth/AuthProvider";
 import RequireAuth from "./auth/RequireAuth";
 import { AskProvider } from "./lib/ui";
@@ -106,7 +107,7 @@ const App = () => (
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
                 <Route path="meu-dia" element={<Productivity />} />
-                <Route path="status" element={<Overview />} />
+                <Route path="status" element={<FeatureGate feature="system_status"><Overview /></FeatureGate>} />
                 <Route path="pessoas" element={g(R.people, <People />)} />
                 <Route path="paginas" element={g(R.pages, <Pages />)} />
                 <Route path="paginas/:id" element={g(R.pages, <PageEditor />)} />
@@ -121,8 +122,8 @@ const App = () => (
                   <Route path="metas/ritmo" element={<CrmRitmo />} />
                   <Route path="metas/time" element={g(R.crmTeam, <CrmTeam />)} />
                   <Route path="conversas" element={<CrmConversas />} />
-                  <Route path="mensagens-agendadas" element={<CrmMensagensAgendadas />} />
-                  <Route path="disparo" element={<CrmDisparo />} />
+                  <Route path="mensagens-agendadas" element={<FeatureGate feature="crm_scheduled_messages"><CrmMensagensAgendadas /></FeatureGate>} />
+                  <Route path="disparo" element={<FeatureGate feature="crm_broadcast"><CrmDisparo /></FeatureGate>} />
                   <Route path="relatorios" element={<CrmReports />} />
                   <Route path="relatorios/desempenho" element={<CrmReports />} />
                   <Route path="configuracoes" element={<Navigate to="/admin/configuracoes" replace />} />

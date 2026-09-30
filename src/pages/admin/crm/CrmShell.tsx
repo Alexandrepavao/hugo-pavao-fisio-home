@@ -9,6 +9,7 @@ import CommandMenu from "@/components/hp/CommandMenu";
 import { useAppTheme } from "@/components/hp/AppShell";
 import { ROLE_LABEL } from "@/components/hp/nav";
 import { CRM_NAV, CRM_MANAGER_ROLES, type CrmNavItem } from "./crmNav";
+import { featureOn } from "@/lib/release";
 
 const STORAGE_KEY = "hp-crm-sidebar-collapsed";
 const readCollapsed = () => { try { return localStorage.getItem(STORAGE_KEY) === "1"; } catch { return false; } };
@@ -26,7 +27,7 @@ const OTHER_APPS: AppLink[] = [
 const CrmSidebarNav = ({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) => {
   const { hasRole } = useAuth();
   const isManagerLike = hasRole(...CRM_MANAGER_ROLES);
-  const sections = useMemo(() => CRM_NAV.map((s) => ({ ...s, items: s.items.filter((i) => !i.managerOnly || isManagerLike) })).filter((s) => s.items.length), [isManagerLike]);
+  const sections = useMemo(() => CRM_NAV.map((s) => ({ ...s, items: s.items.filter((i) => (!i.managerOnly || isManagerLike) && (!i.feature || featureOn(i.feature))) })).filter((s) => s.items.length), [isManagerLike]);
   return (
     <nav aria-label="Navegação do CRM" className="hp-sb-nav">
       {sections.map((s, si) => (

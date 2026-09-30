@@ -2,11 +2,12 @@ import { Building2, CalendarDays, ClipboardList, FileText, GraduationCap, Handsh
 import type { AppRole } from "@/auth/AuthProvider";
 
 export interface NavChild { to: string; label: string; end?: boolean }
-export interface NavItem { to: string; label: string; icon: LucideIcon; roles?: AppRole[]; end?: boolean; keywords?: string; children?: NavChild[] }
+import { featureOn, type FeatureKey } from "@/lib/release";
+export interface NavItem { feature?: FeatureKey; to: string; label: string; icon: LucideIcon; roles?: AppRole[]; end?: boolean; keywords?: string; children?: NavChild[] }
 export interface NavSection { label?: string; items: NavItem[] }
 
 // Papéis apenas controlam a exibição do menu. A autorização real é feita no banco (RLS e funções).
-export const NAV: NavSection[] = [
+const ALL_NAV: NavSection[] = [
   { items: [
     { to: "/admin", label: "Início", icon: LayoutDashboard, end: true, keywords: "dashboard indicadores painel" },
     { to: "/admin/meu-dia", label: "Meu dia", icon: Sunrise, keywords: "tarefas foco produtividade agenda pessoal" },
@@ -47,10 +48,13 @@ export const NAV: NavSection[] = [
   { label: "Sistema", items: [
     { to: "/admin/equipe", label: "Equipe e acessos", icon: ShieldCheck, roles: ["manager", "ops_admin"], keywords: "convites papéis usuários" },
     { to: "/admin/configuracoes", label: "Configurações", icon: Settings, roles: ["manager", "ops_admin"], keywords: "unidades whatsapp captação financeiro parâmetros" },
-    { to: "/admin/status", label: "Estado dos módulos", icon: ListChecks, roles: ["manager", "ops_admin"] },
+    { to: "/admin/status", label: "Estado dos módulos", icon: ListChecks, roles: ["manager", "ops_admin"], feature: "system_status" },
     { to: "/admin/auditoria", label: "Auditoria", icon: ScrollText, roles: ["manager"], keywords: "log histórico" },
   ] },
 ];
+
+/** Menu efetivo: itens de recursos fora do perfil de entrega (ver src/lib/release.ts) não aparecem. */
+export const NAV: NavSection[] = ALL_NAV.map((s) => ({ ...s, items: s.items.filter((i) => !i.feature || featureOn(i.feature)) })).filter((s) => s.items.length);
 
 export const ROLE_LABEL: Record<AppRole, string> = {
   manager: "Gestor", ops_admin: "Administrador operacional", unit_manager: "Gestor de unidade",
