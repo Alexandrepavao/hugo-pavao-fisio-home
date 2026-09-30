@@ -2,6 +2,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 // @ts-ignore - resolvido pelo Supabase Edge Runtime no deploy
 import { createClient } from "jsr:@supabase/supabase-js@2";
+// @ts-ignore - resolvido pelo Supabase Edge Runtime no deploy
+import { planAppointments, type Appt, type Detail } from "./sync-plan.ts";
 
 /**
  * Google Calendar por usuário: conectar (OAuth), sincronizar e desconectar. Publicar SEM verify_jwt (o retorno do Google não traz JWT; as ações do usuário
@@ -15,14 +17,15 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
  *     exibidos no Meu dia. Um compromisso externo NUNCA vira atendimento, cobrança, venda ou consumo de sessão (vai para external_calendar_events, e só).
  *   Tarefas pessoais NUNCA são enviadas ao Google. Por padrão o evento publicado é "Atendimento HP" + unidade, sem nome de paciente (o usuário pode optar por incluir).
  *
- * Rotas (path após o nome da função):  POST /start · GET /callback · POST /disconnect · POST /sync   (+ /sync com x-cron-secret para rodar agendado)
+ * Rotas (path após o nome da função):  POST /start · GET /callback · POST /disconnect · POST /sync   (+ /sync com x-cron-secret para rodar de forma automática, para todos ou para {user_id})
  * Autenticação: /start, /disconnect e /sync exigem o JWT do usuário (validado aqui com auth.getUser); /callback é autenticado pelo "state" assinado de USO ÚNICO (migration 061).
  * Secrets (Supabase → Edge Functions → Secrets; nunca no navegador/repositório):
  *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET   — cliente OAuth "Aplicativo da Web" do Google Cloud; redirect URI autorizado:
  *                                              https://<ref-do-projeto>.supabase.co/functions/v1/google-calendar/callback
  *   GOOGLE_TOKEN_ENC_KEY                     — 32 bytes em base64 (ex.: openssl rand -base64 32): criptografa o refresh token em repouso e assina o "state" do OAuth.
- *   PUBLIC_SITE_URL                          — origem do app (para voltar do Google), ex.: https://hp-group-hub.netlify.app
- *   CALENDAR_SYNC_SECRET (opcional)          — habilita a sincronização agendada por chamada servidor-a-servidor.
+ *   GOOGLE_RETURN_URL                        — origem do app para onde o usuário volta depois do Google (ex.: https://release-v1--hp-group-hub.netlify.app). É SÓ do calendário:
+ *                                              sem ela vale PUBLIC_SITE_URL, mas os e-mails (auth-email-hook) usam PUBLIC_SITE_URL e não devem ser afetados por esta configuração.
+ *   CALENDAR_SYNC_SECRET                     — habilita a sincronização automática por chamada servidor-a-servidor (pg_cron/pg_net): x-cron-secret.
  * SUPABASE_URL, SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY são injetados pela plataforma.
  */
 
@@ -31,11 +34,15 @@ const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 // @ts-ignore
 const env = (k: string) => Deno.env.get(k) ?? "";
+// Client ID/Secret não têm espaço nem quebra de linha; colados em painel às vezes chegam com um deles no meio. Removemos antes de usar (o segredo guardado não muda).
+const cred = (k: string) => env(k).replace(/\s+/g, "");
 const b64 = (u: Uint8Array) => btoa(String.fromCharCode(...u));
 const unb64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const b64url = (s: string) => btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const unb64url = (s: string) => atob(s.replace(/-/g, "+").replace(/_/g, "/"));
-const configured = () => !!(env("GOOGLE_CLIENT_ID") && env("GOOGLE_CLIENT_SECRET") && env("GOOGLE_TOKEN_ENC_KEY") && env("PUBLIC_SITE_URL"));
+const returnUrl = () => (env("GOOGLE_RETURN_URL") || env("PUBLIC_SITE_URL")).replace(/\/+$/, "");
+const configured = () => !!(cred("GOOGLE_CLIENT_ID") && cred("GOOGLE_CLIENT_SECRET") && env("GOOGLE_TOKEN_ENC_KEY") && returnUrl());
+const sameSecret = (a: string, b: string) => { if (!a || !b || a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; };
 const redirectUri = () => `${env("SUPABASE_URL")}/functions/v1/google-calendar/callback`;
 
 async function aesKey() { const raw = unb64(env("GOOGLE_TOKEN_ENC_KEY")); if (raw.length !== 32) throw new Error("GOOGLE_TOKEN_ENC_KEY deve ter 32 bytes em base64"); return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]); }
@@ -62,7 +69,7 @@ async function orgOf(sb: any, userId: string): Promise<string | null> { const { 
 
 async function refreshAccess(sb: any, conn: any): Promise<string> {
   const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ client_id: env("GOOGLE_CLIENT_ID"), client_secret: env("GOOGLE_CLIENT_SECRET"), refresh_token: await decrypt(conn.refresh_token_enc), grant_type: "refresh_token" }) });
+    body: new URLSearchParams({ client_id: cred("GOOGLE_CLIENT_ID"), client_secret: cred("GOOGLE_CLIENT_SECRET"), refresh_token: await decrypt(conn.refresh_token_enc), grant_type: "refresh_token" }) });
   const j = await r.json();
   if (!r.ok || !j.access_token) {
     if (j.error === "invalid_grant") await sb.from("google_calendar_connections").update({ status: "revoked", last_error: "O acesso ao Google foi revogado ou expirou. Conecte novamente." }).eq("user_id", conn.user_id);
@@ -71,7 +78,6 @@ async function refreshAccess(sb: any, conn: any): Promise<string> {
   return j.access_token as string;
 }
 const gcal = (token: string, path: string, init: RequestInit = {}) => fetch(`https://www.googleapis.com/calendar/v3/${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init.headers ?? {}) } });
-const parsePeriod = (p: string): [string, string] => { const [a, b] = p.replace(/[[\]()"]/g, "").split(","); return [new Date(a.trim().replace(" ", "T")).toISOString(), new Date(b.trim().replace(" ", "T")).toISOString()]; };
 
 async function syncUser(sb: any, userId: string) {
   const { data: conn } = await sb.from("google_calendar_connections").select("*").eq("user_id", userId).maybeSingle();
@@ -91,24 +97,17 @@ async function syncUser(sb: any, userId: string) {
     const { data: appts } = await sb.from("appointments").select("id, period, status, updated_at, person:people(full_name), service:services(name), unit:units(name)")
       .eq("professional_id", prof.id).overlaps("period", `[${from},${to})`).limit(1000);
     const { data: links } = await sb.from("calendar_event_links").select("local_id, google_event_id, local_version").eq("user_id", userId).eq("local_type", "appointment");
-    const byLocal = new Map((links ?? []).map((l: any) => [l.local_id, l]));
-    for (const a of (appts ?? []) as any[]) {
-      const eventId = "hp" + String(a.id).replace(/-/g, ""); const link: any = byLocal.get(a.id); const version = Math.floor(Date.parse(a.updated_at) / 1000);
-      if (["scheduled", "confirmed", "attended"].includes(a.status)) {
-        if (link && Number(link.local_version) === version) continue;
-        const [s, e] = parsePeriod(a.period);
-        const body = { id: eventId, status: "confirmed", summary: conn.detail === "names" ? `Atendimento: ${String(a.person?.full_name ?? "").split(" ")[0]} — ${a.service?.name ?? ""}` : "Atendimento HP",
-          location: a.unit?.name ?? undefined, description: "Evento do HP Group Hub. Alterações aqui não voltam para o HP.", start: { dateTime: s, timeZone: "UTC" }, end: { dateTime: e, timeZone: "UTC" },
-          extendedProperties: { private: { hp_kind: "appointment", hp_id: a.id } }, reminders: { useDefault: false } };
-        let r = link ? await gcal(token, `calendars/${cid}/events/${eventId}`, { method: "PUT", body: JSON.stringify(body) }) : await gcal(token, `calendars/${cid}/events`, { method: "POST", body: JSON.stringify(body) });
-        if (!link && r.status === 409) r = await gcal(token, `calendars/${cid}/events/${eventId}`, { method: "PUT", body: JSON.stringify(body) });   // id já existiu: ressuscita em vez de duplicar
+    for (const act of planAppointments((appts ?? []) as Appt[], (links ?? []) as any[], (conn.detail === "names" ? "names" : "minimal") as Detail)) {
+      if (act.type === "upsert") {
+        let r = act.create ? await gcal(token, `calendars/${cid}/events`, { method: "POST", body: JSON.stringify(act.body) }) : await gcal(token, `calendars/${cid}/events/${act.eventId}`, { method: "PUT", body: JSON.stringify(act.body) });
+        if (act.create && r.status === 409) r = await gcal(token, `calendars/${cid}/events/${act.eventId}`, { method: "PUT", body: JSON.stringify(act.body) });   // id já existiu: ressuscita em vez de duplicar
         if (!r.ok) throw new Error(`Google recusou o evento (${r.status})`);
-        await sb.from("calendar_event_links").upsert({ org_id: conn.org_id, user_id: userId, local_type: "appointment", local_id: a.id, google_event_id: eventId, local_version: version }, { onConflict: "user_id,local_type,local_id" });
+        await sb.from("calendar_event_links").upsert({ org_id: conn.org_id, user_id: userId, local_type: "appointment", local_id: act.localId, google_event_id: act.eventId, local_version: act.version }, { onConflict: "user_id,local_type,local_id" });
         pushed++;
-      } else if (link) {    // cancelado, remarcado ou ausência do profissional: remove do Google
-        const r = await gcal(token, `calendars/${cid}/events/${eventId}`, { method: "DELETE" });
+      } else {
+        const r = await gcal(token, `calendars/${cid}/events/${act.eventId}`, { method: "DELETE" });
         if (!r.ok && r.status !== 404 && r.status !== 410) throw new Error(`Google recusou a remoção (${r.status})`);
-        await sb.from("calendar_event_links").delete().eq("user_id", userId).eq("local_type", "appointment").eq("local_id", a.id); removed++;
+        await sb.from("calendar_event_links").delete().eq("user_id", userId).eq("local_type", "appointment").eq("local_id", act.localId); removed++;
       }
     }
   }
@@ -142,7 +141,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   const route = new URL(req.url).pathname.split("/").pop() ?? "";
   try {
-    if (!configured()) return route === "callback" ? Response.redirect(`${env("PUBLIC_SITE_URL") || "/"}/admin/meu-dia?google=indisponivel`, 302)
+    if (!configured()) return route === "callback" ? Response.redirect(`${returnUrl() || ""}/admin/meu-dia?google=indisponivel`, 302)
       : json(503, { error: "google_not_configured", message: "Conexão com o Google indisponível: as credenciais OAuth ainda não foram cadastradas no servidor." });
     const sb = service();
 
@@ -155,12 +154,12 @@ Deno.serve(async (req: Request) => {
       const ins = await sb.from("google_oauth_states").insert({ nonce, user_id: user.id, expires_at: new Date(exp).toISOString() });
       if (ins.error) return json(500, { error: "state_unavailable", message: "Não foi possível iniciar a conexão. Tente novamente." });
       const state = await signState({ u: user.id, exp, n: nonce });
-      const qs = new URLSearchParams({ client_id: env("GOOGLE_CLIENT_ID"), redirect_uri: redirectUri(), response_type: "code", scope: SCOPES, access_type: "offline", prompt: "consent", include_granted_scopes: "true", state });
+      const qs = new URLSearchParams({ client_id: cred("GOOGLE_CLIENT_ID"), redirect_uri: redirectUri(), response_type: "code", scope: SCOPES, access_type: "offline", prompt: "consent", include_granted_scopes: "true", state });
       return json(200, { url: `https://accounts.google.com/o/oauth2/v2/auth?${qs}` });
     }
 
     if (route === "callback" && req.method === "GET") {
-      const back = (r: string) => Response.redirect(`${env("PUBLIC_SITE_URL")}/admin/meu-dia?google=${r}`, 302);
+      const back = (r: string) => Response.redirect(`${returnUrl()}/admin/meu-dia?google=${r}`, 302);
       const q = new URL(req.url).searchParams; const st = await verifyState(q.get("state") ?? ""); if (!st) return back("estado");
       // uso único: apaga o nonce e só segue se ele existia, era deste usuário e não tinha vencido — repetir o mesmo state cai aqui
       const used = await sb.from("google_oauth_states").delete().eq("nonce", st.n).eq("user_id", st.u).gt("expires_at", new Date().toISOString()).select("nonce");
@@ -168,11 +167,12 @@ Deno.serve(async (req: Request) => {
       if (q.get("error") || !q.get("code")) return back("erro");
       const org = await orgOf(sb, st.u); if (!org) return back("erro");
       const tr = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ code: q.get("code")!, client_id: env("GOOGLE_CLIENT_ID"), client_secret: env("GOOGLE_CLIENT_SECRET"), redirect_uri: redirectUri(), grant_type: "authorization_code" }) });
+        body: new URLSearchParams({ code: q.get("code")!, client_id: cred("GOOGLE_CLIENT_ID"), client_secret: cred("GOOGLE_CLIENT_SECRET"), redirect_uri: redirectUri(), grant_type: "authorization_code" }) });
       const tj = await tr.json();
       if (!tr.ok || !tj.refresh_token || !String(tj.scope ?? "").includes("calendar.app.created")) return back("permissao");        // sem refresh token ou sem o escopo mínimo: não conecta
       const ui = await (await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${tj.access_token}` } })).json().catch(() => ({}));
       const { error } = await sb.from("google_calendar_connections").upsert({ user_id: st.u, org_id: org, google_email: ui.email ?? null, refresh_token_enc: await encrypt(tj.refresh_token), scope: tj.scope, hp_calendar_id: null, sync_token: null, status: "active", last_error: null }, { onConflict: "user_id" });
+      if (!error) { try { await syncUser(sb, st.u); } catch (e) { await sb.from("google_calendar_connections").update({ status: "error", last_error: String((e as Error).message).slice(0, 300) }).eq("user_id", st.u); } }   // já aparece no Google sem precisar clicar
       return back(error ? "erro" : "conectado");
     }
 
@@ -189,8 +189,10 @@ Deno.serve(async (req: Request) => {
 
     if (route === "sync" && req.method === "POST") {
       const cron = req.headers.get("x-cron-secret");
-      if (cron && env("CALENDAR_SYNC_SECRET") && cron === env("CALENDAR_SYNC_SECRET")) {
-        const { data } = await sb.from("google_calendar_connections").select("user_id").eq("status", "active"); const out: Record<string, unknown> = {};
+      if (cron && sameSecret(cron, env("CALENDAR_SYNC_SECRET"))) {
+        let only: string | null = null; try { const b = await req.json(); if (b && typeof b.user_id === "string" && /^[0-9a-f-]{36}$/i.test(b.user_id)) only = b.user_id; } catch { /* sem corpo: todos */ }
+        let q = sb.from("google_calendar_connections").select("user_id").in("status", ["active", "error"]); if (only) q = q.eq("user_id", only);
+        const { data } = await q; const out: Record<string, unknown> = {};
         for (const c of data ?? []) { try { out[c.user_id] = await syncUser(sb, c.user_id); } catch (e) { out[c.user_id] = { error: String((e as Error).message) }; await sb.from("google_calendar_connections").update({ status: "error", last_error: String((e as Error).message).slice(0, 300) }).eq("user_id", c.user_id); } }
         return json(200, { ok: true, users: out });
       }

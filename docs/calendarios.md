@@ -1,57 +1,59 @@
-# Calendários: Meu dia (dia/semana/mês), assinatura Apple/iPhone e Google Calendar
+# Calendários: Meu dia (Dia/Semana/Mês) e Google Calendar
 
-> Migration `059`, Edge Functions `calendar-feed` e `google-calendar`, telas do “Meu dia” e teste `S08`. Cada opção tem um **alcance diferente** — não confundir.
+> Migrations `059` (tabelas e funções), `061` (state de uso único) e `063` (sincronização automática); Edge Function `google-calendar`; telas do “Meu dia”; testes `S08`, `S11`, `R10`, `google-calendar-auth.mjs` e `google-sync-plan.test.mjs`.
+> **Google Calendar é a única integração de calendário.** A assinatura `.ics` (Apple/iPhone e “Google por URL”) foi **aposentada**: saiu da interface, a função `calendar-feed` foi despublicada e o código dela removido. Nada foi apagado do banco (as tabelas/funções da 059 ficam como histórico e nada as serve).
 
-## Quadro de alcance
-| Opção | Direção | Status hoje |
+## O que o usuário vê (Meu dia → Google Calendar)
+- **Conectar Google Calendar**: leva ao Google, onde a pessoa **escolhe a própria conta e autoriza individualmente**; volta ao “Meu dia” já conectada. Cada usuário conecta a sua — não existe conta compartilhada.
+- **Status**: “Conectado” (com o e-mail da conta e a última sincronização), “Conectado com erro na última sincronização” (com o motivo) ou “Acesso revogado — conecte novamente”.
+- **Sincronizar agora**, **nível de detalhe** do evento e **Desconectar** (remove o calendário “HP Group Hub” criado pelo app, revoga o acesso no Google e apaga os compromissos externos importados; os eventos do Google da pessoa **não** são tocados).
+
+## O que é sincronizado
+| Direção | O quê | Como |
 |---|---|---|
-| **Meu dia: visões Dia / Semana / Mês** | interna | Implementada (precisa da migration 059). Agenda própria por padrão; outra agenda só por permissão e por unidade; nenhuma confirmação em nome de outro profissional; tarefas pessoais privadas só na própria agenda. |
-| **Assinatura de calendário (.ics) — Apple/iPhone e Google “por URL”** | **somente leitura** (HP → calendário do aparelho) | Implementada (precisa da 059 + publicar `calendar-feed`). **Não** é sincronização bidirecional: o que for alterado no calendário do aparelho não volta ao HP. Link secreto e **revogável**. |
-| **Google Calendar (OAuth)** | HP → Google (calendário “HP Group Hub” criado pelo app) **e** Google → HP (somente como compromissos externos) | **Código preparado, NÃO testado contra o Google** e **bloqueado por credenciais** (abaixo). A assinatura .ics **não** substitui nem conclui esta integração. |
+| **HP → Google** | atendimentos **da agenda do próprio profissional**: **criação, remarcação e cancelamento** | num calendário secundário **“HP Group Hub” criado pelo app** (o app só escreve nele, nunca no calendário principal). Evento com **id determinístico por atendimento** (impossível duplicar); remarcar atualiza o mesmo evento (ou remove o antigo e cria o novo, quando o atendimento é remarcado para outro horário); cancelamento, falta e ausência do profissional removem o evento |
+| **Google → HP** | eventos do calendário principal, só leitura | aparecem no Meu dia como **“compromisso externo”**, só para quem os tem. **Nunca** viram atendimento, cobrança, venda ou consumo de sessão |
 
-## Regras que valem para tudo
-- **Compromisso externo nunca vira atendimento, cobrança, venda ou consumo de sessão**: os eventos do Google só entram em `external_calendar_events` (só leitura, só do próprio usuário) e aparecem no “Meu dia” como “Compromisso externo”.
-- **Tarefas pessoais privadas nunca saem do HP** (nem para o .ics nem para o Google).
-- **Conteúdo mínimo por padrão**: o evento externo diz “Atendimento HP” + unidade, sem nome de paciente nem serviço. O usuário pode escolher incluir o primeiro nome e o serviço, com aviso de que isso fica guardado no provedor do calendário.
-- **Fusos horários**: o .ics usa UTC (o aparelho converte); o Google recebe `dateTime` em UTC com fuso do calendário `America/Sao_Paulo`; a tela mostra no fuso do navegador.
-- **Duplicidade**: UID estável por atendimento no .ics (`appt-<id>@hp-group-hub`); no Google, id de evento **determinístico** por atendimento (impossível criar dois), com `PUT` quando já existe.
-- **Criação, alteração, cancelamento**: remarcar muda a hora do MESMO evento; cancelar/remarcar/ausência do profissional saem como `STATUS:CANCELLED` (.ics) ou removem o evento (Google).
-- **Desconexão**: o link .ics é revogado em um clique (o antigo para de funcionar na hora); desconectar o Google remove o calendário “HP Group Hub” criado pelo app, revoga o acesso e apaga os compromissos externos importados — os eventos do Google do usuário **não** são tocados.
-- **Autenticação da função `google-calendar`** (publicada sem `verify_jwt` porque o retorno do Google não traz JWT): `start`, `sync` e `disconnect` exigem a sessão do usuário, validada **dentro da função** (`auth.getUser`); a chave pública sozinha ou um JWT inválido recebem 401. O `callback` é autenticado pelo `state` assinado (HMAC) **de uso único**: o nonce é guardado em `google_oauth_states` ao iniciar e apagado ao consumir (migration 061); repetir o state, usar um state forjado ou vencido, ou de outro usuário, volta ao app com `google=estado`. Testado em `supabase/tests/functions/google-calendar-auth.mjs` (25 verificações, com segredos fictícios temporários no Dev).
-- **Credenciais e tokens só no servidor**: o token do .ics é mostrado uma vez e guardado só como hash; o refresh token do Google é guardado **criptografado** (AES-GCM) e as tabelas não têm acesso do navegador.
+**Privacidade**: por padrão o evento diz só **“Atendimento HP” + unidade**. Nunca vai nota, motivo de cancelamento, avaliação, objetivo ou qualquer dado clínico; tarefas pessoais privadas nunca saem do HP. Só se a **própria pessoa** escolher “com primeiro nome e serviço” saem o primeiro nome do paciente e o nome do serviço (a tela avisa que ficam guardados no Google).
 
-## Assinatura (.ics) — como usar
-1. Meu dia › *Conectar calendários* › escolha o conteúdo (mínimo recomendado) › **Gerar link de assinatura** (aparece **uma única vez**).
-2. iPhone: Ajustes › Calendário › Contas › Adicionar conta › Outra › *Adicionar calendário assinado* › cole o link **webcal**. Mac: Calendário › Arquivo › Nova assinatura. Google Agenda (web): Outras agendas › Por URL › cole o link **https** (o Google atualiza assinaturas em várias horas; não é tempo real).
-3. Vazou? **Revogar link**. Gerar outro revoga o anterior.
-- Publicação da função (sem JWT, porque clientes de calendário não o enviam): `supabase functions deploy calendar-feed --no-verify-jwt --project-ref fsvtzowcwhvwtluwrhnb`. Não há secret extra.
+## Sincronização automática (migration 063)
+- **Na hora**: toda criação, mudança de horário, mudança de status ou troca de profissional de um atendimento de quem **tem conexão** chama a sincronização **só daquele usuário** (e do profissional anterior, se mudou). Assíncrono, depois do commit; só o identificador do usuário viaja (nada de paciente, horário ou nota).
+- **Rede de segurança a cada 5 minutos** (`pg_cron`): para todas as conexões ativas ou com erro — repete o que falhou e lê os compromissos externos do Google.
+- **Logo ao conectar**, a função já faz a primeira sincronização.
+- A chamada é servidor-a-servidor: `pg_net` → `google-calendar/sync` com o cabeçalho `x-cron-secret` (comparação em tempo constante). **A URL da função e o segredo ficam no Vault** (`calendar_sync_url`, `calendar_sync_secret`) e no segredo `CALENDAR_SYNC_SECRET` da função (mesmo valor). **Sem eles no Vault, tudo é no-op**; e **a agenda nunca falha por causa do calendário** (o gatilho engole qualquer erro).
 
-## Google Calendar — o que preciso que você cadastre e onde
-**No Google Cloud Console** (conta Google do HP Group):
-1. Criar um projeto (ex.: “HP Group Hub”) e ativar a **Google Calendar API**.
-2. **OAuth consent screen**: tipo *External* (ou *Internal*, se o HP usa Google Workspace), nome do app, e-mail de suporte, domínios autorizados. **Escopos** a adicionar: `.../auth/calendar.app.created` (escreve só no calendário que o app cria), `.../auth/calendar.events.readonly` (lê os eventos — escopo **sensível**), `openid`, `email`.
-   - Enquanto o app estiver em modo **Testing**, só usuários de teste cadastrados conseguem conectar (até 100) e o **refresh token expira em 7 dias** (precisa reconectar). Para uso contínuo, publicar o app e passar pela verificação do Google do escopo sensível.
-3. **Credentials › Create credentials › OAuth client ID › Web application**. **Authorized redirect URI**: `https://fsvtzowcwhvwtluwrhnb.supabase.co/functions/v1/google-calendar/callback` (Dev; a produção terá o endereço do projeto de produção). Copiar **Client ID** e **Client Secret**.
+## Segurança
+- **Tokens**: o refresh token é guardado **criptografado** (AES-GCM, chave de 32 bytes em `GOOGLE_TOKEN_ENC_KEY`); as tabelas de conexão não são legíveis pelo navegador (só o status, sem token). Client ID/Secret só no servidor.
+- **`google-calendar` é publicada sem `verify_jwt`** (o retorno do Google não traz JWT): `start`, `sync` e `disconnect` exigem a **sessão do usuário, validada dentro da função**; o `callback` é autenticado pelo **`state` assinado (HMAC) de uso único** (nonce guardado e consumido; repetir, forjar, vencer ou usar o de outro usuário volta com `google=estado`). `sync` com `x-cron-secret` errado → 401.
+- Escopos pedidos (exatamente): `https://www.googleapis.com/auth/calendar.app.created` (escreve só no calendário que o app cria), `https://www.googleapis.com/auth/calendar.events.readonly` (lê eventos; **sensível**), `openid` e `email`. Nunca o escopo amplo de calendário.
+- Client ID/Secret colados com espaço ou quebra de linha no meio são aceitos (a função remove espaços antes de usar); o segredo guardado não muda.
 
-**No Supabase** (Project Settings › Edge Functions › Secrets, ou `supabase secrets set`) — **nunca no chat, no repositório ou em `VITE_*`**:
-| Secret | Valor |
-|---|---|
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | do passo 3 |
-| `GOOGLE_TOKEN_ENC_KEY` | 32 bytes aleatórios em base64 (`openssl rand -base64 32`); criptografa o refresh token e assina o `state` do OAuth. Se trocar, todos precisam reconectar. |
-| `PUBLIC_SITE_URL` | origem do app para voltar do Google (ex.: `https://hp-group-hub.netlify.app`, ou `http://127.0.0.1:5181` para testar localmente) |
-| `CALENDAR_SYNC_SECRET` (opcional) | habilita sincronização agendada por chamada servidor-a-servidor (`POST .../google-calendar/sync` com o cabeçalho `x-cron-secret`) |
+## Configuração (Dev `fsvtzowcwhvwtluwrhnb`)
+| Onde | Nome | Situação |
+|---|---|---|
+| Google Cloud | projeto **HPGroupCalendario**, Calendar API, cliente OAuth Web, callback `https://fsvtzowcwhvwtluwrhnb.supabase.co/functions/v1/google-calendar/callback`, usuários de teste | feito por você |
+| Secrets da função | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | cadastrados por você |
+| Secrets da função | `GOOGLE_TOKEN_ENC_KEY` (32 bytes aleatórios em base64) | gerada e cadastrada diretamente no Dev; nunca exibida |
+| Secrets da função | `GOOGLE_RETURN_URL` = `https://release-v1--hp-group-hub.netlify.app` | **só do calendário**; o `PUBLIC_SITE_URL` (usado pelos e-mails) não foi tocado |
+| Secrets da função | `CALENDAR_SYNC_SECRET` | gerado e cadastrado diretamente no Dev |
+| Vault | `calendar_sync_url`, `calendar_sync_secret` (mesmo valor do segredo acima) | gravados diretamente no Dev |
+| Banco | job `google-calendar-sync` (`*/5 * * * *`) e gatilho `appointments_google_kick` | migration 063 |
 
-**Publicar**: `supabase functions deploy google-calendar --no-verify-jwt --project-ref fsvtzowcwhvwtluwrhnb` (o retorno do Google não traz JWT; as ações do usuário são autenticadas dentro da função).
+**Tela de consentimento (Google Cloud › APIs e serviços › Tela de permissão OAuth › Acesso a dados › Adicionar ou remover escopos)** — confira que estão listados: `.../auth/calendar.app.created`, `.../auth/calendar.events.readonly`, `openid` e `.../auth/userinfo.email`. Enquanto o app estiver em modo **Teste**: só os **usuários de teste** cadastrados conseguem conectar (até 100) e o **refresh token expira em 7 dias** (a pessoa precisa reconectar; a tela mostra “Acesso revogado — conecte novamente”). Para uso contínuo é preciso publicar o app e passar pela verificação do Google do escopo sensível.
 
-**Como funciona (alcance informado na tela)**: *HP → Google* publica os atendimentos **da sua agenda** no calendário secundário “HP Group Hub” (o app só escreve nele, nunca no principal) e reflete remarcações e cancelamentos; editar esses eventos no Google **não** altera o atendimento (o HP é a fonte). *Google → HP* lê o **calendário principal** e mostra os eventos no Meu dia como compromissos externos (leitura incremental por `syncToken`; evento cancelado no Google some do HP). A sincronização é sob demanda (“Sincronizar agora”) e, se configurado o cron, periódica.
+Produção (quando for a hora): repetir os segredos no projeto `HP Group Core`, cadastrar o callback dele no cliente OAuth, gravar os dois itens no Vault e usar o domínio final em `GOOGLE_RETURN_URL`.
 
-## Verificação
-- SQL: `supabase/tests/release/S08_calendarios.sql` (visão por intervalo, permissões, privacidade, token só como hash, revogação, conteúdo mínimo, isolamento, anon).
-- **Testado no Dev (2026-09-30)**: `calendar-feed` publicada (sem JWT) e exercitada de verdade — criar link, baixar o VCALENDAR (UID único, UTC, conteúdo mínimo, sem nome de paciente), gerar outro link derruba o antigo (404), revogar derruba o novo (404), token inválido 404, POST 405, anônimo não cria link. `google-calendar` publicada: sem credenciais responde 503 `google_not_configured`.
-- **Não testado**: o OAuth e a API do Google (**pendente de credenciais e de teste real**) e a entrega do .ics a um iPhone/Google Agenda de verdade (teste manual com o link gerado na tela). Até configurar, a tela mostra “indisponível por configuração” nos pontos que dependem disso.
+## Como foi verificado
+- **Planejamento da sincronização** (`google-sync-plan.test.mjs`, 22 verificações, sem rede): criação, “nada mudou → nenhuma chamada”, remarcação (mesmo evento), remarcação para outro horário (antigo sai, novo entra), cancelamento/falta/ausência, atendimento repetido → uma ação só, id determinístico, horário em UTC e formatos de período do Postgres, e **nenhum dado pessoal/clínico** no evento (modo mínimo e modo com nome).
+- **Gatilho e cron** (`S11`, 19 verificações): criar/remarcar/cancelar disparam a sincronização do usuário conectado e só dele; sem conexão, conexão revogada ou Vault vazio não há chamada; mudar só uma anotação não dispara; trocar de profissional sincroniza os dois; o corpo só tem o `user_id`; erros não quebram a agenda; nada executável pelo navegador. A cadeia real Vault → pg_net → função (segredo) respondeu HTTP 200.
+- **Função publicada** (`google-calendar-auth.mjs`): 401 sem sessão/com chave pública/JWT inválido; `state` adulterado ou repetido → `google=estado`; escopos exatos; o Google **aceita o cliente e o callback** (abre a escolha de conta); o retorno vai para a URL do app configurada.
+- **Telas** (`R10`): Meu dia (Dia/Semana/Mês), só Google na interface (nada de iPhone/Apple/.ics), navegação ao Google interceptada e inspecionada (cliente, callback, escopos, state, sem segredo na URL), mensagens de retorno, função `.ics` fora do ar (404), status/erro/desconexão (com uma linha de teste removida ao final).
+
+## Não testado (depende de você autorizar no Google)
+A autorização real (escolher a conta e conceder as permissões) e o que vem depois: o evento aparecer de fato no Google, a remarcação e o cancelamento refletirem lá, e a leitura dos seus compromissos. A lógica de planejamento e todos os gatilhos foram testados; o último elo — a API do Google aceitando as chamadas com o token da sua conta — só se prova com a sua autorização.
 
 ## Limitações conhecidas
 - Eventos recorrentes do Google são lidos expandidos (`singleEvents`); o HP não cria recorrências.
-- Sem notificações push do Google: a leitura é por sincronização.
+- Sem notificações push do Google: a leitura dos compromissos externos é por sincronização (a cada 5 minutos).
 - Atendimentos com mais de 180 dias à frente ou 30 dias atrás ficam fora da janela.
-- A assinatura .ics de paciente mostra só as consultas dele (“Consulta HP”); o portal do paciente ainda não tem a tela para gerar esse link (só o “Meu dia” da equipe).
+- Em modo Teste do Google o acesso expira em 7 dias.
