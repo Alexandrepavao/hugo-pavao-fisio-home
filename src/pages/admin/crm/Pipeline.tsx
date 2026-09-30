@@ -114,7 +114,7 @@ const Pipeline = () => {
               {stageList.map((s) => <Column key={s.id} stage={s} items={filtered.filter((o) => o.stage_id === s.id)} allStages={stageList} nameOf={nameOf} onOpen={setOpenId} onMove={moveTo} dragging={!!dragId} />)}
             </div>
           </div>
-          <DragOverlay>{dragged && <CardBody o={dragged} nameOf={nameOf} overlay />}</DragOverlay>
+          <DragOverlay dropAnimation={null}>{dragged && <CardBody o={dragged} nameOf={nameOf} overlay />}</DragOverlay>
         </DndContext>
       )}
       {stages.data && opps.data && view === "lista" && (filtered.length === 0 ? <EmptyState icon={KanbanSquare} title="Nenhuma oportunidade com estes filtros">Ajuste os filtros ou crie uma nova oportunidade.</EmptyState> : (
@@ -167,13 +167,16 @@ const CardBody = ({ o, nameOf, overlay }: { o: Opp; nameOf: (id: string | null) 
 const Card = ({ o, stages, nameOf, onOpen, onMove }: { o: Opp; stages: Stage[]; nameOf: (id: string | null) => string; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: o.id });
   return (
-    <li ref={setNodeRef} style={{ opacity: isDragging ? 0.35 : 1, position: "relative", touchAction: "manipulation" }}>
+    <li ref={setNodeRef} style={{ position: "relative", touchAction: "manipulation" }}>
+      {isDragging && <div aria-hidden className="absolute inset-0 rounded-lg border-2 border-dashed border-input" style={{ background: "hsl(var(--muted) / .5)" }} />}
+      <div style={isDragging ? { visibility: "hidden" } : undefined}>
       <div {...attributes} {...listeners} role="button" aria-roledescription="item arrastável" aria-label={`${o.person?.full_name ?? "Oportunidade"}, ${o.title}. Enter abre os detalhes.`} tabIndex={0} className="cursor-grab active:cursor-grabbing rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
         onClick={() => onOpen(o.id)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onOpen(o.id); } else listeners?.onKeyDown?.(e); }}>
         <CardBody o={o} nameOf={nameOf} />
       </div>
+      </div>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild><button className="absolute top-1.5 right-1.5 p-1 rounded hover:bg-muted text-muted-foreground" aria-label={`Ações de ${o.person?.full_name ?? "oportunidade"}`} onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}><MoreHorizontal size={16} /></button></DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild><button className={`absolute top-1.5 right-1.5 p-1 rounded hover:bg-muted text-muted-foreground ${isDragging ? "invisible" : ""}`} aria-label={`Ações de ${o.person?.full_name ?? "oportunidade"}`} onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}><MoreHorizontal size={16} /></button></DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onSelect={() => onOpen(o.id)}>Abrir detalhes</DropdownMenuItem>
           <DropdownMenuSub><DropdownMenuSubTrigger>Mover para…</DropdownMenuSubTrigger><DropdownMenuSubContent>
