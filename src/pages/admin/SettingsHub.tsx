@@ -61,7 +61,7 @@ const SettingsHub = () => {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground mt-6" data-testid="build-info">Versão {RELEASE_PROFILE === "v1" ? "de entrega (v1)" : "de desenvolvimento"} · commit <code>{BUILD_INFO.commit}</code>{BUILD_INFO.builtAt ? ` · construída em ${new Date(BUILD_INFO.builtAt).toLocaleString("pt-BR")}` : ""}</p>
+      <p className="text-xs text-muted-foreground mt-6" data-testid="build-info">Versão {RELEASE_PROFILE === "v1" ? "de entrega (v1)" : "de desenvolvimento"} · commit <code>{BUILD_INFO.commit}</code> · ambiente {BUILD_INFO.environment} · banco {BUILD_INFO.backend}{BUILD_INFO.builtAt ? ` · construída em ${new Date(BUILD_INFO.builtAt).toLocaleString("pt-BR")}` : ""}</p>
     </div>
   );
 };

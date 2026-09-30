@@ -53,6 +53,8 @@ test.describe("@release Permissões por papel", () => {
     await page.goto("/admin/configuracoes");
     await expect(page.getByText("Pendente", { exact: true })).toHaveCount(0);                    // cartões sem tela ficam fora
     await expect(page.getByTestId("build-info")).toContainText("commit");
+    await expect(page.getByTestId("build-info")).toContainText("banco Dev");
+    await expect(page.getByTestId("env-badge")).toContainText("AMBIENTE DE TESTE");                    // fora de produção o selo está sempre visível
   });
 
   test("backend: cada papel só lê e só executa o que lhe cabe (chamadas diretas à API, sem passar pela interface)", async () => {

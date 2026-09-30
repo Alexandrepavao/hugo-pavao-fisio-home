@@ -127,7 +127,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     await loginAs(context, QA.manager); const errors = collectErrors(page); const g = api(mgr);
     const day = spDate(2);
     const start = await bookUi(page, day, undefined, { opp: true });
-    let appts = (await g.get(`appointments?select=id,status,opportunity_id&person_id=eq.${S.person}&order=created_at`)).body as { id: string; status: string; opportunity_id: string }[];
+    const appts = (await g.get(`appointments?select=id,status,opportunity_id&person_id=eq.${S.person}&order=created_at`)).body as { id: string; status: string; opportunity_id: string }[];
     expect(appts).toHaveLength(1); expect(appts[0]).toMatchObject({ status: "scheduled", opportunity_id: S.opp }); S.evalAppt = appts[0].id;
     // o mesmo horário do mesmo paciente/profissional é recusado pelo servidor
     const dup = await g.rpc("book_appointment", { p_person: S.person, p_unit: S.unit, p_professional: S.prof, p_service: S.svc, p_start: start, p_package: null, p_opportunity: null });

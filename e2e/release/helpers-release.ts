@@ -5,10 +5,10 @@ import { ANON, SUPABASE_URL, api, runId, signIn, useSession as injectSession, ty
 export { api, runId, signIn };
 export const QA = {
   manager: "qa.manager@hp-test.dev", gestorUnidade: "qa.gestorunidade@hp-test.dev", comercial: "qa.comercial@hp-test.dev", financeiro: "qa.financeiro@hp-test.dev",
-  fisio: "qa.fisio@hp-test.dev", parceiro: "qa.parceiro@hp-test.dev", aluno: "qa.aluno@hp-test.dev",
+  fisio: "qa.fisio@hp-test.dev", paciente: "qa.paciente@hp-test.dev", parceiro: "qa.parceiro@hp-test.dev", aluno: "qa.aluno@hp-test.dev",
 };
 export async function loginAs(context: BrowserContext, email: string): Promise<Session> { const s = await signIn(email); await injectSession(context, s); return s; }
-export const brlFmt = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100).replace(/ /g, " ");
+export const brlFmt = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100).replace(/\s/g, " ");
 
 export async function rest(s: Session | null, method: "POST" | "PATCH" | "DELETE", path: string, body?: unknown) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method, headers: { apikey: ANON, authorization: `Bearer ${s?.access_token ?? ANON}`, "content-type": "application/json", prefer: "return=representation" }, body: body === undefined ? undefined : JSON.stringify(body) });

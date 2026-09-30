@@ -14,5 +14,7 @@ const OFF_IN_V1: ReadonlySet<FeatureKey> = new Set<FeatureKey>(["crm_scheduled_m
 export const RELEASE_PROFILE: "v1" | "full" = (import.meta.env.VITE_RELEASE_PROFILE as string | undefined) === "full" ? "full" : "v1";
 export const featureOn = (key: FeatureKey): boolean => RELEASE_PROFILE === "full" || !OFF_IN_V1.has(key);
 
-declare const __BUILD_INFO__: { commit: string; builtAt: string };
-export const BUILD_INFO: { commit: string; builtAt: string } = typeof __BUILD_INFO__ !== "undefined" ? __BUILD_INFO__ : { commit: "dev", builtAt: "" };
+declare const __BUILD_INFO__: { commit: string; builtAt: string; environment: string; backend: string };
+export const BUILD_INFO: { commit: string; builtAt: string; environment: string; backend: string } = typeof __BUILD_INFO__ !== "undefined" ? __BUILD_INFO__ : { commit: "dev", builtAt: "", environment: "development", backend: "Dev" };
+/** Ambiente que NÃO é produção mostra um selo fixo, para ninguém confundir teste com operação real. */
+export const IS_PRODUCTION = BUILD_INFO.environment === "production";

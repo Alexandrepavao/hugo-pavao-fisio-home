@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
 import FeatureGate from "./components/hp/FeatureGate";
+import EnvBadge from "./components/hp/EnvBadge";
 import { AuthProvider, STAFF_ROLES, type AppRole } from "./auth/AuthProvider";
 import RequireAuth from "./auth/RequireAuth";
 import { AskProvider } from "./lib/ui";
@@ -88,6 +89,7 @@ const g = (roles: AppRole[], el: JSX.Element) => <RequireAuth roles={roles}>{el}
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <EnvBadge />
       <Toaster />
       <Sonner />
       <BrowserRouter>

@@ -9,7 +9,7 @@ test.describe.serial("@release Portais (paciente e parceiro)", () => {
   const S: Record<string, string> = {};
 
   test("paciente: vê só os próprios atendimentos e pacotes, edita os próprios dados e não alcança nada administrativo", async ({ page, context }) => {
-    const mgr = await signIn(QA.manager); const g = api(mgr); const aluno = await loginAs(context, QA.aluno); const errors = collectErrors(page);
+    const mgr = await signIn(QA.manager); const g = api(mgr); const aluno = await loginAs(context, QA.paciente); const errors = collectErrors(page);
     const org = (await g.get("organizations?select=id&slug=eq.hp-group")).body[0].id; const unit = (await g.get("units?select=id&slug=eq.sao-paulo")).body[0].id;
     const me = (await api(aluno).get("people?select=id,full_name")).body as { id: string; full_name: string }[]; expect(me).toHaveLength(1);
     // outro paciente (fixture) com atendimento: o QA aluno nunca pode enxergá-lo
