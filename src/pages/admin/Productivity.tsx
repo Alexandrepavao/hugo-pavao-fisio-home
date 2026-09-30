@@ -5,6 +5,9 @@ import { CheckCircle2, Circle, Pause, Play, Plus, Timer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { useAuth } from "@/auth/AuthProvider";
+import CalendarViews from "./CalendarViews";
+import CalendarConnect from "./CalendarConnect";
+import { addDays, calTitle, dayKey, parseDay, type CalView } from "./calendarUtil";
 import { Badge, EmptyState, errText, FilterBar, FilterField, Msg, PageHead, State, Tabs, useMsg } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -30,6 +33,8 @@ const Productivity = () => {
 
   const day = useQuery({ queryKey: ["my-day", date], queryFn: async () => { const { data, error } = await supabase.rpc("my_day", { p_date: date }); if (error) throw error; return data as MyDay; } });
   // Agendas de outros profissionais: só aparecem para quem o servidor autoriza (gestor, administrador operacional; gestor de unidade nas suas unidades).
+  const [view, setView] = useState<"dia" | CalView>("dia");
+  const shift = (dir: -1 | 1) => { const d = parseDay(date); setDate(dayKey(view === "mes" ? new Date(d.getFullYear(), d.getMonth() + dir, 1) : addDays(d, dir * (view === "semana" ? 7 : 1)))); };
   const [viewProf, setViewProf] = useState("");
   const profs = useQuery({ queryKey: ["agenda-profs"], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_agenda_professionals"); if (error) throw error; return data as AgendaProf[]; } });
   const others = (profs.data ?? []).filter((p) => !p.is_self);
@@ -53,10 +58,20 @@ const Productivity = () => {
         <FilterField label="Data" htmlFor="pd-date"><input id="pd-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></FilterField>
         {tab === "dia" && others.length > 0 && <FilterField label="Agenda clínica de" htmlFor="pd-prof"><select id="pd-prof" value={viewProf} onChange={(e) => setViewProf(e.target.value)}><option value="">Minha agenda</option>{others.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></FilterField>}
         {date !== todayISO() && <button className="hp-btn hp-btn-outline" onClick={() => setDate(todayISO())}>Hoje</button>}
+        {tab === "dia" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <div role="group" aria-label="Visualização" className="inline-flex rounded-full border border-input overflow-hidden">
+              {([["dia", "Dia"], ["semana", "Semana"], ["mes", "Mês"]] as ["dia" | CalView, string][]).map(([k, l]) => <button key={k} aria-pressed={view === k} onClick={() => setView(k)} className={`hp-btn hp-btn-sm rounded-none border-0 ${view === k ? "hp-btn-primary" : "hp-btn-outline"}`}>{l}</button>)}
+            </div>
+            <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => shift(-1)} aria-label="Anterior">‹</button>
+            {view !== "dia" && <span className="text-sm font-medium capitalize" aria-live="polite">{calTitle(view, date)}</span>}
+            <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => shift(1)} aria-label="Próximo">›</button>
+          </div>)}
         {tab === "dia" && <span className="ml-auto self-center text-sm text-muted-foreground">{pending} pendente(s)</span>}
       </FilterBar>
 
-      {tab === "dia" && (
+      {tab === "dia" && view !== "dia" && <CalendarViews view={view} date={date} professionalId={viewProf} onPickDay={(d) => { setDate(d); setView("dia"); }} onConfirm={confirmAppt} />}
+      {tab === "dia" && view === "dia" && (
         <div className="grid gap-5 lg:grid-cols-[1fr_18rem] items-start">
           <div className="grid gap-5">
             <State loading={day.isLoading} error={day.error} />
@@ -102,6 +117,7 @@ const Productivity = () => {
         </div>
       )}
       {tab === "equipe" && isManager && <TeamDay date={date} />}
+      {tab === "dia" && <div className="mt-8"><CalendarConnect /></div>}
       <NewTaskDialog open={showNew} onOpenChange={setShowNew} date={date} onCreated={() => { setShowNew(false); refresh(); }} />
     </div>
   );
