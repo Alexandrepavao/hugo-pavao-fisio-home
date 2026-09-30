@@ -27,17 +27,17 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 | 1b | Indicadores CRM (tempo/etapa, conversão, ciclo, perdas, responsável/origem) | ✅ código + migration 056 | ❌ | idem 1a (`S05` cobre fórmulas e permissões) |
 | 1c | Indicadores Captação (quiz/formulário, conversão até venda) | ✅ código + migration 056 | ❌ | idem 1a. Limitação: formulário não registra início/abandono (só envio) |
 | 1d | `docs/indicadores.md` (fórmula, período, denominador) | ✅ | — | revisar depois dos testes |
-| 2a | Linha de negócio no modelo (Fisioterapia / Academy / Não classificado) | ❌ | ❌ | a fazer |
-| 2b | Seletor Geral/Fisioterapia/Academy em vendas, recebíveis, despesas, comissões, relatórios, DRE | ❌ | ❌ | a fazer |
-| 2c | Venda com itens das duas linhas; parcial/desconto/estorno reconciliam | ❌ | ❌ | a fazer |
-| 2d | Despesas compartilhadas com rateio / não alocadas; Geral reconcilia sem duplicar | ❌ | ❌ | a fazer |
-| 3a | Objetivos, plano de sessões, próximas consultas, histórico, saldo separado | ❌ | ❌ | a fazer |
-| 3b | Avaliações de evolução (registro com data/autoria) e gráficos | ❌ | ❌ | a fazer |
-| 3c | Vídeos Bunny atribuídos pelo profissional | ❌ | ❌ | a fazer — **não existe integração Bunny hoje** |
-| 3d | Reavaliação e indicação continuidade/manutenção/alta; solicitar renovação/contato | ❌ | ❌ | a fazer |
-| 4a | Meu dia: visões diária/semanal/mensal; agenda conjunta por autorização | ❌ | ❌ | a fazer |
-| 4b | Assinatura de calendário (Apple/iPhone, Google "por URL"): somente leitura | ❌ | ❌ | a fazer |
-| 4c | Google Calendar do próprio usuário (sincronização) | ❌ | ❌ | a investigar — exige credenciais OAuth do Google (não existem no projeto) |
+| 2a | Linha de negócio no modelo (Fisioterapia / Academy / Não classificado) | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 2b | Seletor Geral/Fisioterapia/Academy em vendas, recebíveis, despesas, comissões, relatórios, DRE | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 2c | Venda com itens das duas linhas; parcial/desconto/estorno reconciliam | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 2d | Despesas compartilhadas com rateio / não alocadas; Geral reconcilia sem duplicar | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 3a | Objetivos, plano de sessões, próximas consultas, histórico, saldo separado | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 3b | Avaliações de evolução (registro com data/autoria) e gráficos | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 3c | Vídeos Bunny atribuídos pelo profissional | ❌ | ❌ | 🔒 plano em `docs/plano-escopo-ampliado.md`; **não existe integração Bunny hoje**; proteção por token exige chave da biblioteca (decisão/credencial do usuário) |
+| 3d | Reavaliação e indicação continuidade/manutenção/alta; solicitar renovação/contato | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 4a | Meu dia: visões diária/semanal/mensal; agenda conjunta por autorização | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 4b | Assinatura de calendário (Apple/iPhone, Google "por URL"): somente leitura | ❌ | ❌ | 🔒 não iniciado: precisa de acesso ao Dev para aplicar e testar; plano em `docs/plano-escopo-ampliado.md` |
+| 4c | Google Calendar do próprio usuário (sincronização) | ❌ | ❌ | 🔒 **bloqueado**: exige credenciais OAuth do Google (Client ID/Secret) que não existem no projeto; ver plano |
 | 5 | PR #3 e preview `hp-group-hub` atualizados | ❌ | ❌ | ao fim de cada etapa |
 
 ---
