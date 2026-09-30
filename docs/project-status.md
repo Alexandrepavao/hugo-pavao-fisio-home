@@ -1,6 +1,28 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-29) — Novos apps do Hub: ADM (etapa 1 de 5) concluído
+## Sessão mais recente (2026-09-30) — Mudança de prioridade: release v1 (primeira versão operacional)
+
+> Expansão de Contábil (já pronto), Marketing, Jurídico, RH e provisionamento white label **pausada**; nada foi apagado. Prioridade: operação real do
+> HP Group, com jornada de aceite completa, separação entrega × desenvolvimento e plano de publicação. **Nada foi publicado, nem em produção, DNS ou dados reais.**
+
+- **Separação**: `release/v1` (a partir de `93ac116`, sem Contábil) é a versão de entrega; `feature/lead-quizzes` segue para desenvolvimento e já recebeu a release de volta
+  (merge sem perder o Contábil). Documento de entrega completo: **`docs/release-v1.md`**; guia da equipe: **`docs/guia-operacao-v1.md`**.
+- **Jornada de aceite** (`e2e/release/R01`): lead pelo quiz → 1 pessoa + 1 oportunidade (repetir não duplica) → responsável automático e troca com histórico → tarefa e contato →
+  avaliação agendada, remarcada e realizada → “Converter em venda” → venda de pacote com contrato/parcelas/pacote → recebimento parcial (duplo clique e mesma chave não duplicam,
+  excedente recusado) → estorno parcial com comissão proporcional → sessões (comparecimento, falta, cancelamento tardio consomem; antecipado e da clínica não; sem consumo duplicado;
+  pacote esgotado não agenda) → dashboard reconciliado com os pagamentos → histórico. **8/8**.
+- **Bloqueios achados e corrigidos**: link “Converter em venda” para a tela errada; falta marcável antes do horário consumindo sessão (052); indicação de parceiro pelo quiz sem rastreio (053) —
+  e o `CREATE OR REPLACE` que zerou o GRANT de `anon` em `quiz_start` (pego pelo teste).
+- **Achados de ambiente (críticos)**: o site `hp-group-hub-producao` foi publicado com o **banco Dev** no bundle (build local leu `.env.local`); o site Dev `hp-group-hub` está **público**; produção não tem
+  Resend/hook/URLs de autenticação e não tem backup/PITR. Salvaguarda no build (`vite.config.ts`), contextos de deploy no `netlify.toml`, `version.json` e selo “AMBIENTE DE TESTE”.
+- **Permissões** (`R02`): menu, rota digitada e backend por papel (gestor, gestor de unidade, comercial, financeiro, fisioterapeuta, parceiro, paciente); decisão registrada: o Financeiro lê
+  as pessoas **da própria unidade** (identificar quem paga), sem tela de Pessoas. **Portais** (`R03`): paciente vê só o próprio; parceiro vê indicações só com 1º nome + etapa.
+- **Auth/Resend (Dev)**: Site URL/Redirect URLs do Dev corrigidos; 1 e-mail de recuperação ao destinatário autorizado (nível 1 verificado); função `diag-email-config` removida.
+- **Testes SQL legados**: `001` e `005` ganharam cópias independentes de volume (`supabase/tests/release`); `002`, `003`, `010`, `012` falham por fixtures próprias (e-mail/slug fixos, coluna ambígua no script)
+  e continuam sem correção (as jornadas equivalentes passam nos E2E).
+- Quirk de teste: o limitador do quiz (8 inícios/10 min por IP/jornada) é atingido por baterias seguidas — não é defeito do produto.
+
+## Sessão anterior (2026-09-29) — Novos apps do Hub: ADM (etapa 1 de 5) concluído
 
 > Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
 > Pedido: ampliar o Hub com 5 apps (ADM, Contábil, Marketing, Jurídico, RH), seguindo a navegação contextual do
