@@ -17,7 +17,7 @@ const AdmDashboard = () => {
   return (
     <div>
       <div className="mb-5"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo administrativo — cadastro central (pessoas físicas e jurídicas).</p></div>
-      <PageHead eyebrow="ADM" title="Visão geral" />
+      <PageHead eyebrow="Administrativo" title="Visão geral" />
       <State loading={indicators.isLoading} error={indicators.error} />
       {indicators.data && (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

@@ -59,7 +59,7 @@ Executados contra o **Supabase Dev** (dados de QA), com o front local da branch 
 **Não coberto / não provado:** entrega e clique dos e-mails (§7); convite por e-mail via Netlify; migrations numa cópia de produção; SQL legado 001–023 inteiro em base limpa (002, 003, 010, 012 falham por fixtures próprias; 001/005 têm cópias independentes de volume em `supabase/tests/release`); carga/concorrência além da restrição de exclusão da agenda.
 
 ## 4. Migrations para produção (ordem exata)
-Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 13 (Dev já as tem):
+Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 14 (Dev já as tem):
 
 | Ordem | Arquivo | O que faz |
 |---|---|---|
@@ -76,9 +76,10 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 11 | `20260930000052_appointment_status_guard.sql` | Trava de falta/comparecimento futuro |
 | 12 | `20260930000053_quiz_partner_referral.sql` | Indicação de parceiro pelo quiz (+ GRANT) |
 | 13 | `20260930000054_appointment_confirmations.sql` | Confirmação antecipada (paciente/profissional), falta do profissional, `my_appointments`/`my_day` ampliados (+ GRANT/REVOKE) |
+| 14 | `20260930000055_patient_cancel_past_guard_team_day.sql` | Cancelamento pelo paciente no portal (prazo/consumo), bloqueio de horário passado em `book_appointment`/`reschedule_appointment`, `my_agenda_professionals`/`professional_day` (agendas por permissão), `my_appointments` ampliado (+ GRANT/REVOKE) |
 
 **NÃO aplicar 048–051** (papel `accountant` e Contábil): existem no Dev e ficam na branch de desenvolvimento. Não há dependência da v1 nelas. Como a 052/053 têm versão maior que a 051, a ordem de aplicação em produção (…047 → 052 → 053) e a futura chegada de 048–051 são compatíveis (são independentes).
-Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 50 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
+Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 51 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
 
 ## 5. Variáveis e configurações (somente nomes; valores ficam nos painéis)
 | Onde | Nome | Observação |
@@ -95,6 +96,7 @@ Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), con
 - Recuperação se uma migration falhar no meio: cada arquivo roda em uma transação por chamada; se falhar, nada dela persiste. Parar, corrigir o arquivo, reaplicar. Não seguir para a próxima.
 - Reversão das duas migrations que **substituem função**: 052 → reaplicar `set_appointment_status` do arquivo `20260921000006_directory_agenda.sql`; 053 → reaplicar `quiz_start` de `20260924000038_lead_quizzes.sql` **e o GRANT a `anon`**. As demais só adicionam objetos.
 - Reversão da 054 (substitui 3 funções e recria `my_appointments`): `set_appointment_status` → arquivo 052; `my_appointments` → `20260921000012_portal_support.sql` (recriar exige `drop function` antes, e repetir o GRANT a `authenticated`); `my_day` → `20260922000019_productivity.sql`. As colunas de confirmação e o status `professional_no_show` só se removem se nenhuma linha os usar (a constraint de status volta à lista antiga).
+- Reversão da 055 (substitui `book_appointment`, `reschedule_appointment` e recria `my_appointments`; cria funções novas): `book_appointment` e `reschedule_appointment` → arquivo `20260921000006_directory_agenda.sql` (isso **reabre** a brecha de horário passado); `my_appointments` → versão da 054 (`drop function` antes, repetir o GRANT); as funções novas (`my_appointment_cancel`, `my_agenda_professionals`, `professional_day`, `private.can_view_prof_agenda`) podem ser removidas com `drop function`.
 
 ## 7. Verificação de login e e-mail (Resend) no Dev
 - **Usuário de teste autorizado**: somente `jan.darioush@yahoo.com.br`. **Um** e-mail de recuperação enviado em 2026-09-30 02:04:30Z pelo fluxo real (`/auth/v1/recover` → hook → Resend): API respondeu 200, o Auth registrou `recovery_sent_at` 02:04:31Z — ou seja, o hook respondeu com sucesso, o que só acontece se o Resend aceitou o envio (**nível 1**).
@@ -107,7 +109,7 @@ Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), con
 
 Publicação (banco → configuração → front → verificação):
 1. Backup/inventário (§6). Congelar mudanças de schema.
-2. Aplicar as 13 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 50; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
+2. Aplicar as 14 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 51; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
 3. Configurar o Supabase de produção (§5): secrets, hook, Site URL/Redirect URLs, limite de e-mail, senha mínima.
 4. **Conectar o site Netlify de produção ao repositório**, branch `release/v1` (ou `main` após o merge), com as variáveis de produção — assim o **Netlify** compila (não a máquina de alguém) e cada deploy carrega o `COMMIT_REF`. Sem `.env.local` no build.
 5. Deploy. Verificar `GET /version.json`: `commit` = commit aprovado, `environment` = `production`, `backend` = `produção`. Se não bater, **não abrir para a equipe**. A tela *Configurações* mostra a mesma linha e, fora de produção, aparece o selo "AMBIENTE DE TESTE".
@@ -121,7 +123,7 @@ Reversão:
 ## 9. Pendências que IMPEDEM o uso × melhorias futuras
 **Impedem colocar em produção (precisam de ação sua/painéis):**
 1. Republicar o front de produção com o banco de produção (hoje aponta para o Dev — §2 #5) e conectá-lo ao repositório.
-2. Aplicar as 13 migrations em produção.
+2. Aplicar as 14 migrations em produção.
 3. Configurar e-mail em produção: Resend (domínio, DKIM/SPF), secrets e hook do Supabase, Site URL/Redirect URLs, limite de e-mails (§5). Sem isso ninguém completa o primeiro acesso.
 4. DNS de `hpfisioterapia.com.br` continua no GitHub Pages (HTTPS válido); o app não está no domínio oficial. Decidir subdomínio do app (ex.: `app.hpfisioterapia.com.br`) e apontar o DNS quando aprovado.
 5. Proteger ou desligar o site Dev público `hp-group-hub` (§2 #6) e resolver o site Netlify não documentado `leafy-cascaron-325147` (ver `docs/deployment.md`).
@@ -139,7 +141,7 @@ Três coisas **separadas** (antes se misturavam no `status`):
 | **Consumo de sessão** | `session_ledger` (handlers de evento) | Política do produto: `no_show` consome se `consume_on_no_show`; cancelamento tardio consome; **`professional_no_show` nunca consome** e, se uma falta do paciente marcada por engano já consumira, **devolve** (uma vez) e reativa o pacote. Libera o horário e cria tarefa "reagendar sem custo". |
 
 Telas: portal do paciente (botão "Confirmar minha presença", confirmação do profissional, e nas faltas se a sessão foi ou não descontada), "Meu dia" do fisioterapeuta ("Confirmo o atendimento"), Agenda do gestor (colunas *Confirmações* e *Sessão do pacote*, "Registrar confirmação do paciente", "Profissional ausente").
-Decisões: `professional_no_show` é estado final (corrigir pela marcação só de `no_show` → `professional_no_show`); o status legado `confirmed` segue aceito por compatibilidade, mas a confirmação nova não o usa; o paciente ainda não cancela pelo portal (cancelamento segue pela equipe).
+Decisões: `professional_no_show` é estado final (corrigir pela marcação só de `no_show` → `professional_no_show`); o status legado `confirmed` segue aceito por compatibilidade, mas a confirmação nova não o usa.
 
 **Verificação (Dev), estado honesto:**
 - Migration 054 aplicada no Dev pelo SQL Editor (colunas, funções sem `anon`, handler registrado).
@@ -147,3 +149,10 @@ Decisões: `professional_no_show` é estado final (corrigir pela marcação só 
 - Telas conferidas com dados reais (portal, Meu dia, Agenda) e por captura de tela.
 - Regressão E2E 01/03/04/05/06/07 + R02 + R03: **33/33** (o 04 estourou o tempo uma vez em bateria e passou isolado, flake já documentado).
 - **NÃO executados (precisam do token do Dev):** `S03` (SQL, `supabase/tests/release`), `R04` (E2E das confirmações, inclusive "confirmou e faltou") e `R01` (usa deslocamento de horário). Escritos e compilando; rodar antes de publicar: `SUPABASE_ACCESS_TOKEN=… npm run test:sql:release` e `npm run test:e2e:release`.
+
+### 10.1 Cancelamento pelo paciente, horário passado e agendas por permissão (migration 055)
+- **Cancelamento pelo paciente no portal** (`my_appointment_cancel`): só o próprio paciente, só antes do início, idempotente. **Segue a política do produto do pacote**: cancelar com menos de `late_cancel_hours` (padrão 24 h) de antecedência **consome 1 sessão** (mesmo handler que já valia quando a equipe cancela "pelo paciente"); antes do prazo, não consome; sem pacote, não há o que consumir. O portal **avisa antes** (texto do prazo e diálogo de confirmação com a consequência) e depois mostra se a sessão foi descontada. Depois do início ou em atendimento encerrado/cancelado pela clínica, só pela equipe.
+- **Horário passado**: `reschedule_appointment` recusa novo horário ≤ agora e `book_appointment` recusa qualquer início ≤ agora — **a antiga exceção de `p_rescheduled_from` foi removida** (chamando a função direto dava para criar atendimento no passado). A Agenda também recusa antes de chamar o servidor.
+- **"Meu dia" com agenda própria + outras por permissão**: cada pessoa vê a própria agenda clínica; o seletor "Agenda clínica de" só aparece para quem o servidor autoriza — gestor e administrador operacional (toda a organização) e gestor de unidade (**só as unidades dele**). Fisioterapeuta, comercial, financeiro e paciente **não** abrem agenda alheia (403). Na agenda alheia nunca há ação de confirmar (a confirmação do profissional é só dele).
+- **ADM → Administrativo**: rótulo visível renomeado (menu, cabeçalhos, troca de app do CRM); as rotas `/admin/adm` não mudaram.
+- **Testes escritos**: `S04` (SQL) e `R05` (E2E, sem token de gestão do Dev). **Status: migration 055 ainda NÃO aplicada no Dev e S03/S04/R04/R05/R01 ainda NÃO executados** — dependem de aplicar a 055 e do acesso ao Dev; ver `docs/project-status.md`.

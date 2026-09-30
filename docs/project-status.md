@@ -1,6 +1,15 @@
 # HP Group Hub — Status do Projeto
 
-## Sessão mais recente (2026-09-30, continuação) — Confirmação de paciente/profissional, presença e consumo (release v1)
+## Sessão mais recente (2026-09-30, 3ª rodada) — Cancelamento pelo paciente, horário passado, agendas por permissão, Administrativo
+
+> Branch `release/v1`, Dev apenas — sem merge e sem produção/DNS. Detalhes em **`docs/release-v1.md` §10.1**.
+
+- **Implementado (código + migration `055`)**: paciente cancela pelo portal respeitando prazo e consumo do produto (avisado antes); agendar/remarcar no passado bloqueado no servidor (removida a exceção de `p_rescheduled_from`) e na Agenda; "Meu dia" com a própria agenda + seletor de agendas de outros profissionais só para gestor/administrador operacional (e gestor de unidade nas suas unidades); rótulo "ADM" → "Administrativo".
+- **Verificado**: typecheck, eslint dos arquivos alterados, regressão do menu (R02) e dos testes do Administrativo (N10/N11) passando.
+- **NÃO executado**: a migration 055 **não foi aplicada no Dev** (sem acesso válido ao Dev nesta máquina: sem token no ambiente e CLI logado em outra conta), então `S03`, `S04`, `R04`, `R05` e `R01` **não rodaram**. Escritos e compilando. Para fechar: aplicar a 055 no Dev (SQL Editor) e rodar `npm run test:sql:release` + `npm run test:e2e:release` com acesso ao Dev.
+- **Migrations para produção**: agora 14 (038→047, 052, 053, 054, 055); `list_migrations` final = 51.
+
+## Sessão anterior (2026-09-30, continuação) — Confirmação de paciente/profissional, presença e consumo (release v1)
 
 > Branch `release/v1`, Dev apenas — sem merge, publicação em produção, DNS ou push. Detalhes e regras em **`docs/release-v1.md` §10**.
 

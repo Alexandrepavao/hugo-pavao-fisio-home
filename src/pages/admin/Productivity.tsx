@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 interface MyDayTask { id: string; title: string; start_time: string | null; category: string; urgency: string; importance: string; completed: boolean; person: string | null; opportunity_title: string | null }
 interface CrmTaskRow { id: string; title: string; due_at: string; kind: string; person: string | null }
-interface ApptRow { id: string; starts_at: string; ends_at: string; status: string; person: string; service: string; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean }
+interface ApptRow { id: string; starts_at: string; ends_at: string; status: string; person: string; service: string; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; unit?: string }
+interface AgendaProf { id: string; display_name: string; is_self: boolean }
 interface MyDay { tasks: MyDayTask[]; crm_tasks: CrmTaskRow[]; appointments: ApptRow[] }
 interface FocusSession { id: string; started_at: string; ended_at: string | null; planned_minutes: number }
 interface TeamItem { id: string; title: string; owner: string; start_time: string | null; category: string }
@@ -28,9 +29,15 @@ const Productivity = () => {
   const isManager = hasRole("manager", "ops_admin", "unit_manager");
 
   const day = useQuery({ queryKey: ["my-day", date], queryFn: async () => { const { data, error } = await supabase.rpc("my_day", { p_date: date }); if (error) throw error; return data as MyDay; } });
+  // Agendas de outros profissionais: só aparecem para quem o servidor autoriza (gestor, administrador operacional; gestor de unidade nas suas unidades).
+  const [viewProf, setViewProf] = useState("");
+  const profs = useQuery({ queryKey: ["agenda-profs"], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_agenda_professionals"); if (error) throw error; return data as AgendaProf[]; } });
+  const others = (profs.data ?? []).filter((p) => !p.is_self);
+  const other = useQuery({ queryKey: ["prof-day", viewProf, date], enabled: !!viewProf, queryFn: async () => { const { data, error } = await supabase.rpc("professional_day", { p_professional: viewProf, p_date: date }); if (error) throw error; return data as { is_self: boolean; appointments: ApptRow[] }; } });
+  const apptList = (viewProf ? other.data?.appointments : day.data?.appointments) ?? [];
   const focus = useQuery({ queryKey: ["focus-open"], queryFn: async () => ((await supabase.from("focus_sessions").select("id, started_at, ended_at, planned_minutes").is("ended_at", null).order("started_at", { ascending: false }).limit(1)).data?.[0] ?? null) as FocusSession | null });
 
-  const refresh = () => { void qc.invalidateQueries({ queryKey: ["my-day"] }); void qc.invalidateQueries({ queryKey: ["focus-open"] }); };
+  const refresh = () => { void qc.invalidateQueries({ queryKey: ["my-day"] }); void qc.invalidateQueries({ queryKey: ["prof-day"] }); void qc.invalidateQueries({ queryKey: ["focus-open"] }); };
   const confirmAppt = async (id: string) => { const { error } = await supabase.rpc("professional_appointment_confirm", { p_id: id }); if (error) m.err(errText(error)); else { m.ok("Atendimento confirmado."); refresh(); } };
   const toggle = async (id: string) => { const { error } = await supabase.rpc("staff_task_toggle", { p_id: id }); error ? m.err(errText(error)) : refresh(); };
 
@@ -44,6 +51,7 @@ const Productivity = () => {
       <Msg m={msg} />
       <FilterBar>
         <FilterField label="Data" htmlFor="pd-date"><input id="pd-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></FilterField>
+        {tab === "dia" && others.length > 0 && <FilterField label="Agenda clínica de" htmlFor="pd-prof"><select id="pd-prof" value={viewProf} onChange={(e) => setViewProf(e.target.value)}><option value="">Minha agenda</option>{others.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></FilterField>}
         {date !== todayISO() && <button className="hp-btn hp-btn-outline" onClick={() => setDate(todayISO())}>Hoje</button>}
         {tab === "dia" && <span className="ml-auto self-center text-sm text-muted-foreground">{pending} pendente(s)</span>}
       </FilterBar>
@@ -54,10 +62,11 @@ const Productivity = () => {
             <State loading={day.isLoading} error={day.error} />
             {day.data && (
               <>
-                <Section title="Agenda clínica" empty={day.data.appointments.length === 0} emptyText="Nenhum atendimento seu hoje.">
-                  <ul className="grid gap-2">{day.data.appointments.map((a) => (
+                <Section title={viewProf ? `Agenda de ${others.find((p) => p.id === viewProf)?.display_name ?? ""}` : "Agenda clínica"} empty={apptList.length === 0 && !(viewProf && (other.isLoading || other.error))} emptyText={viewProf ? "Nenhum atendimento neste dia." : "Nenhum atendimento seu hoje."}>
+                  {viewProf && <State loading={other.isLoading} error={other.error} />}
+                  <ul className="grid gap-2">{apptList.map((a) => (
                     <li key={a.id} className="hp-card p-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                      <span><b className="tabular">{fmtDateTime(a.starts_at).split(" ")[1]}</b> — {a.person} · {a.service}</span>
+                      <span><b className="tabular">{fmtDateTime(a.starts_at).split(" ")[1]}</b> — {a.person} · {a.service}{viewProf && a.unit ? ` · ${a.unit}` : ""}</span>
                       <span className="flex flex-wrap items-center gap-2">
                         {["scheduled", "confirmed"].includes(a.status) && <span className="text-xs text-muted-foreground">Paciente: {a.patient_confirmed_at ? "confirmou" : "não confirmou"}</span>}
                         {a.can_confirm && <button className="hp-btn hp-btn-ghost hp-btn-sm" onClick={() => confirmAppt(a.id)}>Confirmo o atendimento</button>}

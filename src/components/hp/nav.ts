@@ -13,7 +13,7 @@ const ALL_NAV: NavSection[] = [
     { to: "/admin/meu-dia", label: "Meu dia", icon: Sunrise, keywords: "tarefas foco produtividade agenda pessoal" },
   ] },
   { label: "Comercial", items: [
-    { to: "/admin/adm", label: "ADM", icon: Table2, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "administrativo planilha pessoa física jurídica empresas cadastro cnpj cpf" },
+    { to: "/admin/adm", label: "Administrativo", icon: Table2, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "administrativo planilha pessoa física jurídica empresas cadastro cnpj cpf" },
     { to: "/admin/pessoas", label: "Pessoas", icon: Users, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "pacientes leads contatos" },
     { to: "/admin/crm", label: "CRM", icon: KanbanSquare, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "oportunidades funil kanban tarefas" },
     { to: "/admin/captacao-leads", label: "Captação de leads", icon: MessageCircleQuestion, roles: ["manager", "ops_admin", "unit_manager", "sales"], keywords: "quiz avaliação parceria whatsapp academy" },

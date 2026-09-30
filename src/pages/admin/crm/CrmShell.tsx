@@ -17,7 +17,7 @@ const readCollapsed = () => { try { return localStorage.getItem(STORAGE_KEY) ===
 interface AppLink { to: string; label: string; icon: LucideIcon }
 const OTHER_APPS: AppLink[] = [
   { to: "/admin", label: "Início (Hub)", icon: Grid2x2 },
-  { to: "/admin/adm", label: "ADM", icon: Table2 },
+  { to: "/admin/adm", label: "Administrativo", icon: Table2 },
   { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
   { to: "/admin/academy", label: "Academy", icon: GraduationCap },
   { to: "/admin/parceiros", label: "Parceiros", icon: Handshake },

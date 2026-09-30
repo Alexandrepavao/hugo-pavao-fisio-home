@@ -7,11 +7,11 @@ import { api, collectErrors, loginAs, QA, signIn } from "./helpers-release";
 test.use({ locale: "pt-BR" });
 
 // Itens da barra lateral do Hub esperados por papel (ver docs/permissions.md).
-const ALL = ["Início", "Meu dia", "ADM", "Pessoas", "CRM", "Captação de leads", "Páginas", "Pesquisas", "Agenda", "Acompanhamento", "Financeiro", "Parceiros", "Contas corporativas", "Academy", "Equipe e acessos", "Configurações", "Auditoria"];
+const ALL = ["Início", "Meu dia", "Administrativo", "Pessoas", "CRM", "Captação de leads", "Páginas", "Pesquisas", "Agenda", "Acompanhamento", "Financeiro", "Parceiros", "Contas corporativas", "Academy", "Equipe e acessos", "Configurações", "Auditoria"];
 const NAV: Record<string, { email: string; see: string[] }> = {
   gestor: { email: QA.manager, see: ALL },
-  gestorUnidade: { email: QA.gestorUnidade, see: ["Início", "Meu dia", "ADM", "Pessoas", "CRM", "Captação de leads", "Páginas", "Agenda", "Acompanhamento", "Financeiro", "Parceiros", "Contas corporativas"] },
-  comercial: { email: QA.comercial, see: ["Início", "Meu dia", "ADM", "Pessoas", "CRM", "Captação de leads", "Páginas", "Agenda", "Financeiro", "Parceiros"] },
+  gestorUnidade: { email: QA.gestorUnidade, see: ["Início", "Meu dia", "Administrativo", "Pessoas", "CRM", "Captação de leads", "Páginas", "Agenda", "Acompanhamento", "Financeiro", "Parceiros", "Contas corporativas"] },
+  comercial: { email: QA.comercial, see: ["Início", "Meu dia", "Administrativo", "Pessoas", "CRM", "Captação de leads", "Páginas", "Agenda", "Financeiro", "Parceiros"] },
   financeiro: { email: QA.financeiro, see: ["Início", "Meu dia", "Financeiro", "Parceiros", "Contas corporativas"] },
   fisio: { email: QA.fisio, see: ["Início", "Meu dia", "Agenda", "Acompanhamento"] },
 };

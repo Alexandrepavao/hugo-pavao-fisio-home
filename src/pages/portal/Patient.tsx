@@ -2,10 +2,10 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
-import { btnGhost, btnPrimary, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, btnPrimary, confirmDialog, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
 import PortalShell from "./PortalShell";
 
-interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean }
+interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean; can_cancel: boolean; cancel_consumes: boolean; late_cancel_hours: number | null }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
 interface Me { full_name: string; preferred_name: string | null; birth_date: string | null; city: string | null; state_uf: string | null }
 interface Contact { type: string; value: string; is_primary: boolean }
@@ -22,6 +22,18 @@ const Patient = () => {
 
   const confirm = async (a: Appt) => { const { error } = await supabase.rpc("my_appointment_confirm", { p_id: a.id });
     if (error) m.err(errText(error)); else { m.ok("Presença confirmada. Obrigado!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
+  // A regra de consumo é a do produto do pacote: cancelar com menos de `late_cancel_hours` de antecedência desconta 1 sessão. O paciente é avisado ANTES.
+  const cancel = async (a: Appt) => {
+    const h = a.late_cancel_hours;
+    const consequence = !a.uses_package ? "Este atendimento não usa pacote, então nenhuma sessão é descontada."
+      : a.cancel_consumes ? `Faltam menos de ${h} h para o atendimento: pela regra do seu pacote, esta sessão SERÁ DESCONTADA.`
+      : `Você está cancelando com mais de ${h} h de antecedência: nenhuma sessão será descontada.`;
+    if (!(await confirmDialog("Cancelar atendimento?", `${a.service_name} com ${a.professional_name}, ${fmtDateTime(a.starts_at, a.timezone)}. ${consequence}`, "Cancelar atendimento", true))) return;
+    const { data, error } = await supabase.rpc("my_appointment_cancel", { p_id: a.id, p_reason: null });
+    if (error) return m.err(errText(error));
+    m.ok((data as { session_consumed?: boolean } | null)?.session_consumed ? "Atendimento cancelado. A sessão foi descontada do seu pacote, conforme a regra de cancelamento tardio." : "Atendimento cancelado. Nenhuma sessão foi descontada.");
+    void qc.invalidateQueries({ queryKey: ["my-appts"] }); void qc.invalidateQueries({ queryKey: ["my-pkgs"] });
+  };
   const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null });
     if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
 
@@ -34,6 +46,8 @@ const Patient = () => {
           {["scheduled", "confirmed"].includes(a.status) && new Date(a.starts_at) > new Date() && <span className="basis-full text-sm flex flex-wrap items-center gap-2">
             {a.patient_confirmed_at ? <span>Você confirmou presença em {fmtDateTime(a.patient_confirmed_at, a.timezone)}.</span> : a.can_confirm ? <button className={btnPrimary} onClick={() => confirm(a)}>Confirmar minha presença</button> : null}
             <span className="text-muted-foreground">{a.professional_confirmed_at ? "O profissional confirmou o atendimento." : "Aguardando confirmação do profissional."}</span></span>}
+          {a.can_cancel && <span className="basis-full text-sm"><button className={btnDanger} onClick={() => cancel(a)}>Cancelar atendimento</button>{a.uses_package && a.late_cancel_hours != null && <span className="text-muted-foreground"> {a.cancel_consumes ? `Cancelar agora desconta 1 sessão (prazo: ${a.late_cancel_hours} h antes).` : `Sem custo até ${a.late_cancel_hours} h antes.`}</span>}</span>}
+          {a.status === "cancelled_by_patient" && a.uses_package && <span className="basis-full text-sm text-muted-foreground">{a.session_consumed ? "Cancelado com menos de " + (a.late_cancel_hours ?? "") + " h de antecedência: a sessão foi descontada." : "Cancelado dentro do prazo: nenhuma sessão foi descontada."}</span>}
           {a.status === "no_show" && a.uses_package && <span className="basis-full text-sm text-muted-foreground">{a.session_consumed ? "Como não houve cancelamento, esta sessão foi descontada do seu pacote." : "Esta falta não descontou sessão do seu pacote."}</span>}
           {a.status === "professional_no_show" && <span className="basis-full text-sm text-muted-foreground">Sua sessão não foi descontada. A equipe entrará em contato para reagendar sem custo.</span>}
           {a.status === "attended" && !a.survey_answered && survey.data && <span className="basis-full text-sm">Como foi? {[...Array(11).keys()].map((n) => <button key={n} className="w-7 h-7 border border-border mx-0.5 text-xs hover:bg-primary hover:text-primary-foreground" onClick={() => rate(a, n)} aria-label={`Nota ${n}`}>{n}</button>)}</span>}</li>)}</ul></section>

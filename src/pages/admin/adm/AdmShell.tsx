@@ -13,7 +13,7 @@ const OTHER_APPS: AppLink[] = [
 ];
 
 const AdmShell = ({ children }: { children: ReactNode }) => (
-  <ContextualAppShell appId="adm" appLabel="ADM" nav={ADM_NAV} managerRoles={["manager", "ops_admin"]} otherApps={OTHER_APPS}>
+  <ContextualAppShell appId="adm" appLabel="Administrativo" nav={ADM_NAV} managerRoles={["manager", "ops_admin"]} otherApps={OTHER_APPS}>
     {children}
   </ContextualAppShell>
 );

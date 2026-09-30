@@ -71,6 +71,7 @@ const Day = () => {
   const resched = async (a: Appt) => {
     const v = await promptText("Remarcar", "Novo horário (AAAA-MM-DD HH:MM, no fuso do seu navegador)", { defaultValue: "" }); if (!v) return; const d = new Date(v.replace(" ", "T") + ":00");
     if (Number.isNaN(d.getTime())) return m.err("Data inválida. Use o formato AAAA-MM-DD HH:MM.");
+    if (d.getTime() <= Date.now()) return m.err("Não é possível remarcar para um horário passado. Escolha um horário futuro.");
     const { error } = await supabase.rpc("reschedule_appointment", { p_id: a.id, p_new_start: d.toISOString() }); if (error) m.err(errText(error)); else { m.ok("Remarcado."); void qc.invalidateQueries({ queryKey: ["appts"] }); }
   };
 

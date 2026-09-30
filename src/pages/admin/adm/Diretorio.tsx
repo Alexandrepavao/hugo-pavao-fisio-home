@@ -136,7 +136,7 @@ const Diretorio = () => {
 
   return (
     <div>
-      <PageHead eyebrow="ADM" title="Planilha administrativa" hint="Interface sobre o cadastro central — pessoa física (people) e jurídica (legal_entities). Uma pessoa pode ter vários vínculos sem duplicar cadastro."
+      <PageHead eyebrow="Administrativo" title="Planilha administrativa" hint="Interface sobre o cadastro central — pessoa física (people) e jurídica (legal_entities). Uma pessoa pode ter vários vínculos sem duplicar cadastro."
         actions={<>
           <button className={btnGhost} onClick={() => setShowCols(true)} disabled={!catalog.data || !view.data}><Columns3 size={15} />Colunas</button>
           <button className={btnGhost} onClick={() => exportCsv.mutate()} disabled={exportCsv.isPending || !view.data}><Download size={15} />{exportCsv.isPending ? "Exportando…" : "Exportar CSV"}</button>
