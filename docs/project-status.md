@@ -1,5 +1,47 @@
 # HP Group Hub — Status do Projeto
 
+## ESCOPO AMPLIADO AUTORIZADO (2026-09-30) — lista de acompanhamento (preservar entre sessões)
+
+> **Autorização do usuário**: executar no **Dev**, em `release/v1`, preservando o que funciona, conferindo o estado antes de alterar. **Sem merge, sem publicação em produção, sem DNS.** Pode criar migrations no Dev (convenções do projeto). Testar cálculos, permissões e jornadas reais de cada etapa. Atualizar o PR #3 (rascunho) e o preview do `hp-group-hub`. **Não pedir nova aprovação deste escopo.** Se uma integração exigir credencial/decisão não inferível: explicar o bloqueio específico e seguir com o resto. **Não declarar tudo concluído enquanto houver item pendente.** Ordem: indicadores → financeiro → jornada do paciente → calendários.
+
+**Regras transversais**: usar dados reais; documentar fórmula, período e denominador de cada indicador (`docs/indicadores.md`); diferenciar respostas, pessoas e oportunidades; clique no WhatsApp ≠ mensagem enviada; se faltar histórico, começar a registrar e informar a limitação (sem inventar retroativo); credenciais/tokens só no servidor; acesso administrativo não libera informação de saúde.
+
+**1. Indicadores e gráficos** — filtros compactos, cartões clicáveis que abrem os registros.
+- *Administrativo*: totais PF/PJ, novos por período, ativos/inativos, incompletos + campos faltantes, distribuição por vínculo e unidade.
+- *CRM*: tempo na etapa atual, tempo médio e mediano por etapa, oportunidades paradas, conversão entre etapas, conversão geral, ciclo de venda, motivos de perda, desempenho por responsável e origem.
+- *Captação*: entradas por formulário/quiz, conclusão e abandono dos quizzes, origem/campanha, evolução temporal, conversão em oportunidade, agendamento e venda.
+
+**2. Financeiro por linha de negócio** (mesma organização; não são unidades/empresas/bancos): seletor Geral / HP Fisioterapia / HP Academy em vendas, recebimentos, contas a receber, despesas, comissões, relatórios e DRE; venda com itens de ambas as linhas; parcial/desconto/estorno reconciliam; despesa compartilhada com rateio explícito ou "compartilhada/não alocada"; histórico sem classificação = "Não classificado"; Geral reconcilia com as duas linhas + compartilhados + não classificados, sem duplicar; preservar caixa × competência × previsão.
+
+**3. Área do paciente / jornada de acompanhamento**: objetivos com o fisioterapeuta; plano de sessões, próximas consultas e histórico; realizadas, faltas e saldo separados; gráficos de evolução com avaliações reais (data e autoria); vídeos Bunny atribuídos pelo profissional; reavaliação e indicação de continuidade/manutenção/alta; solicitar renovação/contato sem cobrança automática; 10 sessões como modelo inicial configurável; sem prometer resultado nem tratar consumo de sessão como prova de melhora; acesso individual e restrições clínicas.
+
+**4. Meu dia e calendários**: visões diária/semanal/mensal; agenda própria por padrão; seleção/visão conjunta só com autorização e por unidade; nenhuma confirmação em nome de outro profissional; tarefas pessoais privadas; cada usuário conecta o próprio Google Calendar e usa a agenda no Calendário da Apple/iPhone (distinguir assinatura somente leitura de sincronização bidirecional; `.ics` avulso não basta); tratar criação/alteração/cancelamento/fuso/desconexão/duplicidade; compromisso externo nunca gera atendimento, cobrança ou consumo.
+
+### Tabela única de acompanhamento (atualizada a cada entrega)
+Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linha) · — não se aplica.
+
+| # | Item | Implementado | Testado | Pendente / Bloqueado |
+|---|---|---|---|---|
+| 0 | Escopo registrado neste documento | ✅ | — | — |
+| 1a | Indicadores Administrativo (+ detalhes clicáveis) | ✅ código + migration 056 | ❌ | **aplicar a 056 no Dev** (sem acesso ao Dev nesta sessão) e rodar `S05`; teste E2E da tela |
+| 1b | Indicadores CRM (tempo/etapa, conversão, ciclo, perdas, responsável/origem) | ✅ código + migration 056 | ❌ | idem 1a (`S05` cobre fórmulas e permissões) |
+| 1c | Indicadores Captação (quiz/formulário, conversão até venda) | ✅ código + migration 056 | ❌ | idem 1a. Limitação: formulário não registra início/abandono (só envio) |
+| 1d | `docs/indicadores.md` (fórmula, período, denominador) | ✅ | — | revisar depois dos testes |
+| 2a | Linha de negócio no modelo (Fisioterapia / Academy / Não classificado) | ❌ | ❌ | a fazer |
+| 2b | Seletor Geral/Fisioterapia/Academy em vendas, recebíveis, despesas, comissões, relatórios, DRE | ❌ | ❌ | a fazer |
+| 2c | Venda com itens das duas linhas; parcial/desconto/estorno reconciliam | ❌ | ❌ | a fazer |
+| 2d | Despesas compartilhadas com rateio / não alocadas; Geral reconcilia sem duplicar | ❌ | ❌ | a fazer |
+| 3a | Objetivos, plano de sessões, próximas consultas, histórico, saldo separado | ❌ | ❌ | a fazer |
+| 3b | Avaliações de evolução (registro com data/autoria) e gráficos | ❌ | ❌ | a fazer |
+| 3c | Vídeos Bunny atribuídos pelo profissional | ❌ | ❌ | a fazer — **não existe integração Bunny hoje** |
+| 3d | Reavaliação e indicação continuidade/manutenção/alta; solicitar renovação/contato | ❌ | ❌ | a fazer |
+| 4a | Meu dia: visões diária/semanal/mensal; agenda conjunta por autorização | ❌ | ❌ | a fazer |
+| 4b | Assinatura de calendário (Apple/iPhone, Google "por URL"): somente leitura | ❌ | ❌ | a fazer |
+| 4c | Google Calendar do próprio usuário (sincronização) | ❌ | ❌ | a investigar — exige credenciais OAuth do Google (não existem no projeto) |
+| 5 | PR #3 e preview `hp-group-hub` atualizados | ❌ | ❌ | ao fim de cada etapa |
+
+---
+
 ## Sessão mais recente (2026-09-30, 3ª rodada) — Cancelamento pelo paciente, horário passado, agendas por permissão, Administrativo
 
 > Branch `release/v1`, Dev apenas — sem merge e sem produção/DNS. Detalhes em **`docs/release-v1.md` §10.1**.

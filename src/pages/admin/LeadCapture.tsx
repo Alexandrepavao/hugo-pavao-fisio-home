@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { presetRange, toExclusive, type RangePreset } from "@/lib/period";
-import { Badge, PageHead, State, StatCard, Table, Td, btnGhost, type Tone } from "@/lib/ui";
+import { Badge, PageHead, State, StatCard, Table, Td, Tabs, btnGhost, type Tone } from "@/lib/ui";
+import CaptureAnalytics from "./CaptureAnalytics";
 
 interface LeadRow {
   id: string; journey: "atendimento" | "parceria"; status: "started" | "partial" | "completed";
@@ -36,6 +37,7 @@ const LeadCapture = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [sel, setSel] = useState<string | null>(null);
+  const [tab, setTab] = useState<"leads" | "indicadores">("leads");
   const [preset, setPreset] = useState<RangePreset>("mes"); const [custom, setCustom] = useState(presetRange("mes"));
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
 
@@ -104,6 +106,8 @@ const LeadCapture = () => {
             } />
         } />
 
+      <Tabs tabs={[["leads", "Captações"], ["indicadores", "Indicadores"]]} value={tab} onChange={(v) => setTab(v as "leads" | "indicadores")} />
+      {tab === "indicadores" ? <CaptureAnalytics from={from} to={to} fromIso={`${from}T00:00:00.000Z`} toIso={toExclusive(to)} unit="" /> : (<>
       <MetricsPanel metrics={metrics.data} loading={metrics.isLoading} />
 
       <State loading={leads.isLoading} error={leads.error} empty={leads.data?.length === 0} emptyText="Nenhuma captação encontrada com esses filtros." />
@@ -136,6 +140,7 @@ const LeadCapture = () => {
       )}
 
       {sel && <DetailPanel detail={detail.data} loading={detail.isLoading} />}
+      </>)}
     </div>
   );
 };

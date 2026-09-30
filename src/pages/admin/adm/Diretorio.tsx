@@ -54,9 +54,9 @@ const Diretorio = () => {
   const [sp, setSp] = useSearchParams();
   const [search, setSearch] = useState(sp.get("q") ?? "");
   const [type, setType] = useState(sp.get("tipo") ?? "");
-  const [kind, setKind] = useState("");
-  const [unit, setUnit] = useState("");
-  const [status, setStatus] = useState("");
+  const [kind, setKind] = useState(sp.get("vinculo") ?? "");
+  const [unit, setUnit] = useState(sp.get("unidade") ?? "");
+  const [status, setStatus] = useState(sp.get("status") ?? "");
   const [incompleteOnly, setIncompleteOnly] = useState(sp.get("incompleto") === "1");
   const [sort, setSort] = useState<SortKey>("created_at");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
