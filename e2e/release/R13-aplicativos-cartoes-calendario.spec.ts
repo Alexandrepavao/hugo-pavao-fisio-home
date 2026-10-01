@@ -35,6 +35,7 @@ test.describe.serial("@release Aplicativos contextuais e filtros", () => {
     await page.locator("header").getByRole("button", { name: "Trocar de aplicativo" }).click();
     await page.getByRole("menuitem", { name: /CRM/ }).click();
     await expect(page).toHaveURL(/\/admin\/crm$/);
+    await expect(page.getByRole("navigation", { name: "Navegação do CRM" }).getByRole("link", { name: "Pipeline" })).toBeVisible({ timeout: 30_000 });   // espera a sidebar do CRM renderizar antes de ler os links
     const crm = await links(page); expect(crm).toContain("Pipeline"); expect(crm).not.toContain("Cartões"); expect(crm).not.toContain("DRE");
     await page.getByRole("link", { name: "Voltar ao Hub" }).first().click();
     await expect(page).toHaveURL(/\/admin$/);

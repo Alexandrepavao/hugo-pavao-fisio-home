@@ -22,14 +22,14 @@ const ScheduleDialog = ({ open, onOpenChange, conversationId, personName, initia
     const { error } = await supabase.rpc("crm_schedule_message", { p_conversation: conversationId, p_body: body, p_when: new Date(when).toISOString(), p_assignee: who || null });
     setBusy(false);
     if (error) return setErr(errText(error));
-    refreshConversations(qc, conversationId); onOpenChange(false); onDone("Mensagem agendada. No horário ela fica pronta para enviar e o responsável recebe um lembrete.");
+    refreshConversations(qc, conversationId); onOpenChange(false); onDone("Lembrete de envio criado. No horário o responsável recebe uma tarefa para abrir o WhatsApp (nada é enviado automaticamente).");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Agendar mensagem para {personName.split(" ")[0]}</DialogTitle>
-          <DialogDescription>O HP não envia sozinho: no horário marcado a mensagem aparece como <strong>pronta para enviar</strong> e vira uma tarefa para o responsável abrir o WhatsApp.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>Lembrete de envio para {personName.split(" ")[0]}</DialogTitle>
+          <DialogDescription>O HP <strong>não envia sozinho</strong>. No horário marcado, o responsável recebe uma tarefa e abre o WhatsApp com este texto.</DialogDescription></DialogHeader>
         <form onSubmit={submit} className="grid gap-3">
           <div><label htmlFor="sc-body" className="block mb-1">Mensagem</label><textarea id="sc-body" rows={4} required maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} /></div>
           <div><label htmlFor="sc-when" className="block mb-1">Quando</label><input id="sc-when" type="datetime-local" required value={when} onChange={(e) => setWhen(e.target.value)} />
@@ -39,10 +39,10 @@ const ScheduleDialog = ({ open, onOpenChange, conversationId, personName, initia
               <button type="button" className="hp-pill" onClick={() => preset(14, 1)}>Amanhã 14h</button>
               <button type="button" className="hp-pill" onClick={() => preset(9, 7)}>Em 1 semana</button>
             </div></div>
-          <div><label htmlFor="sc-who" className="block mb-1">Quem vai enviar</label>
+          <div><label htmlFor="sc-who" className="block mb-1">Quem vai abrir o WhatsApp</label>
             <select id="sc-who" value={who} onChange={(e) => setWho(e.target.value)}>{myId && <option value={myId}>Eu</option>}{(staff.data ?? []).filter((u) => u.user_id !== myId).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
           {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
-          <div className="flex justify-end gap-2"><button type="button" className="hp-btn hp-btn-outline" onClick={() => onOpenChange(false)}>Cancelar</button><button className="hp-btn hp-btn-primary" disabled={busy}>{busy ? "Agendando…" : "Agendar"}</button></div>
+          <div className="flex justify-end gap-2"><button type="button" className="hp-btn hp-btn-outline" onClick={() => onOpenChange(false)}>Cancelar</button><button className="hp-btn hp-btn-primary" disabled={busy}>{busy ? "Criando…" : "Criar lembrete"}</button></div>
         </form>
       </DialogContent>
     </Dialog>

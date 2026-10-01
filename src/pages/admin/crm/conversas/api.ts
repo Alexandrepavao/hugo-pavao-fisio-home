@@ -45,14 +45,14 @@ export const refreshConversations = (qc: QueryClient, id?: string | null) => {
   void qc.invalidateQueries({ queryKey: ["opp-hist"] }); void qc.invalidateQueries({ queryKey: ["opp-tasks"] }); void qc.invalidateQueries({ queryKey: ["crm-tasks-page"] });
 };
 
-/** Ações da mensagem agendada (usadas na conversa e na página "Mensagens agendadas"). O envio é SEMPRE manual: abre o WhatsApp e registra. */
+/** Ações do lembrete de envio (conversa e página "Lembretes de envio"). SEMPRE manual: abre o WhatsApp e registra a abertura. */
 export const useScheduledActions = (onMsg: { ok: (t: string) => void; err: (t: string) => void }) => {
   const qc = useQueryClient();
   const done = (id?: string | null) => refreshConversations(qc, id);
   return {
-    cancel: async (s: { id: string; conversation_id: string }) => { const { error } = await supabase.rpc("crm_scheduled_cancel", { p_id: s.id }); if (error) return onMsg.err(errText(error)); onMsg.ok("Mensagem agendada cancelada."); done(s.conversation_id); },
+    cancel: async (s: { id: string; conversation_id: string }) => { const { error } = await supabase.rpc("crm_scheduled_cancel", { p_id: s.id }); if (error) return onMsg.err(errText(error)); onMsg.ok("Lembrete de envio cancelado."); done(s.conversation_id); },
     reschedule: async (s: { id: string; conversation_id: string }, when: string) => {
-      const { error } = await supabase.rpc("crm_scheduled_reschedule", { p_id: s.id, p_when: new Date(when).toISOString() }); if (error) return onMsg.err(errText(error)); onMsg.ok("Mensagem remarcada."); done(s.conversation_id);
+      const { error } = await supabase.rpc("crm_scheduled_reschedule", { p_id: s.id, p_when: new Date(when).toISOString() }); if (error) return onMsg.err(errText(error)); onMsg.ok("Lembrete de envio remarcado."); done(s.conversation_id);
     },
     /** abre o WhatsApp (se houver telefone) e registra o envio; o pop-up é aberto antes do await para não ser bloqueado */
     sendNow: async (s: { id: string; conversation_id: string; body: string }, phone: string | null) => {
@@ -60,7 +60,7 @@ export const useScheduledActions = (onMsg: { ok: (t: string) => void; err: (t: s
       window.open(waLink(phone, s.body), "_blank", "noopener,noreferrer");
       const { error } = await supabase.rpc("crm_scheduled_mark_sent", { p_id: s.id });
       if (error) return onMsg.err(`O WhatsApp foi aberto, mas o registro falhou: ${errText(error)}`);
-      onMsg.ok("WhatsApp aberto e envio registrado (o HP não confirma a entrega)."); done(s.conversation_id);
+      onMsg.ok("WhatsApp aberto e registrado (o HP não confirma envio nem entrega)."); done(s.conversation_id);
     },
   };
 };

@@ -25,7 +25,7 @@ export const CRM_NAV: CrmNavSection[] = [
   ] },
   { label: "Comunicação", items: [
     { to: "/admin/crm/conversas", label: "Conversas", icon: MessageCircle },
-    { to: "/admin/crm/mensagens-agendadas", label: "Mensagens agendadas", icon: CalendarClock, feature: "crm_scheduled_messages" },
+    { to: "/admin/crm/mensagens-agendadas", label: "Lembretes de envio", icon: CalendarClock, feature: "crm_scheduled_messages" },
     { to: "/admin/crm/disparo", label: "Disparo de mensagens", icon: Send, feature: "crm_broadcast" },
   ] },
   { label: "Relatórios", items: [

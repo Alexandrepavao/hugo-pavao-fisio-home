@@ -46,7 +46,7 @@ test.describe("@release Permissões por papel", () => {
     await page.goto("/admin/crm");
     const side = page.getByRole("navigation", { name: "Navegação do CRM" });
     await expect(side.getByRole("link", { name: "Conversas" })).toBeVisible();
-    await expect(side.getByRole("link", { name: "Mensagens agendadas" })).toBeVisible();          // ligada na v1 pela migration 077 (lembrete + registro manual; R19)
+    await expect(side.getByRole("link", { name: "Lembretes de envio" })).toBeVisible();          // ligada na v1 pela migration 077 como “Lembretes de envio” (lembrete + registro manual; R19)
     await expect(side.getByRole("link", { name: "Disparo de mensagens" })).toHaveCount(0);
     for (const p of ["/admin/crm/disparo", "/admin/status"]) {
       await page.goto(p); await expect(page.getByText("Recurso ainda não disponível nesta versão")).toBeVisible();

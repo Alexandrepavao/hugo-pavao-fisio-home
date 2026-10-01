@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CalendarClock, Clock, MessageCircle, PanelRight, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, BellRing, ChevronRight, Clock, MessageCircle, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
+
 import { Badge, errText } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { initials } from "../types";
@@ -11,9 +12,9 @@ import { fmtPhone, phoneOf, refreshConversations, useScheduledActions, useStaff,
 import ScheduleDialog from "./ScheduleDialog";
 
 type Mode = "outbound" | "inbound" | "note";
-const MODES: [Mode, string][] = [["outbound", "Mensagem ao contato"], ["inbound", "Resposta recebida"], ["note", "Nota interna"]];
+const MODES: [Mode, string][] = [["outbound", "Mensagem"], ["inbound", "Resposta recebida"], ["note", "Nota interna"]];
 const MODE_HELP: Record<Mode, string> = {
-  outbound: "Abre o WhatsApp e registra aqui; sem confirmação de entrega.",
+  outbound: "“Abrir WhatsApp” só abre o wa.me com o texto e registra aqui. O HP não confirma envio, entrega nem leitura.",
   inbound: "Registro manual do que o contato respondeu.",
   note: "Só a equipe do CRM vê. Não vai para o contato.",
 };
@@ -24,15 +25,26 @@ interface ConvRow {
   participants: { user_id: string; role: "owner" | "collaborator"; added_at: string }[];
 }
 
+const TZ = "America/Sao_Paulo";
+const dayKey = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: TZ });
+const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+const dayLabel = (iso: string) => {
+  const k = dayKey(iso); if (k === dayKey(new Date().toISOString())) return "Hoje"; if (k === dayKey(new Date(Date.now() - 864e5).toISOString())) return "Ontem";
+  const d = new Date(iso); const sameYear = d.toLocaleDateString("sv-SE", { timeZone: TZ, year: "numeric" }) === new Date().toLocaleDateString("sv-SE", { timeZone: TZ, year: "numeric" });
+  return d.toLocaleDateString("pt-BR", { day: "numeric", month: "long", ...(sameYear ? {} : { year: "numeric" }), timeZone: TZ });
+};
+
+const DateSep = ({ iso }: { iso: string }) => <li className="flex justify-center py-1" data-testid="msg-date"><span className="rounded-full bg-muted px-3 py-0.5 text-[11px] font-medium text-muted-foreground">{dayLabel(iso)}</span></li>;
+
 const Bubble = ({ m, name }: { m: ConvMessage; name: string }) => {
-  if (m.direction === "system") return <li className="text-center text-xs text-muted-foreground py-1" data-testid="msg-system">{m.body} <span className="opacity-70">· {fmtDateTime(m.created_at)}</span></li>;
+  if (m.direction === "system") return <li className="text-center text-xs text-muted-foreground py-0.5" data-testid="msg-system">{m.body} <span className="opacity-70">· {hhmm(m.created_at)}</span></li>;
   const out = m.direction === "outbound"; const note = m.direction === "note";
   return (
     <li className={`flex ${out || note ? "justify-end" : "justify-start"}`} data-testid={`msg-${m.direction}`}>
-      <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${note ? "bg-[hsl(var(--accent)/.12)] border border-[hsl(var(--accent)/.35)] rounded-br-sm" : out ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>
+      <div className={`max-w-[85%] sm:max-w-[68%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${note ? "bg-[hsl(var(--accent)/.12)] border border-[hsl(var(--accent)/.35)] rounded-br-sm" : out ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>
         <p className="whitespace-pre-wrap break-words">{m.body}</p>
-        <p className={`pt-1 text-[11px] ${out ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-          {note ? `Nota interna · ${name}` : out ? `${name} · ${m.delivery === "whatsapp_opened" ? "WhatsApp aberto · sem confirmação de entrega" : "registrada"}` : "Resposta registrada manualmente"} · {fmtDateTime(m.created_at)}
+        <p className={`pt-1 text-[11px] text-right ${out ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
+          {note ? `Nota interna · ${name}` : out ? `${name} · ${m.delivery === "whatsapp_opened" ? "WhatsApp aberto · sem confirmação de entrega" : "registrada"}` : "Resposta registrada manualmente"} · {hhmm(m.created_at)}
         </p>
       </div>
     </li>
@@ -85,7 +97,7 @@ const ConversationThread = ({ id, myId, isManager, onBack, panelOpen, onTogglePa
     setBusy(false);
     if (error) return onMsg.err(mode === "outbound" && c.channel === "whatsapp" && phone ? `O WhatsApp foi aberto, mas o registro falhou: ${errText(error)}` : errText(error));
     setText(""); refreshConversations(qc, id);
-    onMsg.ok(mode === "outbound" ? "WhatsApp aberto e mensagem registrada (sem confirmação de entrega)." : mode === "inbound" ? "Resposta registrada." : "Nota registrada.");
+    onMsg.ok(mode === "outbound" ? "WhatsApp aberto e registrado na conversa (sem confirmação de envio)." : mode === "inbound" ? "Resposta registrada." : "Nota registrada.");
   };
 
   const dueCount = useMemo(() => (pending.data ?? []).filter((s) => new Date(s.scheduled_for) <= new Date()).length, [pending.data]);
@@ -97,33 +109,32 @@ const ConversationThread = ({ id, myId, isManager, onBack, panelOpen, onTogglePa
     <section aria-label={`Conversa com ${name}`} className="flex flex-col min-h-0 h-full min-w-0 bg-background">
       <header className="flex items-center gap-2 px-3 py-2.5 border-b border-border bg-card min-w-0">
         <button className="lg:hidden hp-btn hp-btn-outline hp-btn-sm" onClick={onBack} aria-label="Voltar para a lista"><ArrowLeft size={15} aria-hidden /></button>
-        <span aria-hidden className="shrink-0 size-9 rounded-full bg-primary/10 text-primary grid place-items-center text-sm font-semibold">{initials(name)}</span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[0.9375rem] font-semibold truncate leading-5" data-testid="conv-title">{name}</h2>
-          <p className="text-xs text-muted-foreground truncate">{CHANNEL_LABEL[c.channel]} · {fmtPhone(phone)} · {c.participants.length ? `${c.participants.length} atendente${c.participants.length > 1 ? "s" : ""}` : "sem atendente"}</p>
-        </div>
-        <label htmlFor="conv-st" className="sr-only">Estado da conversa</label>
-        <select id="conv-st" className="!w-auto !h-8 text-xs hidden 2xl:block" value={c.status} disabled={!canAct} onChange={(e) => void call("crm_conversation_set_status", { p_conversation: id, p_status: e.target.value })}>
-          {Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-        </select>
+        <button className="flex items-center gap-3 min-w-0 flex-1 text-left rounded-lg px-1 py-0.5 hover:bg-muted/60" onClick={onTogglePanel} aria-expanded={panelOpen} data-testid="conv-panel-toggle"
+          aria-label={panelOpen ? `Recolher a ficha de ${name}` : `Abrir a ficha de ${name}`}>
+          <span aria-hidden className="shrink-0 size-10 rounded-full bg-primary/10 text-primary grid place-items-center text-sm font-semibold">{initials(name)}</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[0.9375rem] font-semibold truncate leading-5" data-testid="conv-title">{name}</span>
+            <span className="block text-xs text-muted-foreground truncate">{CHANNEL_LABEL[c.channel]} · {fmtPhone(phone)} · {c.participants.length ? `${c.participants.length} atendente${c.participants.length > 1 ? "s" : ""}` : "sem atendente"}</span>
+          </span>
+          <ChevronRight size={16} aria-hidden className={`shrink-0 text-muted-foreground transition-transform ${panelOpen ? "rotate-180" : ""}`} />
+        </button>
         {mine
           ? <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => void call("crm_conversation_leave", { p_conversation: id }, "Você saiu da conversa.")}>Sair</button>
           : <button className="hp-btn hp-btn-primary hp-btn-sm" data-testid="conv-join" onClick={() => void call("crm_conversation_join", { p_conversation: id }, "Você entrou na conversa.")}><UserPlus size={14} aria-hidden />Entrar</button>}
-        <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => setTeam(true)} data-testid="conv-team" aria-label="Atendentes da conversa"><Users size={14} aria-hidden /><span className="hidden 2xl:inline">Atendentes</span></button>
-        <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={onTogglePanel} aria-pressed={panelOpen} aria-label={panelOpen ? "Recolher a ficha do lead" : "Abrir a ficha do lead"} data-testid="conv-panel-toggle"><PanelRight size={14} aria-hidden /><span className="hidden 2xl:inline">Ficha</span></button>
+        <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => setTeam(true)} data-testid="conv-team" aria-label="Atendimento da conversa: atendentes e estado"><Users size={14} aria-hidden /><span className="hidden 2xl:inline">Atendimento</span></button>
       </header>
 
       {(pending.data?.length ?? 0) > 0 && (
         <div className="border-b border-border bg-[hsl(var(--accent)/.07)] px-3 py-2 grid gap-1.5" data-testid="conv-scheduled">
-          <p className="text-xs font-medium flex items-center gap-1.5"><Clock size={13} aria-hidden />Mensagens agendadas {dueCount > 0 && <Badge tone="warning">{dueCount} pronta{dueCount > 1 ? "s" : ""} para enviar</Badge>}</p>
+          <p className="text-xs font-medium flex items-center gap-1.5"><Clock size={13} aria-hidden />Lembretes de envio {dueCount > 0 && <Badge tone="warning">{dueCount} vencido{dueCount > 1 ? "s" : ""}</Badge>}</p>
           {(pending.data ?? []).map((s) => {
             const due = new Date(s.scheduled_for) <= new Date();
             return (
               <div key={s.id} className="flex flex-wrap items-center gap-2 text-sm" data-testid="conv-sched-item">
                 <span className="min-w-0 flex-1 truncate" title={s.body}>“{s.body}”</span>
-                <span className={`text-xs ${due ? "text-destructive font-medium" : "text-muted-foreground"}`}>{due ? "Pronta · " : ""}{fmtDateTime(s.scheduled_for)} · {nameOf(s.assignee_user_id)}</span>
+                <span className={`text-xs ${due ? "text-destructive font-medium" : "text-muted-foreground"}`}>{due ? "Vencido · " : ""}{fmtDateTime(s.scheduled_for)} · {nameOf(s.assignee_user_id)}</span>
                 {canAct || s.assignee_user_id === myId ? (<>
-                  <button className="hp-btn hp-btn-primary hp-btn-sm" data-testid="sched-send" onClick={() => void sched.sendNow(s, phone)}><MessageCircle size={13} aria-hidden />{due ? "Enviar" : "Enviar agora"}</button>
+                  <button className="hp-btn hp-btn-primary hp-btn-sm" data-testid="sched-send" onClick={() => void sched.sendNow(s, phone)}><MessageCircle size={13} aria-hidden />Abrir WhatsApp</button>
                   <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => { setReschedId(reschedId === s.id ? null : s.id); setReschedAt(""); }}>Remarcar</button>
                   <button className="hp-btn hp-btn-outline hp-btn-sm" data-testid="sched-cancel" onClick={() => void sched.cancel(s)}>Cancelar</button>
                 </>) : null}
@@ -137,28 +148,32 @@ const ConversationThread = ({ id, myId, isManager, onBack, panelOpen, onTogglePa
         </div>
       )}
 
-      <ol className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 grid content-start gap-2.5" data-testid="conv-messages" aria-live="polite" aria-label="Mensagens">
+      <ol className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 grid content-start gap-2 bg-muted/30" data-testid="conv-messages" aria-live="polite" aria-label="Mensagens">
         {msgs.isLoading && <li className="text-sm text-muted-foreground text-center">Carregando mensagens…</li>}
-        {(msgs.data ?? []).map((m) => <Bubble key={m.id} m={m} name={nameOf(m.author_user_id)} />)}
+        {(msgs.data ?? []).map((m, i, all) => (
+          <Fragment key={m.id}>{(i === 0 || dayKey(all[i - 1].created_at) !== dayKey(m.created_at)) && <DateSep iso={m.created_at} />}<Bubble m={m} name={nameOf(m.author_user_id)} /></Fragment>
+        ))}
         <li ref={endRef} aria-hidden />
       </ol>
 
-      <div className="border-t border-border bg-card p-3 grid gap-2">
+      <div className="border-t border-border bg-card px-3 py-2.5 grid gap-2" data-testid="conv-composer">
         {!canAct ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="text-muted-foreground">Você pode ler esta conversa. Entre nela para responder, registrar ou agendar.</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="text-muted-foreground">Você pode ler esta conversa. Entre nela para responder, registrar ou criar lembretes.</span>
             <button className="hp-btn hp-btn-primary hp-btn-sm" onClick={() => void call("crm_conversation_join", { p_conversation: id }, "Você entrou na conversa.")}>Entrar na conversa</button></div>
         ) : (
           <form onSubmit={post} className="grid gap-2">
             <div role="tablist" aria-label="Tipo de registro" className="flex flex-wrap gap-1.5">
-              {MODES.map(([k, l]) => <button type="button" key={k} role="tab" aria-selected={mode === k} data-testid={`mode-${k}`} className="hp-pill" data-active={mode === k} onClick={() => setMode(k)}>{l}</button>)}
+              {MODES.map(([k, l]) => <button type="button" key={k} role="tab" aria-selected={mode === k} data-testid={`mode-${k}`} className="hp-pill !h-7 !px-2.5 !text-xs" data-active={mode === k} onClick={() => setMode(k)}>{l}</button>)}
             </div>
             <label htmlFor="conv-text" className="sr-only">Texto</label>
             <textarea id="conv-text" rows={2} maxLength={4000} value={text} onChange={(e) => setText(e.target.value)} data-testid="conv-text"
-              placeholder={mode === "outbound" ? `Escreva a mensagem para ${name.split(" ")[0]}…` : mode === "inbound" ? "O que o contato respondeu…" : "Anotação para a equipe…"} />
-            <div className="flex flex-wrap items-center gap-2">
-              <button className="hp-btn hp-btn-primary" disabled={busy || !text.trim()} data-testid="conv-send">{mode === "outbound" ? <><MessageCircle size={15} aria-hidden />Abrir WhatsApp e registrar</> : mode === "inbound" ? "Registrar resposta" : "Salvar nota"}</button>
-              {mode === "outbound" && <button type="button" className="hp-btn hp-btn-outline" data-testid="conv-schedule" disabled={!text.trim()} onClick={() => setScheduleOpen(true)}><CalendarClock size={15} aria-hidden />Agendar</button>}
-              <span className="text-xs text-muted-foreground basis-full sm:basis-auto">{MODE_HELP[mode]}</span>
+              placeholder={mode === "outbound" ? `Escreva o texto para ${name.split(" ")[0]}…` : mode === "inbound" ? "O que o contato respondeu…" : "Anotação para a equipe…"} />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] text-muted-foreground flex-1 basis-56 min-w-0">{MODE_HELP[mode]}</p>
+              <div className="flex gap-2 ml-auto">
+                {mode === "outbound" && <button type="button" className="hp-btn hp-btn-outline" data-testid="conv-schedule" disabled={!text.trim()} onClick={() => setScheduleOpen(true)}><BellRing size={15} aria-hidden />Lembrete de envio</button>}
+                <button className="hp-btn hp-btn-primary" disabled={busy || !text.trim()} data-testid="conv-send">{mode === "outbound" ? <><MessageCircle size={15} aria-hidden />Abrir WhatsApp</> : mode === "inbound" ? "Registrar resposta" : "Salvar nota"}</button>
+              </div>
             </div>
           </form>
         )}

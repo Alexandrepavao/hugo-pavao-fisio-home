@@ -44,7 +44,15 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-01, 14ª rodada) — Central de Conversas (CRM)
+## Sessão mais recente (2026-10-01, 15ª rodada) — layout da central de Conversas e rótulos honestos
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Escopo desta rodada: **somente o layout de Conversas** (referência: *Chats* do shadcn Admin). Provedor de WhatsApp, envio automático e recebimento ficam para depois (nada foi configurado nem contratado). **Repasses** (075/076, `S18`, `Commissions.tsx`, `MySummary.tsx`, `S15`) segue **sem commit e fora desta entrega**.
+- **Layout:** lista (avatar, nome, última interação, horário, busca) · conversa ocupando a maior parte da tela (cabeçalho com avatar e nome, separadores de data, horários nos balões, compositor fixo) · **ficha do lead recolhida por padrão**, abre ao clicar no nome; celular: uma coluna por vez com botão de voltar. Sem mensagens fictícias e sem botões sem função.
+- **Rótulos (nunca “enviada” para a abertura do WhatsApp):** “**Abrir WhatsApp**” só abre o `wa.me` e registra a abertura; “**Lembrete de envio**” (antes “agendar mensagem”; menu “Lembretes de envio”, estados Vencido/Agendado/WhatsApp aberto/Cancelado); prévia da lista “WhatsApp aberto: …”.
+- **Testes (Dev, 01/10):** E2E `R19` (9) reescrito para o novo layout/rótulos + regressão `R02` (13), `R12` (9), `R13` e `R18` (7) verdes; `tsc` e `eslint` limpos. `R13`: o teste lia os links da sidebar do CRM antes de ela renderizar (instantâneo da falha mostra a sidebar completa; lista vazia no momento da leitura) — incluí a espera pela sidebar; **não** foi enfraquecida nenhuma verificação. Capturas desktop e celular em `docs/screenshots/conversas/`.
+- **Publicação:** preview do `hp-group-hub` (rascunho) a partir de **worktree isolado** do commit desta rodada, sem Repasses (ver o fechamento da rodada no chat/`transferencia`). A migration 077 é a única dependência de banco e já está no Dev; as 075/076 de Repasses também já estão **aplicadas no Dev** (sem commit no repositório) e **não** são necessárias a Conversas.
+
+## Sessão anterior (2026-10-01, 14ª rodada) — Central de Conversas (CRM)
 
 > `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Detalhes, limites e fórmulas: [`docs/conversas.md`](conversas.md). O trabalho de **Repasses** (migrations 075/076, `S18`, `Commissions.tsx`, `MySummary.tsx`, `S15`) ficou **fora** dos commits desta rodada e permanece sem commit.
 - **Ponto de partida conferido:** a sessão anterior caiu no item Repasses; a central de Conversas ainda era a tabela simples de 24/09 (abre o WhatsApp e registra o contato), sem tabelas de mensagem/atendente/ficha. Layout de referência: padrão de 3 colunas do *Chats* do shadcn Admin (indicado pelo usuário), recriado com componentes próprios do HP.

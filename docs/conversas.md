@@ -8,19 +8,20 @@ O HP **não tem provedor de WhatsApp/e-mail conectado** (nem API oficial, nem Ev
 
 | Ação | O que acontece de verdade | O que NÃO é |
 |---|---|---|
-| Mensagem ao contato | abre o `wa.me` com o texto pronto **e registra** na conversa (`delivery = whatsapp_opened`, “WhatsApp aberto · sem confirmação de entrega”) | não há confirmação de entrega nem de leitura |
+| **Abrir WhatsApp** (modo *Mensagem*) | **apenas abre** o `wa.me` com o texto pronto **e registra a abertura** na conversa (`delivery = whatsapp_opened`, “WhatsApp aberto · sem confirmação de entrega”). Nunca é apresentado como “enviada” | não há confirmação de envio, entrega nem leitura |
 | Resposta recebida | o atendente **registra à mão** o que o contato respondeu | não há caixa de entrada sincronizada com o WhatsApp |
 | Nota interna | só a equipe do CRM vê; não vai ao contato | — |
-| Mensagem agendada | grava a mensagem + cria um **lembrete** (tarefa do CRM) para o responsável pelo envio; no horário fica **“pronta para enviar”**; o atendente clica **Enviar** (abre o WhatsApp e registra) | **nada é enviado sozinho**; sem provedor não há envio no horário |
+| **Lembrete de envio** (antes “mensagem agendada”) | grava o texto + cria uma **tarefa do CRM** para o responsável; no horário o lembrete fica **vencido**; o atendente clica **Abrir WhatsApp** (abre o `wa.me` e registra a abertura) | **nada é enviado sozinho**; sem provedor não há envio no horário |
 
 Disparo em massa continua **fora da v1** (precisa de provedor). Quando houver provedor, o modelo (`crm_messages.delivery`, mensagens agendadas) comporta estados reais de entrega; hoje só existem `registered` e `whatsapp_opened`.
 
-## Tela (padrão 3 colunas, inspirado no *Chats* do shadcn Admin, com a identidade HP)
+## Tela (padrão 3 colunas do *Chats* do shadcn Admin, com a identidade HP)
 
-- **Esquerda — lista:** abas *Minhas · Fila · Todas* (com contador de não lidas), filtro de estado, busca por nome/mensagem; cada linha traz nicho, etapa, estado, nº de atendentes e agendadas pendentes.
-- **Centro — mensagens:** cabeçalho (voltar, atendentes, entrar/sair, ficha), faixa de mensagens agendadas (Enviar/Remarcar/Cancelar), balões (enviada, recebida, nota, sistema) e compositor com três modos (*Mensagem ao contato · Resposta recebida · Nota interna*) e **Agendar**.
-- **Direita — ficha do lead (recolhível):** dados e etapa da oportunidade, **ficha do nicho**, atendimentos (só para Fisioterapia, administrativo), vendas confirmadas, tarefas e atalhos. Abaixo de 1280 px a ficha vira **gaveta**; no celular a tela mostra **uma coluna por vez** (lista → conversa; “voltar” retorna à lista). O estado “ficha aberta/fechada” fica no navegador.
+- **Esquerda — lista:** título com contador de não lidas, busca, filtro de estado e abas *Minhas · Fila · Todas*; cada linha traz **avatar, nome, última interação (prévia) e horário** (hora hoje, “Ontem” ou data) e uma linha discreta com nicho · etapa.
+- **Centro — conversa (a maior parte da tela):** cabeçalho com **avatar e nome do lead** — **clicar no nome abre/recolhe a ficha** —, histórico com **separadores de data** (Hoje, Ontem, data), balões recebidos/enviados com horário, e **compositor fixo embaixo** (*Mensagem · Resposta recebida · Nota interna*, **Abrir WhatsApp** e **Lembrete de envio**). A faixa **Lembretes de envio** aparece acima do histórico quando há pendentes.
+- **Direita — ficha do lead:** **recolhida por padrão**. Mostra dados e etapa da oportunidade, **ficha do nicho**, atendimentos (só Fisioterapia, administrativo), vendas confirmadas, tarefas e atalhos. Abaixo de 1280 px a ficha vira **gaveta**; no celular a tela mostra **uma coluna por vez** (lista → conversa, com botão de voltar). A preferência “ficha aberta” fica no navegador.
 - **Abrir por link:** `?pessoa=<id>[&oportunidade=<id>]` cria (ou reaproveita) a conversa; a oportunidade tem o botão **Abrir conversa**.
+- A página de lembretes (`/admin/crm/mensagens-agendadas`, menu **Lembretes de envio**) lista *Vencidos · Agendados · WhatsApp aberto · Cancelados*; o estado interno `sent` aparece como “WhatsApp aberto”, nunca como “enviada”. Os textos de sistema gravados na conversa pela migration 077 ainda dizem “agendou uma mensagem… o envio é manual” (mudar exigiria nova migration; sem impacto funcional).
 
 ## Ficha por nicho
 

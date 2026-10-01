@@ -52,13 +52,17 @@ test.describe.serial("@release Central de Conversas", () => {
     convId = new URL(page.url()).searchParams.get("c")!; expect(convId).toMatch(/^[0-9a-f-]{36}$/);
     await expect(page.getByTestId("conv-title")).toHaveText(person, { timeout: 30_000 });
     const item = page.getByTestId("conv-item").filter({ hasText: person }); await expect(item).toHaveCount(1);
-    const panel = page.getByTestId("lead-panel"); await expect(panel).toBeVisible();
+    const panel = page.getByTestId("lead-panel");
+    await expect(panel).toHaveCount(0);                                                                            // ficha RECOLHIDA por padrão
+    await page.screenshot({ path: `${SHOTS}/conversas-desktop.png` });
+    await page.getByTestId("conv-title").click(); await expect(panel).toBeVisible();                              // abre ao clicar no nome do lead
     await expect(page.getByTestId("lead-niche")).toContainText("Ficha · Fisioterapia"); await expect(page.getByTestId("lead-opp")).toContainText(title); await expect(page.getByTestId("lead-opp")).toContainText("Instagram");
     await expect(page.getByTestId("lead-niche")).toContainText("Não registre dados clínicos");
     const a = await item.boundingBox(); const b = await page.getByTestId("conv-title").boundingBox(); const c = await panel.boundingBox();
     expect(a!.x).toBeLessThan(b!.x); expect(b!.x).toBeLessThan(c!.x);                                              // lista · mensagens · ficha, da esquerda para a direita
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    // recolher e reabrir a ficha
+    await page.waitForTimeout(300); await page.screenshot({ path: `${SHOTS}/conversas-ficha-aberta-desktop.png` });
+    // recolher e reabrir a ficha (clicando no nome de novo)
     await page.getByTestId("conv-panel-toggle").click(); await expect(panel).toHaveCount(0); await page.getByTestId("conv-panel-toggle").click(); await expect(page.getByTestId("lead-panel")).toBeVisible();
     // uma conversa só por pessoa e canal: abrir de novo pelo link devolve a mesma
     await page.goto(`/admin/crm/conversas?pessoa=${personId}&oportunidade=${oppId}`); await expect(page).toHaveURL(new RegExp(`c=${convId}`), { timeout: 30_000 });
@@ -75,6 +79,12 @@ test.describe.serial("@release Central de Conversas", () => {
     const out = page.getByTestId("msg-outbound").filter({ hasText: text }); await expect(out).toBeVisible({ timeout: 20_000 });
     await expect(out).toContainText("WhatsApp aberto · sem confirmação de entrega"); await expect(out).not.toContainText(/entregue|lida|visualizada/i);
     expect(waUrls.some((u) => u.includes(`wa.me/55${digits}`) && u.includes(text))).toBe(true);                    // número e texto certos no link
+    await expect(page.getByTestId("msg-date").first()).toHaveText("Hoje");                                         // separador de data
+    await expect(out).toContainText(/\d{2}:\d{2}/);                                                                // horário no balão
+    await expect(page.getByTestId("conv-send")).toHaveText("Abrir WhatsApp");                                      // a ação só ABRE o WhatsApp
+    await expect(page.getByTestId("conv-schedule")).toContainText("Lembrete de envio");
+    await expect(page.getByTestId("conversas")).not.toContainText(/mensagem enviada|enviada com sucesso|entregue/i);
+    const cb = await page.getByTestId("conv-composer").boundingBox(); const vh = page.viewportSize()!.height; expect(cb!.y + cb!.height).toBeLessThanOrEqual(vh + 1); expect(cb!.y).toBeGreaterThan(vh * 0.55);   // compositor fixo embaixo
     await page.getByTestId("mode-inbound").click(); await page.getByTestId("conv-text").fill(`Oi! Pode ser amanhã? ${runId}`); await page.getByTestId("conv-send").click();
     await expect(page.getByTestId("msg-inbound").filter({ hasText: "Pode ser amanhã?" })).toContainText("Resposta registrada manualmente", { timeout: 20_000 });
     await page.getByTestId("mode-note").click(); await page.getByTestId("conv-text").fill(`Prefere manhã (nota) ${runId}`); await page.getByTestId("conv-send").click();
@@ -93,7 +103,8 @@ test.describe.serial("@release Central de Conversas", () => {
 
   test("Ficha por nicho: Fisioterapia e Academy têm campos diferentes; salvar persiste; etapa muda pela ficha", async ({ page, context }) => {
     await loginAs(context, QA.comercial); const errors = collectErrors(page);
-    await page.goto(`/admin/crm/conversas?c=${convId}`); await expect(page.getByTestId("lead-niche")).toBeVisible({ timeout: 30_000 });
+    await page.goto(`/admin/crm/conversas?c=${convId}`); await expect(page.getByTestId("conv-title")).toHaveText(person, { timeout: 30_000 });
+    await expect(page.getByTestId("lead-panel")).toHaveCount(0); await page.getByTestId("conv-title").click(); await expect(page.getByTestId("lead-niche")).toBeVisible({ timeout: 30_000 });
     await page.locator("#pf-contact_reason").fill("Quer conhecer valores e horários"); await page.locator("#pf-preferred_period").selectOption("manha"); await page.locator("#pf-payment_pref").selectOption("particular"); await page.locator("#pf-referred_by").fill("Dra. Paula");
     await page.getByTestId("lead-save").click(); await expect(page.getByText("Ficha salva.")).toBeVisible({ timeout: 20_000 });
     const prof = (await sql1<{ profile: Record<string, string> }>(`select profile from public.opportunities where id = '${oppId}'`)).profile;
@@ -129,55 +140,54 @@ test.describe.serial("@release Central de Conversas", () => {
     const ctx2 = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); await loginAs(ctx2, QA.gestorUnidade); const p2 = await ctx2.newPage(); const err2 = collectErrors(p2);
     await ctx2.route("https://wa.me/**", (r) => r.fulfill({ status: 200, contentType: "text/html", body: "ok" }));
     await p2.goto("/admin/crm/conversas"); await p2.getByTestId("conv-scope-all").click();
-    const it2 = p2.getByTestId("conv-item").filter({ hasText: person }); await expect(it2).toContainText("2 atendentes", { timeout: 30_000 }); await it2.click();
-    await expect(p2.getByTestId("conv-title")).toHaveText(person); await expect(p2.getByTestId("msg-outbound").first()).toBeVisible();
+    const it2 = p2.getByTestId("conv-item").filter({ hasText: person }); await expect(it2).toBeVisible({ timeout: 30_000 }); await it2.click();
+    await expect(p2.getByTestId("conv-title")).toHaveText(person); await expect(p2.getByTestId("conv-panel-toggle")).toContainText("2 atendentes"); await expect(p2.getByTestId("msg-outbound").first()).toBeVisible();
     await p2.getByTestId("mode-inbound").click(); await p2.getByTestId("conv-text").fill(`Contato confirmou por telefone ${runId}`); await p2.getByTestId("conv-send").click();
     await expect(p2.getByTestId("msg-inbound").filter({ hasText: "Contato confirmou" })).toBeVisible({ timeout: 20_000 });
     // a leitura é por usuário: para o comercial (fora da conversa aberta) ela aparece como não lida; para quem a registrou, não
     await page.goto("/admin/crm/conversas"); const mine = page.getByTestId("conv-item").filter({ hasText: person }); await expect(mine).toHaveAttribute("data-unread", "1", { timeout: 30_000 });
-    await expect(page.getByTestId("conv-scope-mine")).toContainText("1");
+    await expect(page.getByLabel("1 não lidas")).toBeVisible();                                 // contador de não lidas no título da lista
     await mine.click(); await expect(page.getByTestId("msg-inbound").filter({ hasText: "Contato confirmou" })).toBeVisible(); await expect(mine).toHaveAttribute("data-unread", "0", { timeout: 30_000 });  // abrir marca como lida
     await expect(p2.getByTestId("conv-item").filter({ hasText: person })).toHaveAttribute("data-unread", "0");
     await ctx2.close(); expect(errors, errors.join("\n")).toEqual([]); expect(err2, err2.join("\n")).toEqual([]);
   });
 
-  test("Mensagens agendadas: vira lembrete (nada é enviado), remarcar/cancelar, e na hora fica pronta para enviar; envio registrado na conversa e no histórico", async ({ page, context }) => {
+  test("Lembretes de envio: criam tarefa (nada é enviado), remarcar/cancelar, vencem na hora; abrir o WhatsApp é registrado como abertura na conversa e no histórico", async ({ page, context }) => {
     await loginAs(context, QA.comercial); await interceptWa(page); const errors = collectErrors(page);
     await page.goto(`/admin/crm/conversas?c=${convId}`); await expect(page.getByTestId("conv-title")).toHaveText(person, { timeout: 30_000 });
     const body1 = `Lembrete: sua avaliação é amanhã às 9h. ${runId}`; const body2 = `Segunda mensagem para cancelar ${runId}`;
     const before = waUrls.length;
     for (const b of [body1, body2]) {
       await page.getByTestId("conv-text").fill(b); await page.getByTestId("conv-schedule").click();
-      await expect(page.getByRole("dialog").getByText(/O HP não envia sozinho/)).toBeVisible(); await page.getByRole("dialog").getByRole("button", { name: "Agendar", exact: true }).click();
-      await expect(page.getByText(/Mensagem agendada\. No horário/)).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole("dialog").getByText(/O HP não envia sozinho/)).toBeVisible(); await page.getByRole("dialog").getByRole("button", { name: "Criar lembrete", exact: true }).click();
+      await expect(page.getByText(/Lembrete de envio criado/)).toBeVisible({ timeout: 20_000 });
     }
     const bar = page.getByTestId("conv-scheduled"); await expect(bar.getByTestId("conv-sched-item")).toHaveCount(2, { timeout: 20_000 });
     expect(waUrls.length).toBe(before);                                                                              // agendar NÃO abre WhatsApp nem envia
     expect((await sql1<{ n: number }>(`select count(*)::int n from public.crm_messages where conversation_id = '${convId}' and body in ('${body1}', '${body2}')`)).n).toBe(0);
     const tasks = await sql1<{ n: number }>(`select count(*)::int n from public.crm_tasks where kind = 'reminder' and person_id = '${personId}' and assignee_user_id = '${comId}' and done_at is null and opportunity_id = '${oppId}'`); expect(tasks.n).toBe(2);
-    await expect(page.getByTestId("conv-item").filter({ hasText: person })).toContainText("2 agendadas", { timeout: 20_000 });
     // cancelar a segunda
     await bar.getByTestId("conv-sched-item").filter({ hasText: body2 }).getByTestId("sched-cancel").click(); await expect(bar.getByTestId("conv-sched-item")).toHaveCount(1, { timeout: 20_000 });
     expect(await sql1<{ s: string; t: number }>(`select (select status from public.crm_scheduled_messages where body = '${body2}') s, (select count(*)::int from public.crm_tasks where kind = 'reminder' and person_id = '${personId}' and done_at is null) t`)).toEqual({ s: "cancelled", t: 1 });
     // remarcar a primeira (+2 dias): o lembrete acompanha
     await bar.getByRole("button", { name: "Remarcar" }).click(); const d = new Date(Date.now() + 2 * 864e5); const pad = (n: number) => String(n).padStart(2, "0");
     await bar.locator('input[type="datetime-local"]').fill(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T10:00`); await bar.getByRole("button", { name: "Salvar" }).click();
-    await expect(page.getByText("Mensagem remarcada.")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("Lembrete de envio remarcado.")).toBeVisible({ timeout: 20_000 });
     expect((await sql1<{ ok: boolean }>(`select (s.scheduled_for = t.due_at and s.scheduled_for > now() + interval '1 day 12 hours') ok from public.crm_scheduled_messages s join public.crm_tasks t on t.id = s.task_id where s.body = '${body1}'`)).ok).toBe(true);
     // a lista "Mensagens agendadas" (rota do CRM, ligada na v1) mostra em "Agendadas"
-    await page.goto("/admin/crm/mensagens-agendadas"); await page.getByRole("tab", { name: /^Agendadas/ }).click(); await expect(page.getByTestId("sched-row").filter({ hasText: body1 })).toContainText("Agendada", { timeout: 20_000 });
+    await page.goto("/admin/crm/mensagens-agendadas"); await page.getByRole("tab", { name: /^Agendados/ }).click(); await expect(page.getByTestId("sched-row").filter({ hasText: body1 })).toContainText("Agendado", { timeout: 20_000 });
     // chega a hora (desloca o horário no Dev): a mensagem passa a "pronta para enviar" e NADA foi enviado sozinho
     await devSql(`update public.crm_scheduled_messages set scheduled_for = now() - interval '5 minutes' where body = '${body1}'; update public.crm_tasks set due_at = now() - interval '5 minutes' where id = (select task_id from public.crm_scheduled_messages where body = '${body1}')`);
     expect((await sql1<{ n: number }>(`select count(*)::int n from public.crm_messages where scheduled_message_id is not null and conversation_id = '${convId}'`)).n).toBe(0);
-    await page.goto("/admin/crm/mensagens-agendadas"); await expect(page.getByRole("tab", { name: /^Prontas para enviar \(1\)/ })).toBeVisible({ timeout: 30_000 });
-    const row = page.getByTestId("sched-row").filter({ hasText: body1 }); await expect(row).toContainText("Pronta para enviar");
+    await page.goto("/admin/crm/mensagens-agendadas"); await expect(page.getByRole("tab", { name: /^Vencidos \(1\)/ })).toBeVisible({ timeout: 30_000 });
+    const row = page.getByTestId("sched-row").filter({ hasText: body1 }); await expect(row).toContainText("Vencido");
     await page.screenshot({ path: `${SHOTS}/mensagens-agendadas-desktop.png`, fullPage: true });
     // o lembrete aparece nas tarefas do CRM (integração)
     await page.goto("/admin/crm/tarefas"); await expect(page.getByText(`Enviar mensagem agendada para ${person}`)).toBeVisible({ timeout: 30_000 });
     // transferir a conversa para o gestor leva a mensagem pendente e o lembrete; ele registra o envio
     await page.goto(`/admin/crm/conversas?c=${convId}`); await expect(page.getByTestId("conv-title")).toHaveText(person, { timeout: 30_000 });
-    await expect(page.getByTestId("conv-scheduled")).toContainText("Pronta", { timeout: 20_000 });
-    await page.screenshot({ path: `${SHOTS}/conversas-desktop.png`, fullPage: false });
+    await expect(page.getByTestId("conv-scheduled")).toContainText("Vencido", { timeout: 20_000 });
+    await page.screenshot({ path: `${SHOTS}/conversas-lembrete-desktop.png`, fullPage: false });
     await page.getByTestId("conv-team").click(); const dlg = page.getByRole("dialog"); await dlg.locator("#tm-to").selectOption(gestorId); await dlg.getByText("Continuar como colaborador").click(); await dlg.getByTestId("team-transfer").click();
     await expect(page.getByText("Conversa transferida.")).toBeVisible({ timeout: 20_000 });
     const tr = await sql1<{ owner: string; opp: string; sched: string; task: string; stay: number }>(`select (select user_id::text from public.crm_conversation_participants where conversation_id = '${convId}' and role = 'owner') owner, (select owner_user_id::text from public.opportunities where id = '${oppId}') opp, (select assignee_user_id::text from public.crm_scheduled_messages where body = '${body1}') sched, (select assignee_user_id::text from public.crm_tasks where id = (select task_id from public.crm_scheduled_messages where body = '${body1}')) task, (select count(*)::int from public.crm_conversation_participants where conversation_id = '${convId}' and user_id = '${comId}') stay`);
@@ -186,11 +196,12 @@ test.describe.serial("@release Central de Conversas", () => {
     await expect(page.getByText("Você pode ler esta conversa. Entre nela para responder")).toBeVisible();
     const ctx2 = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); await loginAs(ctx2, QA.gestorUnidade); const p2 = await ctx2.newPage(); const err2 = collectErrors(p2);
     const wa2: string[] = []; await ctx2.route("https://wa.me/**", (r) => { wa2.push(decodeURIComponent(r.request().url())); return r.fulfill({ status: 200, contentType: "text/html", body: "ok" }); });
-    await p2.goto("/admin/crm/mensagens-agendadas"); const row2 = p2.getByTestId("sched-row").filter({ hasText: body1 }); await expect(row2).toContainText("Pronta para enviar", { timeout: 30_000 });
+    await p2.goto("/admin/crm/mensagens-agendadas"); const row2 = p2.getByTestId("sched-row").filter({ hasText: body1 }); await expect(row2).toContainText("Vencido", { timeout: 30_000 });
     const pop = p2.waitForEvent("popup"); await row2.getByTestId("sched-send").click(); await pop;
-    await expect(p2.getByText(/WhatsApp aberto e envio registrado/)).toBeVisible({ timeout: 20_000 });
+    await expect(p2.getByText(/WhatsApp aberto e registrado/)).toBeVisible({ timeout: 20_000 });
     expect(wa2.some((u) => u.includes(`wa.me/55${digits}`) && u.includes(body1))).toBe(true);
-    await p2.getByRole("tab", { name: /^Enviadas/ }).click(); await expect(p2.getByTestId("sched-row").filter({ hasText: body1 })).toContainText("Enviada", { timeout: 20_000 });
+    await p2.getByRole("tab", { name: /^WhatsApp aberto/ }).click(); await expect(p2.getByTestId("sched-row").filter({ hasText: body1 })).toContainText("WhatsApp aberto", { timeout: 20_000 });
+    await expect(p2.getByTestId("sched-row").filter({ hasText: body1 })).not.toContainText(/Enviad/);
     const sent = await sql1<{ st: string; dir: string; del: string; done: boolean; it: number }>(`select s.status st, m.direction dir, m.delivery del, (t.done_at is not null) done, (select count(*)::int from public.interactions i where i.opportunity_id = '${oppId}' and i.summary like '%${body1}%') it from public.crm_scheduled_messages s join public.crm_messages m on m.id = s.message_id join public.crm_tasks t on t.id = s.task_id where s.body = '${body1}'`);
     expect(sent).toEqual({ st: "sent", dir: "outbound", del: "whatsapp_opened", done: true, it: 1 });
     await p2.goto(`/admin/crm/conversas?c=${convId}`); await expect(p2.getByTestId("msg-outbound").filter({ hasText: body1 })).toContainText("sem confirmação de entrega", { timeout: 30_000 });

@@ -12,16 +12,15 @@ import ConversationThread from "./conversas/ConversationThread";
 import LeadPanel from "./conversas/LeadPanel";
 import { refreshConversations, useMediaQuery, type InboxItem } from "./conversas/api";
 
-const PANEL_KEY = "hp-conv-panel";
+const PANEL_KEY = "hp-conv-panel-v2";
 
 /** Central de Conversas (CRM): lista à esquerda, mensagens no centro e ficha contextual do lead à direita (recolhível; no celular vira tela cheia + gaveta).
- *  Sem provedor de WhatsApp conectado: "enviar" abre o wa.me com o texto e REGISTRA aqui; respostas do contato são registradas à mão; mensagens agendadas viram
- *  lembrete para o responsável (nada é enviado sozinho). Abrir por link: ?pessoa=<id>[&oportunidade=<id>] cria/abre a conversa. */
+ *  A ficha fica RECOLHIDA por padrao e abre ao clicar no nome do lead. Sem provedor de WhatsApp: "Abrir WhatsApp" apenas abre o wa.me e REGISTRA a abertura (nunca "enviada"); respostas sao registradas a mao; "Lembrete de envio" vira tarefa (nada e enviado sozinho). Abrir por link: ?pessoa=<id>[&oportunidade=<id>] cria/abre a conversa. */
 const Conversas = () => {
   const qc = useQueryClient(); const { user, hasRole } = useAuth(); const [sp, setSp] = useSearchParams(); const [msg, m] = useMsg();
   const [scope, setScope] = useState<Scope>("mine"); const [status, setStatus] = useState(""); const [q, setQ] = useState("");
   const selected = sp.get("c"); const wide = useMediaQuery("(min-width: 1280px)");
-  const [panelOpen, setPanelOpen] = useState(() => { try { return localStorage.getItem(PANEL_KEY) !== "0"; } catch { return true; } });
+  const [panelOpen, setPanelOpen] = useState(() => { try { return localStorage.getItem(PANEL_KEY) === "1"; } catch { return false; } });
   const [sheet, setSheet] = useState(false);
   const myId = user?.id ?? null; const isManager = hasRole(...CRM_MANAGER_ROLES);
   const opening = useRef<string | null>(null);
@@ -60,16 +59,16 @@ const Conversas = () => {
 
   return (
     <div>
-      <div className={selected ? "hidden lg:block" : ""}><PageHead eyebrow="CRM · Comunicação" title="Conversas" hint="Atendimento por WhatsApp com a ficha do lead ao lado. O envio abre o WhatsApp e registra aqui; o HP não confirma entrega nem leitura." /></div>
+      <div className={selected ? "hidden lg:block" : ""}><PageHead eyebrow="CRM · Comunicação" title="Conversas" /></div>
       <Msg m={msg} />
-      <div className={`hp-card overflow-hidden grid h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-16rem)] min-h-[30rem] ${showPanel ? "lg:grid-cols-[18rem_minmax(0,1fr)_19rem]" : "lg:grid-cols-[18rem_minmax(0,1fr)]"}`} data-testid="conversas">
+      <div className={`hp-card overflow-hidden grid h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-15rem)] min-h-[30rem] ${showPanel ? "lg:grid-cols-[20rem_minmax(0,1fr)_20rem]" : "lg:grid-cols-[20rem_minmax(0,1fr)]"}`} data-testid="conversas">
         <div className={`${selected ? "hidden lg:block" : "block"} min-h-0 h-full`}>
           <ConversationList items={items} loading={inbox.isLoading} error={!!inbox.error} scope={scope} onScope={setScope} status={status} onStatus={setStatus} q={q} onQ={setQ} selected={selected} onSelect={select} counts={{ unread: unread.data ?? 0 }} />
         </div>
         <div className={`${selected ? "block" : "hidden lg:block"} min-h-0 h-full min-w-0`}>
           {selected
             ? <ConversationThread key={selected} id={selected} myId={myId} isManager={isManager} onBack={() => select(null)} panelOpen={wide ? panelOpen : sheet} onTogglePanel={togglePanel} onMsg={m} />
-            : <div className="h-full grid place-items-center p-6 text-center bg-background"><div className="max-w-xs grid gap-2 justify-items-center"><MessageCircle size={32} className="text-muted-foreground" aria-hidden /><p className="font-medium">Escolha uma conversa</p><p className="text-sm text-muted-foreground">A ficha do lead aparece ao lado, com os campos do nicho (Fisioterapia, Academy, Parceiros ou Empresas).</p></div></div>}
+            : <div className="h-full grid place-items-center p-6 text-center bg-background"><div className="max-w-xs grid gap-2 justify-items-center"><MessageCircle size={32} className="text-muted-foreground" aria-hidden /><p className="font-medium">Escolha uma conversa</p><p className="text-sm text-muted-foreground">Clique no nome do lead, no topo da conversa, para abrir a ficha com os campos do nicho.</p></div></div>}
         </div>
         {showPanel && <aside aria-label="Ficha do lead" className="hidden xl:block min-h-0 h-full border-l border-border">{panel}</aside>}
       </div>
