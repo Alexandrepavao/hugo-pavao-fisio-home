@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { brl } from "@/lib/format";
 import { PageHead, State, StatCard, Table, Td } from "@/lib/ui";
 import { PeriodFilter } from "./PeriodFilter";
-import LineBreakdown, { LineSelector } from "./LineBreakdown";
+import LineBreakdown from "./LineBreakdown";
 import { useLineFilter } from "./lineFilter";
 import { mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./shared";
 
@@ -78,12 +78,11 @@ const FinanceDre = () => {
         actions={
           <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
             onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); setLine("geral"); }} line={line} onLine={setLine} />
         } />
       <section className="mb-8" aria-label="DRE por linha de negócio">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div><h2 className="text-xl">DRE por linha de negócio</h2><p className="text-xs text-muted-foreground">HP Fisioterapia, HP Academy, compartilhado/não alocado e não classificado; a DRE consolidada logo abaixo não muda.</p></div>
-          <LineSelector value={line} onChange={setLine} />
         </div>
         <LineBreakdown mode="dre" fromIso={`${from}T00:00:00.000Z`} toIso={toExclusive(to)} unit={unit} line={line} />
       </section>

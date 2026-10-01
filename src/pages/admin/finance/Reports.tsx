@@ -6,7 +6,6 @@ import { KpiGrid, LevelSection, PageHead, State, StatCard, Table, Td } from "@/l
 import { AlertTriangle, Repeat, Stethoscope, Users } from "lucide-react";
 import { RANGE_LABEL } from "@/lib/period";
 import { PeriodFilter } from "./PeriodFilter";
-import { LineSelector } from "./LineBreakdown";
 import EfficiencyLineSection from "./EfficiencyByLine";
 import { useLineFilter } from "./lineFilter";
 import { useEfficiencyByLine } from "./lineReports";
@@ -47,7 +46,7 @@ const FinanceReports = () => {
         actions={
           <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
             onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); setLine("geral"); }} line={line} onLine={setLine} />
         } />
       <State loading={eff.isLoading} error={eff.error} />
       {eff.data && (<>
@@ -66,8 +65,7 @@ const FinanceReports = () => {
           </KpiGrid>
         </LevelSection>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <p className="text-xs text-muted-foreground">Os cartões acima são o consolidado (Geral). Abaixo, a mesma leitura por linha de negócio.</p>
-          <LineSelector value={line} onChange={setLine} />
+          <p className="text-xs text-muted-foreground">Os cartões acima são o consolidado (Geral). Abaixo, a mesma leitura por linha de negócio — escolha a linha em Filtros ▸ Linha de negócio.</p>
         </div>
         <EfficiencyLineSection q={effLine} line={line} />
         <section className="mb-8"><h2 className="text-[1.0625rem] font-bold mb-3">Concentração de receita por produto — Geral</h2>

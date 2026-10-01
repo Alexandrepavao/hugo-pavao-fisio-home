@@ -402,3 +402,16 @@ html.hp-app[data-theme="dark"] input::placeholder, html.hp-app[data-theme="dark"
 
 /* itens de grade nunca alargam a coluna além da tela (textos longos e gráficos encolhem em vez de gerar rolagem horizontal) */
 html.hp-app .grid > * { min-width: 0; }
+
+/* ---------- cartão corporativo (representação visual segura: sem número completo, CVV ou foto) ---------- */
+.hp-ccard-wrap { display: block; padding: .5rem; border-radius: 1.125rem; border: 2px solid transparent; background: transparent; cursor: pointer; transition: border-color .12s, background-color .12s; }
+.hp-ccard-wrap:hover { background: hsl(var(--muted) / .5); }
+.hp-ccard-wrap.is-selected { border-color: hsl(var(--app-accent) / .55); background: hsl(var(--card)); box-shadow: var(--shadow-md); }
+.hp-ccard-wrap:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.hp-ccard { --cc1: 212 58% 20%; --cc2: 212 55% 38%; position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: .75rem; aspect-ratio: 1.586; padding: 1.1rem 1.2rem; border-radius: 1rem; color: #fff;
+  background: radial-gradient(120% 90% at 100% 0%, hsl(0 0% 100% / .18), transparent 55%), linear-gradient(135deg, hsl(var(--cc1)), hsl(var(--cc2))); box-shadow: 0 8px 22px -10px hsl(var(--cc1) / .75); overflow: hidden; }
+.hp-ccard-mastercard { --cc1: 22 62% 24%; --cc2: 8 58% 40%; } .hp-ccard-elo { --cc1: 165 55% 14%; --cc2: 172 48% 30%; }
+.hp-ccard-amex { --cc1: 198 58% 20%; --cc2: 192 60% 36%; } .hp-ccard-hipercard { --cc1: 350 50% 24%; --cc2: 354 55% 38%; } .hp-ccard-outra { --cc1: 215 22% 20%; --cc2: 215 20% 38%; }
+.hp-ccard-chip { width: 2.25rem; height: 1.6rem; border-radius: .375rem; background: linear-gradient(135deg, hsl(45 70% 72%), hsl(40 55% 52%)); box-shadow: inset 0 0 0 1px hsl(0 0% 0% / .2); }
+.hp-ccard.is-blocked { filter: grayscale(.9) brightness(.8); }
+.hp-ccard-lock { position: absolute; top: 50%; right: .9rem; transform: translateY(-50%); display: inline-flex; align-items: center; gap: .25rem; padding: .125rem .5rem; border-radius: 9999px; background: hsl(0 0% 0% / .55); font-size: .6875rem; font-weight: 700; }

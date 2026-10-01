@@ -9,8 +9,8 @@ import { makeDelta } from "@/lib/kpi";
 import { RANGE_LABEL } from "@/lib/period";
 import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { PeriodFilter } from "./PeriodFilter";
-import LineBreakdown, { LineSelector } from "./LineBreakdown";
-import { useLineFilter } from "./lineFilter";
+import LineBreakdown from "./LineBreakdown";
+import { lineFilterLabel, useLineFilter } from "./lineFilter";
 import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./shared";
 
 const brl0 = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(cents / 100);
@@ -67,7 +67,7 @@ const Overview = () => {
       <PageHead eyebrow="Financeiro" title="Visão geral" hint="Resumo financeiro do período. Cada cartão mostra a regra de cálculo — passe o mouse ou abra o detalhe para ver a origem exata."
         actions={
           <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-            onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
+            onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} line={line} onLine={setLine} />
         } />
 
       <State loading={metrics.isLoading} error={metrics.error} />
@@ -117,8 +117,7 @@ const Overview = () => {
 
       <LevelSection level="summary" title="Por linha de negócio" label="Linhas de negócio" hint="HP Fisioterapia e HP Academy, com compartilhados e não classificados — o “Geral” acima continua sendo o consolidado.">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <span className="sr-only">Seletor de linha de negócio</span>
-          <LineSelector value={line} onChange={setLine} />
+          <p className="text-xs text-muted-foreground">Linha exibida: <b>{lineFilterLabel(line)}</b> — troque em Filtros ▸ Linha de negócio.</p>
         </div>
         <LineBreakdown mode="overview" fromIso={range.fromIso} toIso={range.toIso} unit={unit} line={line} />
       </LevelSection>

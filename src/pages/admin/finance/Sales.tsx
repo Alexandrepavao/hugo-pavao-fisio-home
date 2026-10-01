@@ -9,8 +9,10 @@ import { REC_ST, SALE_ST, type Account, type Pay, type Rec, type Sale } from "./
 
 /** "Vendas e recebimentos": venda contratada (vendas), valor a receber e recebimento efetivo (recebíveis) — conceitos separados, na mesma tela por fluxo de trabalho. */
 const FinanceSales = () => {
-  const [sp] = useSearchParams();
-  const [tab, setTab] = useState(sp.get("venda") ? "vendas" : "recebiveis");
+  const [sp, setSp] = useSearchParams();
+  // a aba vive na URL (?aba=vendas|recebiveis): o menu do Financeiro aponta direto para "Vendas" e "Contas a receber"
+  const aba = sp.get("aba"); const tab = aba === "vendas" || aba === "recebiveis" ? aba : sp.get("venda") ? "vendas" : "recebiveis";
+  const setTab = (v: string) => { const n = new URLSearchParams(sp); n.set("aba", v); setSp(n, { replace: true }); };
   return (
     <div>
       <PageHead eyebrow="Financeiro" title="Vendas e recebimentos" hint="Venda contratada, valor a receber e recebimento efetivo são conceitos separados. Valores em reais, calculados em centavos inteiros." />

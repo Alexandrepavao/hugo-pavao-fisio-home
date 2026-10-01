@@ -3,13 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
-import { FilterBar, FilterField, PageHead, State, Table, Td } from "@/lib/ui";
+import { PageHead, State, Table, Td } from "@/lib/ui";
+import { PeriodFilter } from "@/lib/PeriodFilter";
+import { presetRange, type RangePreset } from "@/lib/period";
 import { axisBrl, iso, useUnits } from "./shared";
 
 interface Row { month: string; realized_in_cents: number; realized_out_cents: number; forecast_in_cents: number; forecast_out_cents: number }
 
 const FinanceCashFlow = () => {
   const [unit, setUnit] = useState("");
+  const [preset, setPreset] = useState<RangePreset>("personalizado");
   const today = new Date();
   const [from, setFrom] = useState(iso(new Date(today.getFullYear(), today.getMonth() - 5, 1)));
   const [to, setTo] = useState(iso(new Date(today.getFullYear(), today.getMonth() + 3, 1)));
@@ -21,12 +24,9 @@ const FinanceCashFlow = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Fluxo de caixa" hint="Realizado = pagamentos e despesas efetivos, pelo mês do pagamento. Previsto = parcelas contratadas e contas a pagar em aberto, pelo mês do vencimento (a projeção de mensalidades fica separada em Recorrência)." />
-      <FilterBar>
-        <FilterField label="De" htmlFor="cf1"><input id="cf1" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></FilterField>
-        <FilterField label="Até" htmlFor="cf2"><input id="cf2" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></FilterField>
-        <FilterField label="Unidade" htmlFor="cfu"><select id="cfu" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></FilterField>
-      </FilterBar>
+      <PageHead eyebrow="Financeiro" title="Fluxo de caixa" hint="Realizado = pagamentos e despesas efetivos, pelo mês do pagamento. Previsto = parcelas contratadas e contas a pagar em aberto, pelo mês do vencimento (a projeção de mensalidades fica separada em Recorrência)." actions={<PeriodFilter preset={preset} from={from} to={to} unit={unit} units={units.data} defaultPreset="personalizado"
+          onPreset={(p) => { setPreset(p); if (p !== "personalizado") { const r = presetRange(p); setFrom(r.from); setTo(r.to); } }} onFrom={setFrom} onTo={setTo} onUnit={setUnit}
+          onClear={() => { setPreset("personalizado"); setFrom(iso(new Date(today.getFullYear(), today.getMonth() - 5, 1))); setTo(iso(new Date(today.getFullYear(), today.getMonth() + 3, 1))); setUnit(""); }} />} />
       <State loading={cash.isLoading} error={cash.error} empty={cash.data?.length === 0} />
       {chart.length > 0 && (
         <div className="hp-card p-4 mb-6" style={{ height: 300 }}><ResponsiveContainer width="100%" height="100%">

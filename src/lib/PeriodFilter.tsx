@@ -5,6 +5,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { useIsMobile } from "@/hooks/use-mobile";
 import { RANGE_LABEL, RANGE_PRESETS, type RangePreset } from "@/lib/period";
 import { btnGhost, btnPrimary } from "@/lib/ui";
+import { lineFilterLabel, type LineFilter } from "@/pages/admin/finance/lineFilter";
 
 export interface PeriodFilterProps {
   /** Omitir preset/from/to/onPreset/onFrom/onTo esconde a pílula de período (ex.: CRM, sem dimensão de data). */
@@ -19,6 +20,12 @@ export interface PeriodFilterProps {
   extraCount?: number;
   /** Resumo curto dos filtros extras ativos, mostrado no celular. */
   extraSummary?: string;
+  /** Linha de negócio (Financeiro): Geral, HP Fisioterapia ou HP Academy — dentro do popover/gaveta, com contador e chip. */
+  line?: LineFilter; onLine?: (v: LineFilter) => void;
+  /** Mês de referência (telas mensais, como Recorrência e Fluxo de caixa): aparece sempre visível no topo, no lugar do período. */
+  month?: string; onMonth?: (v: string) => void;
+  /** Período padrão da tela (para o contador de filtros ativos); omitido = "mes". */
+  defaultPreset?: RangePreset;
 }
 
 const pillCls = "hp-pill";
@@ -29,9 +36,11 @@ const pillCls = "hp-pill";
  * e Captação (e nas demais telas que já usavam este componente: Pesquisas, Contas corporativas). Período e
  * unidade são opcionais: uma tela sem essas dimensões (ex. CRM) só mostra o botão "Filtros". */
 export const PeriodFilter = (props: PeriodFilterProps) => {
-  const { preset, from, to, onPreset, onFrom, onTo, compare, onCompare, unit, units, onUnit, onClear, extra, extraCount = 0, extraSummary } = props;
+  const { preset, from, to, onPreset, onFrom, onTo, compare, onCompare, unit, units, onUnit, onClear, extra, extraCount = 0, extraSummary, line, onLine, month, onMonth, defaultPreset = "mes" } = props;
   const showPeriod = preset !== undefined && from !== undefined && to !== undefined && !!onPreset && !!onFrom && !!onTo;
   const showUnit = units !== undefined && !!onUnit;
+  const showLine = !!onLine; const lineActive = showLine && !!line && line !== "geral";
+  const showMonth = month !== undefined && !!onMonth;
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   // intervalo personalizado só é aplicado ao clicar "Aplicar" — evita disparar consultas a cada tecla digitada
@@ -41,10 +50,10 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
   const clear = () => { onClear(); setOpen(false); };
 
   // "ativo" = diferente do padrão da tela (mês atual, todas as unidades, sem comparação, sem filtros específicos)
-  const totalActive = extraCount + (compare ? 1 : 0) + (showUnit && unit ? 1 : 0) + (showPeriod && preset !== "mes" ? 1 : 0);
+  const totalActive = extraCount + (compare ? 1 : 0) + (showUnit && unit ? 1 : 0) + (showPeriod && preset !== defaultPreset ? 1 : 0) + (lineActive ? 1 : 0);
   const periodLabel = showPeriod ? RANGE_LABEL[preset!] : "";
   const unitLabel = showUnit ? (units!.find((u) => u.id === unit)?.name ?? "Todas as unidades") : "";
-  const activeChips = [showPeriod && preset !== "mes" ? `Período: ${periodLabel}` : "", showUnit && unit ? `Unidade: ${unitLabel}` : "", compare ? "Comparando com o período anterior" : "", ...(extraSummary ? extraSummary.split(" · ") : [])].filter(Boolean);
+  const activeChips = [showPeriod && preset !== defaultPreset ? `Período: ${periodLabel}` : "", showUnit && unit ? `Unidade: ${unitLabel}` : "", lineActive ? `Linha: ${lineFilterLabel(line!)}` : "", compare ? "Comparando com o período anterior" : "", ...(extraSummary ? extraSummary.split(" · ") : [])].filter(Boolean);
   const rangeText = showPeriod ? `${new Date(from! + "T12:00:00Z").toLocaleDateString("pt-BR")} – ${new Date(to! + "T12:00:00Z").toLocaleDateString("pt-BR")}` : "";
 
   const body = (
@@ -65,6 +74,15 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
             </div>
           )}
           <p className="text-[11px] text-muted-foreground mt-1.5">{rangeText}</p>
+        </div>
+      )}
+      {showLine && (
+        <div className={showPeriod ? "border-t border-border pt-3" : ""}>
+          <p className="text-xs font-medium text-muted-foreground mb-1.5">Linha de negócio</p>
+          <div role="group" aria-label="Linha de negócio" className="inline-flex flex-wrap rounded-full border border-input overflow-hidden">
+            {([["geral", "Geral"], ["physio", "HP Fisioterapia"], ["academy", "HP Academy"]] as [LineFilter, string][]).map(([k, l]) => (
+              <button key={k} type="button" aria-pressed={line === k} onClick={() => onLine!(k)} className={`hp-btn hp-btn-sm rounded-none border-0 ${line === k ? "hp-btn-primary" : "hp-btn-outline"}`}>{l}</button>))}
+          </div>
         </div>
       )}
       {showPeriod && onCompare && <label className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={!!compare} onChange={(e) => onCompare(e.target.checked)} />Comparar com período anterior</label>}
@@ -97,6 +115,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
               </DrawerFooter>
             </DrawerContent>
           </Drawer>
+          {showMonth && <><label className="sr-only" htmlFor="pf-month-m">Mês</label><input id="pf-month-m" type="month" value={month} onChange={(e) => onMonth!(e.target.value)} className="hp-pill !w-auto" /></>}
           {periodLabel && <p className="text-[12px] text-muted-foreground truncate min-w-0">{periodLabel}{showUnit && unit ? ` · ${unitLabel}` : ""}</p>}
           {totalActive > 0 && <button type="button" className="ml-auto text-[12px] font-medium text-primary underline underline-offset-2 whitespace-nowrap" onClick={onClear}>Limpar filtros</button>}
         </div>
@@ -115,6 +134,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
             </PopoverTrigger>
           )}
 
+          {showMonth && <><label className="sr-only" htmlFor="pf-month">Mês</label><input id="pf-month" type="month" value={month} onChange={(e) => onMonth!(e.target.value)} className="hp-pill !w-auto" /></>}
           {showUnit && (<>
             <label className="sr-only" htmlFor="pf-unit">Unidade</label>
             <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 !w-auto max-w-[14rem] rounded-full !py-0 text-[13px] font-semibold shadow-sm" aria-label="Unidade">

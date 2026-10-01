@@ -49,6 +49,7 @@ const FinanceDre = lazy(() => import("./pages/admin/finance/Dre"));
 const FinanceCommissions = lazy(() => import("./pages/admin/finance/Commissions"));
 const FinanceReconciliation = lazy(() => import("./pages/admin/finance/Reconciliation"));
 const FinanceReports = lazy(() => import("./pages/admin/finance/Reports"));
+const FinanceCards = lazy(() => import("./pages/admin/finance/Cards"));
 const FinanceSettings = lazy(() => import("./pages/admin/finance/Settings"));
 const AcademyAdmin = lazy(() => import("./pages/admin/AcademyAdmin"));
 const Care = lazy(() => import("./pages/admin/Care"));
@@ -87,8 +88,21 @@ const R = {
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 const g = (roles: AppRole[], el: JSX.Element) => <RequireAuth roles={roles}>{el}</RequireAuth>;
 
-/** Endereço amigável: /admin/administrativo[/...] leva ao app Administrativo (/admin/adm[/...]), mantendo caminho, parâmetros e âncora (sem laço). */
-const AdministrativoAlias = () => { const l = useLocation(); return <Navigate to={`${l.pathname.replace(/^\/admin\/administrativo/, "/admin/adm")}${l.search}${l.hash}`} replace />; };
+/** Endereços amigáveis por aplicativo (/admin/gestao, /admin/operacao, /admin/pages, /admin/produtividade, /admin/administrativo) levam às rotas existentes, mantendo
+ *  parâmetros e âncora; as rotas antigas continuam valendo. Mapa fixo (sem laço): o destino nunca é outro alias. */
+const ALIASES: Record<string, Record<string, string>> = {
+  administrativo: { "": "/admin/adm", diretorio: "/admin/adm/diretorio", pendencias: "/admin/adm/pendencias" },
+  gestao: { "": "/admin/adm", pessoas: "/admin/pessoas", equipe: "/admin/equipe", configuracoes: "/admin/configuracoes", auditoria: "/admin/auditoria", diretorio: "/admin/adm/diretorio", pendencias: "/admin/adm/pendencias" },
+  operacao: { "": "/admin/agenda", agenda: "/admin/agenda", acompanhamento: "/admin/acompanhamento" },
+  pages: { "": "/admin/paginas", paginas: "/admin/paginas", captacao: "/admin/captacao-leads", pesquisas: "/admin/pesquisas" },
+  produtividade: { "": "/admin/meu-dia" },
+};
+const AppAlias = ({ app }: { app: keyof typeof ALIASES }) => {
+  const l = useLocation();
+  const rest = l.pathname.replace(new RegExp(`^/admin/${app}/?`), "").split("/")[0];
+  const to = ALIASES[app][rest] ?? ALIASES[app][""];
+  return <Navigate to={`${to}${l.search}${l.hash}`} replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -112,7 +126,11 @@ const App = () => (
               <Route path="/app" element={<Landing />} />
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
-                <Route path="administrativo/*" element={<AdministrativoAlias />} />
+                <Route path="administrativo/*" element={<AppAlias app="administrativo" />} />
+                <Route path="gestao/*" element={<AppAlias app="gestao" />} />
+                <Route path="operacao/*" element={<AppAlias app="operacao" />} />
+                <Route path="pages/*" element={<AppAlias app="pages" />} />
+                <Route path="produtividade/*" element={<AppAlias app="produtividade" />} />
                 <Route path="meu-dia" element={<Productivity />} />
                 <Route path="status" element={<FeatureGate feature="system_status"><Overview /></FeatureGate>} />
                 <Route path="pessoas" element={g(R.people, <People />)} />
@@ -151,6 +169,7 @@ const App = () => (
                   <Route path="comissoes" element={<FinanceCommissions />} />
                   <Route path="conciliacao" element={<FinanceReconciliation />} />
                   <Route path="relatorios" element={<FinanceReports />} />
+                  <Route path="cartoes" element={<FinanceCards />} />
                   <Route path="config" element={<FinanceSettings />} />
                 </Route>
                 <Route path="academy" element={g(R.academy, <AcademyAdmin />)} />

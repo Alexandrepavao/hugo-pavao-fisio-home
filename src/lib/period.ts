@@ -55,7 +55,10 @@ export const usePeriodFilterState = () => {
     if (p === "personalizado") { params.de = range.from; params.ate = range.to; }
     if (u) params.unidade = u;
     if (c) params.comparar = "1";
-    setSp(params, { replace: true });
+    // preserva parâmetros que não são deste filtro (linha de negócio, aba, mês…): só os do período/unidade/comparação são reescritos
+    const merged = new URLSearchParams(sp); ["periodo", "de", "ate", "unidade", "comparar"].forEach((k) => merged.delete(k));
+    Object.entries(params).forEach(([k, v]) => merged.set(k, v));
+    setSp(merged, { replace: true });
   };
   const onPreset = (p: RangePreset) => { setPresetState(p); if (p !== "personalizado") setCustom(presetRange(p)); sync({ preset: p }); };
   const onFrom = (v: string) => { setCustom((c) => ({ ...c, from: v })); sync({ preset: "personalizado", from: v }); };

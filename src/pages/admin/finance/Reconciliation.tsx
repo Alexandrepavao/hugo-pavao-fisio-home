@@ -11,7 +11,7 @@ import { ORIGIN_LABEL, sharesLabel, useBankShares } from "./lineReports";
 
 interface Line { id: string; txn_date: string; description: string; amount_cents: number; external_ref: string | null; status: string }
 interface Import { id: string; filename: string | null; row_count: number; imported_at: string }
-interface Suggestion { payment_id?: string; payable_id?: string; amount_cents: number; paid_at: string; method?: string; person?: string; description?: string }
+interface Suggestion { payment_id?: string; payable_id?: string; invoice_id?: string; amount_cents: number; paid_at: string; method?: string; person?: string; description?: string }
 
 const HEADERS: Record<string, "date" | "description" | "amount" | "ref"> = {
   data: "date", date: "date", descrição: "description", descricao: "description", description: "description", histórico: "description", historico: "description",
@@ -29,7 +29,15 @@ const FinanceReconciliation = () => {
   const accounts = useQuery({ queryKey: ["accounts-rec"], queryFn: async () => (await supabase.from("financial_accounts").select("id, name").eq("active", true)).data as Account[] });
   const imports = useQuery({ queryKey: ["bsi"], queryFn: async () => (await supabase.from("bank_statement_imports").select("id, filename, row_count, imported_at").order("imported_at", { ascending: false }).limit(20)).data as Import[] });
   const lines = useQuery({ queryKey: ["bsl"], queryFn: async () => (await supabase.from("bank_statement_lines").select("id, txn_date, description, amount_cents, external_ref, status").order("txn_date", { ascending: false }).limit(300)).data as Line[] });
-  const suggestions = useQuery({ queryKey: ["bsl-sug", openLine], enabled: !!openLine, queryFn: async () => { const { data, error } = await supabase.rpc("bank_reconcile_suggestions", { p_line: openLine }); if (error) throw error; return data as Suggestion[]; } });
+  const suggestions = useQuery({ queryKey: ["bsl-sug", openLine], enabled: !!openLine, queryFn: async () => {
+    const { data, error } = await supabase.rpc("bank_reconcile_suggestions", { p_line: openLine }); if (error) throw error;
+    const base = (data ?? []) as Suggestion[];
+    // saída do extrato: também sugere a FATURA de cartão já paga com o mesmo valor (a linha agregada do banco; as compras individuais não são conciliadas uma a uma)
+    const amount = lines.data?.find((l) => l.id === openLine)?.amount_cents ?? 0;
+    if (amount >= 0) return base;
+    const inv = await supabase.rpc("card_invoice_suggestions", { p_line: openLine }); if (inv.error) throw inv.error;
+    return [...base, ...((inv.data ?? []) as { invoice_id: string; card: string; closing_date: string; amount_cents: number; paid_at: string }[]).map((x) => ({ invoice_id: x.invoice_id, amount_cents: x.amount_cents, paid_at: x.paid_at, description: `Fatura do cartão ${x.card} (fechamento em ${fmtDate(x.closing_date + "T12:00:00Z")})` }))] as Suggestion[];
+  } });
 
   const parseAmount = (raw: string): number | null => {
     const cleaned = raw.trim().replace(/[R$\s]/g, "");
@@ -65,7 +73,7 @@ const FinanceReconciliation = () => {
   };
 
   const confirm = async (line: string, s: Suggestion) => {
-    const { error } = await supabase.rpc("bank_reconcile_confirm", { p_line: line, p_payment_id: s.payment_id ?? null, p_payable_id: s.payable_id ?? null });
+    const { error } = s.invoice_id ? await supabase.rpc("card_invoice_reconcile", { p_line: line, p_invoice: s.invoice_id }) : await supabase.rpc("bank_reconcile_confirm", { p_line: line, p_payment_id: s.payment_id ?? null, p_payable_id: s.payable_id ?? null });
     if (error) return m.err(errText(error));
     m.ok("Conciliado."); setOpenLine(null); setAllocLine(null); afterChange();
   };
@@ -89,7 +97,7 @@ const FinanceReconciliation = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Conciliação" hint="Importe o extrato e associe cada linha a um recebimento ou conta a pagar já lançado. A conciliação nunca cria um lançamento novo — só confirma o que já existe no sistema." />
+      <PageHead eyebrow="Financeiro" title="Conciliação" hint="Importe o extrato e associe cada linha a um recebimento, conta a pagar ou fatura de cartão já paga. A conciliação nunca cria nem altera lançamento — só confirma o que já existe no sistema. O débito agregado da fatura do cartão se concilia com a fatura (não com cada compra)." />
       <Msg m={msg} />
       <div className="hp-card p-4 mb-6 grid gap-3 sm:grid-cols-3 items-end">
         <div><label htmlFor="rec-acc" className="block text-xs mb-1">Conta bancária</label><select id="rec-acc" value={account} onChange={(e) => setAccount(e.target.value)}><option value="">Selecione…</option>{accounts.data?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
@@ -121,10 +129,10 @@ const FinanceReconciliation = () => {
               {allocLine === l.id && <BankLineAllocator lineId={l.id} current={shares.data?.[l.id]} onDone={() => setAllocLine(null)} />}
               {openLine === l.id && (
                 <div className="mt-3 border-t border-border pt-3">
-                  <State loading={suggestions.isLoading} error={suggestions.error} empty={suggestions.data?.length === 0} emptyText="Nenhum lançamento com o mesmo valor em ±3 dias. Confira o valor ou registre o recebimento/pagamento primeiro." />
+                  <State loading={suggestions.isLoading} error={suggestions.error} empty={suggestions.data?.length === 0} emptyText="Nenhum lançamento com o mesmo valor em ±3 dias (nem fatura de cartão já paga com este valor). Confira o valor ou registre o recebimento/pagamento primeiro." />
                   {suggestions.data && suggestions.data.length > 0 && <ul className="grid gap-1.5">
                     {suggestions.data.map((s) => (
-                      <li key={s.payment_id ?? s.payable_id} className="flex items-center justify-between text-sm bg-muted/50 px-3 py-2">
+                      <li key={s.payment_id ?? s.payable_id ?? s.invoice_id} className="flex items-center justify-between text-sm bg-muted/50 px-3 py-2">
                         <span>{s.person ?? s.description} — {fmtDate(s.paid_at)} {s.method && `· ${s.method}`}</span>
                         <span className="flex items-center gap-2"><span className="tabular">{brl(s.amount_cents)}</span><button className={btnGhost + " hp-btn-sm"} onClick={() => confirm(l.id, s)}>Confirmar</button></span>
                       </li>

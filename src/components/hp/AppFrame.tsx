@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ChevronsUpDown, LayoutDashboard, type LucideIcon } from "lucide-react";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -10,7 +10,7 @@ import HeaderBar, { AppTile } from "./HeaderBar";
 import { APPS, appById, type AppId } from "./apps";
 import { useAppTheme } from "./theme";
 
-export interface FrameNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; roles?: AppRole[]; feature?: FeatureKey }
+export interface FrameNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; roles?: AppRole[]; feature?: FeatureKey; keywords?: string }
 export interface FrameNavSection { label?: string; items: FrameNavItem[] }
 
 /** Moldura única dos aplicativos: cabeçalho em largura total (marca HP, aplicativo ▸ seção, busca, notificações, tema, perfil) e, abaixo, a sidebar CONTEXTUAL do
@@ -39,7 +39,22 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
   const visible = (i: FrameNavItem) => (!i.managerOnly || isManagerLike) && (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature));
   const sections = useMemo(() => nav.map((s) => ({ ...s, items: s.items.filter(visible) })).filter((s) => s.items.length), [nav, isManagerLike, hasRole]); // eslint-disable-line react-hooks/exhaustive-deps
   const flatItems = useMemo(() => nav.flatMap((s) => s.items), [nav]);
-  const activeItem = useMemo(() => flatItems.find((i) => (i.end ? location.pathname === i.to : location.pathname === i.to || location.pathname.startsWith(i.to + "/"))) ?? flatItems[0], [flatItems, location.pathname]);
+  // Item ativo = o que melhor casa com a URL (caminho e, quando o item tem parâmetros, os parâmetros: ex. Unidades × Configurações em /admin/configuracoes).
+  const activeItem = useMemo(() => {
+    const cur = new URLSearchParams(location.search);
+    const scored = flatItems.map((i) => {
+      const [path, qs] = i.to.split("?");
+      const pathOk = i.end ? location.pathname === path : location.pathname === path || location.pathname.startsWith(path + "/");
+      if (!pathOk) return null;
+      const want = qs ? [...new URLSearchParams(qs)] : [];
+      const queryOk = want.every(([k, v]) => cur.get(k) === v);
+      return { i, queryOk, keys: want.length, len: path.length };
+    }).filter(Boolean) as { i: FrameNavItem; queryOk: boolean; keys: number; len: number }[];
+    const ok = scored.filter((x) => x.queryOk);
+    const pool = ok.length ? ok : scored;
+    pool.sort((a, b) => b.len - a.len || b.keys - a.keys);
+    return pool[0]?.i ?? flatItems[0];
+  }, [flatItems, location.pathname, location.search]);
   const apps = useMemo(() => APPS.filter((a) => a.id === "hub" || !a.roles || hasRole(...a.roles)), [hasRole]);
   const isHub = appId === "hub";
 
@@ -71,9 +86,9 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
         <div key={si} className="hp-sb-group">
           {s.label && <p className="hp-sb-group-label">{s.label}</p>}
           {s.items.map((i) => (
-            <NavLink key={i.to} to={i.to} end={i.end} onClick={onNavigate} title={compact ? i.label : undefined} aria-label={compact ? i.label : undefined} className="hp-sb-link">
+            <Link key={i.to} to={i.to} onClick={onNavigate} title={compact ? i.label : undefined} aria-label={compact ? i.label : undefined} aria-current={activeItem === i ? "page" : undefined} className="hp-sb-link">
               <i.icon aria-hidden /><span className="hp-sb-text">{i.label}</span>
-            </NavLink>
+            </Link>
           ))}
         </div>
       ))}

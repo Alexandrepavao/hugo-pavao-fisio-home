@@ -4,10 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, parseCents } from "@/lib/format";
-import { btnGhost, errText, FilterBar, FilterField, Msg, PageHead, promptText, State, StatCard, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnGhost, errText, Msg, PageHead, promptText, State, StatCard, Table, Tabs, Td, useMsg } from "@/lib/ui";
 import { CardDetailSheet, type CardDetailTrigger } from "@/lib/CardDetailSheet";
 import { axisBrl, mfmt, useUnits, type Metric } from "./shared";
-import { LineSelector } from "./LineBreakdown";
+import { PeriodFilter } from "@/lib/PeriodFilter";
 import { BUCKET_LABEL, lineFilterLabel, useLineFilter, type LineFilter } from "./lineFilter";
 import MrrLineSection from "./MrrByLine";
 import { useMrrByLine, useMrrHistoryByLine, useProductLines, type MrrHistoryByLine, type MrrLine } from "./lineReports";
@@ -109,11 +109,10 @@ const Report = () => {
 
   return (
     <>
-      <FilterBar>
-        <FilterField label="Mês" htmlFor="rm"><input id="rm" type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></FilterField>
-        <FilterField label="Unidade" htmlFor="ru"><select id="ru" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></FilterField>
-        <FilterField label="Linha de negócio" htmlFor="rline"><LineSelector value={line} onChange={setLine} /></FilterField>
-      </FilterBar>
+      <div className="flex justify-end mb-5">
+        <PeriodFilter month={month} onMonth={setMonth} unit={unit} units={units.data} onUnit={setUnit} line={line} onLine={setLine}
+          onClear={() => { setMonth(new Date().toISOString().slice(0, 7)); setUnit(""); setLine("geral"); }} />
+      </div>
       <State loading={report.isLoading} error={report.error} />
       {line !== "geral" && byLine.isLoading && <State loading />}
       {line !== "geral" && byLine.error && <State error={byLine.error} />}

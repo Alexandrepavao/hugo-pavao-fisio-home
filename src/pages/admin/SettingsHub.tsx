@@ -1,7 +1,7 @@
 import JourneySettings from "./JourneySettings";
 import { useState, type FormEvent } from "react";
 import { BUILD_INFO, RELEASE_PROFILE, featureOn } from "@/lib/release";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, parseCents } from "@/lib/format";
@@ -28,7 +28,9 @@ const CATEGORIES: Category[] = [
 ];
 
 const SettingsHub = () => {
-  const [open, setOpen] = useState<string | null>(null);
+  const [sp] = useSearchParams();
+  const first = sp.get("secao"); // links diretos do menu (Unidades, Produtos e serviços) abrem a categoria
+  const [open, setOpen] = useState<string | null>(first && CATEGORIES.some((c) => c.key === first && c.status === "ready") ? first : null);
   return (
     <div>
       <PageHead eyebrow="Sistema" title="Configurações" hint="Central de configurações do sistema, por categoria. Só o que já tem suporte real no backend aparece como gerenciável — o resto é uma pendência documentada, nunca uma tela que finge funcionar." />

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, parseCents } from "@/lib/format";
@@ -32,6 +33,8 @@ const FinancePayables = () => {
     const { data, error } = await supabase.from("payables").select("id, business_line, payable_allocations(line, basis_points)").limit(1000); if (error) throw error;
     return Object.fromEntries((data as unknown as { id: string; business_line: Line; payable_allocations: Alloc[] }[]).map((r) => [r.id, r]));
   } });
+  // despesas que são compras de cartão: pagam-se pela FATURA (a função do banco também recusa o pagamento isolado)
+  const cardIds = useQuery({ queryKey: ["card-payables"], retry: false, queryFn: async () => new Set(((await supabase.from("card_purchases").select("payable_id")).data ?? []).map((r) => r.payable_id as string)) });
   const rows: PayRow[] = (list.data ?? []).map((p) => ({ ...p, business_line: lineInfo.data?.[p.id]?.business_line ?? "unclassified", payable_allocations: lineInfo.data?.[p.id]?.payable_allocations ?? [] }));
   const add = async (e: FormEvent) => {
     e.preventDefault(); const cents = parseCents(amount); const { data: u } = await supabase.auth.getUser();
@@ -72,8 +75,8 @@ const FinancePayables = () => {
         <select id="pfilter" className="!w-auto" value={filterLine} onChange={(e) => setFilterLine(e.target.value as "" | Line)}><option value="">Todas</option>{(Object.keys(LINE_LABEL) as Line[]).map((k) => <option key={k} value={k}>{LINE_LABEL[k]}</option>)}</select></div>
       <State loading={list.isLoading} error={list.error} empty={shown.length === 0 && !list.isLoading} emptyText="Nenhuma conta a pagar neste filtro." />
       {shown.length > 0 && <Table head={["Descrição", "Vencimento", "Valor", "Linha", "Estado", ""]} right={[2]}>
-        {shown.map((p) => <tr key={p.id}><Td>{p.description}</Td><Td>{fmtDate(p.due_date + "T12:00:00Z")}</Td><Td num>{brl(p.amount_cents)}</Td><Td><button className="text-accent text-left hover:underline" onClick={() => openEdit(p)} title="Classificar / ratear">{lineText(p)}</button></Td><Td>{p.status === "paid" ? `Paga em ${fmtDate(p.paid_at)}` : p.status === "open" ? "Em aberto" : "Cancelada"}</Td>
-          <Td>{p.status === "open" && <button className={btnGhost + " hp-btn-sm"} onClick={async () => { const { error } = await supabase.rpc("payable_pay", { p_id: p.id, p_account: accounts.data?.[0]?.id ?? null }); if (error) m.err(errText(error)); else { m.ok("Baixa registrada."); void qc.invalidateQueries({ queryKey: ["payables"] }); } }}>Marcar como paga</button>}</Td></tr>)}</Table>}
+        {shown.map((p) => <tr key={p.id}><Td>{p.description}{cardIds.data?.has(p.id) && <span className="ml-2 hp-badge hp-badge-info">Cartão</span>}</Td><Td>{fmtDate(p.due_date + "T12:00:00Z")}</Td><Td num>{brl(p.amount_cents)}</Td><Td><button className="text-accent text-left hover:underline" onClick={() => openEdit(p)} title="Classificar / ratear">{lineText(p)}</button></Td><Td>{p.status === "paid" ? `Paga em ${fmtDate(p.paid_at)}` : p.status === "open" ? "Em aberto" : "Cancelada"}</Td>
+          <Td>{p.status === "open" && cardIds.data?.has(p.id) && <Link to="/admin/financeiro/cartoes" className="text-accent text-sm hover:underline">Pagar pela fatura</Link>}{p.status === "open" && !cardIds.data?.has(p.id) && <button className={btnGhost + " hp-btn-sm"} onClick={async () => { const { error } = await supabase.rpc("payable_pay", { p_id: p.id, p_account: accounts.data?.[0]?.id ?? null }); if (error) m.err(errText(error)); else { m.ok("Baixa registrada."); void qc.invalidateQueries({ queryKey: ["payables"] }); } }}>Marcar como paga</button>}</Td></tr>)}</Table>}
       <Dialog open={!!edit} onOpenChange={(o) => { if (!o) setEdit(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Linha de negócio da despesa</DialogTitle>
