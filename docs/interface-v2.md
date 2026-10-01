@@ -83,7 +83,7 @@ pelo E2E `R10` após a nova interface.
   - `R04` (falta do profissional) lia o banco logo depois de a tela mostrar o rótulo: era corrida do teste; agora ele **espera a condição real** (`expect.poll` até o banco chegar a `professional_no_show`) — a verificação em si não foi enfraquecida.
   - `07` (configurações do Financeiro): o `h1` do cabeçalho agora é “Financeiro · Configurações”, e o locator `heading "Configurações"` ficou ambíguo; passou a usar `exact: true` (mudança intencional da interface).
   - `04-agenda-concurrency` estourou o tempo uma vez numa bateria longa (teste só de API, sem interface) e passou ao ser reexecutado.
-  - `08-lead-quizzes` (página pública, sem o shell novo) falhou numa repetição seguida e passou (3/3) após uma pausa: é o limitador de quiz (8 inícios por 10 min por IP), que estoura em baterias seguidas.
+  - `08-lead-quizzes` (página pública, sem o shell novo) falhou numa repetição seguida e passou (3/3) depois; **a causa não foi confirmada** (na 11ª rodada se verificou que o limitador de 8 inícios por 10 min NÃO era a explicação — ver `docs/project-status.md`).
 - **Typecheck:** OK. **Build:** OK. **Lint:** 23 erros e 21 avisos — os 23 erros já existiam antes desta rodada (funções Edge `auth-email-hook`, `bunny-playback`, `google-calendar` e o spec `R06`); nenhum erro novo.
 - Depois dos últimos ajustes de CSS (altura igual dos cartões, logo maior, cabeçalho mobile), `R02`, `R11` e `R12` foram reexecutados: 26/26.
 - Capturas 1440 e 390 px, claro e escuro, com medição de rolagem horizontal (0 px) e de erros de console (nenhum).

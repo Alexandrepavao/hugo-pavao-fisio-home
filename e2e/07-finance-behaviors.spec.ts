@@ -99,6 +99,9 @@ test.describe.serial("Financeiro — comportamentos", () => {
     await useSession(page.context(), m);
     await page.goto("/admin/financeiro/dre");
     await expect(page.getByRole("heading", { name: "Rentabilidade e DRE" })).toBeVisible();
+    // diagnóstico: espera a tabela de categorias OU o alerta de erro e só então confere — uma recorrência mostra se a DRE falhou ao carregar ou veio sem a linha
+    await expect(page.getByRole("heading", { name: "Despesas por categoria" }).or(page.getByRole("alert"))).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("alert"), "a DRE não pode ter carregado com erro").toHaveCount(0);
     await expect(page.getByRole("cell", { name: `Custo E2E ${runId}` }).first()).toBeVisible();
     const catRow = page.locator("tr", { hasText: `Custo E2E ${runId}` }).first();
     await expect(catRow).toContainText("Custo direto");

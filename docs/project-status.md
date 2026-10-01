@@ -60,6 +60,14 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 - **Testes:** SQL S01–S13 e N01–N02 OK; E2E: `R02` reescrito (menus por papel e por aplicativo), novo `R13` (14), ajustes por mudança intencional em `R08` (linha de negócio no filtro) e `R12`; correções de fragilidade que dependiam de
   data/dados acumulados em `R01` (parcela “1/2” exata), `R03` (contagem na seção certa e dia livre para o paciente QA compartilhado) e do isolamento do `S13` (auditoria só das próprias compras).
   `04-agenda-concurrency` é **intermitente** (1 em 3 execuções recebe `57014` — statement timeout — em vez de `P0409` nas requisições perdedoras; teste só de API, sem relação com esta etapa).
+- **Falhas da bateria longa (`07` DRE e `08` quizzes), investigadas — causa NÃO determinada:** numa bateria de 35 testes (01:32–01:37, horário de Brasília) falharam, em sequência, `07 › DRE` (a linha da categoria
+  “Custo E2E …” não apareceu em 10 s) e dois testes do `08` (a próxima pergunta do quiz não apareceu / timeout). O que foi **descartado com evidência**: (a) *dados*: a despesa estava paga no banco (04:33:50 UTC), com categoria
+  classificada e competência de outubro, e a `dre_report` devolve a categoria para a janela da tela; (b) *janela de datas/fuso*: o intervalo calculado pela tela cobre o pagamento; (c) *latência do RPC*: `dre_report`,
+  `finance_by_line` e `efficiency_report` respondem em ~60–450 ms; (d) *limitador de quiz*: em `private.rate_limits` a janela 04:30 tem só 3 de 8 inícios de “atendimento” e nenhum de “parceria”, e **não há nenhuma chamada de
+  consentimento/progresso do quiz** nessa janela — o fluxo travou logo depois do início, antes de qualquer limite; (e) *código desta etapa*: o `07` passou 6/6 isolado e a mesma sequência (com e sem `02`) passou 3 vezes; o `08` passou
+  3/3 isolado. O padrão (duas especificações diferentes falhando no mesmo intervalo de poucos minutos, com o Dev já tendo dado `57014` em `04-agenda-concurrency` e o computador com ~0,3–0,9 GB livres) é compatível com uma
+  interrupção momentânea do ambiente, mas **isso é uma hipótese, não uma prova**: os artefatos da falha foram apagados pela execução seguinte e a API de logs do Supabase não respondeu de forma utilizável. Para que uma
+  recorrência explique a si mesma, o `07` agora espera a tabela OU o alerta de erro e confere que a DRE não carregou com erro antes de procurar a linha.
 - **Migrations para produção:** 24 (038→047, 052→065); `list_migrations` final = **61**; o Dev tem **66**.
 
 ## Sessão anterior (2026-09-30, 10ª rodada) — reformulação visual de verdade
