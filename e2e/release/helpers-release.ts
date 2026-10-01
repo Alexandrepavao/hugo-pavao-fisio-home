@@ -41,3 +41,30 @@ export const moveAppointment = (id: string, startIso: string) =>
   devSql(`update public.appointments set period = tstzrange('${startIso}'::timestamptz, '${startIso}'::timestamptz + (upper(period) - lower(period))) where id = '${id.replace(/[^0-9a-f-]/gi, "")}'`);
 
 export async function expectNoFatal(page: Page) { await expect(page.getByText(/Sem permissão ou falha/)).toHaveCount(0); }
+
+/** Cria no Dev (só Dev, via devSql) uma conta de teste JÁ com e-mail confirmado e senha, como ela ficaria depois de “Primeiro acesso” + clique no link do e-mail.
+ *  Dispara o mesmo gatilho do Supabase Auth (convites → conta, papéis e vínculos). NÃO envia e-mail (a entrega do e-mail é dependência externa e não é exercitada aqui). */
+export async function createConfirmedUser(email: string, password: string): Promise<string> {
+  const e = email.replace(/'/g, ""); const p = password.replace(/'/g, "");
+  const r = (await devSql(`with u as (
+      insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)
+      values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', '${e}', extensions.crypt('${p}', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '')
+      returning id, email)
+    insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+      select gen_random_uuid(), u.id, jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true), 'email', u.id::text, now(), now(), now() from u returning user_id`)) as { user_id: string }[];
+  return r[0].user_id;
+}
+export const deleteAuthUser = (id: string) => devSql(`delete from auth.users where id = '${id.replace(/[^0-9a-f-]/gi, "")}'`);
+
+/** Login pela TELA (como o usuário faz): e-mail + senha → “Entrar”. */
+export async function uiLogin(page: Page, email: string, password: string) {
+  await page.goto("/login");
+  await page.getByLabel("E-mail").fill(email); await page.getByLabel("Senha").fill(password);
+  await page.getByRole("button", { name: "Entrar" }).click();
+}
+
+/** Token de uma conta criada pelo teste (senha própria, diferente da das contas de QA). */
+export async function signInWith(email: string, password: string): Promise<Session> {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, { method: "POST", headers: { apikey: ANON, "content-type": "application/json" }, body: JSON.stringify({ email, password }) });
+  const s = await r.json(); if (!s.access_token) throw new Error(`login falhou (${r.status})`); return s;
+}

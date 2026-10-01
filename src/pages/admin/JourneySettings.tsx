@@ -30,7 +30,7 @@ const JourneySettings = () => {
       <h3 className="text-sm font-medium mb-2">Jornada do paciente</h3>
       <Msg m={msg} />
       <form onSubmit={save} className="grid gap-3 sm:grid-cols-4 items-end mb-3">
-        <div><label htmlFor="js-n" className="block text-xs mb-1">Sessões do plano modelo</label><input id="js-n" type="number" min={1} max={200} value={sessions ?? s.data.default_sessions} onChange={(e) => setSessions(e.target.value)} /></div>
+        <div><label htmlFor="js-n" className="block text-xs mb-1">Sugestão de sessões (só exibida ao profissional; nunca aplicada sozinha)</label><input id="js-n" type="number" min={1} max={200} value={sessions ?? s.data.default_sessions} onChange={(e) => setSessions(e.target.value)} /></div>
         <div><label htmlFor="js-l" className="block text-xs mb-1">ID da biblioteca Bunny (padrão)</label><input id="js-l" inputMode="numeric" value={lib ?? s.data.bunny_library_id ?? ""} onChange={(e) => setLib(e.target.value)} placeholder="ex.: 123456" /></div>
         <button className={btnPrimary}>Salvar</button><button type="button" className={btnGhost} onClick={check}>Verificar proteção de vídeo</button>
       </form>

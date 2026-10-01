@@ -72,6 +72,8 @@ const Journey = () => {
   };
   if (q.error) return <section className="mb-10"><h2 className="text-xl mb-3">Minha jornada</h2><p className="text-sm text-muted-foreground">A jornada de acompanhamento ainda não está disponível para a sua conta.</p></section>;
   const d = q.data; const p = d?.plan;
+  const lastDecision = [...(d?.reassessments ?? [])].sort((x, y) => y.decided_at.localeCompare(x.decided_at))[0]?.decision;
+  const renewalAdvised = lastDecision === "continuidade" || lastDecision === "manutencao";
   return (
     <section className="mb-10" aria-label="Minha jornada">
       <h2 className="text-xl mb-1">Minha jornada</h2>
@@ -84,7 +86,7 @@ const Journey = () => {
         </div>
 
         <div><h3 className="text-base font-semibold mb-2">Plano de sessões</h3>
-          {!p ? <p className="text-sm text-muted-foreground">Ainda não há um plano de sessões registrado. O modelo inicial da clínica é de {d.default_sessions} sessões, ajustado pelo fisioterapeuta conforme a sua avaliação.</p> : (<>
+          {!p ? <p className="text-sm text-muted-foreground">Seu fisioterapeuta ainda não definiu o plano de sessões. A quantidade é decidida por ele depois da sua avaliação — não existe um número padrão igual para todos.</p> : (<>
             <p className="text-sm mb-2">Plano de {p.planned_sessions} sessão(ões) desde {fmtDate(p.started_on + "T12:00:00Z")} {p.maintenance && <Badge tone="gold">Manutenção</Badge>} {p.status === "completed" && <Badge tone="success">Plano encerrado (alta)</Badge>}</p>
             <div className="h-2 bg-muted rounded overflow-hidden mb-3" role="progressbar" aria-valuemin={0} aria-valuemax={p.planned_sessions} aria-valuenow={Math.min(p.attended, p.planned_sessions)} aria-label="Sessões realizadas do plano"><div className="h-full bg-primary" style={{ width: `${Math.min(100, Math.round((100 * p.attended) / p.planned_sessions))}%` }} /></div>
             <div className="grid gap-2 grid-cols-2 sm:grid-cols-4 lg:grid-cols-5">
@@ -127,7 +129,10 @@ const Journey = () => {
         <div><h3 className="text-base font-semibold mb-2">Renovação ou contato</h3>
           {d.renewal ? <p className="text-sm hp-card p-3">Você pediu {d.renewal.kind === "renovacao" ? "a renovação" : "contato da equipe"} em {fmtDateTime(d.renewal.created_at)}. A equipe vai falar com você — <b>nenhuma cobrança é feita automaticamente</b>.</p> : (
             <div className="hp-card p-3 grid gap-2"><label htmlFor="rq-msg" className="text-xs">Mensagem (opcional)</label><input id="rq-msg" value={reqMsg} onChange={(e) => setReqMsg(e.target.value)} maxLength={1000} />
-              <div className="flex flex-wrap gap-2"><button className={btnPrimary} onClick={() => request("renovacao")}>Quero renovar meu acompanhamento</button><button className={btnGhost} onClick={() => request("contato")}>Quero falar com a equipe</button></div>
+              {renewalAdvised
+                ? <p className="text-sm" role="note">Seu fisioterapeuta indicou {lastDecision === "manutencao" ? "a manutenção do acompanhamento" : "a continuidade do acompanhamento"} na reavaliação de {fmtDate(d.reassessments[0].decided_at)}. Se quiser seguir, peça a renovação:</p>
+                : <p className="text-sm text-muted-foreground" role="note">A renovação é indicada pelo seu fisioterapeuta na reavaliação{lastDecision === "alta" ? " (a última decisão foi alta)" : ""}. Enquanto isso, você pode falar com a equipe.</p>}
+              <div className="flex flex-wrap gap-2">{renewalAdvised && <button className={btnPrimary} onClick={() => request("renovacao")}>Quero renovar meu acompanhamento</button>}<button className={renewalAdvised ? btnGhost : btnPrimary} onClick={() => request("contato")}>Quero falar com a equipe</button></div>
               <p className="text-[11px] text-muted-foreground">Isto só avisa a equipe. Nenhuma cobrança, compra ou desconto de sessão é feito automaticamente.</p></div>)}
         </div>
       </div>)}

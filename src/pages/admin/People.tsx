@@ -80,9 +80,11 @@ const People = () => {
   };
   const invitePortal = async (p: Person) => {
     const email = p.person_contacts.find((c) => c.type === "email")?.value; if (!email) return setNote("Esta pessoa não tem e-mail cadastrado.");
-    const { data: u } = await supabase.auth.getUser(); const { data: org } = await supabase.from("organizations").select("id").single();
-    const { error } = await supabase.from("invitations").insert({ org_id: org?.id, email, role: "member", person_id: p.id, invited_by: u.user?.id });
-    setNote(error ? "Não foi possível criar o convite (permissão ou convite já existente)." : `Convite ao portal registrado para ${email}. A pessoa deve usar “Primeiro acesso” com este e-mail.`);
+    // vínculo imediato se a conta já existe; convite se não existe (o servidor decide e confere o e-mail cadastrado)
+    const { data, error } = await supabase.rpc("person_portal_access", { p_person: p.id, p_email: email });
+    if (error) return setNote(`Não foi possível liberar o portal: ${error.message.replace(/^.*?:\s*/, "")}`);
+    const r = data as { status: "linked" | "invited" };
+    setNote(r.status === "linked" ? `${email} já tinha conta: o portal foi ligado a este cadastro agora.` : `Convite ao portal registrado para ${email}. A pessoa deve usar “Primeiro acesso” com este e-mail.`);
   };
 
   const clearFilters = () => { setQ(""); setKind(""); setUnit(""); setPage(0); setSp({}); };

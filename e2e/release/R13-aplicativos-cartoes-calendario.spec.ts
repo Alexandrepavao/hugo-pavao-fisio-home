@@ -15,12 +15,17 @@ const noHScroll = async (page: Page, where: string) => {
 test.describe.serial("@release Aplicativos contextuais e filtros", () => {
   test.setTimeout(150_000);
 
-  test("Hub: lista só os aplicativos permitidos; entrar troca a sidebar, “Voltar ao Hub” e o seletor funcionam", async ({ page, context }) => {
+  test("Hub: a sidebar lista só os aplicativos permitidos (sem bloco duplicado no dashboard); entrar troca a sidebar, “Voltar ao Hub” e o seletor funcionam", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin");
-    const apps = page.getByRole("list", { name: "Aplicativos" }).first();
-    for (const a of ["Gestão", "Financeiro", "CRM", "Pages", "Operação", "Academy", "Parceiros", "Produtividade"]) await expect(apps.getByRole("link", { name: `Abrir ${a}` })).toBeVisible({ timeout: 40_000 });
-    await apps.getByRole("link", { name: "Abrir Financeiro" }).click();
+    // o acesso aos aplicativos é só pela sidebar do Hub (o dashboard não repete o bloco “Seus aplicativos”)
+    await expect(page.getByRole("heading", { name: "Seus aplicativos" })).toHaveCount(0); await expect(page.getByRole("list", { name: "Aplicativos" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /^Abrir / })).toHaveCount(0);
+    await expect(side(page).getByRole("link", { name: "Início" })).toBeVisible({ timeout: 40_000 });
+    const hubLinks = await links(page); expect(hubLinks).toContain("Início");
+    for (const a of ["Gestão", "Financeiro", "CRM", "Pages", "Operação", "Academy", "Parceiros", "Produtividade"]) expect(hubLinks, `sidebar do Hub lista ${a}`).toContain(a);
+    await expect(page.getByRole("heading", { name: "Indicadores prioritários" }).first()).toBeVisible({ timeout: 40_000 });   // indicadores, alertas e gráficos continuam no dashboard
+    await side(page).getByRole("link", { name: "Financeiro", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/financeiro$/);
     await expect(page.getByRole("navigation", { name: "Navegação do Financeiro" })).toBeVisible();
     const fin = await links(page);

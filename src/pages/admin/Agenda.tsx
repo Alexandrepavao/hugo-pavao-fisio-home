@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { useAuth } from "@/auth/AuthProvider";
 import { PeriodFilter } from "@/lib/PeriodFilter";
+import ProfessionalsAdmin from "./ProfessionalsAdmin";
 import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Unit { id: string; name: string; timezone: string }
@@ -27,7 +28,7 @@ const Agenda = () => {
   return (<div>
     <PageHead eyebrow="Operação" title="Agenda" hint="Horários seguem o fuso de cada unidade. O banco impede sobreposição de profissional e de paciente, mesmo com requisições simultâneas." />
     <Tabs tabs={[["dia", "Agenda do dia"], ["pacotes", "Pacotes e sessões"], ["espera", "Lista de espera"], ["prof", "Profissionais e disponibilidade"]]} value={tab} onChange={setTab} />
-    {tab === "dia" && <Day />}{tab === "pacotes" && <Packages />}{tab === "espera" && <Waitlist />}{tab === "prof" && <Professionals />}
+    {tab === "dia" && <Day />}{tab === "pacotes" && <Packages />}{tab === "espera" && <Waitlist />}{tab === "prof" && <ProfessionalsAdmin />}
   </div>);
 };
 
@@ -149,32 +150,6 @@ const Waitlist = () => {
       <button className="hp-btn hp-btn-primary">Adicionar</button></form>
     <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Lista de espera vazia." />
     {list.data && list.data.length > 0 && <Table head={["Paciente", "Serviço", "Preferência", "Desde", "Estado"]}>{list.data.map((w) => <tr key={w.id}><Td>{w.person.full_name}</Td><Td>{w.service.name}</Td><Td>{w.preference ?? "—"}</Td><Td>{fmtDateTime(w.created_at)}</Td><Td>{w.status}</Td></tr>)}</Table>}</>);
-};
-
-const Professionals = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg(); const { units } = useBase();
-  const [name, setName] = useState(""); const [unit, setUnit] = useState(""); const [prof, setProf] = useState(""); const [dow, setDow] = useState("1"); const [st, setSt] = useState("08:00"); const [en, setEn] = useState("18:00");
-  const profs = useQuery({ queryKey: ["all-profs"], queryFn: async () => (await supabase.from("professionals").select("id, display_name, active").order("display_name")).data ?? [] });
-  const rules = useQuery({ queryKey: ["rules"], queryFn: async () => (await supabase.from("availability_rules").select("id, weekday, start_time, end_time, professional:professionals(display_name), unit:units(name)").order("weekday")).data as unknown as { id: string; weekday: number; start_time: string; end_time: string; professional: { display_name: string }; unit: { name: string } }[] });
-  const addProf = async (e: FormEvent) => { e.preventDefault(); if (!name.trim() || !unit) return m.err("Informe nome e unidade."); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
-    const { data, error } = await supabase.from("professionals").insert({ org_id: org?.org_id, display_name: name.trim() }).select("id").single(); if (error) return m.err(errText(error));
-    const l = await supabase.from("professional_units").insert({ professional_id: data.id, unit_id: unit }); if (l.error) m.err(errText(l.error)); else { m.ok("Profissional cadastrado."); setName(""); void qc.invalidateQueries({ queryKey: ["all-profs"] }); } };
-  const addRule = async (e: FormEvent) => { e.preventDefault(); if (!prof || !unit) return m.err("Selecione profissional e unidade."); const { data: org } = await supabase.from("units").select("org_id").eq("id", unit).single();
-    const { error } = await supabase.from("availability_rules").insert({ org_id: org?.org_id, professional_id: prof, unit_id: unit, weekday: Number(dow), start_time: st, end_time: en }); if (error) m.err(errText(error)); else { m.ok("Disponibilidade cadastrada."); void qc.invalidateQueries({ queryKey: ["rules"] }); } };
-  return (<><Msg m={msg} />
-    <div className="grid gap-6 lg:grid-cols-2 mb-8">
-      <form onSubmit={addProf} className="hp-card p-5 grid gap-3" noValidate><h2 className="text-xl">Novo profissional</h2>
-        <div><label htmlFor="pn" className="block text-xs mb-1">Nome</label><input id="pn"   value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div><label htmlFor="pun2" className="block text-xs mb-1">Unidade</label><select id="pun2"   value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div><button className="hp-btn hp-btn-primary">Cadastrar</button></form>
-      <form onSubmit={addRule} className="hp-card p-5 grid gap-3 sm:grid-cols-2" noValidate><h2 className="text-xl sm:col-span-2">Disponibilidade semanal</h2>
-        <div><label htmlFor="rp" className="block text-xs mb-1">Profissional</label><select id="rp"   value={prof} onChange={(e) => setProf(e.target.value)}><option value="">…</option>{profs.data?.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></div>
-        <div><label htmlFor="rd" className="block text-xs mb-1">Dia</label><select id="rd"   value={dow} onChange={(e) => setDow(e.target.value)}>{DOW.map((d, i) => <option key={d} value={i}>{d}</option>)}</select></div>
-        <div><label htmlFor="rs" className="block text-xs mb-1">Início</label><input id="rs" type="time"   value={st} onChange={(e) => setSt(e.target.value)} /></div>
-        <div><label htmlFor="re" className="block text-xs mb-1">Fim</label><input id="re" type="time"   value={en} onChange={(e) => setEn(e.target.value)} /></div>
-        <p className="text-xs text-muted-foreground sm:col-span-2">Usa a unidade selecionada em “Novo profissional”.</p><button className="hp-btn hp-btn-primary sm:col-span-2">Adicionar</button></form>
-    </div>
-    <State loading={rules.isLoading} error={rules.error} empty={rules.data?.length === 0} emptyText="Nenhuma disponibilidade cadastrada." />
-    {rules.data && rules.data.length > 0 && <Table head={["Profissional", "Unidade", "Dia", "Horário"]}>{rules.data.map((r) => <tr key={r.id}><Td>{r.professional.display_name}</Td><Td>{r.unit.name}</Td><Td>{DOW[r.weekday]}</Td><Td>{r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}</Td></tr>)}</Table>}</>);
 };
 
 export default Agenda;

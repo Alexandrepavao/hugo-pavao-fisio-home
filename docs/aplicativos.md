@@ -1,10 +1,10 @@
 # Aplicativos do HP Group Hub (navegação contextual, rotas e filtros)
 
 > Implementação: `src/components/hp/apps.ts` (registro e resolução por URL), `src/components/hp/appNav.ts` (menu de cada aplicativo), `src/components/hp/AppFrame.tsx` (cabeçalho + sidebar),
-> `src/pages/admin/AdminLayout.tsx` (escolhe o app pela URL), `src/components/hp/AppLauncher.tsx` (lançador do Hub). Testes: `R02` (menus por papel), `R13` (navegação, aliases, filtros).
+> `src/pages/admin/AdminLayout.tsx` (escolhe o app pela URL), Testes: `R02` (menus por papel), `R13` (navegação, aliases, filtros).
 
 ## 1. Como funciona
-- O **Hub** (`/admin`) é a entrada central: indicadores consolidados e o lançador **“Seus aplicativos”**, que lista só os aplicativos que o papel do usuário permite.
+- O **Hub** (`/admin`) é a entrada central: indicadores, alertas e gráficos consolidados. O acesso aos aplicativos fica **só na sidebar do Hub** (lista só os aplicativos que o papel permite); o bloco duplicado “Seus aplicativos” do dashboard foi removido e o componente `AppLauncher` apagado.
 - Ao entrar num aplicativo, a **sidebar passa a ser a exclusiva dele** (nunca a de outro app), com: identidade do app (ícone e cor próprios), **“Voltar ao Hub”**, o **seletor de aplicativos**
   (no bloco do app, na sidebar, e no breadcrumb do cabeçalho), grupos de navegação, item ativo destacado, recolher no desktop e gaveta no celular.
 - O **aplicativo ativo é decidido pela URL** (`appForPath`): link direto, recarregar a página e voltar/avançar caem sempre no app e no item corretos. Itens que compartilham o caminho
@@ -23,10 +23,12 @@
 | **Operação** | gestor, adm. operacional, gestor de unidade, comercial, fisioterapeuta | Agenda `/admin/agenda` (atendimentos, pacotes e sessões, lista de espera) · Acompanhamento `/admin/acompanhamento` |
 | **Academy** (administração) | gestor, adm. operacional, professor | Cursos e alunos `/admin/academy` — **não** é o portal de aulas do aluno (`/academy`, `/academy/:slug`), que continua à parte |
 | **Parceiros** | gestor, adm. operacional, gestor de unidade, financeiro, comercial | Parceiros `/admin/parceiros` (indicações, encaminhamentos e repasses) |
-| **Produtividade** | todos os staff | Meu dia `/admin/meu-dia` (tarefas, calendário Dia/Semana/Mês, foco, Google Calendar) |
+| **Produtividade** | todos os staff (Meu resumo: fisioterapeuta, gestor, adm. operacional e gestor de unidade) | Meu dia `/admin/meu-dia` (tarefas, calendário Dia/Semana/Mês, foco, Google Calendar) · **Meu resumo** `/admin/meu-resumo` (atendimentos do profissional por situação e repasses autorizados) |
+
+Operação: a aba **Profissionais e disponibilidade** da Agenda (`ProfessionalsAdmin`) cadastra o profissional a partir de uma pessoa do cadastro central, com registro no conselho, unidades, disponibilidade e liberação de acesso.
 
 Prefixos que definem cada app: Gestão `/admin/adm`, `/admin/pessoas`, `/admin/equipe`, `/admin/configuracoes`, `/admin/auditoria`, `/admin/status` · Financeiro `/admin/financeiro`, `/admin/contas-corporativas` ·
-CRM `/admin/crm` · Pages `/admin/paginas`, `/admin/captacao-leads`, `/admin/pesquisas` · Operação `/admin/agenda`, `/admin/acompanhamento` · Academy `/admin/academy` · Parceiros `/admin/parceiros` · Produtividade `/admin/meu-dia`.
+CRM `/admin/crm` · Pages `/admin/paginas`, `/admin/captacao-leads`, `/admin/pesquisas` · Operação `/admin/agenda`, `/admin/acompanhamento` · Academy `/admin/academy` · Parceiros `/admin/parceiros` · Produtividade `/admin/meu-dia`, `/admin/meu-resumo`.
 
 **O que não foi criado de propósito:** nenhuma tela vazia nem link para o que ainda não existe. Por isso não há item de menu para, por exemplo, “Relatórios” da Gestão (o dashboard já os reúne),
 “Templates” e “Formulários” soltos em Pages (vivem no editor de páginas e na Captação), turmas/matrículas/comunidade do Academy (a tela atual é uma só) ou “Atividades” do CRM (as atividades aparecem no painel

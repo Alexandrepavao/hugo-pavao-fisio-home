@@ -6,6 +6,7 @@ import { Badge, PageHead, State, Table, Td, errText, useMsg, Msg } from "@/lib/u
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { usePeriodFilterState, useUnits, presetRange, toExclusive } from "../finance/shared";
 import OpportunitySheet from "./OpportunitySheet";
+import CrmImportDialog from "./CrmImportDialog";
 import { isStale, type Opp, type Stage, type StaffUser } from "./types";
 
 /** Gestão de leads: a fila de qualificação/distribuição — oportunidades ainda na PRIMEIRA etapa do funil
@@ -18,7 +19,7 @@ const Leads = () => {
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const range = { from: `${from}T00:00:00.000Z`, to: toExclusive(to) };
   const units = useUnits();
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null); const [importOpen, setImportOpen] = useState(false);
 
   const users = useQuery({ queryKey: ["assignable"], queryFn: async () => ((await supabase.rpc("list_assignable_users", {})).data ?? []) as StaffUser[] });
   const stages = useQuery({ queryKey: ["stages-all"], queryFn: async () => (await supabase.from("pipeline_stages").select("*").order("position")).data as Stage[] });
@@ -44,8 +45,9 @@ const Leads = () => {
   return (
     <div>
       <PageHead eyebrow="CRM" title="Gestão de leads" hint="Fila de leads ainda na primeira etapa (sem qualificação/distribuição concluída). Para negociações já em andamento, veja o Pipeline."
-        actions={<PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onClear={onClear} />} />
+        actions={<div className="flex flex-wrap items-center justify-end gap-2"><button type="button" className="hp-btn hp-btn-outline" onClick={() => setImportOpen(true)}>Importar CSV</button><PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onClear={onClear} /></div>} />
       <Msg m={msg} />
+      <CrmImportDialog open={importOpen} onOpenChange={setImportOpen} onDone={() => { void qc.invalidateQueries({ queryKey: ["crm-leads-queue"] }); void qc.invalidateQueries({ queryKey: ["crm-lists"] }); void qc.invalidateQueries({ queryKey: ["opps"] }); void qc.invalidateQueries({ queryKey: ["people"] }); }} />
       <State loading={leads.isLoading} error={leads.error} empty={leads.data?.length === 0} emptyText="Nenhum lead na fila para este recorte." />
       {leads.data && leads.data.length > 0 && (
         <Table head={["Pessoa", "Título", "Origem", "Criado em", "Responsável", ""]}>

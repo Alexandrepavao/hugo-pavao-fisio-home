@@ -58,6 +58,7 @@ const Research = lazy(() => import("./pages/admin/Research"));
 const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
+const MySummary = lazy(() => import("./pages/admin/MySummary"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
 const Landing = lazy(() => import("./pages/portal/Landing"));
 const Patient = lazy(() => import("./pages/portal/Patient"));
@@ -132,6 +133,7 @@ const App = () => (
                 <Route path="pages/*" element={<AppAlias app="pages" />} />
                 <Route path="produtividade/*" element={<AppAlias app="produtividade" />} />
                 <Route path="meu-dia" element={<Productivity />} />
+                <Route path="meu-resumo" element={<RequireAuth roles={["physio", "manager", "ops_admin", "unit_manager"]}><MySummary /></RequireAuth>} />
                 <Route path="status" element={<FeatureGate feature="system_status"><Overview /></FeatureGate>} />
                 <Route path="pessoas" element={g(R.people, <People />)} />
                 <Route path="paginas" element={g(R.pages, <Pages />)} />

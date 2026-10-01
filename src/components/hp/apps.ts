@@ -32,7 +32,7 @@ const PREFIXES: Record<Exclude<AppId, "hub">, string[]> = {
   operacao: ["/admin/agenda", "/admin/acompanhamento"],
   academy: ["/admin/academy"],
   parceiros: ["/admin/parceiros"],
-  produtividade: ["/admin/meu-dia"],
+  produtividade: ["/admin/meu-dia", "/admin/meu-resumo"],
 };
 const under = (p: string, base: string) => p === base || p.startsWith(base + "/");
 export const appForPath = (pathname: string): AppId =>

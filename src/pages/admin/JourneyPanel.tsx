@@ -26,7 +26,7 @@ const JourneyPanel = ({ person }: { person: string }) => {
   const addGoal = async (e: FormEvent) => { e.preventDefault(); if (gTitle.trim().length < 3) return m.err("Descreva o objetivo (mínimo de 3 caracteres).");
     if (await call("patient_goal_save", { p_person: person, p_id: null, p_title: gTitle, p_details: gDetails || null, p_target_date: gDate || null, p_status: "active" }, "Objetivo registrado.")) { setGTitle(""); setGDetails(""); setGDate(""); } };
   const savePlan = async (e: FormEvent) => { e.preventDefault(); const n = sessions ? Number(sessions) : null;
-    if (n != null && (!Number.isInteger(n) || n < 1 || n > 200)) return m.err("Informe de 1 a 200 sessões (ou deixe em branco para o modelo padrão).");
+    if (n == null || !Number.isInteger(n) || n < 1 || n > 200) return m.err("Informe de 1 a 200 sessões: a quantidade é definida por você na avaliação (não há número padrão).");
     await call("patient_plan_save", { p_person: person, p_planned_sessions: n, p_client_package: null, p_notes: planNotes || null }, "Plano de sessões salvo."); };
   const addAssessment = async (e: FormEvent) => { e.preventDefault(); const v = Number(aScore.replace(",", ".")); if (!Number.isFinite(v) || v < 0 || v > 10) return m.err("Nota de 0 a 10.");
     if (await call("professional_assessment_add", { p_person: person, p_kind: aKind, p_score: v, p_note: aNote || null, p_assessed_at: null }, "Avaliação registrada com a sua autoria.")) setANote(""); };
@@ -57,8 +57,8 @@ const JourneyPanel = ({ person }: { person: string }) => {
 
         <div><h4 className="font-medium mb-2">Plano de sessões</h4>
           {p ? <p className="text-sm mb-2">Plano de <b>{p.planned_sessions}</b> sessão(ões) desde {fmtDate(p.started_on + "T12:00:00Z")} {p.maintenance && <Badge tone="gold">Manutenção</Badge>} {p.status !== "active" && <Badge tone="success">{p.status === "completed" ? "Encerrado (alta)" : "Cancelado"}</Badge>} — realizadas {p.attended} · faltas do paciente {p.patient_no_show} · ausência do profissional {p.professional_no_show} · canceladas {p.cancelled} · saldo do pacote {d.package_balance}</p>
-            : <p className="text-sm text-muted-foreground mb-2">Sem plano ativo. O modelo inicial da clínica é de {settings.data?.default_sessions ?? d.default_sessions} sessões (configurável); a quantidade final é decisão clínica.</p>}
-          <form onSubmit={savePlan} className="hp-card p-3 grid gap-2 sm:grid-cols-4 items-end"><div><label htmlFor="jp-n" className="block text-xs mb-1">Sessões (vazio = modelo de {settings.data?.default_sessions ?? d.default_sessions})</label><input id="jp-n" type="number" min={1} max={200} value={sessions} onChange={(e) => setSessions(e.target.value)} /></div>
+            : <p className="text-sm text-muted-foreground mb-2">Sem plano ativo. Defina a quantidade de sessões conforme a sua avaliação clínica; o paciente só vê o número que você registrar.</p>}
+          <form onSubmit={savePlan} className="hp-card p-3 grid gap-2 sm:grid-cols-4 items-end"><div><label htmlFor="jp-n" className="block text-xs mb-1">Sessões do plano *</label><input id="jp-n" type="number" min={1} max={200} required value={sessions} onChange={(e) => setSessions(e.target.value)} placeholder={settings.data?.default_sessions ? `sugestão da clínica: ${settings.data.default_sessions}` : undefined} /></div>
             <div className="sm:col-span-2"><label htmlFor="jp-o" className="block text-xs mb-1">Observações do plano</label><input id="jp-o" value={planNotes} onChange={(e) => setPlanNotes(e.target.value)} maxLength={1000} /></div><button className={btnPrimary}>{p && p.status === "active" ? "Atualizar plano" : "Criar plano"}</button></form>
         </div>
 

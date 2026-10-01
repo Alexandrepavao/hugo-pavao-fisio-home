@@ -19,6 +19,7 @@ const Patient = () => {
   const appts = useQuery({ queryKey: ["my-appts"], queryFn: async () => ((await supabase.rpc("my_appointments")).data ?? []) as Appt[] });
   const pkgs = useQuery({ queryKey: ["my-pkgs"], queryFn: async () => ((await supabase.rpc("my_packages")).data ?? []) as { id: string; product_name: string; balance: number; total_sessions: number; valid_until: string | null; status: string }[] });
   const assigns = useQuery({ queryKey: ["my-care"], queryFn: async () => (await supabase.from("care_assignments").select("id, phase, note, released_at, content:care_contents(id, title, kind, body, storage_path, questions)").order("released_at", { ascending: false })).data as unknown as Assign[] });
+  const bks = useQuery({ queryKey: ["my-pkg-breakdown"], retry: false, queryFn: async () => ((await supabase.rpc("my_package_breakdown")).data ?? []) as { id: string; contracted: number; adjusted: number; attended: number; no_show: number; late_cancel: number; consumed_other: number; refunded: number; balance: number }[] });
   const survey = useQuery({ queryKey: ["survey"], queryFn: async () => (await supabase.from("surveys").select("id").eq("active", true).limit(1).maybeSingle()).data });
 
   const confirm = async (a: Appt) => { const { error } = await supabase.rpc("my_appointment_confirm", { p_id: a.id });
@@ -33,7 +34,7 @@ const Patient = () => {
     const { data, error } = await supabase.rpc("my_appointment_cancel", { p_id: a.id, p_reason: null });
     if (error) return m.err(errText(error));
     m.ok((data as { session_consumed?: boolean } | null)?.session_consumed ? "Atendimento cancelado. A sessão foi descontada do seu pacote, conforme a regra de cancelamento tardio." : "Atendimento cancelado. Nenhuma sessão foi descontada.");
-    void qc.invalidateQueries({ queryKey: ["my-appts"] }); void qc.invalidateQueries({ queryKey: ["my-pkgs"] });
+    void qc.invalidateQueries({ queryKey: ["my-appts"] }); void qc.invalidateQueries({ queryKey: ["my-pkgs"] }); void qc.invalidateQueries({ queryKey: ["my-pkg-breakdown"] });
   };
   const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null });
     if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
@@ -56,7 +57,16 @@ const Patient = () => {
       <Journey />
 
       <section className="mb-10"><h2 className="text-xl mb-3">Meus pacotes</h2>
-        {pkgs.data && pkgs.data.length > 0 ? <ul className="space-y-2">{pkgs.data.map((p) => <li key={p.id} className="hp-card p-3 flex justify-between"><span>{p.product_name}</span><span className="tabular">{p.balance} de {p.total_sessions} sessões {p.valid_until ? `· válido até ${new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR")}` : ""}</span></li>)}</ul> : <p className="text-muted-foreground">Nenhum pacote.</p>}</section>
+        {pkgs.data && pkgs.data.length > 0 ? <ul className="space-y-3">{pkgs.data.map((p) => { const b = bks.data?.find((x) => x.id === p.id); return (
+          <li key={p.id} className="hp-card p-3" aria-label={`Pacote ${p.product_name}`}>
+            <div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{p.product_name}</span><span className="tabular">{p.balance} de {p.total_sessions} sessões {p.valid_until ? `· válido até ${new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR")}` : ""}</span></div>
+            {b && <dl className="grid gap-2 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mt-3 text-sm">
+              {([["Contratadas", b.contracted, "sessões compradas no pacote"], ["Realizadas", b.attended, "comparecimentos que descontaram do pacote"], ["Consumidas por falta", b.no_show, "você faltou sem cancelar"], ["Consumidas por cancelamento tardio", b.late_cancel, "cancelou fora do prazo do pacote"],
+                ["Devolvidas", b.refunded, "sessões devolvidas à sua conta"], ["Ajustes", b.adjusted, "acertos feitos pela equipe"], ["Saldo", b.balance, "sessões que ainda pode usar"]] as [string, number, string][]).map(([label, v, hint]) => (
+                <div key={label} className="rounded-md border border-border p-2"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-xl font-bold tabular" aria-label={`${label}: ${v}`}>{v}</dd><p className="text-[11px] leading-4 text-muted-foreground">{hint}</p></div>))}
+            </dl>}
+            {b && b.consumed_other > 0 && <p className="text-xs text-muted-foreground mt-2">Há também {b.consumed_other} sessão(ões) descontada(s) por outro motivo, registrada(s) pela equipe.</p>}
+          </li>); })}</ul> : <p className="text-muted-foreground">Nenhum pacote.</p>}</section>
 
       <section className="mb-10"><h2 className="text-xl mb-1">Orientações liberadas pela sua equipe</h2><p className="text-sm text-muted-foreground mb-3">Conteúdos definidos por profissionais autorizados. Em caso de dor intensa ou piora, procure atendimento — este espaço não substitui uma avaliação.</p>
         <State loading={assigns.isLoading} error={assigns.error} empty={assigns.data?.length === 0} emptyText="Nenhum conteúdo liberado no momento." />

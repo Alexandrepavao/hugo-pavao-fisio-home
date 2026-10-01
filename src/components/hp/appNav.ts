@@ -88,6 +88,7 @@ export const PARCEIROS_NAV: FrameNavSection[] = [
 export const PRODUTIVIDADE_NAV: FrameNavSection[] = [
   { label: "Pessoal", items: [
     { to: "/admin/meu-dia", label: "Meu dia", icon: Sunrise, keywords: "tarefas calendário agenda foco google" },
+    { to: "/admin/meu-resumo", label: "Meu resumo", icon: BarChart3, roles: ["physio", "manager", "ops_admin", "unit_manager"], keywords: "atendimentos realizados faltas cancelamentos pacientes atendidos repasses desempenho" },
   ] },
 ];
 

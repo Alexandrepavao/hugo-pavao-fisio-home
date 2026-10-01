@@ -7,7 +7,6 @@ import { brl, fmtDate } from "@/lib/format";
 import { EmptyState, KpiGrid, LevelSection, State, StatCard, type CardLevel } from "@/lib/ui";
 import { AreaTrend, BarBlock } from "@/lib/IndicatorCharts";
 import { useAttention } from "@/components/hp/attention";
-import AppLauncher from "@/components/hp/AppLauncher";
 import { makeDelta } from "@/lib/kpi";
 import { RANGE_LABEL } from "@/lib/period";
 import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
@@ -87,10 +86,6 @@ const Dashboard = () => {
         <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
           onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
       </div>
-
-      <LevelSection level="summary" title="Seus aplicativos" label="Aplicativos" hint="Cada aplicativo tem menu, rotas e indicadores próprios; aparecem só os que o seu papel permite.">
-        <AppLauncher />
-      </LevelSection>
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {metrics.data && patients.data && (

@@ -4,7 +4,7 @@ do $$
 declare
   v_org uuid; uz uuid; u_mgr uuid := gen_random_uuid(); u_sales uuid := gen_random_uuid(); u_phy uuid := gen_random_uuid(); u_phy2 uuid := gen_random_uuid(); u_p1 uuid := gen_random_uuid(); u_p2 uuid := gen_random_uuid();
   p1 uuid; p2 uuid; p3 uuid; prof uuid; svc uuid; prod uuid; cpk uuid; g1 uuid; plan1 uuid; plan3 uuid; asm uuid; vid1 uuid; vid2 uuid; rq1 uuid; rq2 uuid;
-  j jsonb; d jsonb; n int; n2 int; ok boolean; rep text := ''; s text; r record;
+  j jsonb; d jsonb; n int; n2 int; ok boolean; ok3 boolean; rep text := ''; s text; r record;
 begin
   select id into v_org from public.organizations where slug = 'hp-group';
   insert into public.units (org_id, name, slug) values (v_org, 'Unidade Z (teste S07)', 'teste-z-s07') returning id into uz;
@@ -53,10 +53,12 @@ begin
   select status, closed_at is not null as closed into r from public.patient_goals where id = g1;
   rep := rep || format(E'\n[%s] objetivo alcançado guarda a data de encerramento', case when r.status = 'achieved' and r.closed then 'OK' else 'FALHA' end);
 
-  -- ============ 3) plano: modelo padrão configurável; um plano ativo por paciente
-  plan1 := public.patient_plan_save(p1, null, null, 'Plano inicial');
+  -- ============ 3) plano: a quantidade é SEMPRE definida pelo profissional (migration 068: sem padrão silencioso); um plano ativo por paciente
+  ok := false; begin perform public.patient_plan_save(p1, null, null, 'Sem quantidade'); exception when others then ok := sqlerrm like '%não há quantidade padrão%'; end;
+  rep := rep || format(E'\n[%s] plano SEM quantidade é recusado: o profissional precisa definir (não há “10 por padrão”)', case when ok then 'OK' else 'FALHA' end);
+  plan1 := public.patient_plan_save(p1, 10, null, 'Plano inicial');
   select planned_sessions into n from public.patient_plans where id = plan1;
-  rep := rep || format(E'\n[%s] plano sem quantidade usa o modelo padrão de 10 sessões (%s)', case when n = 10 then 'OK' else 'FALHA' end, n);
+  rep := rep || format(E'\n[%s] plano nasce com a quantidade informada pelo profissional (%s)', case when n = 10 then 'OK' else 'FALHA' end, n);
   perform set_config('request.jwt.claims', json_build_object('sub', u_phy, 'role','authenticated')::text, true);
   ok := false; begin perform public.journey_settings_set(12, null); exception when others then ok := sqlstate = '42501'; end;
   rep := rep || format(E'\n[%s] fisioterapeuta NÃO altera a configuração do modelo', case when ok then 'OK' else 'FALHA' end);
@@ -64,9 +66,9 @@ begin
   ok := false; begin perform public.journey_settings_set(0, null); exception when others then ok := true; end;
   perform public.journey_settings_set(12, '123456');
   perform set_config('request.jwt.claims', json_build_object('sub', u_phy, 'role','authenticated')::text, true);
-  plan3 := public.patient_plan_save(p3, null, null, null);
+  plan3 := public.patient_plan_save(p3, 6, null, null);
   select planned_sessions into n from public.patient_plans where id = plan3;
-  rep := rep || format(E'\n[%s] gestor muda o modelo para 12: o próximo plano nasce com 12 (o anterior não muda) e configuração inválida é recusada (%s)', case when n = 12 and ok then 'OK' else 'FALHA' end, n);
+  rep := rep || format(E'\n[%s] gestor muda o modelo para 12: isso NÃO altera nenhum plano (o próximo nasce com os 6 que o profissional informou) e configuração inválida é recusada (%s)', case when n = 6 and ok then 'OK' else 'FALHA' end, n);
   perform public.patient_plan_save(p1, 8, null, 'Ajustado pela avaliação');
   select count(*), max(planned_sessions) into n, n2 from public.patient_plans where person_id = p1 and status = 'active';
   rep := rep || format(E'\n[%s] atualizar o plano mantém UM plano ativo e a quantidade é decisão do profissional (8) (%s plano, %s sessões)', case when n = 1 and n2 = 8 then 'OK' else 'FALHA' end, n, n2);
@@ -182,6 +184,12 @@ begin
   -- ============ 8) pedido de renovação/contato: sem cobrança, sem consumo, sem duplicar
   perform set_config('request.jwt.claims', json_build_object('sub', u_p1, 'role','authenticated')::text, true);
   ok := false; begin perform public.my_renewal_request('cobranca'); exception when others then ok := true; end;
+  -- migration 068: renovação só com a orientação do fisioterapeuta (a última reavaliação do paciente 1 foi ALTA)
+  ok3 := false; begin perform public.my_renewal_request('renovacao', 'Sem orientação'); exception when others then ok3 := sqlerrm like '%orientação do seu fisioterapeuta%'; end;
+  rep := rep || format(E'\n[%s] com a última decisão “alta”, o pedido de RENOVAÇÃO é recusado (depende da orientação do fisioterapeuta); “contato” segue livre', case when ok3 then 'OK' else 'FALHA' end);
+  reset role;
+  insert into public.patient_reassessments (org_id, unit_id, person_id, decision, extra_sessions, patient_message, decided_at, decided_by) values (v_org, uz, p1, 'continuidade', 4, 'Recomendo continuar', now() + interval '1 second', u_phy);
+  set local role authenticated; perform set_config('request.jwt.claims', json_build_object('sub', u_p1, 'role','authenticated')::text, true);
   rq1 := public.my_renewal_request('renovacao', 'Quero continuar com o tratamento');
   rq2 := public.my_renewal_request('renovacao', 'Clique repetido');
   reset role; select count(*) into n from public.renewal_requests where person_id = p1; select count(*) into n2 from public.crm_tasks where dedupe_key = 'renewal:' || rq1::text;
