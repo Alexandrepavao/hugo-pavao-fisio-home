@@ -29,3 +29,7 @@ crédito visual de modelo externo** (sem “Powered by”); a atribuição exigi
 ## Referências visuais
 A nova interface tomou como **referência de organização** (estrutura, hierarquia de cartões e posição dos filtros) painéis administrativos de mercado. Nenhum código, logotipo, texto, marca
 ou componente proprietário foi copiado: tudo foi recriado com os componentes e tokens do HP.
+
+## Repositórios de referência (organização dos aplicativos)
+`brightercore-4d41cb1d` (Gestão/Financeiro), `brighter-flow-20722354` (CRM), `engage-nest-space-71c70a06` (Academy) e `focussphere-51789` (Produtividade) estavam acessíveis e foram **lidos só para entender a organização**
+(pastas, páginas e agrupamento dos menus laterais). Nenhum código, credencial, dado, infraestrutura, texto ou marca foi copiado; nada deles vai para o repositório ou para a interface.

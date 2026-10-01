@@ -8,6 +8,14 @@
 - **Status**: “Conectado” (com o e-mail da conta e a última sincronização), “Conectado com erro na última sincronização” (com o motivo) ou “Acesso revogado — conecte novamente”.
 - **Sincronizar agora**, **nível de detalhe** do evento e **Desconectar** (remove o calendário “HP Group Hub” criado pelo app, revoga o acesso no Google e apaga os compromissos externos importados; os eventos do Google da pessoa **não** são tocados).
 
+## A tela (Produtividade ▸ Meu dia)
+- **Barra do calendário:** ‹ **Hoje** › (anterior/hoje/próximo, na unidade da visão: dia, semana ou mês), **título do mês** (ex.: “Outubro de 2026”), seletor de data, **Dia | Semana | Mês** e, para quem tem permissão, “Agenda clínica de”
+  (outro profissional; o servidor recusa o resto).
+- **Categorias de evento** (chips que ligam/desligam, ao menos uma fica ligada): **Atendimentos**, **Tarefas de CRM**, **Tarefas pessoais** (privadas) e **Google Calendar** (compromissos externos, só leitura). Cada categoria tem cor própria.
+- **Grade mensal:** 6 semanas, dia de hoje destacado, dias de outros meses esmaecidos, até 3 eventos por dia com “+N mais”; no celular cada dia mostra pontos coloridos por categoria e a contagem; clicar no dia abre o Dia.
+- Os eventos continuam vindo de `my_calendar` (atendimentos, tarefas de CRM, tarefas pessoais e compromissos externos já existentes): a tela **não cria compromissos** nem duplica nada.
+- **Somente Google Calendar:** nenhuma referência a iPhone/Apple/`.ics` (testado em `R10` e `R13`); cada usuário conecta a própria conta por OAuth, vê o estado e pode sincronizar ou desconectar.
+
 ## O que é sincronizado
 | Direção | O quê | Como |
 |---|---|---|

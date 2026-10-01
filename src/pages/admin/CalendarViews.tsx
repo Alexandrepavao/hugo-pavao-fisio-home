@@ -17,7 +17,10 @@ interface Item { key: string; at: string; label: string; kind: "appt" | "task" |
  *  externos só aparecem na agenda do PRÓPRIO usuário. Confirmar atendimento só existe na própria agenda (nunca em nome de outro profissional). */
 const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu", no_show: "Paciente faltou", professional_no_show: "Profissional ausente" };
 
-const CalendarViews = ({ view, date, professionalId, onPickDay, onConfirm }: { view: CalView; date: string; professionalId: string; onPickDay: (d: string) => void; onConfirm: (id: string) => void }) => {
+export type EventKind = "appt" | "task" | "crm" | "ext";
+export const KIND_LABEL: Record<EventKind, string> = { appt: "Atendimentos", crm: "Tarefas de CRM", task: "Tarefas pessoais", ext: "Google Calendar" };
+
+const CalendarViews = ({ view, date, professionalId, kinds, onPickDay, onConfirm }: { view: CalView; date: string; professionalId: string; kinds: Set<EventKind>; onPickDay: (d: string) => void; onConfirm: (id: string) => void }) => {
   const { start, end } = calRange(view, date);
   const q = useQuery({ queryKey: ["my-calendar", start.toISOString(), end.toISOString(), professionalId], queryFn: async () => {
     const { data, error } = await supabase.rpc("my_calendar", { p_from: start.toISOString(), p_to: end.toISOString(), p_professional: professionalId || null }); if (error) throw error; return data as Cal;
@@ -34,20 +37,16 @@ const CalendarViews = ({ view, date, professionalId, onPickDay, onConfirm }: { v
       if (e.all_day) { const en = parseDay(e.ends_at.slice(0, 10)); for (let d = parseDay(e.starts_at.slice(0, 10)); d < en; d = addDays(d, 1)) add(dayKey(d), { key: e.id + dayKey(d), at: `${dayKey(d)}T00:00`, label: lab, kind: "ext" }); }   // dia inteiro vem como data (fim exclusivo), sem deslocar pelo fuso
       else { const s0 = new Date(e.starts_at); const en = new Date(e.ends_at); let d = new Date(s0.getFullYear(), s0.getMonth(), s0.getDate()); do { add(dayKey(d), { key: e.id + dayKey(d), at: e.starts_at, label: lab, kind: "ext" }); d = addDays(d, 1); } while (d < en); }
     }
-    for (const v of m.values()) v.sort((a, b) => a.at.localeCompare(b.at));
+    for (const [k, v] of m) { const keep = v.filter((it) => kinds.has(it.kind)); if (keep.length) { keep.sort((a, b) => a.at.localeCompare(b.at)); m.set(k, keep); } else m.delete(k); }
     return m;
-  }, [q.data]);
+  }, [q.data, kinds]);
   const today = dayKey(new Date()); const curMonth = parseDay(date).getMonth();
-  const tone = (k: Item["kind"]) => k === "appt" ? "border-l-2 border-primary" : k === "ext" ? "border-l-2 border-dashed border-muted-foreground text-muted-foreground" : k === "crm" ? "border-l-2 border-accent" : "border-l-2 border-border";
+  const tone = (k: Item["kind"]) => `hp-ev hp-ev-${k}`;
 
   return (
     <div>
       <State loading={q.isLoading} error={q.error} />
       {q.data && (<>
-        <ul className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2" aria-label="Legenda">
-          <li><span className="inline-block w-2 h-2 bg-primary mr-1" aria-hidden />Atendimento</li><li><span className="inline-block w-2 h-2 bg-accent mr-1" aria-hidden />Tarefa de CRM</li>
-          {q.data.is_self && <><li><span className="inline-block w-2 h-2 bg-border mr-1" aria-hidden />Tarefa pessoal (privada)</li><li><span className="inline-block w-2 h-2 border border-dashed border-muted-foreground mr-1" aria-hidden />Compromisso externo (Google, só leitura)</li></>}
-        </ul>
         {view === "semana" ? (
           <div className="grid gap-2 md:grid-cols-7" role="grid" aria-label="Semana">
             {days.map((d, i) => { const k = dayKey(d); const items = byDay.get(k) ?? [];
@@ -64,16 +63,17 @@ const CalendarViews = ({ view, date, professionalId, onPickDay, onConfirm }: { v
                 </section>); })}
           </div>
         ) : (
-          <div role="grid" aria-label="Mês">
-            <div className="grid grid-cols-7 gap-1 text-[11px] text-muted-foreground mb-1">{WD.map((w) => <span key={w} className="text-center">{w}</span>)}</div>
-            <div className="grid grid-cols-7 gap-1">
-              {days.map((d) => { const k = dayKey(d); const items = byDay.get(k) ?? []; const appts = items.filter((x) => x.kind === "appt").length;
+          <div role="grid" aria-label="Mês" className="hp-cal-month">
+            <div className="hp-cal-wd">{WD.map((w) => <span key={w}>{w}</span>)}</div>
+            <div className="hp-cal-grid">
+              {days.map((d) => { const k = dayKey(d); const items = byDay.get(k) ?? []; const appts = items.filter((x) => x.kind === "appt").length; const out = d.getMonth() !== curMonth;
                 return (
                   <button key={k} onClick={() => onPickDay(k)} aria-label={`${d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}: ${items.length} item(ns)`}
-                    className={`hp-card text-left p-1.5 min-h-[4.5rem] min-w-0 hover:border-accent/60 ${k === today ? "ring-2 ring-primary" : ""} ${d.getMonth() === curMonth ? "" : "opacity-50"}`}>
-                    <span className="text-xs font-semibold">{d.getDate()}</span>
-                    <span className="block md:hidden text-[10px] text-muted-foreground">{appts > 0 ? `${appts} at.` : ""}{items.length - appts > 0 ? ` +${items.length - appts}` : ""}</span>
-                    <span className="hidden md:block">{items.slice(0, 3).map((it) => <span key={it.key} className={`block text-[10px] leading-4 truncate pl-1 ${tone(it.kind)}`}>{it.label}</span>)}{items.length > 3 && <span className="block text-[10px] text-muted-foreground">+{items.length - 3}</span>}</span>
+                    className={`hp-cal-cell ${k === today ? "is-today" : ""} ${out ? "is-out" : ""}`}>
+                    <span className="hp-cal-num">{d.getDate()}</span>
+                    <span className="hp-cal-dots md:hidden" aria-hidden>{(["appt", "crm", "task", "ext"] as EventKind[]).filter((kd) => items.some((x) => x.kind === kd)).map((kd) => <i key={kd} className={`hp-ev-dot hp-ev-dot-${kd}`} />)}{items.length > 0 && <b>{items.length}</b>}</span>
+                    <span className="hidden md:block">{items.slice(0, 3).map((it) => <span key={it.key} className={`${tone(it.kind)} hp-ev-line`}>{it.label}</span>)}{items.length > 3 && <span className="hp-ev-more">+{items.length - 3} mais</span>}</span>
+                    {appts > 0 && <span className="sr-only">{appts} atendimento(s)</span>}
                   </button>); })}
             </div>
           </div>

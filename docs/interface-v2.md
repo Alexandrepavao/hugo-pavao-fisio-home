@@ -94,3 +94,8 @@ pelo E2E `R10` após a nova interface.
 - As demais telas (Pessoas, Agenda, Academy, Parceiros, Captação…) herdam header, sidebar, tipografia, tabelas e filtros novos, mas **não** foram reorganizadas em faixa/atenção/análise.
 - Linha de negócio fora do componente de filtros (ver §3). O mapa agrega por **UF do cadastro** (sem geolocalização).
 - Os indicadores do Administrativo no Dev incluem cadastros criados por testes automáticos (profissionais “Fisio E2E …”); em produção isso não existe.
+
+## 10. Aplicativos contextuais, Cartões e Calendário (3ª etapa)
+Estrutura por aplicativo, rotas, filtros e referências: `docs/aplicativos.md`. Cartões corporativos: `docs/cartoes-corporativos.md`. Calendário: `docs/calendarios.md`. Capturas (Hub, Financeiro e CRM com sidebars diferentes,
+gaveta dos aplicativos no celular, Cartões e Calendário em desktop e celular): `docs/screenshots/apps-cartoes-calendario/` (gerador `e2e/tools/shots-novas-telas.mjs`, que cria dados de demonstração no Dev e os remove ao final).
+O app “Administrativo” agora é **Gestão**; o título do cabeçalho passa a ser “Gestão · Seção”.

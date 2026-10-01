@@ -185,7 +185,7 @@ begin
   rep := rep || pg_temp.chk(n >= 1, 'o bloqueio foi auditado com o motivo');
   select count(*) into n from public.audit_log where org_id = v_org and entity_type = 'card_invoices' and entity_id = inv_closed::text and action = 'update';
   rep := rep || pg_temp.chk(n >= 1, 'o pagamento da fatura foi auditado');
-  select count(*) into n from public.audit_log where org_id = v_org and entity_type = 'card_purchases' and action = 'insert';
+  select count(*) into n from public.audit_log where org_id = v_org and entity_type = 'card_purchases' and action = 'insert' and entity_id in (pur1::text, pur2::text, pur3::text);
   rep := rep || pg_temp.chk(n = 3, 'as 3 compras (inclusive a cancelada) foram auditadas');
 
   -- ============ 8) superfície pública

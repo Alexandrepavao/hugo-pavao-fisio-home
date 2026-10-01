@@ -65,7 +65,7 @@ export const Table = ({ head, children, right = [] }: { head: string[]; children
   </div>
 );
 export const Td = ({ children, num, className = "" }: { children: ReactNode; num?: boolean; className?: string }) =>
-  <td className={`align-middle ${num ? "text-right tabular" : ""} ${className}`}>{children}</td>;
+  <td className={`align-middle ${num ? "text-right tabular whitespace-nowrap" : ""} ${className}`}>{children}</td>;
 
 export type Tone = "neutral" | "success" | "warning" | "danger" | "info" | "gold";
 export const Badge = ({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) => {

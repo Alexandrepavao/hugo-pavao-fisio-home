@@ -188,7 +188,8 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     const pays = async (rec: string) => (await g.get(`payments?select=id,kind,amount_cents,idempotency_key&receivable_id=eq.${rec}&order=created_at`)).body as { id: string; kind: string; amount_cents: number; idempotency_key: string }[];
     const recStatus = async (rec: string) => (await g.get(`receivables?select=status&id=eq.${rec}`)).body[0].status as string;
     await page.goto("/admin/financeiro/vendas");
-    const row = (n: string) => page.getByRole("row").filter({ hasText: name }).filter({ hasText: n });
+    // a parcela é a célula inteira "1/2": um hasText "1/2" também casaria com datas de vencimento (ex.: 01/11/2026), que mudam com o dia da execução
+    const row = (n: string) => page.getByRole("row").filter({ hasText: name }).filter({ has: page.getByRole("cell", { name: n, exact: true }) });
     await row("1/2").getByRole("button", { name: "Receber" }).click();
     await page.locator("#pa").fill("100,00"); await page.getByRole("button", { name: "Registrar" }).dblclick();       // clique duplo
     await expect(page.getByText("Recebimento registrado.")).toBeVisible();

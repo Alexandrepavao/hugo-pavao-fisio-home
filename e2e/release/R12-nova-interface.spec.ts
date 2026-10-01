@@ -17,7 +17,7 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/adm");
     const header = page.locator("header.hp-header");
-    await expect(header.getByRole("heading", { level: 1 })).toHaveText(/^Administrativo · /, { timeout: 30_000 });
+    await expect(header.getByRole("heading", { level: 1 })).toHaveText(/^Gestão · /, { timeout: 30_000 });
     await expect(header.getByRole("button", { name: "Buscar (Ctrl+K)" })).toBeVisible();
     await expect(header.getByRole("button", { name: /^Notificações/ })).toBeVisible();
     await expect(header.getByRole("button", { name: "Usar tema escuro" })).toBeVisible();

@@ -224,7 +224,7 @@ const FinanceCards = () => {
                       {i.bank_line && <p className="text-xs text-success">Conciliada com o extrato de {d(i.bank_line.txn_date)}: {i.bank_line.description}</p>}
                       {i.state === "paga" && !i.bank_line && <p className="text-xs text-muted-foreground">Ainda não conciliada com o extrato (Financeiro ▸ Conciliação).</p>}
                     </div>
-                    <div className="flex items-center gap-3"><span className="tabular text-lg font-extrabold" style={{ fontFamily: "Manrope, Inter, sans-serif" }}>{brl(i.total_cents)}</span>
+                    <div className="flex flex-wrap items-center gap-3"><span className="tabular text-lg font-extrabold" style={{ fontFamily: "Manrope, Inter, sans-serif" }}>{brl(i.total_cents)}</span>
                       <button type="button" className={`${btnGhost} hp-btn-sm`} onClick={() => { setInvFilter(i.id); setTab("compras"); }}>Ver compras</button>
                       {i.state === "fechada" && <button type="button" className={`${btnPrimary} hp-btn-sm`} onClick={() => { setPay(i); setPayAcc(sel.financial_account_id ?? ""); setPayDate(todayIso()); }}>Registrar pagamento</button>}
                     </div>

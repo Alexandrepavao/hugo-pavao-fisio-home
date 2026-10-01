@@ -44,7 +44,25 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-09-30, 10ª rodada) — reformulação visual de verdade
+## Sessão mais recente (2026-10-01, 11ª rodada) — aplicativos contextuais, filtros, Cartões corporativos e Calendário
+
+> `release/v1` (a indicação `feature/hp-group-hub` do pedido foi corrigida pelo usuário: essa branch é antiga, já mesclada, e o PR em rascunho é o #3); Dev apenas; produção, DNS e merge intocados.
+> Documentos novos: `docs/aplicativos.md` (rotas, menus, filtros, referências), `docs/cartoes-corporativos.md` (modelo, regras, testes). Capturas: `docs/screenshots/apps-cartoes-calendario/`.
+- **Aplicativos:** Gestão, Financeiro, CRM, Pages, Operação, Academy (administração), Parceiros e Produtividade, cada um com sidebar exclusiva, identidade própria, “Voltar ao Hub” e seletor; o Hub tem o lançador
+  “Seus aplicativos” (só os permitidos). O app ativo vem da URL (link direto, recarregar e voltar/avançar). Rotas antigas preservadas; atalhos `/admin/gestao`, `/admin/operacao`, `/admin/pages`, `/admin/produtividade`,
+  `/admin/administrativo`. “Contas a receber” e “Unidades/Produtos e serviços” ganharam entrada de menu própria apontando para as telas que já existiam (aba/seção na URL). O app **Administrativo** passou a se chamar **Gestão**.
+- **Filtro único:** linha de negócio (Geral/Fisioterapia/Academy) dentro do popover no Financeiro; Recorrência (mês), Fluxo de caixa e Pessoas migrados; trocar o período não apaga mais a linha na URL. Agenda, Academy, Parceiros,
+  Contas a pagar, Conciliação e Planilha administrativa **não** foram migrados (documentado).
+- **Cartões corporativos (migration 065):** cartão visual seguro (sem número completo/CVV), compra = uma despesa em `payables` (uma vez na DRE, no fluxo e na linha de negócio), ciclo/fechamento/vencimento, limite e disponível,
+  bloqueio com motivo, fatura paga baixa as despesas, **conciliação da fatura agregada sem criar despesa nem alterar o extrato**; RLS, escopo por unidade, auditoria; SQL `S13` (80 verificações).
+- **Calendário (Meu dia):** barra com ‹ Hoje ›, título do mês, Dia/Semana/Mês, data, agenda de outro profissional (quando permitido) e **categorias** (atendimentos, CRM, pessoais, Google Calendar) como filtros; grade mensal
+  legível (hoje destacado, eventos coloridos com “+N mais”; pontos no celular). Só Google Calendar (OAuth individual, status, sincronizar, desconectar) — sem iPhone/Apple/`.ics`.
+- **Testes:** SQL S01–S13 e N01–N02 OK; E2E: `R02` reescrito (menus por papel e por aplicativo), novo `R13` (14), ajustes por mudança intencional em `R08` (linha de negócio no filtro) e `R12`; correções de fragilidade que dependiam de
+  data/dados acumulados em `R01` (parcela “1/2” exata), `R03` (contagem na seção certa e dia livre para o paciente QA compartilhado) e do isolamento do `S13` (auditoria só das próprias compras).
+  `04-agenda-concurrency` é **intermitente** (1 em 3 execuções recebe `57014` — statement timeout — em vez de `P0409` nas requisições perdedoras; teste só de API, sem relação com esta etapa).
+- **Migrations para produção:** 24 (038→047, 052→065); `list_migrations` final = **61**; o Dev tem **66**.
+
+## Sessão anterior (2026-09-30, 10ª rodada) — reformulação visual de verdade
 
 > `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho; nenhuma migration nova (a 064 é da rodada anterior). Detalhes, tabela antes × agora e capturas: `docs/interface-v2.md`.
 - A 9ª rodada tinha mudado só tokens, filtros e responsividade (visual quase igual). Esta mudou a **composição**: cabeçalho em largura total, **sidebar contextual clara por aplicativo** (Hub, Administrativo, CRM e **Financeiro, agora com shell próprio**), cor de identidade por app, cartões em quatro pesos (faixa prioritária com minigráfico só com série real, painel de Atenção, resumo, compacto), gráficos redesenhados (áreas, rosca, ranking), tabelas e estados vazios novos, tipografia e espaçamento novos, mapa maior com estado sem dado hachurado.
@@ -91,7 +109,7 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 - **`cash_flow_monthly`** reexecutada com os parâmetros corretos (`p_from`, `p_to`, `p_unit`): 200.
 - **`google-calendar` (publicada sem JWT na plataforma):** `start`, `sync` e `disconnect` exigem sessão de usuário validada dentro da função (sem token, só a chave pública ou JWT inválido → 401). Achado: o `state` era assinado e expirava em 10 min, mas **não era de uso único**. Corrigido com a migration **061** (`google_oauth_state`, nonce guardado e consumido no callback). 25 verificações com segredos **fictícios temporários** (já removidos do Dev): state adulterado/forjado/vencido/de outro usuário/repetido → `google=estado`; só o 1º uso do state legítimo segue. Script: `supabase/tests/functions/google-calendar-auth.mjs`.
 - **Preview:** `https://release-v1--hp-group-hub.netlify.app` (deploy `6abd3c27ec571eb924ec12b2`, branch-deploy, `ready`, sem `--prod`). **Bloqueio de acesso:** o endereço exige login da equipe Netlify (401 sem sessão), então o `version.json` servido e as telas não puderam ser abertos por HTTP. Verificação alternativa: o `dist/` gerado pelo próprio build do deploy foi servido localmente e 32 E2E (R01, R02, R07–R10) passaram; o `version.json` desse bundle diz commit `bcc6db8f649f`, perfil `v1`, ambiente `preview`, backend `Dev` (`fsvtzowcwhvwtluwrhnb`). Para conferir no endereço publicado: abrir a URL **logado na Netlify** e ver `/version.json`.
-- **Contagem de migrations:** Dev 65 × produção prevista 60 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
+- **Contagem de migrations:** Dev 66 × produção prevista 61 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
 - **Ainda pendente (não declarado concluído):** Bunny e Google em **configuração e teste reais**; `.ics` num iPhone/Google Agenda de verdade.
 
 ## Sessão anterior (2026-09-30, 5ª rodada) — Escopo ampliado aplicado no Dev e testado no banco

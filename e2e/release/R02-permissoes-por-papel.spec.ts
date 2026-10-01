@@ -6,14 +6,15 @@ import { api, collectErrors, loginAs, QA, signIn } from "./helpers-release";
 
 test.use({ locale: "pt-BR" });
 
-// Itens da barra lateral do Hub esperados por papel (ver docs/permissions.md).
-const ALL = ["Início", "Meu dia", "Administrativo", "Pessoas", "CRM", "Captação de leads", "Páginas", "Pesquisas", "Agenda", "Acompanhamento", "Financeiro", "Parceiros", "Contas corporativas", "Academy", "Equipe e acessos", "Configurações", "Auditoria"];
+// Aplicativos que o Hub oferece por papel (a barra lateral do Hub lista o início e os aplicativos; o menu de cada app só aparece ao entrar nele).
+const ALL = ["Início", "Gestão", "Financeiro", "CRM", "Pages", "Operação", "Academy", "Parceiros", "Produtividade"];
+const COMMON = ["Início", "Gestão", "Financeiro", "CRM", "Pages", "Operação", "Parceiros", "Produtividade"];
 const NAV: Record<string, { email: string; see: string[] }> = {
   gestor: { email: QA.manager, see: ALL },
-  gestorUnidade: { email: QA.gestorUnidade, see: ["Início", "Meu dia", "Administrativo", "Pessoas", "CRM", "Captação de leads", "Páginas", "Agenda", "Acompanhamento", "Financeiro", "Parceiros", "Contas corporativas"] },
-  comercial: { email: QA.comercial, see: ["Início", "Meu dia", "Administrativo", "Pessoas", "CRM", "Captação de leads", "Páginas", "Agenda", "Financeiro", "Parceiros"] },
-  financeiro: { email: QA.financeiro, see: ["Início", "Meu dia", "Financeiro", "Parceiros", "Contas corporativas"] },
-  fisio: { email: QA.fisio, see: ["Início", "Meu dia", "Agenda", "Acompanhamento"] },
+  gestorUnidade: { email: QA.gestorUnidade, see: COMMON },
+  comercial: { email: QA.comercial, see: COMMON },
+  financeiro: { email: QA.financeiro, see: ["Início", "Financeiro", "Parceiros", "Produtividade"] },
+  fisio: { email: QA.fisio, see: ["Início", "Operação", "Produtividade"] },
 };
 // rotas digitadas na mão que cada papel NÃO pode abrir
 const BLOCKED: Record<string, string[]> = {
@@ -56,6 +57,28 @@ test.describe("@release Permissões por papel", () => {
     await expect(page.getByTestId("build-info")).toContainText("banco Dev");
     await expect(page.getByTestId("env-badge")).toContainText("AMBIENTE DE TESTE");                    // fora de produção o selo está sempre visível
   });
+
+  // Dentro de cada aplicativo a sidebar é exclusiva dele, e o papel continua filtrando os itens (a rota e o banco seguem sendo a autorização de verdade).
+  const SIDE: [string, string, string, string[], string[]][] = [
+    ["gestor", QA.manager, "/admin/adm", ["Dashboard", "Pendências", "Contratos", "Planilha administrativa", "Pessoas", "Unidades", "Equipe e acessos", "Produtos e serviços", "Configurações", "Auditoria"], ["Cartões", "Agenda", "Pipeline"]],
+    ["gestorUnidade", QA.gestorUnidade, "/admin/adm", ["Dashboard", "Pendências", "Contratos", "Planilha administrativa", "Pessoas"], ["Unidades", "Equipe e acessos", "Produtos e serviços", "Configurações", "Auditoria"]],
+    ["comercial", QA.comercial, "/admin/paginas", ["Páginas", "Captação de leads"], ["Pesquisas"]],
+    ["financeiro", QA.financeiro, "/admin/financeiro", ["Visão geral", "Vendas", "Contas a receber", "Contas a pagar", "Cartões", "Fluxo de caixa", "Conciliação", "Recorrência", "DRE", "Comissões e repasses", "Relatórios", "Contas corporativas", "Configurações"], ["Pessoas", "Pipeline", "Agenda"]],
+    ["fisio", QA.fisio, "/admin/agenda", ["Agenda", "Acompanhamento"], ["Pessoas", "Contas a pagar", "Cartões"]],
+  ];
+  for (const [papel, email, rota, ve, naoVe] of SIDE) {
+    test(`${papel}: dentro do aplicativo, a sidebar é só dele e respeita o papel (${rota})`, async ({ page, context }) => {
+      await loginAs(context, email); const errors = collectErrors(page);
+      await page.goto(rota);
+      const nav = page.locator("aside nav").first(); await expect(nav).toBeVisible({ timeout: 30_000 });
+      const seen = (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim());
+      for (const l of ve) expect(seen, `${papel} deve ver "${l}" em ${rota}`).toContain(l);
+      for (const l of naoVe) expect(seen, `${papel} NÃO deve ver "${l}" em ${rota}`).not.toContain(l);
+      for (const hub of ["Início", "Aplicativos"]) expect(seen, "o menu do Hub não se mistura com o do aplicativo").not.toContain(hub);
+      await expect(page.getByRole("link", { name: "Voltar ao Hub" }).first()).toBeVisible();
+      expect(errors).toEqual([]);
+    });
+  }
 
   test("backend: cada papel só lê e só executa o que lhe cabe (chamadas diretas à API, sem passar pela interface)", async () => {
     const [mgr, gu, com, fin, fis, par, alu] = await Promise.all([QA.manager, QA.gestorUnidade, QA.comercial, QA.financeiro, QA.fisio, QA.parceiro, QA.aluno].map(signIn));

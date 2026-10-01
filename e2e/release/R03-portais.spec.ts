@@ -19,13 +19,20 @@ test.describe.serial("@release Portais (paciente e parceiro)", () => {
     const prof = (await rest(mgr, "POST", "professionals", { org_id: org, display_name: `Fisio Portal ${runId}`, active: true })).body[0].id as string;
     await rest(mgr, "POST", "professional_units", { professional_id: prof, unit_id: unit });
     for (let d = 0; d < 7; d++) await rest(mgr, "POST", "availability_rules", { org_id: org, professional_id: prof, unit_id: unit, weekday: d, start_time: "00:00", end_time: "23:30" });
-    const day = spDate(9 + (parseInt(runId, 36) % 60)); const slots = (await g.rpc("available_slots", { p_professional: prof, p_unit: unit, p_service: svc, p_date: day })).body as { slot_start: string }[];
-    const mine = await g.rpc("book_appointment", { p_person: me[0].id, p_unit: unit, p_professional: prof, p_service: svc, p_start: slots[2].slot_start, p_package: null, p_opportunity: null }); expect(mine.status, JSON.stringify(mine.body)).toBe(200);
+    // o paciente QA é compartilhado e acumula atendimentos de outras execuções: se o horário sorteado já estiver ocupado para ELE, tenta outro dia (o profissional é novo e livre)
+    let slots: { slot_start: string }[] = []; let mine: { status: number; body: unknown } = { status: 0, body: null };
+    for (let k = 0; k < 25 && mine.status !== 200; k++) {
+      const day = spDate(9 + ((parseInt(runId, 36) + k * 7) % 90));
+      slots = (await g.rpc("available_slots", { p_professional: prof, p_unit: unit, p_service: svc, p_date: day })).body as { slot_start: string }[];
+      mine = await g.rpc("book_appointment", { p_person: me[0].id, p_unit: unit, p_professional: prof, p_service: svc, p_start: slots[2].slot_start, p_package: null, p_opportunity: null });
+    }
+    expect(mine.status, JSON.stringify(mine.body)).toBe(200);
     const theirs = await g.rpc("book_appointment", { p_person: other.body.id, p_unit: unit, p_professional: prof, p_service: svc, p_start: slots[4].slot_start, p_package: null, p_opportunity: null }); expect(theirs.status).toBe(200);
 
     await page.goto("/paciente");
     await expect(page.getByRole("heading", { name: "Meus atendimentos" })).toBeVisible();
-    await expect(page.getByText(`Consulta Portal E2E ${runId}`)).toHaveCount(1);                       // só o dele, não o do outro paciente
+    // só a seção “Meus atendimentos” (a jornada também lista as próximas consultas, então o mesmo texto pode aparecer lá conforme o dia sorteado)
+    await expect(page.locator("section").filter({ has: page.getByRole("heading", { name: "Meus atendimentos" }) }).getByText(`Consulta Portal E2E ${runId}`)).toHaveCount(1);                       // só o dele, não o do outro paciente
     await expect(page.getByText(`Outro Paciente E2E ${runId}`)).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Meus pacotes" })).toBeVisible();
     // dados pessoais: edita telefone e cidade; nome completo e unidade não são editáveis pelo paciente

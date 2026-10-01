@@ -8,6 +8,11 @@ test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
 
 const region = (page: Page) => page.getByRole("region", { name: "Por linha de negócio" });
 const lineBtn = (page: Page, name: string) => page.getByRole("group", { name: "Linha de negócio" }).getByRole("button", { name });
+// a linha de negócio fica dentro do filtro único (Filtros ▸ Linha de negócio): abre o popover se ainda não estiver aberto
+const pickLine = async (page: Page, name: string) => {
+  if (!(await page.getByRole("group", { name: "Linha de negócio" }).isVisible())) await page.getByRole("button", { name: /^Filtros/ }).first().click();
+  await lineBtn(page, name).click();
+};
 
 test.describe.serial("@release Financeiro por linha de negócio", () => {
   test.setTimeout(150_000);
@@ -28,11 +33,11 @@ test.describe.serial("@release Financeiro por linha de negócio", () => {
       await expect(region(page).getByRole("columnheader", { name: "HP Fisioterapia" })).toBeVisible();
       await expect(region(page).getByRole("columnheader", { name: "HP Academy" })).toBeVisible();
       await expect(region(page).getByRole("columnheader", { name: "Geral" })).toBeVisible();
-      await lineBtn(page, "HP Academy").click();
+      await pickLine(page, "HP Academy");
       await expect(page).toHaveURL(/linha=academy/);
       await expect(lineBtn(page, "HP Academy")).toHaveAttribute("aria-pressed", "true");
       await expect(region(page).getByText(/— HP Academy/).first()).toBeVisible();
-      await lineBtn(page, "Geral").click(); await expect(page).not.toHaveURL(/linha=/);
+      await pickLine(page, "Geral"); await expect(page).not.toHaveURL(/linha=/);
       await expectNoFatal(page);
     }
     expect(errors, errors.join("\n")).toEqual([]);
@@ -49,13 +54,13 @@ test.describe.serial("@release Financeiro por linha de negócio", () => {
     await page.goto("/admin/financeiro/recorrencia");
     await expect(page.getByRole("heading", { name: "Por linha de negócio" })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/Conferido: a soma das linhas bate com o MRR consolidado/)).toBeVisible();
-    await lineBtn(page, "HP Fisioterapia").click();
+    await pickLine(page, "HP Fisioterapia");
     await expect(page).toHaveURL(/linha=physio/);
     await expect(page.getByText(/MRR do mês — HP Fisioterapia/)).toBeVisible();
     await expect(page.getByText(/Ponte de movimentação do MRR — HP Fisioterapia/)).toBeVisible();
-    await lineBtn(page, "HP Academy").click();
+    await pickLine(page, "HP Academy");
     await expect(page.getByText(/MRR do mês — HP Academy/)).toBeVisible();
-    await lineBtn(page, "Geral").click();
+    await pickLine(page, "Geral");
     await expect(page.getByText("MRR do mês", { exact: true })).toBeVisible();
     await expectNoFatal(page);
     expect(errors, errors.join("\n")).toEqual([]);
@@ -66,7 +71,7 @@ test.describe.serial("@release Financeiro por linha de negócio", () => {
     await page.goto("/admin/financeiro/relatorios");
     await expect(page.getByRole("heading", { name: /Por linha de negócio — Geral/ })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/Conferido: o total das linhas bate com o Geral/)).toBeVisible();
-    await lineBtn(page, "HP Fisioterapia").click();
+    await pickLine(page, "HP Fisioterapia");
     await expect(page.getByRole("heading", { name: /Por linha de negócio — HP Fisioterapia/ })).toBeVisible();
     await expect(page.getByText("CAC", { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/indispon/i).first()).toBeVisible();

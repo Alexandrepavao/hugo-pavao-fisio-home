@@ -3,7 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { MoreHorizontal, Plus, Search, Users, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { download, toCsv } from "@/lib/format";
-import { Badge, EmptyState, FilterBar, FilterField, PageHead, State, Table, Td, type Tone } from "@/lib/ui";
+import { PeriodFilter } from "@/lib/PeriodFilter";
+import { Badge, EmptyState, PageHead, State, Table, Td, type Tone } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/auth/AuthProvider";
@@ -97,15 +98,13 @@ const People = () => {
           <button className="hp-btn hp-btn-primary" onClick={() => setShowForm(true)}><Plus size={16} aria-hidden />Nova pessoa</button></>} />
       {note && <p role="status" className="mb-4 rounded-md border border-border bg-card px-3 py-2 text-sm">{note} <button className="underline ml-1" onClick={() => setNote(null)}>Fechar</button></p>}
 
-      <FilterBar>
-        <FilterField label="Buscar por nome" htmlFor="p-q" className="min-w-[16rem]">
-          <div className="relative"><Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input id="p-q" type="search" style={{ paddingLeft: "2rem" }} placeholder="Nome…" value={q} onChange={(e) => { setPage(0); setQ(e.target.value); }} onKeyDown={(e) => e.key === "Escape" && clearFilters()} /></div>
-        </FilterField>
-        <FilterField label="Tipo" htmlFor="p-kind"><select id="p-kind" value={kind} onChange={(e) => { setPage(0); setKind(e.target.value); }}><option value="">Todos</option>{KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}</select></FilterField>
-        <FilterField label="Unidade" htmlFor="p-unit"><select id="p-unit" value={unit} onChange={(e) => { setPage(0); setUnit(e.target.value); }}><option value="">Todas</option>{units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></FilterField>
-        {hasFilters && <button className="hp-btn hp-btn-ghost" onClick={clearFilters}><X size={14} aria-hidden />Limpar filtros</button>}
-      </FilterBar>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div className="relative w-full sm:w-80"><label htmlFor="p-q" className="sr-only">Buscar por nome</label><Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input id="p-q" type="search" style={{ paddingLeft: "2rem" }} placeholder="Buscar por nome…" value={q} onChange={(e) => { setPage(0); setQ(e.target.value); }} onKeyDown={(e) => e.key === "Escape" && clearFilters()} /></div>
+        {/* mesmo padrão dos demais módulos: unidade visível; o resto (tipo) dentro do botão Filtros, com contador e “Limpar filtros” */}
+        <PeriodFilter unit={unit} units={units} onUnit={(v) => { setPage(0); setUnit(v); }} onClear={clearFilters} extraCount={kind ? 1 : 0} extraSummary={kind ? `Tipo: ${KINDS.find((k) => k.value === kind)?.label ?? kind}` : undefined}
+          extra={<div><label htmlFor="p-kind" className="block text-xs mb-1">Tipo</label><select id="p-kind" value={kind} onChange={(e) => { setPage(0); setKind(e.target.value); }}><option value="">Todos</option>{KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}</select></div>} />
+      </div>
 
       <State loading={state === "loading" && rows.length === 0} error={state === "error"} />
       {state === "ok" && rows.length === 0 && <EmptyState icon={Users} title={hasFilters ? "Nenhuma pessoa encontrada" : "Nenhuma pessoa cadastrada ainda"} action={!hasFilters ? <button className="hp-btn hp-btn-primary mt-2" onClick={() => setShowForm(true)}>Cadastrar a primeira pessoa</button> : undefined}>{hasFilters ? "Ajuste ou limpe os filtros." : "Cadastre manualmente, importe uma planilha ou aguarde os envios dos formulários das páginas."}</EmptyState>}
