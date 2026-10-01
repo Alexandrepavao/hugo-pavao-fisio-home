@@ -153,8 +153,8 @@ begin
     (v_org, ua, rule, gen_random_uuid(), gen_random_uuid(), u_phy, 7000, 'pending'), (v_org, ua, rule, gen_random_uuid(), gen_random_uuid(), u_phy2, 4000, 'authorized');
   set local session_replication_role = origin; set local role authenticated; perform pg_temp.as_user(u_phy);
   j := public.my_professional_summary(w_from, w_to) -> 'payouts';
-  rep := rep || pg_temp.chk((j ->> 'available')::boolean and (j ->> 'authorized_cents')::bigint = 15000 and (j ->> 'paid_cents')::bigint = 9000 and (j ->> 'rules')::int = 1 and jsonb_array_length(j -> 'entries') = 2,
-    'repasses: só os AUTORIZADOS (R$ 150,00) e PAGOS (R$ 90,00) dele; o pendente (R$ 70,00) e o de outro profissional não entram');
+  rep := rep || pg_temp.chk((j ->> 'available')::boolean and (j ->> 'authorized_cents')::bigint = 15000 and (j ->> 'paid_cents')::bigint = 9000 and (j ->> 'pending_cents')::bigint = 7000 and (j ->> 'reversed_cents')::bigint = 0 and (j ->> 'net_cents')::bigint = 31000 and (j ->> 'rules')::int = 1 and jsonb_array_length(j -> 'entries') = 3,
+    'repasses: pendente (R$ 70,00), autorizado (R$ 150,00) e pago (R$ 90,00) dele, líquido R$ 310,00; o lançamento de outro profissional não entra (detalhe completo no S18)');
 
   -- ============ 6) paciente: isolamento entre pacientes e sessões separadas
   reset role;

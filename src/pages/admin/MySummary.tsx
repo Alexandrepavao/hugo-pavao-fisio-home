@@ -8,7 +8,10 @@ import { presetRange, usePeriodFilterState } from "./finance/shared";
 import { useSearchParams } from "react-router-dom";
 
 interface Counts { scheduled: number; awaiting_record: number; attended: number; cancelled_by_patient: number; cancelled_by_clinic: number; rescheduled: number; patient_no_show: number; professional_no_show: number; patients_attended: number; total: number }
-interface Payouts { visible: boolean; rules?: number; authorized_cents?: number; paid_cents?: number; available?: boolean; basis: string; entries?: { at: string; amount_cents: number; status: "authorized" | "paid" }[] }
+interface PayEntry { at: string; amount_cents: number; status: "pending" | "authorized" | "paid" | "reversed"; kind: "payment" | "refund"; base_cents: number | null; percent_bp: number | null; percent_estimated: boolean; rule: string | null; products: string | null }
+interface Payouts { visible: boolean; rules?: number; pending_cents?: number; authorized_cents?: number; paid_cents?: number; reversed_cents?: number; net_cents?: number; available?: boolean; basis: string; entries?: PayEntry[] }
+const PAY_ST: Record<PayEntry["status"], string> = { pending: "Pendente", authorized: "Autorizado", paid: "Pago", reversed: "Estornado" };
+const pct = (bp: number | null) => (bp == null ? "—" : `${(bp / 100).toFixed(2).replace(".", ",")}%`);
 interface Summary { professional_id: string; professional_name: string; is_self: boolean; from: string; to: string; counts: Counts; payouts: Payouts }
 interface ProfOpt { id: string; display_name: string; is_self: boolean }
 
@@ -53,15 +56,21 @@ const MySummary = () => {
           <p className="text-xs text-muted-foreground mt-2">Remarcados: {c.rescheduled} · Total de atendimentos no período: {c.total}</p>
         </LevelSection>
 
-        <LevelSection level="analysis" title="Repasses" hint="Só repasses AUTORIZADOS e PAGOS gerados pelas regras de comissão em seu nome.">
+        <LevelSection level="analysis" title="Repasses" hint="Comissões geradas pelas regras em seu nome, pela data do recebimento. Pendente aguarda autorização; estorno reduz o líquido.">
           {pay && !pay.visible && <p className="text-sm text-muted-foreground" role="note">{pay.basis}.</p>}
           {pay?.visible && !pay.available && <div className="hp-card p-4 flex gap-3 items-start" role="note"><Wallet aria-hidden className="mt-0.5 shrink-0 text-muted-foreground" size={18} /><p className="text-sm"><b>Indisponível.</b> {pay.basis}.</p></div>}
           {pay?.visible && pay.available && (<>
             <KpiGrid>
+              <StatCard icon={Wallet} label="Repasses pendentes" value={brl(pay.pending_cents ?? 0)} period={per} basis="aguardando autorização do financeiro" />
               <StatCard icon={Wallet} label="Repasses autorizados" value={brl(pay.authorized_cents ?? 0)} period={per} basis="autorizados e ainda não pagos" />
               <StatCard icon={Wallet} label="Repasses pagos" value={brl(pay.paid_cents ?? 0)} period={per} tone="success" basis="já pagos" />
+              <StatCard icon={Wallet} label="Estornos de repasse" value={brl(pay.reversed_cents ?? 0)} period={per} tone={(pay.reversed_cents ?? 0) < 0 ? "warning" : undefined} basis="devoluções de pagamento reduzem a comissão" />
+              <StatCard icon={Wallet} label="Líquido do período" value={brl(pay.net_cents ?? 0)} period={per} basis="pendente + autorizado + pago − estornos" />
             </KpiGrid>
-            {pay.entries && pay.entries.length > 0 && <Table head={["Data", "Situação", "Valor"]} right={[2]}>{pay.entries.map((e, i) => <tr key={i}><Td>{new Date(e.at).toLocaleDateString("pt-BR")}</Td><Td>{e.status === "paid" ? "Pago" : "Autorizado"}</Td><Td num>{brl(e.amount_cents)}</Td></tr>)}</Table>}
+            {pay.entries && pay.entries.length > 0 && <Table head={["Recebimento", "Produto(s)", "Regra", "Base", "Percentual", "Valor", "Situação"]} right={[3, 5]}>{pay.entries.map((e, i) => <tr key={i}>
+              <Td>{new Date(e.at).toLocaleDateString("pt-BR")}{e.kind === "refund" && <span className="block text-xs text-destructive">estorno</span>}</Td><Td>{e.products ?? "—"}</Td><Td>{e.rule ?? "—"}</Td>
+              <Td num>{e.base_cents == null ? "—" : brl(e.base_cents)}</Td><Td num>{pct(e.percent_bp)}{e.percent_estimated && <span className="block text-[11px] text-muted-foreground">da regra atual</span>}</Td>
+              <Td num>{brl(e.amount_cents)}</Td><Td>{PAY_ST[e.status]}</Td></tr>)}</Table>}
             <p className="text-xs text-muted-foreground mt-2">{pay.basis}.</p>
           </>)}
         </LevelSection>
