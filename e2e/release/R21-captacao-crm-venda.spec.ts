@@ -114,7 +114,7 @@ test.describe.serial("@release Captação → CRM → venda (contato existente e
     await page.locator("#pr").selectOption(S.prod); await page.locator("#in").fill("1"); await page.locator("#fd").fill(spDate(0));
     await page.getByRole("button", { name: "Criar venda" }).dblclick();                                              // duplo clique
     await expect(page.getByText(/Venda criada como pendente/)).toBeVisible({ timeout: 20_000 });
-    let sales = await sql<{ id: string; status: string; total_cents: number; opportunity_id: string; unit_id: string; person_id: string }>(`select id, status, total_cents, opportunity_id, unit_id, person_id from public.sales where person_id = '${S.person}'`);
+    const sales = await sql<{ id: string; status: string; total_cents: number; opportunity_id: string; unit_id: string; person_id: string }>(`select id, status, total_cents, opportunity_id, unit_id, person_id from public.sales where person_id = '${S.person}'`);
     expect(sales, "duplo clique: UMA venda").toHaveLength(1); expect(sales[0]).toMatchObject({ status: "pending", total_cents: 90000, opportunity_id: S.opp, unit_id: S.unit, person_id: S.person }); S.sale = sales[0].id;
     const items = await sql<{ product_id: string; description: string; qty: number }>(`select product_id, description, qty from public.sale_items where sale_id = '${S.sale}'`); expect(items).toEqual([{ product_id: S.prod, description: prodName, qty: 1 }]);
     // retentativa pela API (mesmos dados, sem chave): recusada porque já há venda pendente da oportunidade; nada novo é criado
