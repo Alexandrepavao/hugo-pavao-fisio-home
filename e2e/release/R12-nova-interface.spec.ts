@@ -1,7 +1,15 @@
 // ACEITE da release v1 — nova interface (cabeçalho, filtro único, cartões por nível, mapa do Brasil). Só comportamentos NOVOS; os números dos cartões continuam
 // cobertos por R07/R08/R11. Não cria nem altera dados (só lê); a preferência de tema é do navegador do teste.
 import { expect, test, type Page } from "@playwright/test";
+
 import { api, collectErrors, expectNoFatal, loginAs, QA, signIn } from "./helpers-release";
+
+/** O filtro “Estado” do Diretório fica dentro do botão Filtros (filtro único): abre o popover, confere o valor e fecha. */
+const expectUf = async (page: Page, uf: string) => {
+  await page.getByRole("button", { name: /^Filtros/ }).click();
+  await expect(page.locator("#dir-f-uf")).toHaveValue(uf, { timeout: 30_000 });
+  await page.keyboard.press("Escape");
+};
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
 
@@ -122,7 +130,7 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     expect(dir.total).toBe(top.count);
     await panel.getByRole("link", { name: /no Diretório/ }).click();
     await expect(page).toHaveURL(new RegExp(`/admin/adm/diretorio\\?uf=${top.uf}`));
-    await expect(page.getByLabel("Estado")).toHaveValue(top.uf, { timeout: 30_000 });
+    await expectUf(page, top.uf);
     await expect(page.getByText(new RegExp(`${top.count.toLocaleString("pt-BR")}`)).first()).toBeVisible();
     // nada de marca/crédito externo na interface
     await page.goto("/admin/adm"); await expect(page.getByTestId("brazil-map")).toBeVisible({ timeout: 40_000 });
@@ -134,10 +142,10 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     const geo = (await api(s).rpc("adm_geo", { p_unit: null })).body as { by_state: { uf: string; count: number }[] };
     const top = geo.by_state[0];
     await page.goto(`/admin/adm/diretorio?uf=${top.uf}`);
-    await expect(page.getByLabel("Estado")).toHaveValue(top.uf, { timeout: 30_000 });
-    await page.reload(); await expect(page.getByLabel("Estado")).toHaveValue(top.uf, { timeout: 30_000 });
+    await expectUf(page, top.uf);
+    await page.reload(); await expectUf(page, top.uf);
     await page.goto("/admin/adm"); await expect(page.getByTestId("brazil-map")).toBeVisible({ timeout: 40_000 });
-    await page.goBack(); await expect(page.getByLabel("Estado")).toHaveValue(top.uf, { timeout: 30_000 });
+    await page.goBack(); await expectUf(page, top.uf);
     await page.goForward(); await expect(page.getByTestId("brazil-map")).toBeVisible({ timeout: 30_000 });
   });
 

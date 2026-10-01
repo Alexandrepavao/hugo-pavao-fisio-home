@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { brl } from "@/lib/format";
-import { FilterBar, FilterField, State } from "@/lib/ui";
+import { State } from "@/lib/ui";
+import { PeriodFilter } from "@/lib/PeriodFilter";
+import { presetRange, type RangePreset } from "@/lib/period";
 import LineConference from "./LineConference";
 import { useBankByLine } from "./lineReports";
-import { iso, monthStart, type Account } from "./shared";
+import { type Account } from "./shared";
 
 /** Movimentos bancários por linha de negócio (data do extrato). Não substitui o Financeiro por linha (competência/caixa de vendas e contas):
  *  aqui é o que passou pela conta, com a linha vinda do lançamento conciliado ou da alocação manual. Entradas e saídas ficam separadas. */
 const BankByLine = ({ accounts }: { accounts: Account[] | undefined }) => {
-  const today = new Date();
-  const [from, setFrom] = useState(iso(monthStart(today)));
-  const [to, setTo] = useState(iso(today));
+  const [preset, setPreset] = useState<RangePreset>("mes"); const [custom, setCustom] = useState(presetRange("mes"));
+  const { from, to } = custom;
   const [account, setAccount] = useState("");
   const toExclusive = (() => { const d = new Date(`${to}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
   const q = useBankByLine(from, toExclusive, "", account);
@@ -21,11 +22,12 @@ const BankByLine = ({ accounts }: { accounts: Account[] | undefined }) => {
     <section aria-label="Movimentos bancários por linha de negócio" className="mb-8">
       <h2 className="text-xl mb-1">Movimentos bancários por linha de negócio</h2>
       <p className="text-sm text-muted-foreground mb-3">O extrato importado continua exatamente como veio do banco. A linha de negócio é uma camada separada: movimento conciliado herda a linha do recebimento ou da conta paga; pendente ou ignorado pode receber alocação manual; sem nenhuma das duas fica em “Não classificado”.</p>
-      <FilterBar>
-        <FilterField label="De" htmlFor="bbl-from"><input id="bbl-from" type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></FilterField>
-        <FilterField label="Até" htmlFor="bbl-to"><input id="bbl-to" type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} /></FilterField>
-        <FilterField label="Conta bancária" htmlFor="bbl-acc"><select id="bbl-acc" value={account} onChange={(e) => setAccount(e.target.value)}><option value="">Todas</option>{accounts?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></FilterField>
-      </FilterBar>
+      {/* filtro único: período à vista; a conta bancária dentro do botão Filtros (com contador e “Limpar filtros”) */}
+      <div className="flex justify-end mb-4">
+        <PeriodFilter preset={preset} from={from} to={to} onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((x) => ({ ...x, from: v }))} onTo={(v) => setCustom((x) => ({ ...x, to: v }))}
+          onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setAccount(""); }} extraCount={account ? 1 : 0} extraSummary={account ? `Conta: ${accounts?.find((a) => a.id === account)?.name ?? ""}` : undefined}
+          extra={<div><label htmlFor="bbl-acc" className="block text-xs mb-1">Conta bancária</label><select id="bbl-acc" value={account} onChange={(e) => setAccount(e.target.value)}><option value="">Todas</option>{accounts?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>} />
+      </div>
       <State loading={q.isLoading} error={q.error} />
       {d && (<div className="grid gap-4">
         <div className="hp-card p-3 text-sm" role="status" aria-label="Situação do extrato no período">

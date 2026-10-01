@@ -5,6 +5,7 @@ import { Columns3, Download, Search, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { download, fmtDate, toCsv } from "@/lib/format";
 import { Badge, errText, Msg, PageHead, State, StatCard, btnGhost, btnPrimary, useMsg } from "@/lib/ui";
+import { ListFilterBar } from "@/lib/ListFilterBar";
 import { useUnits } from "../finance/shared";
 import ImportDialog from "../people/ImportDialog";
 import PersonAdmSheet from "./PersonAdmSheet";
@@ -159,33 +160,19 @@ const Diretorio = () => {
         </ul>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <div className="relative">
-          <Search size={14} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <label htmlFor="dir-q" className="sr-only">Buscar</label>
-          <input id="dir-q" placeholder="Nome, razão social, e-mail, telefone ou documento" style={{ paddingLeft: "2rem" }} value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }} className="!h-9 rounded-full !py-0 text-[13px] min-w-[18rem]" />
-        </div>
-        <select value={type} onChange={(e) => { setType(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Tipo">
-          <option value="">PF e PJ</option><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option>
-        </select>
-        <select value={kind} onChange={(e) => { setKind(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Vínculo">
-          <option value="">Todos os vínculos</option>{Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-        </select>
-        <select value={unit} onChange={(e) => { setUnit(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Unidade">
-          <option value="">Todas as unidades</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-        </select>
-        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Status">
-          <option value="">Todos os status</option>{Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-        </select>
-        <select value={uf} onChange={(e) => { setUf(e.target.value); setPage(0); }} className="!h-9 !w-auto rounded-full !py-0 text-[13px]" aria-label="Estado">
-          <option value="">Todos os estados</option>{UFS.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
-        <label className="flex items-center gap-1.5 text-[13px]"><input type="checkbox" checked={incompleteOnly} onChange={(e) => { setIncompleteOnly(e.target.checked); setPage(0); }} />Só incompletos</label>
-        {(search || type || kind || unit || status || incompleteOnly || uf) && (
-          <button className={btnGhost + " hp-btn-sm"} onClick={() => { setSearch(""); setType(""); setKind(""); setUnit(""); setStatus(""); setIncompleteOnly(false); setUf(""); setSp({}); setPage(0); }}>Limpar</button>
-        )}
-      </div>
+      {/* filtro único: busca e unidade visíveis; tipo, vínculo, status, estado e “só incompletos” dentro do botão Filtros (com contador, chips e “Limpar filtros”) — mesmos parâmetros de URL e mesma consulta de antes */}
+      <ListFilterBar search={{ id: "dir-q", label: "Buscar", placeholder: "Nome, razão social, e-mail, telefone ou documento", value: search, onChange: (v) => { setSearch(v); setPage(0); } }}
+        unit={unit} units={units.data ?? []} onUnit={(v) => { setUnit(v); setPage(0); }}
+        onClear={() => { setSearch(""); setType(""); setKind(""); setUnit(""); setStatus(""); setIncompleteOnly(false); setUf(""); setSp({}); setPage(0); }}
+        extraCount={[type, kind, status, uf].filter(Boolean).length + (incompleteOnly ? 1 : 0)}
+        extraSummary={[type ? `Tipo: ${type === "pf" ? "Pessoa física" : "Pessoa jurídica"}` : "", kind ? `Vínculo: ${KIND_LABEL[kind] ?? kind}` : "", status ? `Status: ${STATUS_LABEL[status] ?? status}` : "", uf ? `Estado: ${uf}` : "", incompleteOnly ? "Só incompletos" : ""].filter(Boolean).join(" · ") || undefined}
+        extra={<div className="grid gap-3">
+          <div><label htmlFor="dir-f-tipo" className="block text-xs mb-1">Tipo</label><select id="dir-f-tipo" value={type} onChange={(e) => { setType(e.target.value); setPage(0); }}><option value="">PF e PJ</option><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option></select></div>
+          <div><label htmlFor="dir-f-vinculo" className="block text-xs mb-1">Vínculo</label><select id="dir-f-vinculo" value={kind} onChange={(e) => { setKind(e.target.value); setPage(0); }}><option value="">Todos os vínculos</option>{Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+          <div><label htmlFor="dir-f-status" className="block text-xs mb-1">Status</label><select id="dir-f-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}><option value="">Todos os status</option>{Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+          <div><label htmlFor="dir-f-uf" className="block text-xs mb-1">Estado</label><select id="dir-f-uf" value={uf} onChange={(e) => { setUf(e.target.value); setPage(0); }}><option value="">Todos os estados</option>{UFS.map((x) => <option key={x} value={x}>{x}</option>)}</select></div>
+          <label className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={incompleteOnly} onChange={(e) => { setIncompleteOnly(e.target.checked); setPage(0); }} />Só incompletos</label>
+        </div>} />
 
       <State loading={dir_.isLoading || view.isLoading} error={dir_.error ?? view.error} empty={dir_.data?.rows.length === 0} emptyText="Nenhum cadastro encontrado com estes filtros." />
       {dir_.data && dir_.data.rows.length > 0 && view.data && (

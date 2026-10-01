@@ -111,7 +111,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
   };
   const openAgenda = async (page: Page, date: string) => {
     await page.goto("/admin/agenda");
-    await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(date); await page.locator("#ap").selectOption(S.prof); await page.locator("#as").selectOption(S.svc);
+    await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(date); await page.locator("#ap").selectOption(S.prof); await page.locator("#as").selectOption(S.svc);
   };
   const bookUi = async (page: Page, date: string, hhmm: string | undefined, opts: { pkg?: boolean; opp?: boolean } = {}) => {
     await openAgenda(page, date);
@@ -133,7 +133,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     const dup = await g.rpc("book_appointment", { p_person: S.person, p_unit: S.unit, p_professional: S.prof, p_service: S.svc, p_start: start, p_package: null, p_opportunity: null });
     expect(dup.status).not.toBe(200);
     // remarcar pela interface (prompt em AAAA-MM-DD HH:MM, fuso do navegador = São Paulo)
-    await page.reload(); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(day);
+    await page.reload(); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(day);
     await page.getByRole("row").filter({ hasText: name }).filter({ hasText: "Agendado" }).getByRole("button", { name: "Remarcar" }).click();
     await page.locator("#ask-input").fill(`${day} 15:00`); await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText("Remarcado.")).toBeVisible();
@@ -147,7 +147,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     expect((await g.get(`appointments?select=status&id=eq.${S.evalAppt}`)).body[0].status).toBe("scheduled");
     // o tempo passa (Dev): o atendimento passa a ter ocorrido ontem às 10:00 e o comparecimento é registrado pela interface
     const past = spDate(-1); await moveAppointment(S.evalAppt, `${past}T10:00:00-03:00`);
-    await page.reload(); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(past);
+    await page.reload(); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(past);
     await page.getByRole("row").filter({ hasText: name }).filter({ hasText: "Agendado" }).getByRole("button", { name: "Compareceu" }).click();
     await expect(page.getByText("Status atualizado.")).toBeVisible();
     expect((await g.get(`appointments?select=status&id=eq.${S.evalAppt}`)).body[0].status).toBe("attended");
@@ -251,16 +251,16 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     const soon = new Date(Math.ceil((Date.now() + 90 * 60e3) / 1800e3) * 1800e3); await moveAppointment(a3, soon.toISOString());
 
     // a1: compareceu (consome 1) — pela interface
-    await page.goto("/admin/agenda"); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(dm2);
+    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(dm2);
     await page.getByRole("row").filter({ hasText: name }).filter({ hasText: "09:00" }).getByRole("button", { name: "Compareceu" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     // a2: faltou (produto consome falta) — pela interface
     await page.getByRole("row").filter({ hasText: name }).filter({ hasText: "10:00" }).getByRole("button", { name: "Faltou" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     // a3: paciente cancela em cima da hora (< 24h) → consome
-    await page.locator("#ad").fill(soon.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" }));
+    await page.locator("#pf-day").fill(soon.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" }));
     await page.getByRole("row").filter({ hasText: name }).filter({ hasText: spTime(soon.toISOString()) }).getByRole("button", { name: "Cancelou", exact: true }).click();
     await page.locator("#ask-input").fill("Imprevisto de última hora"); await page.getByRole("dialog").getByRole("button", { name: "Cancelar agendamento" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     // a4: paciente cancela com antecedência → NÃO consome; a5: a clínica cancela → NÃO consome
-    await page.locator("#ad").fill(d6);
+    await page.locator("#pf-day").fill(d6);
     await page.getByRole("row").filter({ hasText: name }).filter({ hasText: "10:00" }).getByRole("button", { name: "Cancelou", exact: true }).click();
     await page.locator("#ask-input").fill("Viagem"); await page.getByRole("dialog").getByRole("button", { name: "Cancelar agendamento" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     // cancelamento antecipado devolveu a reserva: agora cabe mais um agendamento, que a clínica cancela

@@ -44,7 +44,23 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-01, 11ª rodada) — aplicativos contextuais, filtros, Cartões corporativos e Calendário
+## Sessão mais recente (2026-10-01, 12ª rodada) — filtro único nos seis módulos, edição de cartão e diagnóstico do `57014`
+
+> `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Sem integração com bancos emissores e sem parcelamento (fora do escopo). Detalhes: `docs/aplicativos.md` §4, `docs/cartoes-corporativos.md` §6, `docs/diagnosticos/04-agenda-concurrency/README.md`.
+- **Filtro único (item 1):** Agenda (unidade e dia à vista; profissional e estado no botão Filtros), Academy (cursos e trilhas), Parceiros (por aba), Contas a pagar (estado, linha, origem, vencimento), Conciliação (+ relatório por linha com período do filtro único) e Planilha administrativa
+  migrados para `PeriodFilter`/`ListFilterBar`, com contador, chips e “Limpar filtros”; os filtros e parâmetros de URL que já existiam foram preservados e nenhuma permissão mudou (`R14`, `R02`).
+- **Edição de cartão (item 2, migration 066):** limite, fechamento e vencimento, com motivo e auditoria; **faturas e despesas existentes não mudam**; os novos dias valem só para faturas que ainda não existem (documentado com exemplo em `docs/cartoes-corporativos.md` §6). Limite não pode ficar abaixo do em aberto.
+- **`57014` do `04-agenda-concurrency` (item 3) — causa determinada:** deadlock no banco entre reservas simultâneas do mesmo horário (exclusion constraints), com reexecução automática até o timeout de 8 s — **não é o ambiente nem o valor do timeout (não foi aumentado)**. Provado com 2 reproduções
+  (1/30 e 1/40 iterações travadas, `pg_stat_database.deadlocks` +154, grafo de bloqueio em ciclo) e **direto no banco** (27 deadlocks em 33 tentativas sem a trava; 0 em 970 com ela). Correção: migration 067 (trava transacional por profissional e pessoa). Depois dela: 100 iterações × 6 requisições sem deadlock
+  (pior 214 ms) e o teste real 10/10. Artefatos das falhas preservados em `docs/diagnosticos/04-agenda-concurrency/`. **Sem diagnóstico:** qual camada reexecuta (PostgREST x gateway) e a linha de log do deadlock (API de logs indisponível).
+- **Testes:** SQL S01–S14 todos OK (S14 novo, 43); E2E: `R14` novo (15), R01–R13, N10/N11 e os gerais 01–09 verdes; `04` ×10. Ajustes por mudança **intencional** de interface: `#au/#ad` → `#pf-unit/#pf-day` (R01/R04/R05), “Estado” do Diretório e “Conta bancária” do relatório agora no popover (R12/R08).
+  Falhas encontradas e tratadas: (a) **R04** — o paciente QA compartilhado acumulou 127 atendimentos e `my_appointments` mostra só 100 (`limit 100`): o “ontem” da execução ficava fora da lista; o teste agora remove atendimentos de execuções anteriores (`R0x`, outro runId) antes de começar;
+  (b) **07** — sobra de um recebimento de R$ 150,00 não conciliado de rodada antiga gerava duas sugestões; o teste passou a conferir e confirmar a da própria pessoa; (c) **R12** — chaves React duplicadas na busca global (`CommandMenu`: a mesma rota aparecia no Hub e no app); corrigido (defeito real, de rodada anterior).
+- **Sem diagnóstico:** uma única ocorrência, no **R04**, em que `#pf-day.fill()` ficou 150 s “aguardando o elemento” — não se repetiu (4 execuções seguintes passaram; o `fill` isolado leva ~60 ms) e o artefato foi sobrescrito pela execução seguinte; não sei se foi o navegador com ~0,7 GB livres ou outra causa.
+  O `vitest` tem 1 suíte que falha há tempos (`supabase/tests/functions/google-sync-plan.test.mjs` chama `process.exit`; não foi tocada) e o `eslint` tem 23 erros em arquivos que não mudaram (funções do Supabase, `R06`).
+- **Migrations para produção:** 26 (038→047, 052→067); `list_migrations` final = **63**; o Dev tem **68**.
+
+## Sessão anterior (2026-10-01, 11ª rodada) — aplicativos contextuais, filtros, Cartões corporativos e Calendário
 
 > `release/v1` (a indicação `feature/hp-group-hub` do pedido foi corrigida pelo usuário: essa branch é antiga, já mesclada, e o PR em rascunho é o #3); Dev apenas; produção, DNS e merge intocados.
 > Documentos novos: `docs/aplicativos.md` (rotas, menus, filtros, referências), `docs/cartoes-corporativos.md` (modelo, regras, testes). Capturas: `docs/screenshots/apps-cartoes-calendario/`.
@@ -59,7 +75,7 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
   legível (hoje destacado, eventos coloridos com “+N mais”; pontos no celular). Só Google Calendar (OAuth individual, status, sincronizar, desconectar) — sem iPhone/Apple/`.ics`.
 - **Testes:** SQL S01–S13 e N01–N02 OK; E2E: `R02` reescrito (menus por papel e por aplicativo), novo `R13` (14), ajustes por mudança intencional em `R08` (linha de negócio no filtro) e `R12`; correções de fragilidade que dependiam de
   data/dados acumulados em `R01` (parcela “1/2” exata), `R03` (contagem na seção certa e dia livre para o paciente QA compartilhado) e do isolamento do `S13` (auditoria só das próprias compras).
-  `04-agenda-concurrency` é **intermitente** (1 em 3 execuções recebe `57014` — statement timeout — em vez de `P0409` nas requisições perdedoras; teste só de API, sem relação com esta etapa).
+  `04-agenda-concurrency` era **intermitente** (`57014` em vez de `P0409`); **investigado e corrigido na 12ª rodada** (deadlock entre reservas simultâneas; migration 067) — ver a seção acima.
 - **Falhas da bateria longa (`07` DRE e `08` quizzes), investigadas — causa NÃO determinada:** numa bateria de 35 testes (01:32–01:37, horário de Brasília) falharam, em sequência, `07 › DRE` (a linha da categoria
   “Custo E2E …” não apareceu em 10 s) e dois testes do `08` (a próxima pergunta do quiz não apareceu / timeout). O que foi **descartado com evidência**: (a) *dados*: a despesa estava paga no banco (04:33:50 UTC), com categoria
   classificada e competência de outubro, e a `dre_report` devolve a categoria para a janela da tela; (b) *janela de datas/fuso*: o intervalo calculado pela tela cobre o pagamento; (c) *latência do RPC*: `dre_report`,
@@ -117,7 +133,7 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 - **`cash_flow_monthly`** reexecutada com os parâmetros corretos (`p_from`, `p_to`, `p_unit`): 200.
 - **`google-calendar` (publicada sem JWT na plataforma):** `start`, `sync` e `disconnect` exigem sessão de usuário validada dentro da função (sem token, só a chave pública ou JWT inválido → 401). Achado: o `state` era assinado e expirava em 10 min, mas **não era de uso único**. Corrigido com a migration **061** (`google_oauth_state`, nonce guardado e consumido no callback). 25 verificações com segredos **fictícios temporários** (já removidos do Dev): state adulterado/forjado/vencido/de outro usuário/repetido → `google=estado`; só o 1º uso do state legítimo segue. Script: `supabase/tests/functions/google-calendar-auth.mjs`.
 - **Preview:** `https://release-v1--hp-group-hub.netlify.app` (deploy `6abd3c27ec571eb924ec12b2`, branch-deploy, `ready`, sem `--prod`). **Bloqueio de acesso:** o endereço exige login da equipe Netlify (401 sem sessão), então o `version.json` servido e as telas não puderam ser abertos por HTTP. Verificação alternativa: o `dist/` gerado pelo próprio build do deploy foi servido localmente e 32 E2E (R01, R02, R07–R10) passaram; o `version.json` desse bundle diz commit `bcc6db8f649f`, perfil `v1`, ambiente `preview`, backend `Dev` (`fsvtzowcwhvwtluwrhnb`). Para conferir no endereço publicado: abrir a URL **logado na Netlify** e ver `/version.json`.
-- **Contagem de migrations:** Dev 66 × produção prevista 61 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
+- **Contagem de migrations:** Dev 68 × produção prevista 63 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
 - **Ainda pendente (não declarado concluído):** Bunny e Google em **configuração e teste reais**; `.ics` num iPhone/Google Agenda de verdade.
 
 ## Sessão anterior (2026-09-30, 5ª rodada) — Escopo ampliado aplicado no Dev e testado no banco

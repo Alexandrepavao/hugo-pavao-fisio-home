@@ -59,7 +59,7 @@ Executados contra o **Supabase Dev** (dados de QA), com o front local da branch 
 **Não coberto / não provado:** entrega e clique dos e-mails (§7); convite por e-mail via Netlify; migrations numa cópia de produção; SQL legado 001–023 inteiro em base limpa (002, 003, 010, 012 falham por fixtures próprias; 001/005 têm cópias independentes de volume em `supabase/tests/release`); carga/concorrência além da restrição de exclusão da agenda.
 
 ## 4. Migrations para produção (ordem exata)
-Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 24 (todas já aplicadas no Dev e testadas por SQL; produção não foi tocada):
+Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 26 (todas já aplicadas no Dev e testadas por SQL; produção não foi tocada):
 
 | Ordem | Arquivo | O que faz |
 |---|---|---|
@@ -87,17 +87,19 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 22 | `20260930000063_google_calendar_auto_sync.sql` | Sincronização automática com o Google Calendar: gatilho de atendimento + job de 5 em 5 minutos (`pg_net`/`pg_cron`, segredo no Vault) — `docs/calendarios.md` |
 | 23 | `20260930000064_adm_geo_and_directory_uf.sql` | Mapa do Brasil do Administrativo: `adm_geo` (cadastros PF+PJ por estado, mesmo escopo do painel) e filtro por estado em `adm_directory`/`adm_export`; a listagem passa a respeitar o escopo de unidade do gestor de unidade — `docs/interface-v2.md` |
 | 24 | `20260930000065_corporate_cards.sql` | Cartões corporativos: `corporate_cards`, `card_invoices`, `card_purchases` (a compra é uma despesa em `payables`), vínculo fatura ↔ extrato, funções de cadastro/compra/fatura/conciliação; ajusta `payable_pay`, `bank_reconcile_*` e `bank_line_split` — `docs/cartoes-corporativos.md` |
+| 25 | `20260930000066_card_update.sql` | Edição de cartão (`card_update`: limite, fechamento, vencimento, com motivo e auditoria); `private.card_cycle_for` (usa a fatura existente da data; novos dias só valem para faturas que ainda não existem); redefine `card_purchase_create` e `card_summary` (mesma assinatura) — `docs/cartoes-corporativos.md` §6 |
+| 26 | `20260930000067_book_appointment_serialize.sql` | `book_appointment` passa a serializar reservas do mesmo profissional/pessoa com `pg_advisory_xact_lock` (evita deadlock entre as exclusion constraints e o `57014` do teste de concorrência) — `docs/diagnosticos/04-agenda-concurrency/README.md` |
 
 **Contagem de migrations — Dev × produção (conferida em 2026-09-30 contra `supabase_migrations.schema_migrations` do Dev e contra os arquivos do repositório):**
 | | Registros | Composição |
 |---|---|---|
 | Produção hoje | **37** | 001–037 |
-| **Dev hoje** | **66** | 47 arquivos (001–047) + **1** (a 045 está registrada em duas partes: `adm_directory` e `adm_legal_entities`) + **4 só do Dev** (048–051: papel `accountant`/Contábil, sem arquivo nesta branch) + 14 (052–065) |
-| **Produção depois da release** | **61** | 37 + 10 (038–047, um registro por arquivo) + 14 (052–065) |
-**Diferença Dev − produção = 5** (66 − 61): as 4 migrations **048–051** (exclusivas do Dev; não há dependência da v1 nelas) + **1** registro extra porque a 045 foi aplicada no Dev em duas partes (o conteúdo é o mesmo do arquivo `045`, que entra em produção inteiro e de uma vez). Os números 61, 62 e 56/57 que aparecem nos relatórios são de bancos e momentos diferentes: 61 = Dev antes da 061 · 62 = Dev com a 061 · 63 = Dev com a 062 · **64 = Dev agora (com a 063)** · 56 = produção prevista antes da 061 · 57 = com a 061 · 58 = com a 062 · **59 = produção prevista agora**. As **22 migrations a aplicar em produção** são as da tabela acima; 056–063 são do escopo ampliado (a 061 tornou o `state` do Google de uso único; a 062 é a central de pendências administrativas; a 063 é a sincronização automática do Google Calendar).
+| **Dev hoje** | **68** | 47 arquivos (001–047) + **1** (a 045 está registrada em duas partes: `adm_directory` e `adm_legal_entities`) + **4 só do Dev** (048–051: papel `accountant`/Contábil, sem arquivo nesta branch) + 16 (052–067) |
+| **Produção depois da release** | **63** | 37 + 10 (038–047, um registro por arquivo) + 16 (052–067) |
+**Diferença Dev − produção = 5** (68 − 63): as 4 migrations **048–051** (exclusivas do Dev; não há dependência da v1 nelas) + **1** registro extra porque a 045 foi aplicada no Dev em duas partes (o conteúdo é o mesmo do arquivo `045`, que entra em produção inteiro e de uma vez). Os números 61, 62 e 56/57 que aparecem nos relatórios são de bancos e momentos diferentes: 61 = Dev antes da 061 · 62 = Dev com a 061 · 63 = Dev com a 062 · **64 = Dev agora (com a 063)** · 56 = produção prevista antes da 061 · 57 = com a 061 · 58 = com a 062 · **59 = produção prevista agora**. As **22 migrations a aplicar em produção** são as da tabela acima; 056–063 são do escopo ampliado (a 061 tornou o `state` do Google de uso único; a 062 é a central de pendências administrativas; a 063 é a sincronização automática do Google Calendar).
 
 **NÃO aplicar 048–051** (papel `accountant` e Contábil): existem no Dev e ficam na branch de desenvolvimento. Não há dependência da v1 nelas. Como a 052/053 têm versão maior que a 051, a ordem de aplicação em produção (…047 → 052 → 053) e a futura chegada de 048–051 são compatíveis (são independentes).
-Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 61 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
+Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), conferindo `list_migrations` (deve terminar em 63 registros) e rodando os testes SQL `supabase/tests/release` **contra o Dev** antes. As migrations foram aplicadas no Dev na mesma ordem; **não foram ensaiadas numa cópia de produção** (o plano do projeto não tem branch/PITR — ver §6).
 
 ## 5. Variáveis e configurações (somente nomes; valores ficam nos painéis)
 | Onde | Nome | Observação |
@@ -115,6 +117,8 @@ Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), con
 - Reversão das duas migrations que **substituem função**: 052 → reaplicar `set_appointment_status` do arquivo `20260921000006_directory_agenda.sql`; 053 → reaplicar `quiz_start` de `20260924000038_lead_quizzes.sql` **e o GRANT a `anon`**. As demais só adicionam objetos.
 - Reversão da 054 (substitui 3 funções e recria `my_appointments`): `set_appointment_status` → arquivo 052; `my_appointments` → `20260921000012_portal_support.sql` (recriar exige `drop function` antes, e repetir o GRANT a `authenticated`); `my_day` → `20260922000019_productivity.sql`. As colunas de confirmação e o status `professional_no_show` só se removem se nenhuma linha os usar (a constraint de status volta à lista antiga).
 - Reversão da 055 (substitui `book_appointment`, `reschedule_appointment` e recria `my_appointments`; cria funções novas): `book_appointment` e `reschedule_appointment` → arquivo `20260921000006_directory_agenda.sql` (isso **reabre** a brecha de horário passado); `my_appointments` → versão da 054 (`drop function` antes, repetir o GRANT); as funções novas (`my_appointment_cancel`, `my_agenda_professionals`, `professional_day`, `private.can_view_prof_agenda`) podem ser removidas com `drop function`.
+- Reversão da 066 (adiciona `card_update` e `private.card_cycle_for`; redefine `card_purchase_create` e `card_summary`): `drop function public.card_update(...)` e reaplicar as duas funções do arquivo `20260930000065_corporate_cards.sql` (mesmos GRANTs); `drop function private.card_cycle_for(uuid, date)` depois.
+- Reversão da 067 (só acrescenta dois `pg_advisory_xact_lock` em `book_appointment`): reaplicar a definição do arquivo `20260930000055_patient_cancel_past_guard_team_day.sql` e repetir o GRANT a `authenticated` (isso **reabre** o risco de deadlock em reservas simultâneas do mesmo horário).
 
 ## 7. Verificação de login e e-mail (Resend) no Dev
 - **Usuário de teste autorizado**: somente `jan.darioush@yahoo.com.br`. **Um** e-mail de recuperação enviado em 2026-09-30 02:04:30Z pelo fluxo real (`/auth/v1/recover` → hook → Resend): API respondeu 200, o Auth registrou `recovery_sent_at` 02:04:31Z — ou seja, o hook respondeu com sucesso, o que só acontece se o Resend aceitou o envio (**nível 1**).
@@ -127,7 +131,7 @@ Como aplicar: uma a uma, em ordem, com `apply_migration` (nunca `db reset`), con
 
 Publicação (banco → configuração → front → verificação):
 1. Backup/inventário (§6). Congelar mudanças de schema.
-2. Aplicar as 24 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 61; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
+2. Aplicar as 26 migrations (§4), uma a uma. Rodar `npm run test:sql:release` **apontando para o Dev** e conferir em produção: `list_migrations` = 63; nenhuma função `acc_`/`adm_` executável por `anon`; lista de funções de `anon` = `get_public_page`, `track_page_visit`, `submit_public_form` + `quiz_*` (6).
 3. Configurar o Supabase de produção (§5): secrets, hook, Site URL/Redirect URLs, limite de e-mail, senha mínima.
 4. **Conectar o site Netlify de produção ao repositório**, branch `release/v1` (ou `main` após o merge), com as variáveis de produção — assim o **Netlify** compila (não a máquina de alguém) e cada deploy carrega o `COMMIT_REF`. Sem `.env.local` no build.
 5. Deploy. Verificar `GET /version.json`: `commit` = commit aprovado, `environment` = `production`, `backend` = `produção`. Se não bater, **não abrir para a equipe**. A tela *Configurações* mostra a mesma linha e, fora de produção, aparece o selo "AMBIENTE DE TESTE".
@@ -141,7 +145,7 @@ Reversão:
 ## 9. Pendências que IMPEDEM o uso × melhorias futuras
 **Impedem colocar em produção (precisam de ação sua/painéis):**
 1. Republicar o front de produção com o banco de produção (hoje aponta para o Dev — §2 #5) e conectá-lo ao repositório.
-2. Aplicar as 24 migrations em produção.
+2. Aplicar as 26 migrations em produção.
 3. Configurar e-mail em produção: Resend (domínio, DKIM/SPF), secrets e hook do Supabase, Site URL/Redirect URLs, limite de e-mails (§5). Sem isso ninguém completa o primeiro acesso.
 4. DNS de `hpfisioterapia.com.br` continua no GitHub Pages (HTTPS válido); o app não está no domínio oficial. Decidir subdomínio do app (ex.: `app.hpfisioterapia.com.br`) e apontar o DNS quando aprovado.
 5. Proteger ou desligar o site Dev público `hp-group-hub` (§2 #6) e resolver o site Netlify não documentado `leafy-cascaron-325147` (ver `docs/deployment.md`).

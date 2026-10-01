@@ -130,7 +130,7 @@ test.describe.serial("@release Financeiro por linha de negócio", () => {
 
     // quadro por linha (filtrado pela conta de teste): entradas e saídas separadas, conferido com o extrato
     const box = page.getByRole("region", { name: "Movimentos bancários por linha de negócio" });
-    await box.getByLabel("Conta bancária").selectOption({ label: S.accName });
+    await box.getByRole("button", { name: /^Filtros/ }).click(); await page.locator("#bbl-acc").selectOption({ label: S.accName }); await page.keyboard.press("Escape");   // a conta fica no botão Filtros (filtro único)
     await expect(box.getByText(/Conferido: a soma das linhas bate com o extrato importado/)).toBeVisible({ timeout: 30_000 });
     const tr = (name: string) => box.getByRole("row", { name: new RegExp(`^${name}`) });
     await expect(tr("HP Academy")).toContainText("R$ 183,45");        // 123,45 + 60,00 (30% de 200,00)

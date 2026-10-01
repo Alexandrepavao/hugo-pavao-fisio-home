@@ -17,6 +17,9 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     const mgr = await signIn(QA.manager); const g = api(mgr); const pac = await loginAs(context, QA.paciente); const fis = await signIn(QA.fisio); const errors = collectErrors(page);
     const org = (await g.get("organizations?select=id&slug=eq.hp-group")).body[0].id as string; const unit = (await g.get("units?select=id&slug=eq.sao-paulo")).body[0].id as string;
     const me = (await api(pac).get("people?select=id,full_name")).body as { id: string; full_name: string }[]; expect(me).toHaveLength(1); S.person = me[0].id;
+    // higiene: o paciente QA é compartilhado e o portal mostra só os 100 atendimentos mais recentes (my_appointments, limit 100); atendimentos de execuções ANTERIORES dos testes R0x
+    // (serviço “R0x …”, de outro runId) são removidos para que o de hoje não seja empurrado para fora da lista. Só dados de teste do Dev; o livro de sessões (append-only) não é tocado.
+    if (process.env.SUPABASE_ACCESS_TOKEN) await devSql(`delete from public.appointments a using public.services s where s.id = a.service_id and a.person_id = '${S.person}' and s.name ~ '^R0[0-9] ' and s.name not like '% ${runId}'`);
 
     // profissional = o cadastro profissional da conta QA de fisioterapeuta (cria e vincula se ainda não existir)
     let prof = ((await g.get(`professionals?select=id&user_id=eq.${fis.user.id}`)).body as { id: string }[])[0]?.id;
@@ -88,7 +91,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     await ctxP.close();
     // gestor: Agenda do dia
     await loginAs(context, QA.manager); const errors = collectErrors(page);
-    await page.goto("/admin/agenda"); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(S.day);
+    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day);
     const agA = page.getByRole("row").filter({ hasText: svcName("A") });
     await expect(agA.getByText("Paciente: ✓")).toBeVisible(); await expect(agA.getByText("Profissional: ✓")).toBeVisible();
     await expect(agA.getByRole("button", { name: "Registrar confirmação do paciente" })).toHaveCount(0);
@@ -111,7 +114,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     const past = spDate(-1); const hh = 1 + (parseInt(runId, 36) % 20); const at = (h: number) => `${past}T${String(h).padStart(2, "0")}:00:00-03:00`;
     await moveAppointment(S.B, at(hh)); await moveAppointment(S.C, at(hh + 2));
     await loginAs(context, QA.manager); const errors = collectErrors(page);
-    await page.goto("/admin/agenda"); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(past);
+    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(past);
     const rowB = page.getByRole("row").filter({ hasText: svcName("B") });
     await rowB.getByRole("button", { name: "Faltou" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     await expect(rowB.getByText("Faltou", { exact: true })).toBeVisible(); await expect(rowB.getByText("Consumida", { exact: true })).toBeVisible();

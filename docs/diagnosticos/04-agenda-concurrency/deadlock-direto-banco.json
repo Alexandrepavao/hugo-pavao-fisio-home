@@ -1,0 +1,116 @@
+[
+ {
+  "variante": "livre (como book_appointment hoje)",
+  "sessoes": 6,
+  "segundos": 20,
+  "duracaoRealMs": 25749,
+  "deadlocksNoBanco": 27,
+  "porSessao": [
+   {
+    "tentativas": 8,
+    "deadlock_40P01": 5,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 6004,
+    "primeiro_deadlock": "deadlock detected"
+   },
+   {
+    "tentativas": 5,
+    "deadlock_40P01": 4,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 6004,
+    "primeiro_deadlock": "deadlock detected"
+   },
+   {
+    "tentativas": 6,
+    "deadlock_40P01": 4,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 7005,
+    "primeiro_deadlock": "deadlock detected"
+   },
+   {
+    "tentativas": 4,
+    "deadlock_40P01": 4,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 6003,
+    "primeiro_deadlock": "deadlock detected"
+   },
+   {
+    "tentativas": 5,
+    "deadlock_40P01": 5,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 6003,
+    "primeiro_deadlock": "deadlock detected"
+   },
+   {
+    "tentativas": 5,
+    "deadlock_40P01": 5,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 7004,
+    "primeiro_deadlock": "deadlock detected"
+   }
+  ]
+ },
+ {
+  "variante": "serial (advisory lock por profissional)",
+  "sessoes": 6,
+  "segundos": 20,
+  "duracaoRealMs": 24219,
+  "deadlocksNoBanco": 0,
+  "porSessao": [
+   {
+    "tentativas": 162,
+    "deadlock_40P01": 0,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 165,
+    "primeiro_deadlock": null
+   },
+   {
+    "tentativas": 160,
+    "deadlock_40P01": 0,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 156,
+    "primeiro_deadlock": null
+   },
+   {
+    "tentativas": 168,
+    "deadlock_40P01": 0,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 171,
+    "primeiro_deadlock": null
+   },
+   {
+    "tentativas": 162,
+    "deadlock_40P01": 0,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 164,
+    "primeiro_deadlock": null
+   },
+   {
+    "tentativas": 159,
+    "deadlock_40P01": 0,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 173,
+    "primeiro_deadlock": null
+   },
+   {
+    "tentativas": 159,
+    "deadlock_40P01": 0,
+    "exclusion_23P01": 0,
+    "outros": 0,
+    "maior_tentativa_ms": 173,
+    "primeiro_deadlock": null
+   }
+  ]
+ }
+]

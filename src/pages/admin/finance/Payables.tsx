@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, parseCents } from "@/lib/format";
+import { ListFilterBar } from "@/lib/ListFilterBar";
 import { btnGhost, btnPrimary, errText, Msg, PageHead, State, Table, Td, useMsg } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Account } from "./shared";
 
 type Line = "unclassified" | "physio" | "academy" | "shared";
 interface Alloc { line: "physio" | "academy"; basis_points: number }
-interface PayRow { id: string; description: string; amount_cents: number; due_date: string; status: string; paid_at: string | null; business_line: Line; payable_allocations: Alloc[] }
+interface PayRow { id: string; unit_id: string | null; description: string; amount_cents: number; due_date: string; status: string; paid_at: string | null; business_line: Line; payable_allocations: Alloc[] }
 const LINE_LABEL: Record<Line, string> = { unclassified: "Não classificado", physio: "HP Fisioterapia", academy: "HP Academy", shared: "Compartilhado" };
 /** Texto da linha: rateio explícito aparece como “Compartilhado (60% Fisioterapia / 40% Academy)”; sem rateio, “não alocado”. */
 const lineText = (p: PayRow) => {
@@ -22,12 +23,13 @@ const lineText = (p: PayRow) => {
 const FinancePayables = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const [desc, setDesc] = useState(""); const [amount, setAmount] = useState(""); const [due, setDue] = useState(new Date().toISOString().slice(0, 10)); const [unit, setUnit] = useState(""); const [cat, setCat] = useState(""); const [product, setProduct] = useState(""); const [newLine, setNewLine] = useState<Line>("unclassified");
-  const [filterLine, setFilterLine] = useState<"" | Line>(""); const [edit, setEdit] = useState<PayRow | null>(null); const [editLine, setEditLine] = useState<Line>("unclassified"); const [editPhysio, setEditPhysio] = useState("50"); const [editSplit, setEditSplit] = useState(false);
+  // filtros da lista (os campos do formulário acima só cadastram): busca e unidade à vista; o resto no botão Filtros
+  const [filterLine, setFilterLine] = useState<"" | Line>(""); const [q, setQ] = useState(""); const [fUnit, setFUnit] = useState(""); const [fStatus, setFStatus] = useState(""); const [fSource, setFSource] = useState(""); const [fFrom, setFFrom] = useState(""); const [fTo, setFTo] = useState(""); const [edit, setEdit] = useState<PayRow | null>(null); const [editLine, setEditLine] = useState<Line>("unclassified"); const [editPhysio, setEditPhysio] = useState("50"); const [editSplit, setEditSplit] = useState(false);
   const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
   const cats = useQuery({ queryKey: ["cats"], queryFn: async () => (await supabase.from("finance_categories").select("id, name, dre_classification").eq("kind", "expense")).data ?? [] });
   const products = useQuery({ queryKey: ["products-payables"], queryFn: async () => (await supabase.from("products").select("id, name").eq("active", true).order("name")).data ?? [] });
   const accounts = useQuery({ queryKey: ["accounts"], queryFn: async () => (await supabase.from("financial_accounts").select("id, name").eq("active", true)).data as Account[] });
-  const list = useQuery({ queryKey: ["payables"], queryFn: async () => (await supabase.from("payables").select("id, description, amount_cents, due_date, status, paid_at").order("due_date").limit(200)).data ?? [] });
+  const list = useQuery({ queryKey: ["payables"], queryFn: async () => (await supabase.from("payables").select("id, unit_id, description, amount_cents, due_date, status, paid_at").order("due_date").limit(200)).data ?? [] });
   // Linha de negócio e rateio: consulta à parte e tolerante (se a migration de linhas ainda não foi aplicada, a tela segue funcionando sem a coluna)
   const lineInfo = useQuery({ queryKey: ["payables-lines"], retry: false, queryFn: async () => {
     const { data, error } = await supabase.from("payables").select("id, business_line, payable_allocations(line, basis_points)").limit(1000); if (error) throw error;
@@ -56,7 +58,12 @@ const FinancePayables = () => {
     if (error) return m.err(errText(error));
     m.ok("Linha de negócio atualizada."); setEdit(null); void qc.invalidateQueries({ queryKey: ["payables"] });
   };
-  const shown = rows.filter((p) => !filterLine || p.business_line === filterLine);
+  const lc = q.trim().toLowerCase();
+  const shown = rows.filter((p) => (!filterLine || p.business_line === filterLine) && (!lc || p.description.toLowerCase().includes(lc)) && (!fUnit || p.unit_id === fUnit) && (!fStatus || p.status === fStatus)
+    && (!fSource || (fSource === "cartao") === !!cardIds.data?.has(p.id)) && (!fFrom || p.due_date >= fFrom) && (!fTo || p.due_date <= fTo));
+  const STATUS_LABEL: Record<string, string> = { open: "Em aberto", paid: "Paga", cancelled: "Cancelada" };
+  const clearFilters = () => { setFilterLine(""); setQ(""); setFUnit(""); setFStatus(""); setFSource(""); setFFrom(""); setFTo(""); };
+  const extraActive = [filterLine, fStatus, fSource, fFrom || fTo].filter(Boolean).length;
   return (
     <div>
       <PageHead eyebrow="Financeiro" title="Contas a pagar" hint="Obrigações, vencimentos e pagamentos. Marcar como paga registra a baixa, a competência e a classificação para a DRE." />
@@ -71,9 +78,17 @@ const FinancePayables = () => {
         <div><label htmlFor="pline" className="block text-xs mb-1">Linha de negócio</label><select id="pline" value={newLine} onChange={(e) => setNewLine(e.target.value as Line)}>{(Object.keys(LINE_LABEL) as Line[]).map((k) => <option key={k} value={k}>{LINE_LABEL[k]}</option>)}</select></div>
         <button className="hp-btn hp-btn-primary">Cadastrar</button>
       </form>
-      <div className="flex flex-wrap items-center gap-2 mb-3 text-sm"><label htmlFor="pfilter" className="text-xs text-muted-foreground">Filtrar por linha</label>
-        <select id="pfilter" className="!w-auto" value={filterLine} onChange={(e) => setFilterLine(e.target.value as "" | Line)}><option value="">Todas</option>{(Object.keys(LINE_LABEL) as Line[]).map((k) => <option key={k} value={k}>{LINE_LABEL[k]}</option>)}</select></div>
-      <State loading={list.isLoading} error={list.error} empty={shown.length === 0 && !list.isLoading} emptyText="Nenhuma conta a pagar neste filtro." />
+      {/* filtro único: busca e unidade visíveis; estado, linha de negócio, origem e vencimento dentro do botão Filtros (com contador e “Limpar filtros”) */}
+      <ListFilterBar search={{ id: "pay-q", label: "Buscar conta", placeholder: "Buscar pela descrição…", value: q, onChange: setQ }} unit={fUnit} units={units.data ?? []} onUnit={setFUnit} onClear={clearFilters} extraCount={extraActive}
+        extraSummary={[fStatus ? `Estado: ${STATUS_LABEL[fStatus]}` : "", filterLine ? `Linha: ${LINE_LABEL[filterLine]}` : "", fSource ? `Origem: ${fSource === "cartao" ? "Cartão" : "Avulsa"}` : "", fFrom || fTo ? `Vencimento: ${fFrom ? fmtDate(fFrom + "T12:00:00Z") : "…"} a ${fTo ? fmtDate(fTo + "T12:00:00Z") : "…"}` : ""].filter(Boolean).join(" · ") || undefined}
+        extra={<div className="grid gap-3">
+          <div><label htmlFor="pf-status" className="block text-xs mb-1">Estado</label><select id="pf-status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Todos</option>{Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+          <div><label htmlFor="pfilter" className="block text-xs mb-1">Linha de negócio</label><select id="pfilter" value={filterLine} onChange={(e) => setFilterLine(e.target.value as "" | Line)}><option value="">Todas</option>{(Object.keys(LINE_LABEL) as Line[]).map((k) => <option key={k} value={k}>{LINE_LABEL[k]}</option>)}</select></div>
+          <div><label htmlFor="pf-source" className="block text-xs mb-1">Origem</label><select id="pf-source" value={fSource} onChange={(e) => setFSource(e.target.value)}><option value="">Todas</option><option value="cartao">Compra de cartão</option><option value="avulsa">Avulsa</option></select></div>
+          <div className="grid grid-cols-2 gap-2"><div><label htmlFor="pf-vfrom" className="block text-xs mb-1">Vencimento de</label><input id="pf-vfrom" type="date" value={fFrom} max={fTo || undefined} onChange={(e) => setFFrom(e.target.value)} /></div>
+            <div><label htmlFor="pf-vto" className="block text-xs mb-1">até</label><input id="pf-vto" type="date" value={fTo} min={fFrom || undefined} onChange={(e) => setFTo(e.target.value)} /></div></div>
+        </div>} />
+      <State loading={list.isLoading} error={list.error} empty={shown.length === 0 && !list.isLoading} emptyText={(q || fUnit || extraActive) ? "Nenhuma conta a pagar com os filtros escolhidos." : "Nenhuma conta a pagar cadastrada."} />
       {shown.length > 0 && <Table head={["Descrição", "Vencimento", "Valor", "Linha", "Estado", ""]} right={[2]}>
         {shown.map((p) => <tr key={p.id}><Td>{p.description}{cardIds.data?.has(p.id) && <span className="ml-2 hp-badge hp-badge-info">Cartão</span>}</Td><Td>{fmtDate(p.due_date + "T12:00:00Z")}</Td><Td num>{brl(p.amount_cents)}</Td><Td><button className="text-accent text-left hover:underline" onClick={() => openEdit(p)} title="Classificar / ratear">{lineText(p)}</button></Td><Td>{p.status === "paid" ? `Paga em ${fmtDate(p.paid_at)}` : p.status === "open" ? "Em aberto" : "Cancelada"}</Td>
           <Td>{p.status === "open" && cardIds.data?.has(p.id) && <Link to="/admin/financeiro/cartoes" className="text-accent text-sm hover:underline">Pagar pela fatura</Link>}{p.status === "open" && !cardIds.data?.has(p.id) && <button className={btnGhost + " hp-btn-sm"} onClick={async () => { const { error } = await supabase.rpc("payable_pay", { p_id: p.id, p_account: accounts.data?.[0]?.id ?? null }); if (error) m.err(errText(error)); else { m.ok("Baixa registrada."); void qc.invalidateQueries({ queryKey: ["payables"] }); } }}>Marcar como paga</button>}</Td></tr>)}</Table>}

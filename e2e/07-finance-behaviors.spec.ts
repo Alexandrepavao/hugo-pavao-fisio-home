@@ -161,10 +161,12 @@ test.describe.serial("Financeiro — comportamentos", () => {
 
     const line = page.locator(".hp-card", { hasText: desc }).first();
     await line.getByRole("button", { name: "Conciliar" }).click();
-    await expect(line.getByText("R$ 150,00")).toBeVisible();                           // sugestão aparece, mas nada foi conciliado ainda
+    // outras execuções podem ter deixado recebimentos de R$ 150,00 não conciliados (Dev compartilhado): a sugestão conferida e confirmada é a da PRÓPRIA pessoa desta execução
+    const mine = line.getByRole("listitem").filter({ hasText: `Pessoa Financeiro E2E ${runId}` });
+    await expect(mine.getByText("R$ 150,00")).toBeVisible();                           // sugestão aparece, mas nada foi conciliado ainda
     const beforeConfirm = await g.get(`bank_statement_lines?select=id,status&description=eq.${encodeURIComponent(desc)}`);
     expect(beforeConfirm.body[0].status).toBe("unmatched");
-    await line.getByRole("button", { name: "Confirmar" }).first().click();
+    await mine.getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText("Conciliado.")).toBeVisible();
     const afterConfirm = await g.get(`bank_statement_lines?select=id,status&description=eq.${encodeURIComponent(desc)}`);
     expect(afterConfirm.body[0].status).toBe("matched");

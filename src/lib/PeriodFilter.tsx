@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { CalendarDays, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,6 +24,10 @@ export interface PeriodFilterProps {
   line?: LineFilter; onLine?: (v: LineFilter) => void;
   /** Mês de referência (telas mensais, como Recorrência e Fluxo de caixa): aparece sempre visível no topo, no lugar do período. */
   month?: string; onMonth?: (v: string) => void;
+  /** Dia único (Agenda do dia): campo de data sempre visível, com ‹ Hoje ›, no lugar do período. */
+  day?: string; onDay?: (v: string) => void;
+  /** A tela exige uma unidade (Agenda): sem a opção "Todas as unidades" e a unidade nunca conta como filtro ativo. */
+  unitRequired?: boolean;
   /** Período padrão da tela (para o contador de filtros ativos); omitido = "mes". */
   defaultPreset?: RangePreset;
 }
@@ -36,11 +40,13 @@ const pillCls = "hp-pill";
  * e Captação (e nas demais telas que já usavam este componente: Pesquisas, Contas corporativas). Período e
  * unidade são opcionais: uma tela sem essas dimensões (ex. CRM) só mostra o botão "Filtros". */
 export const PeriodFilter = (props: PeriodFilterProps) => {
-  const { preset, from, to, onPreset, onFrom, onTo, compare, onCompare, unit, units, onUnit, onClear, extra, extraCount = 0, extraSummary, line, onLine, month, onMonth, defaultPreset = "mes" } = props;
+  const { preset, from, to, onPreset, onFrom, onTo, compare, onCompare, unit, units, onUnit, onClear, extra, extraCount = 0, extraSummary, line, onLine, month, onMonth, day, onDay, unitRequired = false, defaultPreset = "mes" } = props;
   const showPeriod = preset !== undefined && from !== undefined && to !== undefined && !!onPreset && !!onFrom && !!onTo;
   const showUnit = units !== undefined && !!onUnit;
   const showLine = !!onLine; const lineActive = showLine && !!line && line !== "geral";
   const showMonth = month !== undefined && !!onMonth;
+  const showDay = day !== undefined && !!onDay;
+  const shiftDay = (n: number) => { const x = new Date(`${day}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); onDay!(x.toISOString().slice(0, 10)); };
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   // intervalo personalizado só é aplicado ao clicar "Aplicar" — evita disparar consultas a cada tecla digitada
@@ -50,10 +56,10 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
   const clear = () => { onClear(); setOpen(false); };
 
   // "ativo" = diferente do padrão da tela (mês atual, todas as unidades, sem comparação, sem filtros específicos)
-  const totalActive = extraCount + (compare ? 1 : 0) + (showUnit && unit ? 1 : 0) + (showPeriod && preset !== defaultPreset ? 1 : 0) + (lineActive ? 1 : 0);
+  const totalActive = extraCount + (compare ? 1 : 0) + (showUnit && !unitRequired && unit ? 1 : 0) + (showPeriod && preset !== defaultPreset ? 1 : 0) + (lineActive ? 1 : 0);
   const periodLabel = showPeriod ? RANGE_LABEL[preset!] : "";
   const unitLabel = showUnit ? (units!.find((u) => u.id === unit)?.name ?? "Todas as unidades") : "";
-  const activeChips = [showPeriod && preset !== defaultPreset ? `Período: ${periodLabel}` : "", showUnit && unit ? `Unidade: ${unitLabel}` : "", lineActive ? `Linha: ${lineFilterLabel(line!)}` : "", compare ? "Comparando com o período anterior" : "", ...(extraSummary ? extraSummary.split(" · ") : [])].filter(Boolean);
+  const activeChips = [showPeriod && preset !== defaultPreset ? `Período: ${periodLabel}` : "", showUnit && !unitRequired && unit ? `Unidade: ${unitLabel}` : "", lineActive ? `Linha: ${lineFilterLabel(line!)}` : "", compare ? "Comparando com o período anterior" : "", ...(extraSummary ? extraSummary.split(" · ") : [])].filter(Boolean);
   const rangeText = showPeriod ? `${new Date(from! + "T12:00:00Z").toLocaleDateString("pt-BR")} – ${new Date(to! + "T12:00:00Z").toLocaleDateString("pt-BR")}` : "";
 
   const body = (
@@ -105,7 +111,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
                 {showUnit && (
                   <div className="mt-3">
                     <label htmlFor="pf-unit-m" className="block text-xs text-muted-foreground mb-1">Unidade</label>
-                    <select id="pf-unit-m" value={unit} onChange={(e) => onUnit!(e.target.value)} className="w-full"><option value="">Todas</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
+                    <select id="pf-unit-m" value={unit} onChange={(e) => onUnit!(e.target.value)} className="w-full">{!unitRequired && <option value="">Todas</option>}{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
                   </div>
                 )}
               </div>
@@ -115,8 +121,10 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
               </DrawerFooter>
             </DrawerContent>
           </Drawer>
+          {showDay && <div className="flex items-center gap-1"><label className="sr-only" htmlFor="pf-day-m">Dia</label><input id="pf-day-m" type="date" value={day} onChange={(e) => e.target.value && onDay!(e.target.value)} className="hp-pill !w-auto" /></div>}
           {showMonth && <><label className="sr-only" htmlFor="pf-month-m">Mês</label><input id="pf-month-m" type="month" value={month} onChange={(e) => onMonth!(e.target.value)} className="hp-pill !w-auto" /></>}
           {periodLabel && <p className="text-[12px] text-muted-foreground truncate min-w-0">{periodLabel}{showUnit && unit ? ` · ${unitLabel}` : ""}</p>}
+          {!periodLabel && showUnit && unitRequired && <p className="text-[12px] text-muted-foreground truncate min-w-0">{unitLabel}</p>}
           {totalActive > 0 && <button type="button" className="ml-auto text-[12px] font-medium text-primary underline underline-offset-2 whitespace-nowrap" onClick={onClear}>Limpar filtros</button>}
         </div>
         {activeChips.length > 0 && <ul className="flex flex-wrap gap-1" aria-label="Filtros ativos">{activeChips.map((c) => <li key={c} className="hp-badge hp-badge-info max-w-full truncate">{c}</li>)}</ul>}
@@ -134,11 +142,18 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
             </PopoverTrigger>
           )}
 
+          {showDay && (
+            <div role="group" aria-label="Dia" className="flex items-center gap-1">
+              <button type="button" className="hp-pill !px-2" aria-label="Dia anterior" onClick={() => shiftDay(-1)}><ChevronLeft size={14} aria-hidden /></button>
+              <label className="sr-only" htmlFor="pf-day">Dia</label><input id="pf-day" type="date" value={day} onChange={(e) => e.target.value && onDay!(e.target.value)} className="hp-pill !w-auto" />
+              <button type="button" className="hp-pill !px-2" aria-label="Próximo dia" onClick={() => shiftDay(1)}><ChevronRight size={14} aria-hidden /></button>
+            </div>
+          )}
           {showMonth && <><label className="sr-only" htmlFor="pf-month">Mês</label><input id="pf-month" type="month" value={month} onChange={(e) => onMonth!(e.target.value)} className="hp-pill !w-auto" /></>}
           {showUnit && (<>
             <label className="sr-only" htmlFor="pf-unit">Unidade</label>
             <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 !w-auto max-w-[14rem] rounded-full !py-0 text-[13px] font-semibold shadow-sm" aria-label="Unidade">
-              <option value="">Todas as unidades</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+              {!unitRequired && <option value="">Todas as unidades</option>}{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </>)}
 

@@ -25,7 +25,7 @@ const CommandMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: 
       <CommandList>
         <CommandEmpty>Nada encontrado.</CommandEmpty>
         <CommandGroup heading="Ir para">
-          {items.map((i) => <CommandItem key={i.to} value={`${i.label} ${i.app} ${i.keywords ?? ""}`} onSelect={() => go(i.to)}><i.icon className="mr-2 h-4 w-4" aria-hidden />{i.label}<span className="ml-auto text-[11px] text-muted-foreground">{i.app}</span></CommandItem>)}
+          {items.map((i) => <CommandItem key={`${i.app}|${i.label}|${i.to}`} value={`${i.label} ${i.app} ${i.keywords ?? ""}`} onSelect={() => go(i.to)}><i.icon className="mr-2 h-4 w-4" aria-hidden />{i.label}<span className="ml-auto text-[11px] text-muted-foreground">{i.app}</span></CommandItem>)}
         </CommandGroup>
         {people.data && people.data.length > 0 && (
           <CommandGroup heading="Pessoas">

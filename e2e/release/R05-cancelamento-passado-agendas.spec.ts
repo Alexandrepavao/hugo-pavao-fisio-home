@@ -70,7 +70,7 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
 
   test("remarcar para horário passado é recusado na interface e no servidor; futuro continua funcionando", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page); const g = api(await signIn(QA.manager));
-    await page.goto("/admin/agenda"); await page.locator("#au").selectOption(S.unit); await page.locator("#ad").fill(S.day);
+    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day);
     const row = page.getByRole("row").filter({ hasText: svcName("F") }); await expect(row).toHaveCount(1);
     await row.getByRole("button", { name: "Remarcar" }).click(); await page.locator("#ask-input").fill(`${spDate(-1)} 10:00`); await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText(/Não é possível remarcar para um horário passado/)).toBeVisible();

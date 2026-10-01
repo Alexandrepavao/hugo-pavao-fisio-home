@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CalendarClock, CheckCircle2, CreditCard, Lock, LockOpen, Plus, ShoppingBag, Wallet } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, CreditCard, Lock, LockOpen, Pencil, Plus, ShoppingBag, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { brl, parseCents } from "@/lib/format";
 import { Badge, EmptyState, KpiGrid, LevelSection, Msg, PageHead, State, StatCard, Table, Td, btnGhost, btnPrimary, confirmDialog, errText, promptText, useMsg } from "@/lib/ui";
@@ -97,6 +97,21 @@ const FinanceCards = () => {
     }
     refresh();
   };
+  // ---- editar limite, fechamento e vencimento (faturas já existentes não mudam)
+  const [editOpen, setEditOpen] = useState(false);
+  const [ed, setEd] = useState({ limit: "", closing: "", due: "", reason: "" });
+  const openEdit = (c: CardRow) => { setEd({ limit: (c.credit_limit_cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), closing: String(c.closing_day), due: String(c.due_day), reason: "" }); setEditOpen(true); };
+  const saveEdit = async (e: FormEvent) => {
+    e.preventDefault(); if (!sel) return; const cents = parseCents(ed.limit);
+    if (cents == null || cents <= 0) return m.err("Informe um limite válido.");
+    if (!ed.reason.trim() || ed.reason.trim().length < 3) return m.err("Informe o motivo da alteração (fica registrado na auditoria).");
+    const { data, error } = await supabase.rpc("card_update", { p_card: sel.id, p_limit_cents: cents, p_closing_day: Number(ed.closing), p_due_day: Number(ed.due), p_reason: ed.reason });
+    if (error) return m.err(errText(error));
+    const r = data as { changed: string[]; applies_from: string | null };
+    const days = r.changed.includes("closing_day") || r.changed.includes("due_day");
+    m.ok(days ? `Cartão atualizado. Os novos dias valem para faturas ainda não criadas${r.applies_from ? ` (compras a partir de ${d(r.applies_from)})` : ""}; as faturas existentes mantêm as datas.` : "Limite atualizado.");
+    setEditOpen(false); refresh();
+  };
   // ---- nova compra
   const [buyOpen, setBuyOpen] = useState(false);
   const [p, setP] = useState({ date: todayIso(), amount: "", description: "", merchant: "", category: "", line: "unclassified", split: false, physio: "50", note: "" });
@@ -181,6 +196,7 @@ const FinanceCards = () => {
               </div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={btnPrimary} onClick={openBuy} disabled={sel.status === "blocked"} title={sel.status === "blocked" ? "Cartão bloqueado" : undefined}><ShoppingBag size={15} aria-hidden />Registrar compra</button>
+                <button type="button" className={btnGhost} onClick={() => openEdit(sel)}><Pencil size={15} aria-hidden />Editar cartão</button>
                 <button type="button" className={btnGhost} onClick={() => void toggleBlock(sel)}>{sel.status === "active" ? <><Lock size={15} aria-hidden />Bloquear</> : <><LockOpen size={15} aria-hidden />Desbloquear</>}</button>
               </div>
             </div>
@@ -250,6 +266,21 @@ const FinanceCards = () => {
             <div><label htmlFor="cc-holder" className="block text-xs mb-1">Responsável (opcional)</label><input id="cc-holder" value={f.holder} onChange={(e) => setF({ ...f, holder: e.target.value })} /></div>
             <div><label htmlFor="cc-acc" className="block text-xs mb-1">Conta que paga a fatura (opcional)</label><select id="cc-acc" value={f.account} onChange={(e) => setF({ ...f, account: e.target.value })}><option value="">Escolher ao pagar</option>{(accounts.data ?? []).filter((a) => a.unit_id === null || a.unit_id === f.unit).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
             <DialogFooter className="sm:col-span-2"><button type="button" className={btnGhost} onClick={() => setNewOpen(false)}>Cancelar</button><button type="submit" className={btnPrimary}>Cadastrar cartão</button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar cartão{sel ? ` — ${sel.nickname}` : ""}</DialogTitle><DialogDescription>Altere limite, dia de fechamento e dia de vencimento. Toda alteração fica registrada na auditoria, com o motivo.</DialogDescription></DialogHeader>
+          <form onSubmit={saveEdit} className="grid gap-3 sm:grid-cols-2" noValidate>
+            <div className="sm:col-span-2"><label htmlFor="ce-limit" className="block text-xs mb-1">Limite total (R$)</label><input id="ce-limit" inputMode="decimal" value={ed.limit} onChange={(e) => setEd({ ...ed, limit: e.target.value })} />
+              {sel && <p className="text-[11px] text-muted-foreground mt-1">Em aberto no cartão: {brl(sel.unpaid_cents)}. O novo limite não pode ficar abaixo desse valor.</p>}</div>
+            <div><label htmlFor="ce-close" className="block text-xs mb-1">Dia do fechamento (1–28)</label><input id="ce-close" type="number" min={1} max={28} value={ed.closing} onChange={(e) => setEd({ ...ed, closing: e.target.value })} /></div>
+            <div><label htmlFor="ce-due" className="block text-xs mb-1">Dia do vencimento (1–28)</label><input id="ce-due" type="number" min={1} max={28} value={ed.due} onChange={(e) => setEd({ ...ed, due: e.target.value })} /></div>
+            <p className="sm:col-span-2 text-xs rounded-md bg-muted/60 p-3 leading-5">Fechamento e vencimento novos valem só para <b>faturas que ainda não existem</b>. As faturas já criadas (abertas, fechadas ou pagas) e as despesas das compras já lançadas <b>mantêm</b> ciclo, fechamento e vencimento. O limite vale já para as próximas compras.</p>
+            <div className="sm:col-span-2"><label htmlFor="ce-reason" className="block text-xs mb-1">Motivo da alteração</label><input id="ce-reason" value={ed.reason} onChange={(e) => setEd({ ...ed, reason: e.target.value })} placeholder="Ex.: reajuste de limite pelo banco" /></div>
+            <DialogFooter className="sm:col-span-2"><button type="button" className={btnGhost} onClick={() => setEditOpen(false)}>Cancelar</button><button type="submit" className={btnPrimary}>Salvar alterações</button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

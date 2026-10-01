@@ -53,7 +53,16 @@ na URL (`?linha=`) e **trocar o período/unidade não apaga a linha** (antes, ap
 | Hub, Gestão (dashboard), CRM (painel, leads, pipeline, relatórios), Captação, Pesquisas, Contas corporativas | já usavam o componente |
 | Financeiro: Visão geral, DRE, Relatórios, **Recorrência** (mês), **Fluxo de caixa** (intervalo), **Cartões** | migrados/novos: período ou mês + unidade visíveis; linha de negócio no popover |
 | Gestão: **Pessoas** | migrado: unidade visível; tipo dentro do botão Filtros; busca por nome continua à vista |
-| **Não migrados (limitação)** | Agenda, Academy, Parceiros, Contas a pagar (“Filtrar por linha”), Conciliação (“linha de negócio” por movimento), Planilha administrativa e Meu dia (data/profissional ficam visíveis no calendário) mantêm os controles próprios |
+| Gestão: **Planilha administrativa** | migrado: busca (`#dir-q`) e unidade visíveis; **tipo, vínculo, status, estado e “só incompletos”** dentro do botão Filtros (contador, chips, “Limpar filtros”); mesmos parâmetros de URL (`q`, `tipo`, `vinculo`, `unidade`, `status`, `incompleto`, `uf`) e mesma consulta `adm_directory` |
+| Operação: **Agenda do dia** | migrado: **unidade (obrigatória: sem “Todas”) e dia (com ‹ ›) visíveis**; **profissional e estado** da lista dentro do botão Filtros. Profissional e serviço do **formulário de agendamento** continuam no próprio formulário (são campos de preenchimento, não filtros) |
+| Academy (administração) | migrado: busca por título visível; **tipo e estado** dentro do botão Filtros (Cursos); estado (Trilhas). Cursos são da organização inteira: sem unidade nem período |
+| Parceiros | migrado: busca visível em todas as abas; **Repasses**: unidade visível, estado e parceiro no botão Filtros; **Parceiros**: estado; **Indicações**: só busca (não há dimensão de unidade/estado) |
+| Financeiro: **Contas a pagar** | migrado: busca e unidade visíveis; **estado, linha de negócio (o mesmo filtro de antes: não classificado/Fisioterapia/Academy/compartilhado), origem (cartão/avulsa) e vencimento de/até** no botão Filtros |
+| Financeiro: **Conciliação** | migrado: busca e unidade visíveis; **tipo de movimento e estado** no botão Filtros (a “Conta bancária” do envio do extrato continua um campo do formulário). O relatório “Movimentos bancários por linha de negócio” usa o período do filtro único e a **conta** no botão Filtros |
+| **Fora do padrão (de propósito)** | Meu dia (Produtividade): a barra do calendário (‹ Hoje ›, Dia/Semana/Mês, categorias) é a interface de data/profissional e já fica à vista |
+
+Todas as telas migradas **só filtram a lista já carregada ou repassam o mesmo parâmetro de antes à mesma consulta**: nenhuma permissão, RLS ou rota mudou (testado em `R14` e `R02`: quem não tem o papel continua sem a tela e sem os dados). A linha “Limpar filtros” só aparece com algo ativo;
+trocar de aba de Parceiros limpa os filtros. Componentes: `src/lib/PeriodFilter.tsx` (agora com `day` e `unitRequired`) e `src/lib/ListFilterBar.tsx` (busca à esquerda + filtro único à direita).
 
 ## 5. Referências inspecionadas
 Os quatro repositórios de referência estavam **acessíveis** (clonados só em área temporária, fora do projeto): `brightercore-4d41cb1d` (Gestão/Financeiro), `brighter-flow-20722354` (CRM),

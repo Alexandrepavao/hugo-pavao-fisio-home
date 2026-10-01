@@ -99,3 +99,7 @@ pelo E2E `R10` após a nova interface.
 Estrutura por aplicativo, rotas, filtros e referências: `docs/aplicativos.md`. Cartões corporativos: `docs/cartoes-corporativos.md`. Calendário: `docs/calendarios.md`. Capturas (Hub, Financeiro e CRM com sidebars diferentes,
 gaveta dos aplicativos no celular, Cartões e Calendário em desktop e celular): `docs/screenshots/apps-cartoes-calendario/` (gerador `e2e/tools/shots-novas-telas.mjs`, que cria dados de demonstração no Dev e os remove ao final).
 O app “Administrativo” agora é **Gestão**; o título do cabeçalho passa a ser “Gestão · Seção”.
+
+## 11. Filtro único nos módulos restantes (4ª etapa)
+Agenda, Academy, Parceiros, Contas a pagar, Conciliação e Planilha administrativa usam o mesmo filtro (`PeriodFilter`/`ListFilterBar`): o essencial à vista (busca, unidade, dia ou período) e o resto no botão “Filtros”, com contador, chips e “Limpar filtros”; no celular, gaveta. Quadro completo em `docs/aplicativos.md` §4.
+Edição de limite/fechamento/vencimento do cartão: `docs/cartoes-corporativos.md` §6.
