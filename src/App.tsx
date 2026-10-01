@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import TrabalheConosco from "./pages/TrabalheConosco";
 import NotFound from "./pages/NotFound";
@@ -87,6 +87,9 @@ const R = {
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 const g = (roles: AppRole[], el: JSX.Element) => <RequireAuth roles={roles}>{el}</RequireAuth>;
 
+/** Endereço amigável: /admin/administrativo[/...] leva ao app Administrativo (/admin/adm[/...]), mantendo caminho, parâmetros e âncora (sem laço). */
+const AdministrativoAlias = () => { const l = useLocation(); return <Navigate to={`${l.pathname.replace(/^\/admin\/administrativo/, "/admin/adm")}${l.search}${l.hash}`} replace />; };
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -109,6 +112,7 @@ const App = () => (
               <Route path="/app" element={<Landing />} />
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
+                <Route path="administrativo/*" element={<AdministrativoAlias />} />
                 <Route path="meu-dia" element={<Productivity />} />
                 <Route path="status" element={<FeatureGate feature="system_status"><Overview /></FeatureGate>} />
                 <Route path="pessoas" element={g(R.people, <People />)} />

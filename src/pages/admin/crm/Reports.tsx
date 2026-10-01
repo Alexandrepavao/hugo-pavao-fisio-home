@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl } from "@/lib/format";
-import { PageHead, State, StatCard, Table, Td, Tabs } from "@/lib/ui";
+import { KpiGrid, LevelSection, PageHead, State, StatCard, Table, Td, Tabs } from "@/lib/ui";
+import { AlertTriangle, FolderOpen, Percent, PlusCircle, Timer, Trophy } from "lucide-react";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { presetRange, toExclusive, usePeriodFilterState, useUnits } from "@/lib/period";
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
@@ -74,17 +75,28 @@ const Reports = () => {
 
       {d && tab === "analises" && (
         <div className="grid gap-5">
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Em aberto agora" value={num(d.open_total)} basis={d.open_total.basis} onClick={() => open("open")} />
-            <StatCard label="Paradas" value={num(d.stalled)} basis={d.stalled.basis} tone={(d.stalled.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("stalled")} />
-            <StatCard label="Criadas no período" value={num(d.cohort)} basis={d.cohort.basis} onClick={() => open("created")} />
-            <StatCard label="Conversão geral" value={num(d.overall_conversion, pct)} basis={d.overall_conversion.basis} unavailable={!d.overall_conversion.available} onClick={() => open("created")} />
-            <StatCard label="Taxa de ganho (fechadas)" value={num(d.win_rate_closed, pct)} basis={d.win_rate_closed.basis} unavailable={!d.win_rate_closed.available} onClick={() => open("won")} />
-            <StatCard label="Ganhas no período" value={num(d.won_in_period)} basis={d.won_in_period.basis} onClick={() => open("won")} />
-            <StatCard label="Ciclo de venda — média" value={num(d.cycle_avg_days, days)} basis={d.cycle_avg_days.basis} unavailable={!d.cycle_avg_days.available} onClick={() => open("won")} />
-            <StatCard label="Ciclo de venda — mediana" value={num(d.cycle_median_days, days)} basis={d.cycle_median_days.basis} unavailable={!d.cycle_median_days.available} onClick={() => open("won")} />
-          </ul>
+          <LevelSection level="summary" title="Indicadores do funil" hint="Cada cartão explica a fórmula; clique para abrir os registros.">
+            <KpiGrid kind="hero">
+              <StatCard level="hero" icon={FolderOpen} period="Hoje" unit="oportunidades" label="Em aberto agora" value={num(d.open_total)} basis={d.open_total.basis} onClick={() => open("open")} />
+              <StatCard level="hero" icon={PlusCircle} period="Período" unit="oportunidades" label="Criadas no período" value={num(d.cohort)} basis={d.cohort.basis} onClick={() => open("created")} />
+              <StatCard level="hero" icon={Trophy} period="Período" unit="oportunidades" label="Ganhas no período" value={num(d.won_in_period)} basis={d.won_in_period.basis} onClick={() => open("won")} />
+              <StatCard level="hero" icon={Percent} period="Período" label="Conversão geral" value={num(d.overall_conversion, pct)} basis={d.overall_conversion.basis} unavailable={!d.overall_conversion.available} onClick={() => open("created")} />
+            </KpiGrid>
+          </LevelSection>
+          <LevelSection level="attention" title="Atenção" hint="Oportunidades sem movimento além do limite definido no filtro.">
+            <KpiGrid kind="lg">
+              <StatCard level={(d.stalled.value ?? 0) > 0 ? "attention" : "compact"} icon={AlertTriangle} period="Hoje" status={(d.stalled.value ?? 0) > 0 ? "Crítico" : undefined} unit="oportunidades" label="Paradas" value={num(d.stalled)} basis={d.stalled.basis} tone={(d.stalled.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("stalled")} />
+            </KpiGrid>
+          </LevelSection>
+          <LevelSection level="summary" title="Mais indicadores" hint="Taxa de ganho e ciclo de venda.">
+            <KpiGrid kind="compact">
+              <StatCard level="compact" icon={Percent} label="Taxa de ganho (fechadas)" value={num(d.win_rate_closed, pct)} basis={d.win_rate_closed.basis} unavailable={!d.win_rate_closed.available} onClick={() => open("won")} />
+              <StatCard level="compact" icon={Timer} label="Ciclo de venda — média" value={num(d.cycle_avg_days, days)} basis={d.cycle_avg_days.basis} unavailable={!d.cycle_avg_days.available} onClick={() => open("won")} />
+              <StatCard level="compact" icon={Timer} label="Ciclo de venda — mediana" value={num(d.cycle_median_days, days)} basis={d.cycle_median_days.basis} unavailable={!d.cycle_median_days.available} onClick={() => open("won")} />
+            </KpiGrid>
+          </LevelSection>
 
+          <LevelSection level="analysis" title="Tempo e passagem pelas etapas" hint="Onde as oportunidades ficam e até onde chegam.">
           <div className="grid gap-4 lg:grid-cols-2">
             <BarBlock title="Tempo na etapa atual (oportunidades em aberto)" hint="Dias desde a última entrada na etapa, média e mediana. Clique numa barra para ver as oportunidades da etapa."
               data={d.stage_now.filter((s) => s.kind === "open").map((s) => ({ etapa: s.name, id: s.stage_id, Média: s.avg_days, Mediana: s.median_days }))} xKey="etapa"
@@ -92,9 +104,10 @@ const Reports = () => {
             <BarBlock title="Oportunidades da coorte que chegaram a cada etapa" hint="Coorte = criadas no período. “Chegou” = esteve nessa etapa ou em uma posterior (nunca contando etapas de perda)."
               data={d.chain.map((c) => ({ etapa: c.name, Chegaram: c.reached }))} xKey="etapa" series={[{ key: "Chegaram", label: "Chegaram à etapa" }]} empty="Nenhuma oportunidade criada no período." />
           </div>
+          </LevelSection>
 
           <section>
-            <h2 className="text-xl mb-1">Conversão entre etapas</h2>
+            <h2 className="text-[1.0625rem] font-bold mb-1">Conversão entre etapas</h2>
             <p className="text-xs text-muted-foreground mb-2">Denominador: quem chegou à etapa anterior (mesma coorte de {num(d.cohort)} oportunidades criadas no período). “Sobre a 1ª etapa” divide pelo total da primeira etapa.</p>
             {d.chain.length === 0 ? <p className="text-sm text-muted-foreground">Sem etapas abertas neste funil.</p> : (
               <Table head={["Etapa", "Chegaram", "Conversão da etapa anterior", "Sobre a 1ª etapa"]} right={[1, 2, 3]}>
@@ -104,7 +117,7 @@ const Reports = () => {
           </section>
 
           <section>
-            <h2 className="text-xl mb-1">Duração por etapa (histórico)</h2>
+            <h2 className="text-[1.0625rem] font-bold mb-1">Duração por etapa (histórico)</h2>
             <p className="text-xs text-muted-foreground mb-2">Passagens já concluídas que terminaram no período, a partir do registro de eventos do CRM. Oportunidades sem evento de criação não têm a duração da 1ª etapa; não há retroativo inventado.</p>
             <Table head={["Etapa", "Passagens", "Média", "Mediana"]} right={[1, 2, 3]}>
               {d.stage_history.map((h) => <tr key={h.stage_id}><Td>{h.name}</Td><Td num>{h.n}</Td><Td num>{days(h.avg_days)}</Td><Td num>{days(h.median_days)}</Td></tr>)}
@@ -112,7 +125,7 @@ const Reports = () => {
           </section>
 
           <section>
-            <h2 className="text-xl mb-1">Motivos de perda (período)</h2>
+            <h2 className="text-[1.0625rem] font-bold mb-1">Motivos de perda (período)</h2>
             <p className="text-xs text-muted-foreground mb-2">Perdidas fechadas no período; % = motivo ÷ total de perdidas do período.</p>
             {d.loss_reasons.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma oportunidade perdida no período.</p> : (
               <Table head={["Motivo", "Quantidade", "%"]} right={[1, 2]}>
@@ -125,7 +138,7 @@ const Reports = () => {
       {d && tab === "desempenho" && (
         <div className="grid gap-6">
           <section>
-            <h2 className="text-xl mb-1">Por responsável</h2>
+            <h2 className="text-[1.0625rem] font-bold mb-1">Por responsável</h2>
             <p className="text-xs text-muted-foreground mb-2">Criadas e fechadas (ganhas/perdidas) no período; “Em aberto” é a situação de hoje; conversão = ganhas ÷ (ganhas + perdidas) fechadas no período. Quem não vê o time enxerga só os próprios números.</p>
             {d.by_owner.length === 0 ? <p className="text-sm text-muted-foreground">Sem movimentação no período.</p> : (
               <Table head={["Responsável", "Criadas", "Ganhas", "Perdidas", "Em aberto", "Conversão", "Valor ganho"]} right={[1, 2, 3, 4, 5, 6]}>
@@ -135,7 +148,7 @@ const Reports = () => {
               </Table>)}
           </section>
           <section>
-            <h2 className="text-xl mb-1">Por origem</h2>
+            <h2 className="text-[1.0625rem] font-bold mb-1">Por origem</h2>
             <p className="text-xs text-muted-foreground mb-2">Mesmas regras, agrupadas pela origem registrada na oportunidade (“Sem origem” quando vazia).</p>
             {d.by_source.length === 0 ? <p className="text-sm text-muted-foreground">Sem movimentação no período.</p> : (
               <Table head={["Origem", "Criadas", "Ganhas", "Perdidas", "Em aberto", "Conversão", "Valor ganho"]} right={[1, 2, 3, 4, 5, 6]}>

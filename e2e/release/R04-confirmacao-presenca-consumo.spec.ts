@@ -119,7 +119,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     const rowC = page.getByRole("row").filter({ hasText: svcName("C") });
     await rowC.getByRole("button", { name: "Profissional ausente" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     await expect(rowC.getByText("Profissional ausente", { exact: true })).toBeVisible(); await expect(rowC.getByText("Não consumida", { exact: true })).toBeVisible();
-    expect((await appt(S.C)).status).toBe("professional_no_show"); expect(await bal(), "falta do profissional não penaliza o paciente").toBe(3);
+    await expect.poll(async () => (await appt(S.C)).status, { message: "a falta do profissional precisa chegar ao banco", timeout: 20_000 }).toBe("professional_no_show"); expect(await bal(), "falta do profissional não penaliza o paciente").toBe(3);
     // nem um nem outro viram atendimento realizado depois de encerrados
     expect((await g.rpc("set_appointment_status", { p_id: S.C, p_status: "attended", p_reason: null })).status).not.toBe(204);
     const att = await devSql(`select count(*)::int as n from public.session_ledger where appointment_id in ('${S.B}','${S.C}') and note ilike 'Atendimento realizado%'`) as { n: number }[]; expect(att[0].n).toBe(0);

@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { PageHead, State, StatCard } from "@/lib/ui";
+import { KpiGrid, PageHead, State, StatCard } from "@/lib/ui";
+import { LevelSection } from "@/lib/ui";
+import { Building2, UserPlus, UserRound, Users } from "lucide-react";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { presetRange, RANGE_LABEL, toExclusive, usePeriodFilterState, useUnits } from "@/lib/period";
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
@@ -60,19 +62,23 @@ const AdmDashboard = () => {
           </div>} />} />
       <State loading={dash.isLoading} error={dash.error} />
       <AdmCentral mapa={<AdmMapa unit={unit} />} from={range.from} to={range.to} unit={unit} unitName={unitName} filters={filters} onOpen={setSheet}
+        hero={d && (
+          <LevelSection level="summary" title="Indicadores prioritários" label="Cadastro central" hint="Pessoas físicas e jurídicas do cadastro central; “novos” segue o período selecionado.">
+            <KpiGrid kind="hero">
+              <StatCard level="hero" icon={Users} label="Total de cadastros" value={n(d.total.value ?? 0)} unit="cadastros" period="Hoje" basis={d.total.basis} onClick={() => open("total")} />
+              <StatCard level="hero" icon={UserRound} label="Pessoas físicas" value={n(d.pf.value ?? 0)} unit="pessoas" period="Hoje" basis={d.pf.basis} onClick={() => open("pf")} />
+              <StatCard level="hero" icon={Building2} label="Pessoas jurídicas" value={n(d.pj.value ?? 0)} unit="empresas" period="Hoje" basis={d.pj.basis} onClick={() => open("pj")} />
+              <StatCard level="hero" icon={UserPlus} label="Novos no período" value={n(d.new.value ?? 0)} unit="cadastros" period={RANGE_LABEL[preset]} basis={`${d.new.basis} · PF ${d.new_pf} · PJ ${d.new_pj}`} onClick={() => open("new")} />
+            </KpiGrid>
+          </LevelSection>)}
         cadastroResumo={d && (
-          <div className="mb-4">
-            <h3 className="text-[0.9375rem] font-semibold mb-1">Cadastro central — pessoas físicas e jurídicas</h3>
-            <p className="text-xs text-muted-foreground mb-2">Totais e distribuições do cadastro; “novos” segue o período selecionado.</p>
-            <ul className="hp-kpi-grid">
-              <StatCard label="Total de cadastros" value={n(d.total.value ?? 0)} unit="cadastros" period="Hoje" basis={d.total.basis} onClick={() => open("total")} />
-              <StatCard label="Pessoas físicas" value={n(d.pf.value ?? 0)} unit="pessoas" period="Hoje" basis={d.pf.basis} onClick={() => open("pf")} />
-              <StatCard label="Pessoas jurídicas" value={n(d.pj.value ?? 0)} unit="empresas" period="Hoje" basis={d.pj.basis} onClick={() => open("pj")} />
-              <StatCard label="Novos no período" value={n(d.new.value ?? 0)} unit="cadastros" period={RANGE_LABEL[preset]} basis={`${d.new.basis} · PF ${d.new_pf} · PJ ${d.new_pj}`} onClick={() => open("new")} />
+          <div className="mb-5">
+            <h3 className="text-[0.9375rem] font-bold mb-2">Status cadastral</h3>
+            <KpiGrid kind="compact">
               <StatCard level="compact" label="Ativos" value={n(statusSum("ativo"))} basis="status cadastral “ativo” (PF + PJ)" onClick={() => open("status", "ativo")} />
               <StatCard level="compact" label="Pendentes" value={n(statusSum("pendente"))} basis="status cadastral “pendente” (PF + PJ)" onClick={() => open("status", "pendente")} />
               <StatCard level="compact" label="Inativos" value={n(statusSum("inativo"))} basis="status cadastral “inativo” (PF + PJ)" onClick={() => open("status", "inativo")} />
-            </ul>
+            </KpiGrid>
           </div>)}
         cadastroAnalise={d && (<>
           <BarBlock title="Campos faltantes" hint="Cadastros sem cada dado mínimo (um cadastro pode faltar em vários campos). Clique numa barra para ver os registros."

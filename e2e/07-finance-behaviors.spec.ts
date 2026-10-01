@@ -33,7 +33,7 @@ test.describe.serial("Financeiro — comportamentos", () => {
   test("configurações: cria categoria com classificação DRE e conta financeira pela interface", async ({ page }) => {
     const m = await signIn(MANAGER); await useSession(page.context(), m);
     await page.goto("/admin/financeiro/config");
-    await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Configurações", exact: true })).toBeVisible();
     await page.getByLabel("Nome da categoria").fill(`Custo E2E ${runId}`);
     await page.locator("#fc-class").selectOption("custo_direto");
     await page.getByRole("button", { name: "Criar categoria" }).click();

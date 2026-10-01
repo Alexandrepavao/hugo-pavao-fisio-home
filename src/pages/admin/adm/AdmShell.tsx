@@ -1,21 +1,10 @@
 import type { ReactNode } from "react";
-import { Grid2x2, GraduationCap, Handshake, KanbanSquare, MessageCircleQuestion, Wallet } from "lucide-react";
-import ContextualAppShell, { type AppLink } from "@/components/hp/ContextualAppShell";
+import AppFrame from "@/components/hp/AppFrame";
 import { ADM_NAV } from "./admNav";
 
-const OTHER_APPS: AppLink[] = [
-  { to: "/admin", label: "Início (Hub)", icon: Grid2x2 },
-  { to: "/admin/crm", label: "CRM", icon: KanbanSquare },
-  { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
-  { to: "/admin/academy", label: "Academy", icon: GraduationCap },
-  { to: "/admin/parceiros", label: "Parceiros", icon: Handshake },
-  { to: "/admin/captacao-leads", label: "Captação de leads", icon: MessageCircleQuestion },
-];
-
+/** Shell exclusivo do Administrativo — sidebar própria, só com a navegação administrativa. */
 const AdmShell = ({ children }: { children: ReactNode }) => (
-  <ContextualAppShell appId="adm" appLabel="Administrativo" nav={ADM_NAV} managerRoles={["manager", "ops_admin"]} otherApps={OTHER_APPS}>
-    {children}
-  </ContextualAppShell>
+  <AppFrame appId="adm" nav={ADM_NAV} managerRoles={["manager", "ops_admin"]}>{children}</AppFrame>
 );
 
 export default AdmShell;

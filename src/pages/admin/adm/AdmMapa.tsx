@@ -33,7 +33,7 @@ const AdmMapa = ({ unit }: { unit: string }) => {
       <State loading={geo.isLoading} error={geo.error} />
       {g && g.total === 0 && <EmptyState title="Nenhum cadastro neste recorte ainda.">Cadastre pessoas ou empresas no Diretório para ver a distribuição.</EmptyState>}
       {g && g.total > 0 && (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] mt-3">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] mt-4">
           <div>
             {g.by_state.length > 0
               ? <BrazilMap data={g.by_state} selected={uf} onSelect={setUf} noun="cadastros" />
@@ -42,12 +42,13 @@ const AdmMapa = ({ unit }: { unit: string }) => {
           <div className="min-w-0">
             <p className="text-sm"><strong className="tabular">{n(g.total)}</strong> cadastros no recorte · <strong className="tabular">{n(g.sem_localizacao)}</strong> sem estado informado{g.sem_localizacao > 0 && <> — <Link className="text-accent hover:underline" to={dirLink("incompleto=1")}>completar</Link></>}</p>
             {g.by_state.length > 0 && (
-              <ul className="mt-2 text-sm divide-y divide-border" aria-label="Ranking por estado">
-                {g.by_state.slice(0, 6).map((s) => (
-                  <li key={s.uf}><button type="button" aria-pressed={uf === s.uf} onClick={() => setUf(uf === s.uf ? null : s.uf)}
-                    className={`w-full flex items-center justify-between gap-2 py-1.5 text-left hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${uf === s.uf ? "font-semibold text-accent" : ""}`}>
-                    <span>{s.uf}</span><span className="tabular text-muted-foreground">{n(s.count)}{s.pct != null && ` (${String(s.pct).replace(".", ",")}%)`}</span></button></li>
-                ))}
+              <ul className="hp-rank mt-3" aria-label="Ranking por estado">
+                {(() => { const mx = Math.max(1, ...g.by_state.map((x) => x.count)); return g.by_state.slice(0, 6).map((s) => (
+                  <li key={s.uf} className="hp-rank-row"><button type="button" aria-pressed={uf === s.uf} onClick={() => setUf(uf === s.uf ? null : s.uf)}
+                    className={`text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded ${uf === s.uf ? "font-semibold" : ""}`}>
+                    <span className="hp-rank-top"><span>{s.uf}</span><span className="tabular text-muted-foreground">{n(s.count)}{s.pct != null && ` (${String(s.pct).replace(".", ",")}%)`}</span></span>
+                    <span className="hp-rank-bar block mt-1" role="presentation"><i style={{ width: `${Math.max(3, (s.count / mx) * 100)}%`, background: uf === s.uf ? "hsl(var(--accent))" : undefined }} /></span></button></li>
+                )); })()}
               </ul>
             )}
             {uf && (

@@ -44,7 +44,15 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-09-30, 9ª rodada) — nova interface (Hub, Administrativo, CRM, Financeiro)
+## Sessão mais recente (2026-09-30, 10ª rodada) — reformulação visual de verdade
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho; nenhuma migration nova (a 064 é da rodada anterior). Detalhes, tabela antes × agora e capturas: `docs/interface-v2.md`.
+- A 9ª rodada tinha mudado só tokens, filtros e responsividade (visual quase igual). Esta mudou a **composição**: cabeçalho em largura total, **sidebar contextual clara por aplicativo** (Hub, Administrativo, CRM e **Financeiro, agora com shell próprio**), cor de identidade por app, cartões em quatro pesos (faixa prioritária com minigráfico só com série real, painel de Atenção, resumo, compacto), gráficos redesenhados (áreas, rosca, ranking), tabelas e estados vazios novos, tipografia e espaçamento novos, mapa maior com estado sem dado hachurado.
+- Telas reorganizadas: Hub, Administrativo, CRM (painel e relatórios), Financeiro (visão geral e relatórios). As demais herdam header, sidebar, tipografia, tabelas e filtros, sem reorganização. `/admin/administrativo` → `/admin/adm`.
+- **Testes:** SQL S01–S12 OK (Dev, somente leitura); E2E release 65, novos 4 e gerais 32 passando ao final; ajustes de teste: `R11` (`Limpar` exato, 9ª rodada), `07` (`h1` virou breadcrumb → locator exato), `R04` (espera pelo estado real no banco em vez de lê-lo antes da hora). Intermitentes sob pouca memória/limitador de quiz registrados em `docs/interface-v2.md` §8.
+- **Limitação real:** “Linha de negócio” ainda não está dentro do componente único de filtros; o tema escuro foi conferido só nas telas principais.
+
+## Sessão anterior (2026-09-30, 9ª rodada) — nova interface (Hub, Administrativo, CRM, Financeiro)
 
 > `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho. Detalhes, decisões e capturas: `docs/interface-v2.md`; atribuições: `docs/creditos.md`.
 - **Tokens próprios do HP** (`src/styles/app.css`): paleta de gráficos, escala do mapa, níveis dos cartões e **tema escuro** (escolha da pessoa, guardada no navegador).

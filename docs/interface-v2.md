@@ -2,43 +2,59 @@
 
 > Referência de organização: painéis administrativos de mercado (estrutura e tipografia sóbrias, cartões expressivos, composição com filtros no topo). **Nada foi copiado** — código, logotipos,
 > textos, marcas e componentes são do HP; não há “Powered by”, logo ou crédito visual de modelo externo na interface. Atribuições de terceiros: `docs/creditos.md`.
-> Capturas: `docs/screenshots/ui-antes/` (antes) e `docs/screenshots/ui-depois/` (depois; inclui tema escuro). Gerador: `node e2e/tools/shots-ui.mjs <url> <pasta> [dark]`, que também mede rolagem horizontal e erros de console.
+> Capturas (gerador: `node e2e/tools/shots-ui.mjs <url> <pasta> [dark]`, que também mede rolagem horizontal e erros de console):
+> `docs/screenshots/ui-antes/` (interface original) · `docs/screenshots/ui-intermediario/` (1ª rodada, commit `a0b7d73`, mudança sutil) · `docs/screenshots/ui-depois/` (reformulação atual).
+
+## 0. O que mudou de verdade na 2ª rodada (e o que a 1ª não tinha feito)
+A 1ª rodada trocou tokens, filtros e responsividade: o resultado visual era quase igual ao original. Esta rodada mudou a **composição** das telas:
+
+| Elemento | Antes (original e 1ª rodada) | Agora |
+|---|---|---|
+| **Moldura** | sidebar azul-marinho de ponta a ponta com a logo no topo; cabeçalho só sobre o conteúdo | **cabeçalho em largura total** (logo HP alinhada à sidebar, aplicativo ▸ seção, busca, notificações, tema, perfil com nome e papel); sidebar **clara**, abaixo dele |
+| **Sidebar** | uma só (a geral do Hub) em quase todo lugar; o Financeiro aparecia como item com sub-menu na barra geral | **uma sidebar contextual por aplicativo**: Hub, Administrativo, CRM e **Financeiro (novo shell)** — cada uma só com a própria navegação, bloco de identidade do app (ícone com a cor do app) que abre o seletor de aplicativos, “Voltar ao Hub”, grupos, item ativo com fundo na cor do app e barra lateral, recolhida só com ícones, gaveta no celular |
+| **Identidade por app** | uma cor para tudo | cor própria por aplicativo (Hub azul-marinho, Administrativo azul-petróleo, CRM índigo, Financeiro verde, Agenda âmbar, Academy violeta…), usada no ícone, no item ativo, nos cartões e no avatar |
+| **Cartões** | todos iguais (caixa branca, rótulo, número, nota) | **quatro pesos**: *faixa prioritária* (número 2,25 rem, barra de cor no topo, ícone, minigráfico), *atenção* (painel âmbar próprio, ícone cheio, selo “Crítico/Atenção”, número na cor da gravidade, “Ver detalhes” sempre visível), *resumo* e *compacto* (uma linha: ícone, nome, número) |
+| **Seções** | títulos soltos | cada nível tem ícone, rótulo (Atenção/Resumo/Análise) e título; **Atenção vira um painel tingido** que se destaca do resto |
+| **Gráficos** | linhas e barras finas sem moldura comum | áreas com gradiente, barras arredondadas, **rosca** com total no centro, **ranking em barras**, legenda própria e estado vazio que explica o motivo |
+| **Tabelas e vazios** | tabela cinza padrão, texto solto | cabeçalho em caixa alta discreto, linhas respiradas; estados vazios com ícone e borda tracejada |
+| **Tipografia e ritmo** | título de página 22 px, seções coladas | título de página 28 px/800 (Manrope), números em Manrope 800, mais espaço entre seções, cartões com raio de 14 px e sombra em duas camadas |
+| **Filtros** | pílulas simples | pílulas com sombra e destaque quando há filtro ativo, contador, “Limpar filtros”, chips no celular (mantidos da 1ª rodada, agora no novo visual) |
+| **Mapa** | mapa pequeno, estado sem dado liso | mapa maior, **estado sem dado hachurado**, legenda com título e faixas, balão com cor do estado, ranking em barras |
+
+Telas reorganizadas (faixa prioritária → atenção → mais indicadores → análise → atividades/pendências): **Hub, Administrativo, CRM (painel e relatórios), Financeiro (visão geral e relatórios)**.
+`/admin/administrativo` agora redireciona para `/admin/adm` (caminho, parâmetros e âncora preservados).
 
 ## 1. Tokens visuais próprios (`src/styles/app.css`, escopo `html.hp-app`)
-Azul institucional como cor principal, fundo claro, bordas suaves e sombras discretas; fontes **Manrope** (títulos e números) e **Inter** (texto).
-Novos tokens: `--chart-1…6` e `--chart-grid` (gráficos), `--map-0…4`/`--map-none`/`--map-stroke` (mapa), `--lvl-*` (níveis de cartão) e o conjunto completo do **tema escuro**
-(`html[data-theme="dark"]`). O site público e o editor continuam com a identidade editorial (não usam este escopo).
+`app.css` foi reescrito por inteiro. Base: azul institucional, fundo `216 32% 95,5%`, cartões brancos com borda suave e sombra em duas camadas, raio de cartão 14 px; **Manrope** (títulos e números) e **Inter** (texto).
+Tokens: `--app-accent` (cor do aplicativo, definida pelo shell), `--chart-1…6`/`--chart-grid`, `--map-0…4`/`--map-none`/`--map-stroke`, `--lvl-*` (gravidade dos cartões), `--sb-*` (sidebar clara) e o conjunto completo do **tema escuro**
+(`html[data-theme="dark"]`, com realces calculados a partir da cor do app). O site público e o editor continuam com a identidade editorial (não usam este escopo).
 
-## 2. Cabeçalho e barra lateral (`HeaderBar`, usado por `AppShell`, `ContextualAppShell` e `CrmShell`)
-- **Esquerda:** recolher/abrir menu, logo (no celular; no desktop está no topo da barra lateral) e o título “Aplicativo · Seção” (`h1`, usado também pela acessibilidade).
-- **Direita:** selo do ambiente (fora de produção), **busca discreta** (Ctrl K), troca de aplicativo, **notificações**, **tema** (claro/escuro, guardado por pessoa no navegador) e perfil.
-- **Notificações** só mostram o que é real e do próprio usuário: tarefas comerciais vencidas atribuídas a ele e pendências administrativas abertas e vencidas sob a responsabilidade dele
-  (cada consulta respeita a permissão; quem não enxerga a tabela simplesmente não vê o item). Sem nada atrasado: “Nada atrasado sob a sua responsabilidade”.
-- **Barra lateral contextual** persistente no desktop (recolhível), **gaveta** no celular. O selo “AMBIENTE DE TESTE” saiu do canto que sobrepunha o último item da barra lateral e mora no cabeçalho
-  (`data-testid="env-badge"`; no celular mostra “TESTE”, com o texto completo para leitores de tela).
+## 2. Cabeçalho e barra lateral (`AppFrame`, `HeaderBar`, `apps.ts`)
+- **`AppFrame`** é a única moldura: Hub (`AppShell`), CRM (`CrmShell`), Administrativo (`AdmShell`) e Financeiro (`FinShell`) só passam a própria navegação. O `ContextualAppShell` antigo foi removido.
+- **Cabeçalho** (grade do shell: ocupa as duas colunas): coluna da marca com a logo HP (largura = sidebar, encolhe junto) · botão de recolher · **breadcrumb** com o seletor de aplicativo (ícone colorido + nome ▾) e a seção atual (`h1`, com o nome do app só para leitores de tela) · selo de ambiente
+  · busca em pílula (Ctrl K) · **notificações** · tema claro/escuro · perfil (avatar na cor do app, nome e papel). No celular: menu, logo, ícone do app, seção, busca, sino e avatar; tema e “Voltar ao Hub” vão para o menu do perfil.
+- **Notificações** só mostram o que é real e do próprio usuário (tarefas comerciais e pendências administrativas atrasadas sob a responsabilidade dele).
+- **Sidebar contextual:** bloco do aplicativo (abre a lista de apps permitidos ao papel), “Voltar ao Hub”, grupos com rótulo, item ativo na cor do app, recolhimento só com ícones (dica ao passar o mouse), gaveta no celular. O Financeiro agrupa em Visão, Movimento, Resultados e Administração.
+- **Registro de apps** (`src/components/hp/apps.ts`): Hub, Administrativo, CRM, Financeiro, Agenda, Academy, Parceiros e Captação, cada um com ícone e cor; papéis só controlam o que aparece no seletor — a autorização real continua no banco.
 
 ## 3. Filtro único (`src/lib/PeriodFilter.tsx`)
-Um só componente para todos os aplicativos (Hub, Administrativo, CRM, Financeiro, Captação, Pesquisas, Contas corporativas). Não mistura filtros de aplicativos diferentes: cada tela passa só os seus
-filtros específicos (`extra`).
-- **Desktop:** canto superior direito do cabeçalho da tela; pílula de **período** (mostra o intervalo ao passar o mouse), seletor de **unidade** visível, botão **Filtros** com **contador** de filtros
-  ativos (período ≠ mês atual, unidade, comparação, filtros da tela), **Limpar filtros** (aparece só quando há algo ativo) e uma linha com o resumo dos filtros específicos ativos. Popover compacto com
-  rolagem interna (Limpar/Aplicar sempre visíveis).
-- **Celular:** botão **Filtrar** (com contador) abre uma **gaveta** com Limpar e Aplicar fixos no rodapé; os filtros ativos aparecem como **chips** logo abaixo do botão, com “Limpar filtros”.
-- O estado de período/unidade/comparação continua na URL (`periodo`, `de`, `ate`, `unidade`, `comparar`): rota direta, recarregar e voltar/avançar funcionam.
+Um só componente para todos os aplicativos, sem misturar filtros de aplicativos diferentes (cada tela passa só os seus, em `extra`).
+- **Desktop:** canto superior direito do título da página; pílula de **período** (mostra o intervalo no hover), seletor de **unidade**, **Filtros** com contador, **Limpar filtros** só quando há algo ativo e uma linha com o resumo dos filtros específicos. Pílulas ganham destaque quando há filtro ativo.
+- **Celular:** botão **Filtrar** abre **gaveta** com Limpar e Aplicar no rodapé; os filtros ativos aparecem como **chips** logo abaixo.
+- Estado de período/unidade/comparação na URL (`periodo`, `de`, `ate`, `unidade`, `comparar`): rota direta, recarregar e voltar/avançar funcionam. Responsável e funil (CRM) e os filtros da central (Administrativo) entram como filtros específicos.
+- **Não feito:** “Linha de negócio” continua num seletor próprio dentro das seções “Por linha de negócio” do Financeiro (não foi movida para dentro do componente único).
 
-## 4. Cartões e níveis (`StatCard`, `LevelSection`, `makeDelta`)
-Cada cartão tem nome, **número principal**, **unidade de medida**, **período analisado**, **comparação** (só com base real), **descrição curta** (a regra de cálculo) e, se clicável, abre o detalhamento.
-Três níveis visuais, com um rótulo em cada seção:
+## 4. Cartões e níveis (`StatCard`, `KpiGrid`, `LevelSection`, `makeDelta`)
+Cada cartão tem nome, **número principal**, **unidade**, **período analisado**, **comparação** (só com base real), **descrição curta** (a regra de cálculo), indicador de situação/tendência e, se clicável, “Ver detalhes” (abre o detalhamento).
 | Nível | Uso | Aparência |
 |---|---|---|
-| **Atenção** | pendências, atrasos, riscos | cartões maiores, borda lateral âmbar/vermelha e fundo suave quando o valor é > 0 (`tone` = warning/danger); valor zero vira cartão compacto |
-| **Resumo** | totais e situação atual | cartão padrão; os de apoio usam o tamanho **compacto** |
-| **Análise** | gráficos, evolução, conversão, comparações, mapa | gráficos em moldura única (`ChartCard`/`BarBlock`/`LineBlock`) com a paleta do HP |
-**Comparação com período anterior:** `makeDelta` só devolve variação quando as duas medições estão disponíveis e a base anterior não é zero; caso contrário mostra “Sem base de comparação”; com a
-comparação desligada, nenhuma linha de comparação aparece. Nada de dado fictício em gráficos, tendências ou comparações: sem dado, o espaço mostra um aviso.
-Aplicado em: **Administrativo** (Prioridades → Indicadores complementares + cadastro central → Gráficos, evolução e mapa → Lista de prioridades), **CRM** (Atenção: sem retorno/abertos/valor em negociação;
-Resumo: leads, ganhos, conversão; Análise: etapas, evolução, origem, desempenho), **Financeiro** (Atenção: vencidos e faixas de atraso; Resumo: vendas, recebimentos, contas, caixa, ticket, projeção,
-por linha de negócio; Análise: entradas×saídas, forma de pagamento, produto — o Financeiro agora **compara de verdade** com o período anterior) e **Hub** (alertas → visão executiva → evolução, funil e mapa).
+| **Faixa prioritária** (`hero`) | os 3–4 números que resumem a tela | número grande, barra de cor no topo, ícone, minigráfico **só quando existe série real** (ex.: entradas mensais, negócios ganhos por mês) |
+| **Atenção** (`attention`) | pendências, atrasos, riscos | dentro de um painel âmbar; cartão com ícone cheio, selo e número na cor da gravidade; valor zero vira cartão compacto “em dia” |
+| **Resumo** (`summary`) | totais e situação atual | cartão padrão com ícone e CTA |
+| **Apoio** (`compact`) | leitura complementar | uma linha: ícone, nome e número (a descrição fica na dica) |
+**Comparação:** `makeDelta` só devolve variação quando as duas medições estão disponíveis e a base anterior não é zero; senão mostra “Sem base de comparação”; com a comparação desligada, nada aparece. Sem dado fictício: sem série não há minigráfico; sem dado, o gráfico explica o motivo.
+Ordem das telas: **Hub** (indicadores prioritários → alertas → mais indicadores → evolução e funil → distribuição geográfica → minhas pendências), **Administrativo** (cadastro central → prioridades administrativas → indicadores complementares → gráficos e mapa → lista de prioridades),
+**CRM** (indicadores do funil → atenção → mais indicadores → evolução/funil/origem → tarefas e atividades; relatórios: indicadores → atenção → apoio → tempo e etapas → tabelas), **Financeiro** (caixa e contas → atenção/vencidos → mais indicadores → por linha de negócio → evolução e composição; relatórios: eficiência → “sem base de dados”, com o motivo em cada cartão).
 
 ## 5. Mapa do Brasil (`src/components/hp/BrazilMap.tsx`)
 - **Geometria:** `@svg-maps/brazil` (derivada do mapa do Brasil da MapSVG; **CC BY 4.0** — atribuição, link da licença e alterações em `docs/creditos.md`). Componente **próprio**, sem código do plugin
@@ -61,13 +77,20 @@ Continua **só Google Calendar** (sem iPhone/Apple/`.ics`), com agenda interna, 
 pelo E2E `R10` após a nova interface.
 
 ## 8. Como foi verificado
-- SQL: `S01–S12` e `N02` (todas as verificações OK).
-- E2E da release inteiro (Playwright, Edge, um worker) **e** `R12-nova-interface.spec.ts` (novo): cabeçalho/tema persistente/selo de ambiente único fora da barra lateral/busca/notificações; filtro único com
-  contador, “Limpar filtros” e chips no celular; níveis nos quatro apps; comparação só com base real; mapa com dado real do servidor (quantidade, percentual, neutro, balão, clique, Diretório filtrado por UF,
-  voltar/avançar); permissões; celular sem rolagem lateral. Os testes antigos foram mantidos; ajustes mínimos de locator em `R11` (`Limpar` com `exact`, pois agora há também “Limpar filtros”) e em `07-finance-behaviors` (`#rec-acc`: a seção de linhas de negócio da rodada anterior já tinha tornado “Conta bancária” ambíguo). Também rodaram as suítes `novos` e as gerais: todas OK.
-- Capturas `ui-antes` × `ui-depois` (1440 e 390 px, claro e escuro) com medição de rolagem horizontal: **0 px** em todas as telas (antes: Administrativo 151 px e CRM 188 px no celular).
+- **SQL no Dev** (somente leitura, transações desfeitas; nenhuma migration aplicada nesta rodada): `S01–S12` — todas as verificações OK (16, 32, 43, 42, 44, 35, 42, 39, 30, 33, 19, 26).
+- **E2E (Playwright, Edge, um worker, em grupos pequenos por falta de memória do computador):** release inteira (65 testes, em 5 lotes), `novos` 4/4 e gerais `01–09` (32 testes) — todos passando ao final. Ocorrências durante a rodada:
+  - `R11` (pendências no celular) falhou **uma vez** em lote e passou isolada e no arquivo inteiro (intermitente sob pouca memória).
+  - `R04` (falta do profissional) lia o banco logo depois de a tela mostrar o rótulo: era corrida do teste; agora ele **espera a condição real** (`expect.poll` até o banco chegar a `professional_no_show`) — a verificação em si não foi enfraquecida.
+  - `07` (configurações do Financeiro): o `h1` do cabeçalho agora é “Financeiro · Configurações”, e o locator `heading "Configurações"` ficou ambíguo; passou a usar `exact: true` (mudança intencional da interface).
+  - `04-agenda-concurrency` estourou o tempo uma vez numa bateria longa (teste só de API, sem interface) e passou ao ser reexecutado.
+  - `08-lead-quizzes` (página pública, sem o shell novo) falhou numa repetição seguida e passou (3/3) após uma pausa: é o limitador de quiz (8 inícios por 10 min por IP), que estoura em baterias seguidas.
+- **Typecheck:** OK. **Build:** OK. **Lint:** 23 erros e 21 avisos — os 23 erros já existiam antes desta rodada (funções Edge `auth-email-hook`, `bunny-playback`, `google-calendar` e o spec `R06`); nenhum erro novo.
+- Depois dos últimos ajustes de CSS (altura igual dos cartões, logo maior, cabeçalho mobile), `R02`, `R11` e `R12` foram reexecutados: 26/26.
+- Capturas 1440 e 390 px, claro e escuro, com medição de rolagem horizontal (0 px) e de erros de console (nenhum).
 
 ## 9. Limitações e pendências
 - O tema escuro cobre a área logada e foi conferido nas telas principais; telas raramente usadas podem ter detalhes de contraste a refinar.
-- O mapa agrega por **UF do cadastro**; não há geolocalização nem coordenadas. Cidades só aparecem no Hub (ranking), não no mapa.
+- Os cartões “Indicadores complementares” do Administrativo (grupos com listas) mantêm o desenho em caixa; só ganharam a nova moldura, tipografia e espaçamento.
+- As demais telas (Pessoas, Agenda, Academy, Parceiros, Captação…) herdam header, sidebar, tipografia, tabelas e filtros novos, mas **não** foram reorganizadas em faixa/atenção/análise.
+- Linha de negócio fora do componente de filtros (ver §3). O mapa agrega por **UF do cadastro** (sem geolocalização).
 - Os indicadores do Administrativo no Dev incluem cadastros criados por testes automáticos (profissionais “Fisio E2E …”); em produção isso não existe.

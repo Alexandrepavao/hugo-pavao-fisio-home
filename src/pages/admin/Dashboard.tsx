@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AlertTriangle, CalendarCheck, CalendarClock, ClipboardCheck, Copy, GraduationCap, Handshake, Package, Receipt, Smile, Stethoscope, Target, UserPlus, UserX, Wallet, ZapOff, CheckCircle2, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
-import { LevelSection, State, StatCard } from "@/lib/ui";
-import { ChartCard, tooltipStyle } from "@/lib/IndicatorCharts";
+import { EmptyState, KpiGrid, LevelSection, State, StatCard, type CardLevel } from "@/lib/ui";
+import { AreaTrend, BarBlock } from "@/lib/IndicatorCharts";
+import { useAttention } from "@/components/hp/attention";
 import { makeDelta } from "@/lib/kpi";
 import { RANGE_LABEL } from "@/lib/period";
 import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
@@ -17,8 +18,11 @@ import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits
 type Metrics = Record<string, Metric | { items: { reason: string; count: number }[]; basis: string }>;
 interface Alert { kind: string; label: string; link: string; count: number }
 
+const ALERT_ICON: Record<string, LucideIcon> = { cobrancas_vencidas: Receipt, tarefas_atrasadas: CalendarClock, leads_sem_retorno: UserX, pacotes_fim: Package, duplicidades: Copy, eventos_falhos: ZapOff };
+
 const Dashboard = () => {
   const navigate = useNavigate();
+  const attention = useAttention();
   const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const range = { from: `${from}T00:00:00.000Z`, to: toExclusive(to) };
@@ -73,69 +77,89 @@ const Dashboard = () => {
     duplicidades: "duplicidades", eventos_falhos: "eventos_falhos",
   };
 
+  const sparkIn = cash.data && cash.data.length > 1 ? cash.data.map((r) => r.Entradas) : undefined;
+
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
-        <div className="min-w-0"><Greeting /><p className="text-muted-foreground max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 mb-7">
+        <div className="min-w-0"><Greeting /><p className="text-muted-foreground text-[13.5px] max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
         <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
           onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
       </div>
 
       <State loading={metrics.isLoading} error={metrics.error} />
+      {metrics.data && patients.data && (
+        <LevelSection level="summary" title="Indicadores prioritários" label="Visão executiva" hint="O essencial do período selecionado; o que é situação de hoje está marcado no cartão.">
+          <KpiGrid kind="hero">
+            <Exec level="hero" icon={Wallet} label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" period={per} spark={sparkIn} onOpen={() => openDetail("receipts")} />
+            <Exec level="hero" icon={Stethoscope} label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} unit="atendimentos" period={per} onOpen={() => openDetail("attended")} />
+            <Exec level="hero" icon={Target} label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("win_rate")} />
+            <Exec level="hero" icon={UserPlus} label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} unit="pacientes" period={per} onOpen={() => openDetail("new_patients")} />
+          </KpiGrid>
+        </LevelSection>
+      )}
+
       {alerts.data && (
         <LevelSection level="attention" title="Alertas e ações prioritárias" label="Alertas" hint={alertsTotal === 0 ? "Tudo em dia." : "Situação de hoje. Clique para ver os itens."}>
-          <ul className="hp-kpi-grid hp-kpi-grid-lg">
+          <KpiGrid kind="lg">
             {alerts.data.map((a) => {
-              const dKind = ALERT_DETAIL[a.kind];
-              return <StatCard key={a.kind} level={a.count > 0 ? "attention" : "compact"} label={a.label} value={a.count.toLocaleString("pt-BR")} unit={a.count === 1 ? "item" : "itens"} period="Hoje"
-                tone={a.count > 0 ? (ALERT_DANGER.has(a.kind) ? "danger" : "warning") : undefined} onClick={() => (dKind ? openDetail(dKind) : navigate(a.link))} />;
+              const dKind = ALERT_DETAIL[a.kind]; const danger = ALERT_DANGER.has(a.kind);
+              return <StatCard key={a.kind} level={a.count > 0 ? "attention" : "compact"} icon={a.count > 0 ? (ALERT_ICON[a.kind] ?? AlertTriangle) : CheckCircle2} label={a.label} value={a.count.toLocaleString("pt-BR")} unit={a.count === 1 ? "item" : "itens"} period="Hoje"
+                status={a.count > 0 ? (danger ? "Crítico" : "Atenção") : undefined} tone={a.count > 0 ? (danger ? "danger" : "warning") : "success"} onClick={() => (dKind ? openDetail(dKind) : navigate(a.link))} />;
             })}
-          </ul>
+          </KpiGrid>
         </LevelSection>
       )}
 
       {metrics.data && patients.data && (
-        <LevelSection level="summary" title="Visão executiva" hint="Números principais do período selecionado; o que é situação de hoje está marcado.">
-          <ul className="hp-kpi-grid">
-            <Exec label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" period={per} onOpen={() => openDetail("receipts")} />
-            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} unit="atendimentos" period={per} onOpen={() => openDetail("attended")} />
-            <Exec label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("win_rate")} />
-            <Exec label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" period="Hoje" onOpen={() => openDetail("overdue")} />
-            <Exec level="compact" label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} unit="pacientes" period={per} onOpen={() => openDetail("new_patients")} />
-            <Exec level="compact" label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} unit="pacientes" period="Hoje" onOpen={() => openDetail("active_packages")} />
-            <Exec level="compact" label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} unit="avaliações" period={per} onOpen={() => openDetail("evaluations_scheduled")} />
-            <Exec level="compact" label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} unit="parceiros" period="Hoje" onOpen={() => openDetail("active_partners")} />
-            <Exec level="compact" label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} unit="alunos" period="Hoje" onOpen={() => openDetail("active_students")} />
-            <Exec level="compact" label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" period={per} onOpen={() => openDetail("average_ticket")} />
-            <Exec level="compact" label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("attendance_rate")} />
-            <Exec level="compact" label="NPS" m={metrics.data.nps as Metric} basis="pesquisas de satisfação (NPS) têm detalhamento próprio em Pesquisas — não incluído neste cartão para preservar o k-anonimato já aplicado lá" />
-          </ul>
+        <LevelSection level="summary" title="Mais indicadores" hint="Apoio à leitura: situação atual e números do período.">
+          <KpiGrid kind="compact">
+            <Exec level="compact" icon={AlertTriangle} label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" period="Hoje" onOpen={() => openDetail("overdue")} />
+            <Exec level="compact" icon={Package} label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} unit="pacientes" period="Hoje" onOpen={() => openDetail("active_packages")} />
+            <Exec level="compact" icon={ClipboardCheck} label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} unit="avaliações" period={per} onOpen={() => openDetail("evaluations_scheduled")} />
+            <Exec level="compact" icon={Handshake} label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} unit="parceiros" period="Hoje" onOpen={() => openDetail("active_partners")} />
+            <Exec level="compact" icon={GraduationCap} label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} unit="alunos" period="Hoje" onOpen={() => openDetail("active_students")} />
+            <Exec level="compact" icon={Receipt} label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" period={per} onOpen={() => openDetail("average_ticket")} />
+            <Exec level="compact" icon={CalendarCheck} label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("attendance_rate")} />
+            <Exec level="compact" icon={Smile} label="NPS" m={metrics.data.nps as Metric} basis="pesquisas de satisfação (NPS) têm detalhamento próprio em Pesquisas — não incluído neste cartão para preservar o k-anonimato já aplicado lá" />
+          </KpiGrid>
         </LevelSection>
       )}
 
-      <LevelSection level="analysis" title="Evolução e funil" hint="Gráficos com dados reais; sem movimento suficiente, o espaço mostra o aviso em vez de inventar curva.">
+      <LevelSection level="analysis" title="Evolução e funil" hint="Gráficos com dados reais; sem movimento suficiente, o espaço explica o motivo em vez de inventar curva.">
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Evolução financeira (6 meses)" isEmpty={!(cash.data && cash.data.length > 0)} empty="Sem movimentos suficientes.">
-            <LineChart data={cash.data ?? []} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
-              <Tooltip {...tooltipStyle} formatter={(v: number) => brl(Math.round(v * 100))} />
-              <Line type="monotone" dataKey="Entradas" stroke="hsl(var(--success))" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="Saídas" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ChartCard>
-          <ChartCard title="Leads, avaliações e contratos (período)" isEmpty={!(funnel.data && funnel.data.some((f) => f.n > 0))} empty="Sem dados suficientes no período.">
-            <BarChart data={funnel.data ?? []} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} /><XAxis dataKey="etapa" fontSize={12} /><YAxis fontSize={12} allowDecimals={false} />
-              <Tooltip {...tooltipStyle} /><Bar dataKey="n" name="Quantidade" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} /></BarChart>
-          </ChartCard>
+          <AreaTrend title="Evolução financeira (6 meses)" hint="Entradas e saídas realizadas por mês." data={(cash.data ?? []) as never} xKey="mes" isEmpty={!(cash.data && cash.data.length > 0)} empty="Ainda não há movimentos financeiros suficientes para traçar a evolução."
+            series={[{ key: "Entradas", label: "Entradas", color: "hsl(var(--success))" }, { key: "Saídas", label: "Saídas", color: "hsl(var(--destructive))" }]} format={(v) => brl(Math.round(v * 100))} yFormat={axisBrl} />
+          <BarBlock title="Leads, avaliações e contratos (período)" hint="Do primeiro contato ao contrato, no período selecionado." data={(funnel.data ?? []).filter(() => funnel.data?.some((f) => f.n > 0)).map((f) => ({ etapa: f.etapa, Quantidade: f.n }))} xKey="etapa"
+            series={[{ key: "Quantidade", label: "Quantidade" }]} empty="Sem leads, avaliações ou contratos no período selecionado." />
         </div>
       </LevelSection>
 
       <GeoSection unit={unit} />
+
+      <LevelSection level="summary" title="Minhas pendências" label="Pendências e atividades" hint="Tarefas comerciais e pendências administrativas atrasadas sob a sua responsabilidade.">
+        {attention.loading && <State loading />}
+        {!attention.loading && attention.items.length === 0 && <EmptyState icon={CheckCircle2} title="Nada atrasado sob a sua responsabilidade">Quando uma tarefa ou pendência sua vencer, ela aparece aqui e no sino do cabeçalho.</EmptyState>}
+        {attention.items.length > 0 && (
+          <ul className="hp-card divide-y divide-border">
+            {attention.items.map((i) => (
+              <li key={i.id}><Link to={i.to} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/60 transition-colors">
+                <span aria-hidden className="grid place-items-center w-8 h-8 rounded-lg bg-destructive/10 text-destructive"><CalendarClock size={16} /></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-medium truncate">{i.label}</span><span className="block text-xs text-destructive">{i.detail}</span></span>
+                <span className="text-xs font-semibold text-primary">Abrir</span>
+              </Link></li>
+            ))}
+          </ul>
+        )}
+      </LevelSection>
+
       <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
   );
 };
 
-const Exec = ({ label, m, value, basis, kind = "int", unit, period, level, prev, tone, onOpen }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; unit?: string; period?: string; level?: "summary" | "compact"; prev?: Metric; tone?: "danger"; onOpen?: () => void }) => (
-  <StatCard level={level} label={label} value={value ?? mfmt(m, kind)} unit={kind === "int" ? unit : undefined} period={period} tone={tone} delta={makeDelta(m, prev, { lowerIsBetter: tone === "danger" })}
+const Exec = ({ label, m, value, basis, kind = "int", unit, period, level, icon, spark, prev, tone, onOpen }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; unit?: string; period?: string; level?: CardLevel; icon?: LucideIcon; spark?: number[]; prev?: Metric; tone?: "danger"; onOpen?: () => void }) => (
+  <StatCard level={level} icon={icon} spark={spark} label={label} value={value ?? mfmt(m, kind)} unit={kind === "int" ? unit : undefined} period={period} tone={tone} delta={makeDelta(m, prev, { lowerIsBetter: tone === "danger" })}
     basis={basis ?? m?.basis} unavailable={m ? !m.available || m.value == null : false} onClick={onOpen} />
 );
 

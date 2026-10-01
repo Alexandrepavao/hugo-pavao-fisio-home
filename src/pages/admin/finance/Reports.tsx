@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl } from "@/lib/format";
-import { PageHead, State, StatCard, Table, Td } from "@/lib/ui";
+import { KpiGrid, LevelSection, PageHead, State, StatCard, Table, Td } from "@/lib/ui";
+import { AlertTriangle, Repeat, Stethoscope, Users } from "lucide-react";
+import { RANGE_LABEL } from "@/lib/period";
 import { PeriodFilter } from "./PeriodFilter";
 import { LineSelector } from "./LineBreakdown";
 import EfficiencyLineSection from "./EfficiencyByLine";
@@ -28,6 +30,7 @@ const FinanceReports = () => {
   const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const units = useUnits();
+  const per = RANGE_LABEL[preset];
   const [line, setLine] = useLineFilter();
   const effLine = useEfficiencyByLine(`${from}T00:00:00.000Z`, toExclusive(to), unit);
   const eff = useQuery({ queryKey: ["eff", from, to, unit], queryFn: async () => {
@@ -48,25 +51,31 @@ const FinanceReports = () => {
         } />
       <State loading={eff.isLoading} error={eff.error} />
       {eff.data && (<>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-          <StatCard label="Receita por paciente pagante" value={mfmt(eff.data.receita_por_paciente_pagante_cents)} basis={eff.data.receita_por_paciente_pagante_cents.basis} />
-          <StatCard label="Receita por sessão realizada" value={mfmt(eff.data.receita_por_sessao_cents)} basis={eff.data.receita_por_sessao_cents.basis} />
-          <StatCard label="Taxa de recompra" value={mfmt(eff.data.taxa_recompra_pct, "pct")} basis={eff.data.taxa_recompra_pct.basis} />
-          <StatCard label="CAC" value={mfmt(eff.data.cac_cents)} basis={eff.data.cac_cents.basis} unavailable />
-          <StatCard label="LTV estimado" value={mfmt(eff.data.ltv_cents)} basis={eff.data.ltv_cents.basis} unavailable />
-          <StatCard label="Prazo de recuperação do CAC" value={mfmt(eff.data.cac_payback_months)} basis={eff.data.cac_payback_months.basis} unavailable />
-        </ul>
+        <LevelSection level="summary" title="Eficiência do negócio" hint="Consolidado (Geral) do período selecionado, só com base cadastrada real.">
+          <KpiGrid kind="hero">
+            <StatCard level="hero" icon={Users} period={per} label="Receita por paciente pagante" value={mfmt(eff.data.receita_por_paciente_pagante_cents)} basis={eff.data.receita_por_paciente_pagante_cents.basis} />
+            <StatCard level="hero" icon={Stethoscope} period={per} label="Receita por sessão realizada" value={mfmt(eff.data.receita_por_sessao_cents)} basis={eff.data.receita_por_sessao_cents.basis} />
+            <StatCard level="hero" icon={Repeat} period={per} label="Taxa de recompra" value={mfmt(eff.data.taxa_recompra_pct, "pct")} basis={eff.data.taxa_recompra_pct.basis} />
+          </KpiGrid>
+        </LevelSection>
+        <LevelSection level="attention" title="Sem base de dados" hint="Indicadores que dependem de dados que ainda não existem no sistema — o motivo está em cada cartão.">
+          <KpiGrid kind="lg">
+            <StatCard icon={AlertTriangle} period="Indisponível" label="CAC" value={mfmt(eff.data.cac_cents)} basis={eff.data.cac_cents.basis} unavailable />
+            <StatCard icon={AlertTriangle} period="Indisponível" label="LTV estimado" value={mfmt(eff.data.ltv_cents)} basis={eff.data.ltv_cents.basis} unavailable />
+            <StatCard icon={AlertTriangle} period="Indisponível" label="Prazo de recuperação do CAC" value={mfmt(eff.data.cac_payback_months)} basis={eff.data.cac_payback_months.basis} unavailable />
+          </KpiGrid>
+        </LevelSection>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <p className="text-xs text-muted-foreground">Os cartões acima são o consolidado (Geral). Abaixo, a mesma leitura por linha de negócio.</p>
           <LineSelector value={line} onChange={setLine} />
         </div>
         <EfficiencyLineSection q={effLine} line={line} />
-        <section className="mb-8"><h2 className="text-xl mb-3">Concentração de receita por produto — Geral</h2>
+        <section className="mb-8"><h2 className="text-[1.0625rem] font-bold mb-3">Concentração de receita por produto — Geral</h2>
           <State empty={eff.data.concentracao_por_produto.length === 0} emptyText="Sem recebimentos no período." />
           {eff.data.concentracao_por_produto.length > 0 && <Table head={["Produto", "Recebido", "Participação"]} right={[1, 2]}>
             {eff.data.concentracao_por_produto.map((p) => <tr key={p.product_name}><Td>{p.product_name}</Td><Td num>{brl(p.received_cents)}</Td><Td num>{p.share_pct}%</Td></tr>)}</Table>}
         </section>
-        <section><h2 className="text-xl mb-3">Exportações</h2>
+        <section><h2 className="text-[1.0625rem] font-bold mb-3">Exportações</h2>
           <button className="hp-btn hp-btn-outline" onClick={() => void exportPayments()}>Baixar recebimentos do período (CSV)</button>
         </section>
       </>)}

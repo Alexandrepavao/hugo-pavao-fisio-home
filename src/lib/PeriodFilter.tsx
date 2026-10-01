@@ -21,7 +21,7 @@ export interface PeriodFilterProps {
   extraSummary?: string;
 }
 
-const pillCls = "inline-flex h-9 items-center gap-1.5 rounded-full border border-input bg-card px-3.5 text-[13px] font-medium text-foreground hover:bg-muted transition-colors whitespace-nowrap";
+const pillCls = "hp-pill";
 
 /** Filtro compacto: pílula de período + seletor de unidade + botão "Filtros" (com contador), todos abrindo o
  * mesmo popover (drawer no celular) com atalhos de período, intervalo personalizado, comparação e os filtros
@@ -78,7 +78,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
         <div className="flex items-center gap-2">
           <Drawer open={open} onOpenChange={syncDraft}>
             <DrawerTrigger asChild>
-              <button type="button" className={pillCls}><SlidersHorizontal size={14} aria-hidden />Filtrar{totalActive > 0 && <span className="hp-badge">{totalActive}</span>}</button>
+              <button type="button" className={pillCls} data-active={totalActive > 0}><SlidersHorizontal size={14} aria-hidden />Filtrar{totalActive > 0 && <span className="hp-badge">{totalActive}</span>}</button>
             </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader className="text-left"><DrawerTitle>Filtros</DrawerTitle>
@@ -117,13 +117,13 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
 
           {showUnit && (<>
             <label className="sr-only" htmlFor="pf-unit">Unidade</label>
-            <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 !w-auto max-w-[14rem] rounded-full !py-0 text-[13px]" aria-label="Unidade">
+            <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 !w-auto max-w-[14rem] rounded-full !py-0 text-[13px] font-semibold shadow-sm" aria-label="Unidade">
               <option value="">Todas as unidades</option>{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </>)}
 
           <PopoverTrigger asChild>
-            <button type="button" className={pillCls}><SlidersHorizontal size={14} aria-hidden />Filtros{totalActive > 0 && <span className="hp-badge hp-badge-info">{totalActive}</span>}</button>
+            <button type="button" className={pillCls} data-active={totalActive > 0}><SlidersHorizontal size={14} aria-hidden />Filtros{totalActive > 0 && <span className="hp-badge hp-badge-info">{totalActive}</span>}</button>
           </PopoverTrigger>
           {totalActive > 0 && <button type="button" className="hp-btn hp-btn-ghost hp-btn-sm" onClick={onClear}><X size={13} aria-hidden />Limpar filtros</button>}
         </div>

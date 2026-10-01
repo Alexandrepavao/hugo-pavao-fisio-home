@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import { AlertTriangle, CalendarClock, ClipboardX, FileClock, FileSignature, UserCog } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDate } from "@/lib/format";
-import { Badge, LevelSection, State, StatCard, Table, Td, btnGhost, errText, promptText, useMsg, Msg } from "@/lib/ui";
+import { Badge, KpiGrid, LevelSection, State, StatCard, Table, Td, btnGhost, errText, promptText, useMsg, Msg } from "@/lib/ui";
 import { BarBlock, Formula, LineBlock } from "@/lib/IndicatorCharts";
 import type { IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { KIND_LABEL, PEND_KIND, fmtHours, subjectRoute, useAdmCentral, usePendencies, type Central, type Filters, type Metric } from "./central";
@@ -28,7 +29,7 @@ const Unavailable = ({ m }: { m: Metric }) => <span className="text-muted-foregr
 
 /** Central de pendências administrativas: cartões prioritários, indicadores complementares, gráficos e lista de prioridades. Base: adm_central / adm_central_detail (docs/indicadores-administrativo.md). */
 /** `cadastroResumo` e `cadastroAnalise` são os blocos do cadastro central (números e gráficos), encaixados nos níveis Resumo e Análise. `mapa` entra no nível Análise. */
-const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, cadastroResumo, cadastroAnalise, mapa }: { from: string; to: string; unit: string; unitName: string; filters: Filters; onOpen: (t: IndicatorTrigger) => void; cadastroResumo?: ReactNode; cadastroAnalise?: ReactNode; mapa?: ReactNode }) => {
+const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, hero, cadastroResumo, cadastroAnalise, mapa }: { from: string; to: string; unit: string; unitName: string; filters: Filters; onOpen: (t: IndicatorTrigger) => void; hero?: ReactNode; cadastroResumo?: ReactNode; cadastroAnalise?: ReactNode; mapa?: ReactNode }) => {
   const q = useAdmCentral(from, to, unit, filters);
   const prio = usePendencies(unit, filters, filters.status === "overdue" ? "overdue" : "open", 15);
   const qc = useQueryClient(); const [msg, m] = useMsg();
@@ -48,19 +49,23 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, cadastroResumo,
   const c = d.cards, k = d.kpis;
   const evo = d.evolution.map((w) => ({ semana: fmtDate(`${w.week}T12:00:00Z`).slice(0, 5), Abertas: w.opened, Concluídas: w.resolved, "Em aberto ao fim": w.open_at_end }));
   const card = (mt: Metric) => n(mt.value);
+  const lv = (mt: Metric) => ((mt.value ?? 0) > 0 ? "attention" : "compact") as "attention" | "compact";
+  const st = (mt: Metric, danger = false) => ((mt.value ?? 0) > 0 ? (danger ? "Crítico" : "Atenção") : undefined);
 
   return (
     <div>
       <Msg m={msg} />
+      {hero}
+
       <LevelSection level="attention" title="Prioridades administrativas" hint="Situação de hoje (não muda com o período). Clique para abrir os registros.">
-        <ul className="hp-kpi-grid hp-kpi-grid-lg">
-          <StatCard level="attention" label="Pendências administrativas vencidas" value={card(c.overdue_pendencies)} unit="pendências" period="Hoje" basis={c.overdue_pendencies.basis} tone={(c.overdue_pendencies.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("overdue_pendencies")} />
-          <StatCard level="attention" label="Cadastros incompletos" value={card(c.incomplete)} unit="cadastros" period="Hoje" basis={c.incomplete.basis} tone={(c.incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("incomplete")} />
-          <StatCard level="attention" label={`Documentos vencendo em ${d.settings.expiring_days} dias`} value={card(c.docs_expiring)} unit="documentos" period="Hoje" basis={c.docs_expiring.basis} tone={(c.docs_expiring.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("docs_expiring")} />
-          <StatCard level="attention" label="Contratos aguardando assinatura" value={card(c.contracts_awaiting)} unit="contratos" period="Hoje" basis={c.contracts_awaiting.basis} tone={(c.contracts_awaiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("contracts_awaiting")} />
-          <StatCard level="attention" label="Pacientes aguardando agendamento" value={card(c.patients_waiting)} unit="pacientes" period="Hoje" basis={c.patients_waiting.basis} tone={(c.patients_waiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("patients_waiting")} />
-          <StatCard level="attention" label="Profissionais com integração administrativa incompleta" value={card(c.professionals_incomplete)} unit="profissionais" period="Hoje" basis={c.professionals_incomplete.basis} tone={(c.professionals_incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("professionals_incomplete")} />
-        </ul>
+        <KpiGrid kind="lg">
+          <StatCard level={lv(c.overdue_pendencies)} icon={AlertTriangle} status={st(c.overdue_pendencies, true)} label="Pendências administrativas vencidas" value={card(c.overdue_pendencies)} unit="pendências" period="Hoje" basis={c.overdue_pendencies.basis} tone={(c.overdue_pendencies.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("overdue_pendencies")} />
+          <StatCard level={lv(c.incomplete)} icon={ClipboardX} status={st(c.incomplete, true)} label="Cadastros incompletos" value={card(c.incomplete)} unit="cadastros" period="Hoje" basis={c.incomplete.basis} tone={(c.incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("incomplete")} />
+          <StatCard level={lv(c.docs_expiring)} icon={FileClock} status={st(c.docs_expiring, false)} label={`Documentos vencendo em ${d.settings.expiring_days} dias`} value={card(c.docs_expiring)} unit="documentos" period="Hoje" basis={c.docs_expiring.basis} tone={(c.docs_expiring.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("docs_expiring")} />
+          <StatCard level={lv(c.contracts_awaiting)} icon={FileSignature} status={st(c.contracts_awaiting, false)} label="Contratos aguardando assinatura" value={card(c.contracts_awaiting)} unit="contratos" period="Hoje" basis={c.contracts_awaiting.basis} tone={(c.contracts_awaiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("contracts_awaiting")} />
+          <StatCard level={lv(c.patients_waiting)} icon={CalendarClock} status={st(c.patients_waiting, false)} label="Pacientes aguardando agendamento" value={card(c.patients_waiting)} unit="pacientes" period="Hoje" basis={c.patients_waiting.basis} tone={(c.patients_waiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("patients_waiting")} />
+          <StatCard level={lv(c.professionals_incomplete)} icon={UserCog} status={st(c.professionals_incomplete, true)} label="Profissionais com integração administrativa incompleta" value={card(c.professionals_incomplete)} unit="profissionais" period="Hoje" basis={c.professionals_incomplete.basis} tone={(c.professionals_incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("professionals_incomplete")} />
+        </KpiGrid>
       </LevelSection>
 
       <LevelSection level="summary" title="Indicadores complementares" hint="Totais e situação atual, por assunto.">

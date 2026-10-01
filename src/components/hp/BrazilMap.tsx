@@ -40,12 +40,13 @@ const BrazilMap = ({ data, selected, onSelect, noun = "cadastros", className = "
   return (
     <div className={className}>
       <div ref={box} className="relative" data-testid="brazil-map">
-        <svg viewBox={brazil.viewBox} role="group" aria-label="Mapa do Brasil por estado" className="w-full h-auto max-h-[22rem] block touch-manipulation">
+        <svg viewBox={brazil.viewBox} role="group" aria-label="Mapa do Brasil por estado" className="w-full h-auto max-h-[26rem] block touch-manipulation">
+          <defs><pattern id="hp-nodata" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="hsl(var(--map-none))" /><line x1="0" y1="0" x2="0" y2="6" stroke="hsl(var(--muted-foreground) / .28)" strokeWidth="1.4" /></pattern></defs>
           {locs.map((loc) => {
             const uf = loc.id.toUpperCase(); const d = by.get(uf); const c = d?.count ?? 0; const k = classOf(c); const isSel = selected === uf;
             return (
               <path key={loc.id} d={loc.path} data-uf={uf} data-class={k}
-                fill={k === 0 ? "hsl(var(--map-none))" : `hsl(var(--map-${k}))`}
+                fill={k === 0 ? "url(#hp-nodata)" : `hsl(var(--map-${k}))`}
                 stroke={isSel ? "hsl(var(--accent))" : "hsl(var(--map-stroke))"} strokeWidth={isSel ? 2.5 : 0.75} strokeLinejoin="round"
                 className={`${onSelect ? "cursor-pointer" : ""} outline-none focus-visible:[stroke:hsl(var(--ring))] focus-visible:[stroke-width:3px] transition-[filter] hover:brightness-110`}
                 tabIndex={0} role="button" aria-pressed={onSelect ? isSel : undefined} aria-label={describe(uf, loc.name)}
@@ -57,16 +58,17 @@ const BrazilMap = ({ data, selected, onSelect, noun = "cadastros", className = "
         </svg>
         {tip && tipLoc && (
           <div role="tooltip" data-testid="brazil-map-tip" className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md whitespace-nowrap" style={{ left: tip.x, top: Math.max(tip.y - 10, 0) }}>
-            <p className="font-semibold">{tipLoc.name} ({tip.uf})</p>
+            <p className="font-bold flex items-center gap-1.5"><i aria-hidden className="inline-block w-2.5 h-2.5 rounded-[3px] border border-border" style={{ background: tipDatum && tipDatum.count > 0 ? `hsl(var(--map-${classOf(tipDatum.count)}))` : "hsl(var(--map-none))" }} />{tipLoc.name} ({tip.uf})</p>
             {tipDatum && tipDatum.count > 0
               ? <p><span className="tabular font-semibold">{n(tipDatum.count)}</span> {noun}{tipDatum.pct != null && <span className="text-muted-foreground"> · {String(tipDatum.pct).replace(".", ",")}% do total</span>}</p>
               : <p className="text-muted-foreground">Sem dados</p>}
           </div>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-muted-foreground" aria-label="Legenda do mapa">
-        <span className="inline-flex items-center gap-1"><span aria-hidden className="inline-block h-3 w-5 rounded-sm border border-border" style={{ background: "hsl(var(--map-none))" }} />Sem dados</span>
-        {max > 0 && legend.map((l) => <span key={l.k} className="inline-flex items-center gap-1"><span aria-hidden className="inline-block h-3 w-5 rounded-sm border border-border" style={{ background: `hsl(var(--map-${l.k}))` }} /><span className="tabular">{l.label}</span></span>)}
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground" aria-label="Legenda do mapa">
+        <span className="font-semibold text-foreground/80">{`Quantidade de ${noun}`}</span>
+        <span className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block h-3.5 w-6 rounded border border-border" style={{ background: "repeating-linear-gradient(135deg, hsl(var(--map-none)) 0 3px, hsl(var(--muted-foreground) / .3) 3px 4px)" }} />Sem dados</span>
+        {max > 0 && legend.map((l) => <span key={l.k} className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block h-3.5 w-6 rounded border border-border" style={{ background: `hsl(var(--map-${l.k}))` }} /><span className="tabular">{l.label}</span></span>)}
       </div>
     </div>
   );

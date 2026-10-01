@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Legend, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+import { Link } from "react-router-dom";
+import { AlertTriangle, CalendarClock, CheckCircle2, Coins, FolderOpen, Layers, Percent, Trophy, UserPlus, Wallet, type LucideIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDateTime } from "@/lib/format";
-import { LevelSection, PageHead, State, StatCard } from "@/lib/ui";
-import { ChartCard, CHART_COLORS, tooltipStyle } from "@/lib/IndicatorCharts";
+import { EmptyState, KpiGrid, LevelSection, PageHead, State, StatCard, type CardLevel } from "@/lib/ui";
+import { AreaTrend, BarBlock, DonutBlock, RankBars } from "@/lib/IndicatorCharts";
 import { makeDelta } from "@/lib/kpi";
 import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
 import { PeriodFilter } from "@/lib/PeriodFilter";
@@ -12,7 +13,6 @@ import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits
 import { RANGE_LABEL } from "@/lib/period";
 import type { StaffUser, Task } from "./types";
 
-const PIE_COLORS = CHART_COLORS;
 
 const CrmDashboard = () => {
   const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
@@ -44,6 +44,13 @@ const CrmDashboard = () => {
     const { data: u } = await supabase.auth.getUser();
     const { data, error } = await supabase.from("crm_tasks").select("id, title, due_at, kind").eq("assignee_user_id", u.user?.id).is("done_at", null).order("due_at").limit(6);
     if (error) throw error; return data as Task[];
+  } });
+
+  // Tarefas comerciais do usuário já vencidas (contagem exata, não só as 6 exibidas)
+  const overdueTasks = useQuery({ queryKey: ["crm-dash-overdue-tasks"], queryFn: async () => {
+    const { data: u } = await supabase.auth.getUser();
+    const { count, error } = await supabase.from("crm_tasks").select("id", { count: "exact", head: true }).eq("assignee_user_id", u.user?.id).is("done_at", null).lt("due_at", new Date().toISOString());
+    if (error) throw error; return count ?? 0;
   } });
 
   // Atividades recentes (interactions), escopo da unidade selecionada — não filtra por responsável (é um mural do time).
@@ -114,6 +121,8 @@ const CrmDashboard = () => {
 
   const per = RANGE_LABEL[preset];
   const m = metrics.data; const pm = prevMetrics.data;
+  const sparkWon = evolution.data && evolution.data.length > 1 && evolution.data.some((e) => e.Negócios > 0) ? evolution.data.map((e) => e.Negócios) : undefined;
+  const late = overdueTasks.data ?? 0;
 
   return (
     <div>
@@ -135,86 +144,97 @@ const CrmDashboard = () => {
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {m && (
-        <LevelSection level="attention" title="Atenção" hint="O que precisa de ação comercial agora.">
-          <ul className="hp-kpi-grid hp-kpi-grid-lg">
-            <Kpi level="attention" label="Oportunidades sem retorno" m={m.stale_deals} unit="oportunidades" period="Hoje" tone={(Number(m.stale_deals?.value) || 0) > 0 ? "danger" : undefined} onOpen={() => openDetail("crm_stale_deals")} />
-            <Kpi level="attention" label="Negócios em aberto" m={m.open_deals} unit="negócios" period="Hoje" onOpen={() => openDetail("crm_open_deals")} />
-            <Kpi level="attention" label="Valor em negociação" m={m.open_value} kind="brl" period="Hoje" onOpen={() => openDetail("crm_open_value")} />
-          </ul>
+        <LevelSection level="summary" title="Indicadores prioritários" label="Resumo do período" hint="O essencial do funil no período e no recorte selecionados.">
+          <KpiGrid kind="hero">
+            <Kpi level="hero" icon={UserPlus} label="Novos leads no período" m={m.new_leads} prev={pm?.new_leads} unit="leads" period={per} onOpen={() => openDetail("crm_new_leads")} />
+            <Kpi level="hero" icon={Trophy} label="Negócios ganhos" m={m.won_deals} prev={pm?.won_deals} unit="negócios" period={per} spark={sparkWon} onOpen={() => openDetail("crm_won_deals")} />
+            <Kpi level="hero" icon={Percent} label="Conversão comercial" m={m.win_rate} kind="pct" prev={pm?.win_rate} period={per} onOpen={() => openDetail("crm_win_rate")} />
+            <Kpi level="hero" icon={Wallet} label="Valor em negociação" m={m.open_value} kind="brl" period="Hoje" onOpen={() => openDetail("crm_open_value")} />
+          </KpiGrid>
         </LevelSection>
       )}
 
       {m && (
-        <LevelSection level="summary" title="Resumo do período" hint="Números do período e do recorte selecionados.">
-          <ul className="hp-kpi-grid">
-            <Kpi label="Novos leads no período" m={m.new_leads} prev={pm?.new_leads} unit="leads" period={per} onOpen={() => openDetail("crm_new_leads")} />
-            <Kpi label="Negócios ganhos" m={m.won_deals} prev={pm?.won_deals} unit="negócios" period={per} onOpen={() => openDetail("crm_won_deals")} />
-            <Kpi label="Conversão comercial" m={m.win_rate} kind="pct" prev={pm?.win_rate} period={per} onOpen={() => openDetail("crm_win_rate")} />
-            <Kpi level="compact" label="Total de negócios no recorte" m={m.total_deals} unit="negócios" period={per} />
-            <Kpi level="compact" label="Comissão potencial" m={m.commission_potential} kind="brl" period="Hoje" onOpen={() => openDetail("crm_commission_potential")} />
-          </ul>
+        <LevelSection level="attention" title="Atenção" hint="O que precisa de ação comercial agora.">
+          <KpiGrid kind="lg">
+            <Kpi level={(Number(m.stale_deals?.value) || 0) > 0 ? "attention" : "compact"} icon={AlertTriangle} label="Oportunidades sem retorno" m={m.stale_deals} unit="oportunidades" period="Hoje"
+              tone={(Number(m.stale_deals?.value) || 0) > 0 ? "danger" : undefined} status={(Number(m.stale_deals?.value) || 0) > 0 ? "Crítico" : undefined} onOpen={() => openDetail("crm_stale_deals")} />
+            {overdueTasks.data !== undefined && (
+              <StatCard level={late > 0 ? "attention" : "compact"} icon={CalendarClock} label="Minhas tarefas atrasadas" value={late.toLocaleString("pt-BR")} unit={late === 1 ? "tarefa" : "tarefas"} period="Hoje"
+                basis="tarefas comerciais atribuídas a você, não concluídas e com prazo vencido" tone={late > 0 ? "warning" : undefined} status={late > 0 ? "Atenção" : undefined} onClick={() => { window.location.assign("/admin/crm/tarefas"); }} />
+            )}
+          </KpiGrid>
         </LevelSection>
       )}
 
-      <LevelSection level="analysis" title="Evolução, funil e origem" hint="Gráficos com dados reais; sem dado, o espaço mostra o aviso.">
+      {m && (
+        <LevelSection level="summary" title="Mais indicadores" hint="Apoio à leitura do funil.">
+          <KpiGrid kind="compact">
+            <Kpi level="compact" icon={FolderOpen} label="Negócios em aberto" m={m.open_deals} unit="negócios" period="Hoje" onOpen={() => openDetail("crm_open_deals")} />
+            <Kpi level="compact" icon={Layers} label="Total de negócios no recorte" m={m.total_deals} unit="negócios" period={per} />
+            <Kpi level="compact" icon={Coins} label="Comissão potencial" m={m.commission_potential} kind="brl" period="Hoje" onOpen={() => openDetail("crm_commission_potential")} />
+          </KpiGrid>
+        </LevelSection>
+      )}
+
+      <LevelSection level="analysis" title="Evolução, funil e origem" hint="Gráficos com dados reais; sem dado, o espaço explica o motivo.">
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Negócios por etapa (em aberto)" isEmpty={!(byStage.data && byStage.data.length > 0)} empty="Sem oportunidades em aberto neste funil.">
-            <BarChart data={byStage.data ?? []} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} /><XAxis dataKey="etapa" fontSize={11} interval={0} angle={-15} textAnchor="end" height={50} /><YAxis fontSize={12} allowDecimals={false} />
-              <Tooltip {...tooltipStyle} /><Bar dataKey="Quantidade" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} /></BarChart>
-          </ChartCard>
-          <ChartCard title="Evolução de negócios ganhos (6 meses)" isEmpty={!(evolution.data && evolution.data.some((e) => e.Negócios > 0))} empty="Sem negócios ganhos nos últimos 6 meses.">
-            <LineChart data={evolution.data ?? []} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
-              <Tooltip {...tooltipStyle} formatter={(v: number, n: string) => n === "Valor" ? brl(Math.round(v * 100)) : v} /><Line type="monotone" dataKey="Valor" stroke="hsl(var(--success))" strokeWidth={2} dot /></LineChart>
-          </ChartCard>
-          <ChartCard title="Origem dos leads (período)" isEmpty={!(bySource.data && bySource.data.length > 0)} empty="Sem leads no período.">
-            <PieChart><Pie data={bySource.data ?? []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(e: { value: number }) => e.value}>
-              {(bySource.data ?? []).map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="hsl(var(--card))" />)}</Pie><Tooltip {...tooltipStyle} /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart>
-          </ChartCard>
+          <AreaTrend title="Evolução de negócios ganhos (6 meses)" hint="Valor ganho por mês (data do fechamento)." data={(evolution.data ?? []) as never} xKey="mes" isEmpty={!(evolution.data && evolution.data.some((e) => e.Negócios > 0))} empty="Nenhum negócio ganho nos últimos 6 meses."
+            series={[{ key: "Valor", label: "Valor ganho", color: "hsl(var(--success))" }]} format={(v) => brl(Math.round(v * 100))} yFormat={axisBrl} />
+          <BarBlock title="Negócios por etapa (em aberto)" hint="Quantidade de negócios abertos em cada etapa do funil." data={(byStage.data ?? []).filter(() => byStage.data?.some((e) => e.Quantidade > 0)) as never} xKey="etapa"
+            series={[{ key: "Quantidade", label: "Quantidade" }]} empty="Sem oportunidades em aberto neste funil." />
+          <DonutBlock title="Origem dos leads (período)" hint="De onde vieram as oportunidades criadas no período." data={bySource.data ?? []} noun="leads" empty="Nenhum lead criado no período selecionado." />
           {isManagerLike && (
-            <ChartCard title="Desempenho por responsável (período)" isEmpty={!(byRep.data && byRep.data.length > 0)} empty="Sem negócios ganhos no período (ou você só vê os próprios números).">
-              <BarChart data={byRep.data ?? []} layout="vertical" margin={{ top: 4, right: 8, left: 0, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" horizontal={false} /><XAxis type="number" fontSize={12} tickFormatter={axisBrl} /><YAxis type="category" dataKey="nome" fontSize={11} width={96} />
-                <Tooltip {...tooltipStyle} formatter={(v: number) => brl(Math.round(v * 100))} /><Bar dataKey="Valor ganho" fill="hsl(var(--chart-2))" radius={[0, 3, 3, 0]} /></BarChart>
-            </ChartCard>
+            <RankBars title="Desempenho por responsável (período)" hint="Valor ganho no período." empty="Sem negócios ganhos no período (ou você só vê os próprios números)." color="hsl(var(--chart-2))"
+              items={(byRep.data ?? []).map((r) => ({ label: r.nome, value: r["Valor ganho"], display: brl(Math.round(r["Valor ganho"] * 100)) }))} />
           )}
         </div>
       </LevelSection>
 
-      <div className="grid gap-4 lg:grid-cols-2 mb-8">
-        <section className="hp-card p-4" aria-label="Tarefas"><h3 className="text-[0.9375rem] font-semibold mb-2">Tarefas</h3>
-          <State loading={myTasks.isLoading} error={myTasks.error} empty={myTasks.data?.length === 0} emptyText="Nenhuma tarefa pendente." />
-          {myTasks.data && myTasks.data.length > 0 && (
-            <ul className="grid gap-2">
-              {myTasks.data.map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-2 text-sm py-1.5 border-b border-border last:border-0">
-                  <span className={`min-w-0 truncate ${new Date(t.due_at) < new Date() ? "text-destructive" : ""}`}>{t.title}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">{fmtDateTime(t.due_at)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section className="hp-card p-4" aria-label="Atividades recentes"><h3 className="text-[0.9375rem] font-semibold mb-2">Atividades recentes</h3>
-          <State loading={activities.isLoading} error={activities.error} empty={activities.data?.length === 0} emptyText="Nenhuma atividade registrada." />
-          {activities.data && activities.data.length > 0 && (
-            <ul className="grid gap-2">
-              {activities.data.map((a) => (
-                <li key={a.id} className="text-sm py-1.5 border-b border-border last:border-0">
-                  <p className="truncate"><strong>{a.person?.full_name ?? "—"}</strong> — {a.summary}</p>
-                  <p className="text-xs text-muted-foreground">{a.channel} · {fmtDateTime(a.created_at)}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+      <LevelSection level="summary" title="Tarefas e atividades" label="Atividades" hint="O que está na sua fila e o que aconteceu por último.">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className="hp-card p-5" aria-label="Tarefas"><div className="flex items-center justify-between"><h3 className="text-[0.9375rem] font-bold">Tarefas</h3><Link to="/admin/crm/tarefas" className="text-xs font-semibold text-primary hover:underline">Ver todas</Link></div>
+            <div className="mt-3">
+              <State loading={myTasks.isLoading} error={myTasks.error} />
+              {myTasks.data?.length === 0 && <EmptyState icon={CheckCircle2} title="Nenhuma tarefa pendente">Você está em dia com as tarefas comerciais.</EmptyState>}
+              {myTasks.data && myTasks.data.length > 0 && (
+                <ul className="grid gap-1">
+                  {myTasks.data.map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-2 text-sm py-2 border-b border-border last:border-0">
+                      <span className={`min-w-0 truncate ${new Date(t.due_at) < new Date() ? "text-destructive font-medium" : ""}`}>{t.title}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{fmtDateTime(t.due_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+          <section className="hp-card p-5" aria-label="Atividades recentes"><h3 className="text-[0.9375rem] font-bold">Atividades recentes</h3>
+            <div className="mt-3">
+              <State loading={activities.isLoading} error={activities.error} />
+              {activities.data?.length === 0 && <EmptyState title="Nenhuma atividade registrada">As interações com leads e pacientes aparecem aqui.</EmptyState>}
+              {activities.data && activities.data.length > 0 && (
+                <ul className="grid gap-1">
+                  {activities.data.map((a) => (
+                    <li key={a.id} className="text-sm py-2 border-b border-border last:border-0">
+                      <p className="truncate"><strong>{a.person?.full_name ?? "—"}</strong> — {a.summary}</p>
+                      <p className="text-xs text-muted-foreground">{a.channel} · {fmtDateTime(a.created_at)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
+      </LevelSection>
 
       <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
   );
 };
 
-const Kpi = ({ label, m, kind = "int", tone, prev, unit, period, level, onOpen }: { label: string; m?: Metric; kind?: "brl" | "pct" | "int"; tone?: "danger"; prev?: Metric; unit?: string; period?: string; level?: "attention" | "summary" | "compact"; onOpen?: () => void }) => (
-  <StatCard level={level} label={label} value={mfmt(m, kind)} unit={kind === "int" ? unit : undefined} period={period} tone={tone} delta={makeDelta(m, prev)}
+const Kpi = ({ label, m, kind = "int", tone, prev, unit, period, level, icon, spark, status, onOpen }: { label: string; m?: Metric; kind?: "brl" | "pct" | "int"; tone?: "danger"; prev?: Metric; unit?: string; period?: string; level?: CardLevel; icon?: LucideIcon; spark?: number[]; status?: string; onOpen?: () => void }) => (
+  <StatCard level={level} icon={icon} spark={spark} status={status} label={label} value={mfmt(m, kind)} unit={kind === "int" ? unit : undefined} period={period} tone={tone} delta={makeDelta(m, prev)}
     basis={m?.basis} unavailable={m ? !m.available || m.value == null : false} onClick={onOpen} />
 );
 

@@ -14,7 +14,7 @@ const login = async (email) => {
   const s = await r.json(); if (!s.access_token) throw new Error(`login ${email}: ${r.status}`); return s;
 };
 const ROUTES = [["hub", "/admin"], ["adm-dashboard", "/admin/adm"], ["adm-pendencias", "/admin/adm/pendencias"], ["crm-dashboard", "/admin/crm"], ["crm-relatorios", "/admin/crm/relatorios"],
-  ["financeiro-visao-geral", "/admin/financeiro"], ["financeiro-dre", "/admin/financeiro/dre"], ["financeiro-recorrencia", "/admin/financeiro/recorrencia"], ["meu-dia", "/admin/meu-dia"]];
+  ["financeiro-visao-geral", "/admin/financeiro"], ["financeiro-relatorios", "/admin/financeiro/relatorios"], ["financeiro-dre", "/admin/financeiro/dre"], ["financeiro-recorrencia", "/admin/financeiro/recorrencia"], ["meu-dia", "/admin/meu-dia"]];
 const SIZES = [["1440", 1440, 900], ["390", 390, 844]];
 const session = await login("qa.manager@hp-test.dev");
 const browser = await chromium.launch({ channel: "msedge" }); let bad = 0;
