@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
@@ -191,12 +191,12 @@ const Card = ({ o, stages, nameOf, onOpen, onMove }: { o: Opp; stages: Stage[]; 
 
 const NewOpp = ({ open, onOpenChange, pipeId, onDone }: { open: boolean; onOpenChange: (v: boolean) => void; pipeId: string; onDone: () => void }) => {
   const [search, setSearch] = useState(""); const [title, setTitle] = useState(""); const [person, setPerson] = useState<{ id: string; full_name: string; unit_id: string | null } | null>(null);
-  const [err, setErr] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null); const [busy, setBusy] = useState(false); const lock = useRef(false);
   const found = useQuery({ queryKey: ["ppl-search", search], enabled: open && search.length >= 2 && !person, queryFn: async () => (await supabase.from("people").select("id, full_name, unit_id").ilike("full_name", `%${search.replace(/[%_]/g, "")}%`).is("merged_into_id", null).limit(8)).data ?? [] });
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr(null);
     if (!person?.unit_id) return setErr("Selecione uma pessoa com unidade definida."); if (!title.trim()) return setErr("Informe o título.");
-    setBusy(true); const { error } = await supabase.rpc("crm_create_opportunity", { p_person_id: person.id, p_pipeline_id: pipeId, p_unit_id: person.unit_id, p_title: title.trim(), p_source: "manual" }); setBusy(false);
+    if (lock.current) return; lock.current = true; setBusy(true); const { error } = await supabase.rpc("crm_create_opportunity", { p_person_id: person.id, p_pipeline_id: pipeId, p_unit_id: person.unit_id, p_title: title.trim(), p_source: "manual" }); setBusy(false); lock.current = false;
     if (error) return setErr(errText(error)); setPerson(null); setSearch(""); setTitle(""); onDone();
   };
   return (

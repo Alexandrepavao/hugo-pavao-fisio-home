@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SALE_LINE_FILTERS, saleLineLabel, saleLineMatches, useSaleLines, type SaleLineFilter } from "./saleLines";
@@ -28,6 +28,8 @@ const SalesTab = () => {
   const [person, setPerson] = useState(sp.get("pessoa") ?? ""); const [unit, setUnit] = useState(sp.get("unidade") ?? ""); const [opp] = useState(sp.get("venda") ?? "");
   const [product, setProduct] = useState(""); const [qty, setQty] = useState("1"); const [discount, setDiscount] = useState("0,00"); const [inst, setInst] = useState("1"); const [due, setDue] = useState(new Date().toISOString().slice(0, 10));
   const [search, setSearch] = useState(""); const [busy, setBusy] = useState(false);
+  // trava SÍNCRONA contra duplo clique (o estado `busy` só vale depois do próximo render) e chave de idempotência por TENTATIVA: se a mesma tentativa for repetida, o servidor devolve a mesma venda
+  const lock = useRef(false); const attempt = useRef<string | null>(null);
   const products = useQuery({ queryKey: ["products"], queryFn: async () => (await supabase.from("products").select("id, name, price_cents, kind").eq("active", true).order("name")).data ?? [] });
   const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
   const chosen = useQuery({ queryKey: ["person", person], enabled: !!person, queryFn: async () => (await supabase.from("people").select("id, full_name").eq("id", person).single()).data });
@@ -40,9 +42,9 @@ const SalesTab = () => {
   const create = async (e: FormEvent) => {
     e.preventDefault(); const disc = parseCents(discount); const pr = products.data?.find((p) => p.id === product);
     if (!person || !unit) return m.err("Selecione a pessoa e a unidade."); if (!pr) return m.err("Selecione o produto."); if (disc == null) return m.err("Desconto inválido.");
-    setBusy(true);
-    const { error } = await supabase.rpc("sale_create", { p_person: person, p_unit: unit, p_opportunity: opp || null, p_items: [{ product_id: pr.id, qty: Number(qty) || 1 }], p_discount_cents: disc, p_installments: Number(inst) || 1, p_first_due: due });
-    setBusy(false); if (error) return m.err(errText(error)); m.ok("Venda criada como pendente. Confirme para gerar contrato e parcelas."); void qc.invalidateQueries({ queryKey: ["sales"] });
+    if (lock.current) return; lock.current = true; setBusy(true); attempt.current ??= newKey("sale");
+    const { error } = await supabase.rpc("sale_create", { p_person: person, p_unit: unit, p_opportunity: opp || null, p_items: [{ product_id: pr.id, qty: Number(qty) || 1 }], p_discount_cents: disc, p_installments: Number(inst) || 1, p_first_due: due, p_idempotency_key: attempt.current });
+    setBusy(false); lock.current = false; if (error) return m.err(errText(error)); attempt.current = null; m.ok("Venda criada como pendente. Confirme para gerar contrato e parcelas."); void qc.invalidateQueries({ queryKey: ["sales"] });
   };
   const act = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); if (error) m.err(errText(error)); else { m.ok(ok); void qc.invalidateQueries({ queryKey: ["sales"] }); } };
 
