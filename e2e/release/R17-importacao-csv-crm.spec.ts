@@ -64,7 +64,7 @@ test.describe.serial("@release Importação CSV do CRM", () => {
     await page.goto("/admin/crm/leads"); await page.getByRole("button", { name: "Importar CSV" }).click();
     const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Baixar modelo (CSV)" }).click()]);
     expect(dl.suggestedFilename()).toBe("modelo-importacao-crm.csv");
-    const txt = (await (await import("node:fs/promises")).readFile((await dl.path())!, "utf8")).replace(/^﻿/, "");
+    const txt = (await (await import("node:fs/promises")).readFile((await dl.path())!, "utf8")).replace(/^\uFEFF/, "");
     expect(txt.trim().split("\n")).toHaveLength(1); expect(txt).toMatch(/^nome,email,telefone,origem,campanha,unidade,responsavel,lista,etapa,valor,titulo/);
   });
 
