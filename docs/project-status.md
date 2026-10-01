@@ -44,7 +44,21 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-01, 13ª rodada, concluída) — jornadas Fisioterapeuta, Paciente e CRM; Hub sem “Seus aplicativos”
+## Sessão mais recente (2026-10-01, 14ª rodada) — Central de Conversas (CRM)
+
+> `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Detalhes, limites e fórmulas: [`docs/conversas.md`](conversas.md). O trabalho de **Repasses** (migrations 075/076, `S18`, `Commissions.tsx`, `MySummary.tsx`, `S15`) ficou **fora** dos commits desta rodada e permanece sem commit.
+- **Ponto de partida conferido:** a sessão anterior caiu no item Repasses; a central de Conversas ainda era a tabela simples de 24/09 (abre o WhatsApp e registra o contato), sem tabelas de mensagem/atendente/ficha. Layout de referência: padrão de 3 colunas do *Chats* do shadcn Admin (indicado pelo usuário), recriado com componentes próprios do HP.
+- **Migration 077 (aplicada no Dev):** `crm_conversations`, `crm_conversation_participants`, `crm_conversation_reads`, `crm_messages` (imutáveis), `crm_scheduled_messages`, `opportunities.profile`; funções de abrir/postar/entrar/sair/adicionar/transferir/estado/lida, caixa de entrada (`crm_conversations_inbox`, invoker/RLS), agendar/remarcar/cancelar/registrar envio e `crm_lead_profile_save`.
+- **Tela:** lista · mensagens · ficha do lead (recolhível; gaveta abaixo de 1280 px; uma coluna por vez no celular); **ficha por nicho** (Fisioterapia, Academy, Parceiros, Empresas); **multiatendimento** (responsável + colaboradores, fila, entrar/sair/transferir, não lida por usuário); **Mensagens agendadas** agora está **ligada na v1** (lembrete + registro; *Disparo* continua fora).
+- **Honestidade de envio:** sem provedor, “enviar” abre o `wa.me` e registra “WhatsApp aberto · sem confirmação de entrega”; respostas são registradas à mão; mensagem agendada **não é enviada sozinha** (vira lembrete e “pronta para enviar”). Nada na interface promete entrega ou leitura.
+- **Integração:** só a mensagem enviada entra no histórico do lead (último contato/primeira resposta); lembretes aparecem em Tarefas; a transferência leva oportunidade, agendadas e lembretes; botão “Abrir conversa” na oportunidade.
+- **Testes (Dev, 01/10):** SQL **S19 = 96 OK** (permissões por unidade/papel, multiatendimento, imutabilidade, não lidas, histórico do lead, agendadas, ficha por nicho); S15/S16/S17 seguem OK (251 OK no conjunto S15+S16+S17+S19). E2E **R19 (9)** + regressão **R02 (13), R06, R18 (7)** = 29 verdes; `tsc` e `eslint` (arquivos tocados) limpos. **R02 ajustado por mudança intencional:** “Mensagens agendadas” agora aparece na v1. Capturas em `docs/screenshots/conversas/`.
+- **Defeito encontrado e corrigido no caminho:** com a barra lateral aberta a ficha de 21 rem espremia o centro e o botão da ficha ficava coberto pela coluna (clique interceptado); colunas reduzidas, rótulos do cabeçalho só em telas largas e o estado da conversa foi para o diálogo “Atendimento”.
+- **Dependências externas NÃO comprovadas:** envio/recebimento reais no WhatsApp (o teste intercepta `wa.me`; nenhuma mensagem real saiu), provedor de WhatsApp, atualização em tempo real (hoje consulta periódica).
+- **Migrations:** Dev = **78 registros** (última 077); repositório = 72 arquivos (a 077 e as 075/076 de Repasses; para produção, quando autorizado, entram 075→077 além das 33 já listadas — contagem final a recalcular quando o Repasses for commitado).
+- **Segurança:** o token do Supabase do chat de 30/09 continua nas transcrições locais — **revogar e gerar novo** (https://supabase.com/dashboard/account/tokens).
+
+## Sessão anterior (2026-10-01, 13ª rodada, concluída) — jornadas Fisioterapeuta, Paciente e CRM; Hub sem “Seus aplicativos”
 
 > `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Auditoria item a item (implementado/parcial/ausente, com o teste de cada item e as dependências externas): [`docs/jornadas-fisioterapeuta-paciente-crm.md`](jornadas-fisioterapeuta-paciente-crm.md). Histórico e continuidade: [`docs/transferencia-claude.md`](transferencia-claude.md).
 - **Hub:** o bloco “Seus aplicativos” saiu do dashboard (os acessos já estão na sidebar); indicadores, alertas e gráficos preservados.

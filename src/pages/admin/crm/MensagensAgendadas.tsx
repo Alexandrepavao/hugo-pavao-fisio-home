@@ -1,24 +1,68 @@
-import { CalendarClock } from "lucide-react";
-import { PageHead } from "@/lib/ui";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { MessageCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/auth/AuthProvider";
+import { fmtDateTime } from "@/lib/format";
+import { Badge, Msg, PageHead, State, Table, Td, Tabs, useMsg } from "@/lib/ui";
+import { phoneOf, useScheduledActions, useStaff, type ScheduledRow } from "./conversas/api";
 
-/** Mensagens agendadas exige um provedor de envio automático (WhatsApp Business API ou similar) executando
- *  no horário agendado — HP hoje só tem números de WhatsApp para link manual (wa.me, ver Conversas), sem
- *  provedor conectado capaz de enviar sozinho. Bloqueio real, não simulado: nenhuma tela aqui finge agendar. */
-const MensagensAgendadas = () => (
-  <div>
-    <PageHead eyebrow="CRM · Comunicação" title="Mensagens agendadas" />
-    <div className="hp-card p-6 text-center max-w-xl mx-auto">
-      <CalendarClock className="mx-auto mb-3 text-muted-foreground" size={32} aria-hidden />
-      <p className="font-medium mb-2">Pendente: nenhum provedor de envio automático configurado</p>
-      <p className="text-sm text-muted-foreground">
-        Agendar o envio de uma mensagem exige um serviço rodando no horário marcado que efetivamente a envie
-        (uma API de WhatsApp Business ou similar) — hoje a organização não tem esse provedor conectado. Sem
-        ele, esta tela não pode gravar uma mensagem "para ser enviada depois" com garantia real de envio, e
-        fingir isso seria pior do que não ter a tela. Enquanto isso, use <strong>Conversas</strong> para abrir
-        o WhatsApp com uma mensagem pronta agora mesmo.
-      </p>
+type Tab = "due" | "scheduled" | "sent" | "cancelled";
+
+/** Mensagens agendadas: o HP NÃO envia sozinho (não há provedor de WhatsApp conectado). No horário, a mensagem fica "pronta para enviar" e o responsável recebe uma
+ *  tarefa; ele abre o WhatsApp com o texto e o envio é registrado na conversa e no histórico do lead. Esta tela lista, remarca, cancela e registra o envio. */
+const MensagensAgendadas = () => {
+  const { user } = useAuth(); const [msg, m] = useMsg(); const staff = useStaff(); const act = useScheduledActions(m);
+  const [tab, setTab] = useState<Tab>("due"); const [mineOnly, setMineOnly] = useState(true); const [resched, setResched] = useState<{ id: string; at: string } | null>(null);
+  const rows = useQuery({ queryKey: ["crm-scheduled", mineOnly, user?.id], refetchInterval: 30000, queryFn: async () => {
+    let qy = supabase.from("crm_scheduled_messages").select("id, conversation_id, person_id, body, scheduled_for, status, assignee_user_id, sent_at, cancelled_at, person:people(full_name, person_contacts(type, normalized))").order("scheduled_for", { ascending: true }).limit(300);
+    if (mineOnly && user?.id) qy = qy.eq("assignee_user_id", user.id);
+    const { data, error } = await qy; if (error) throw error; return data as unknown as ScheduledRow[];
+  } });
+  const now = Date.now(); const all = rows.data ?? [];
+  const isDue = (r: ScheduledRow) => r.status === "scheduled" && new Date(r.scheduled_for).getTime() <= now;
+  const buckets: Record<Tab, ScheduledRow[]> = {
+    due: all.filter(isDue), scheduled: all.filter((r) => r.status === "scheduled" && !isDue(r)),
+    sent: all.filter((r) => r.status === "sent").reverse(), cancelled: all.filter((r) => r.status === "cancelled").reverse(),
+  };
+  const list = buckets[tab]; const nameOf = (id: string | null) => (id === user?.id ? "Você" : staff.data?.find((u) => u.user_id === id)?.name ?? "Equipe");
+
+  return (
+    <div>
+      <PageHead eyebrow="CRM · Comunicação" title="Mensagens agendadas" hint="O HP não envia sozinho: no horário a mensagem fica pronta para enviar e o responsável abre o WhatsApp (o envio é registrado, sem confirmação de entrega)." />
+      <Msg m={msg} />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <Tabs tabs={[["due", `Prontas para enviar (${buckets.due.length})`], ["scheduled", `Agendadas (${buckets.scheduled.length})`], ["sent", `Enviadas (${buckets.sent.length})`], ["cancelled", `Canceladas (${buckets.cancelled.length})`]]} value={tab} onChange={(v) => setTab(v as Tab)} />
+        <label className="flex items-center gap-2 text-sm font-normal"><input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} />Só as minhas</label>
+      </div>
+      <State loading={rows.isLoading} error={rows.error} empty={!rows.isLoading && list.length === 0} emptyText={tab === "due" ? "Nada pronto para enviar agora." : "Nenhuma mensagem nesta lista."} />
+      {list.length > 0 && (
+        <Table head={["Contato", "Mensagem", "Quando", "Responsável pelo envio", "Estado", ""]}>
+          {list.map((r) => (
+            <tr key={r.id} data-testid="sched-row">
+              <Td><Link className="text-accent hover:underline" to={`/admin/crm/conversas?c=${r.conversation_id}`}>{r.person?.full_name ?? "—"}</Link></Td>
+              <Td className="max-w-[22rem]"><span className="line-clamp-2" title={r.body}>{r.body}</span></Td>
+              <Td>{fmtDateTime(r.scheduled_for)}</Td>
+              <Td>{nameOf(r.assignee_user_id)}</Td>
+              <Td>{r.status === "sent" ? <Badge tone="success">Enviada · {fmtDateTime(r.sent_at)}</Badge> : r.status === "cancelled" ? <Badge>Cancelada</Badge> : isDue(r) ? <Badge tone="warning">Pronta para enviar</Badge> : <Badge tone="info">Agendada</Badge>}</Td>
+              <Td>
+                {r.status === "scheduled" && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button className="hp-btn hp-btn-primary hp-btn-sm" data-testid="sched-send" onClick={() => void act.sendNow(r, phoneOf(r.person?.person_contacts))}><MessageCircle size={13} aria-hidden />{isDue(r) ? "Enviar" : "Enviar agora"}</button>
+                    <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => setResched(resched?.id === r.id ? null : { id: r.id, at: "" })}>Remarcar</button>
+                    <button className="hp-btn hp-btn-outline hp-btn-sm" data-testid="sched-cancel" onClick={() => void act.cancel(r)}>Cancelar</button>
+                    {resched?.id === r.id && (<><label htmlFor={`rs-${r.id}`} className="sr-only">Novo horário</label><input id={`rs-${r.id}`} type="datetime-local" className="!w-auto" value={resched.at} onChange={(e) => setResched({ id: r.id, at: e.target.value })} />
+                      <button className="hp-btn hp-btn-outline hp-btn-sm" disabled={!resched.at} onClick={() => { void act.reschedule(r, resched.at).then(() => setResched(null)); }}>Salvar</button></>)}
+                  </div>
+                )}
+              </Td>
+            </tr>
+          ))}
+        </Table>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 export default MensagensAgendadas;

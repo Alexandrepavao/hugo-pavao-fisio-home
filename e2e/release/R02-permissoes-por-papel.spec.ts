@@ -41,14 +41,14 @@ test.describe("@release Permissões por papel", () => {
     });
   }
 
-  test("recursos incompletos: fora do menu do CRM e das rotas, mesmo digitando o endereço", async ({ page, context }) => {
+  test("recursos incompletos (disparo em massa, estado dos módulos): fora do menu do CRM e das rotas, mesmo digitando o endereço", async ({ page, context }) => {
     await loginAs(context, QA.manager);
     await page.goto("/admin/crm");
     const side = page.getByRole("navigation", { name: "Navegação do CRM" });
     await expect(side.getByRole("link", { name: "Conversas" })).toBeVisible();
-    await expect(side.getByRole("link", { name: "Mensagens agendadas" })).toHaveCount(0);
+    await expect(side.getByRole("link", { name: "Mensagens agendadas" })).toBeVisible();          // ligada na v1 pela migration 077 (lembrete + registro manual; R19)
     await expect(side.getByRole("link", { name: "Disparo de mensagens" })).toHaveCount(0);
-    for (const p of ["/admin/crm/mensagens-agendadas", "/admin/crm/disparo", "/admin/status"]) {
+    for (const p of ["/admin/crm/disparo", "/admin/status"]) {
       await page.goto(p); await expect(page.getByText("Recurso ainda não disponível nesta versão")).toBeVisible();
     }
     await page.goto("/admin/configuracoes");

@@ -1,54 +1,86 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fmtDateTime } from "@/lib/format";
-import { PageHead, State, Table, Td, errText, Msg, useMsg } from "@/lib/ui";
+import { useAuth } from "@/auth/AuthProvider";
+import { Msg, PageHead, errText, useMsg } from "@/lib/ui";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CRM_MANAGER_ROLES } from "./crmNav";
+import ConversationList, { type Scope } from "./conversas/ConversationList";
+import ConversationThread from "./conversas/ConversationThread";
+import LeadPanel from "./conversas/LeadPanel";
+import { refreshConversations, useMediaQuery, type InboxItem } from "./conversas/api";
 
-interface Row { id: string; title: string; person_id: string; full_name: string; phone: string | null; last_contact_at: string | null }
+const PANEL_KEY = "hp-conv-panel";
 
-/** Conversas: abre o WhatsApp com mensagem pronta e registra o contato — o que HP tem de verdade hoje.
- *  NÃO é uma caixa de entrada com sincronização de duas vias (isso exigiria um provedor real conectado —
- *  Evolution API/Chatwoot ou similar — que a organização ainda não tem configurado; ver Mensagens agendadas
- *  e Disparo de mensagens, que dependem do mesmo provedor e ficam bloqueados até essa integração existir). */
+/** Central de Conversas (CRM): lista à esquerda, mensagens no centro e ficha contextual do lead à direita (recolhível; no celular vira tela cheia + gaveta).
+ *  Sem provedor de WhatsApp conectado: "enviar" abre o wa.me com o texto e REGISTRA aqui; respostas do contato são registradas à mão; mensagens agendadas viram
+ *  lembrete para o responsável (nada é enviado sozinho). Abrir por link: ?pessoa=<id>[&oportunidade=<id>] cria/abre a conversa. */
 const Conversas = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg();
-  const rows = useQuery({ queryKey: ["crm-conversas"], queryFn: async () => {
-    const { data, error } = await supabase.from("opportunities").select("id, title, person_id, last_contact_at, person:people(full_name, person_contacts(type, value, normalized))").eq("status", "open").order("last_contact_at", { ascending: true, nullsFirst: true }).limit(100);
-    if (error) throw error;
-    return (data as unknown as { id: string; title: string; person_id: string; last_contact_at: string | null; person: { full_name: string; person_contacts: { type: string; value: string; normalized: string }[] } | null }[]).map((o) => ({
-      id: o.id, title: o.title, person_id: o.person_id, full_name: o.person?.full_name ?? "—", last_contact_at: o.last_contact_at,
-      phone: o.person?.person_contacts.find((c) => c.type === "phone")?.normalized ?? null,
-    })) as Row[];
-  } });
+  const qc = useQueryClient(); const { user, hasRole } = useAuth(); const [sp, setSp] = useSearchParams(); const [msg, m] = useMsg();
+  const [scope, setScope] = useState<Scope>("mine"); const [status, setStatus] = useState(""); const [q, setQ] = useState("");
+  const selected = sp.get("c"); const wide = useMediaQuery("(min-width: 1280px)");
+  const [panelOpen, setPanelOpen] = useState(() => { try { return localStorage.getItem(PANEL_KEY) !== "0"; } catch { return true; } });
+  const [sheet, setSheet] = useState(false);
+  const myId = user?.id ?? null; const isManager = hasRole(...CRM_MANAGER_ROLES);
+  const opening = useRef<string | null>(null);
 
-  const openWhatsApp = async (r: Row) => {
-    if (!r.phone) return m.err("Esta pessoa não tem telefone cadastrado.");
-    const text = encodeURIComponent(`Olá ${r.full_name.split(" ")[0]}, tudo bem? Aqui é da HP Fisioterapia sobre "${r.title}".`);
-    window.open(`https://wa.me/${r.phone}?text=${text}`, "_blank", "noopener,noreferrer");
-    const { data: u } = await supabase.auth.getUser();
-    const { data: org } = await supabase.from("organizations").select("id").single();
-    const { error } = await supabase.from("interactions").insert({ org_id: org?.id, person_id: r.person_id, opportunity_id: r.id, channel: "whatsapp", summary: "WhatsApp aberto com mensagem pronta", created_by: u.user?.id });
-    if (error) return m.err(errText(error));
-    void qc.invalidateQueries({ queryKey: ["crm-conversas"] });
-  };
+  const inbox = useQuery({ queryKey: ["crm-inbox", scope, status, q], refetchInterval: 20000, queryFn: async () => {
+    const { data, error } = await supabase.rpc("crm_conversations_inbox", { p_scope: scope, p_status: status || null, p_search: q || null, p_limit: 150 }); if (error) throw error; return (data ?? []) as InboxItem[];
+  } });
+  const unread = useQuery({ queryKey: ["crm-unread"], refetchInterval: 30000, queryFn: async () => { const { data, error } = await supabase.rpc("crm_conversations_unread"); if (error) throw error; return Number(data ?? 0); } });
+
+  // link de outras telas: cria (ou reaproveita) a conversa da pessoa e abre
+  useEffect(() => {
+    const pessoa = sp.get("pessoa"); if (!pessoa || opening.current === pessoa) return; opening.current = pessoa;
+    void (async () => {
+      const { data, error } = await supabase.rpc("crm_conversation_open", { p_person: pessoa, p_opportunity: sp.get("oportunidade") || null, p_channel: "whatsapp" });
+      const next = new URLSearchParams(sp); next.delete("pessoa"); next.delete("oportunidade");
+      if (error) { m.err(`Não foi possível abrir a conversa: ${errText(error)}`); setSp(next, { replace: true }); return; }
+      next.set("c", data as string); setSp(next, { replace: true }); refreshConversations(qc, data as string);
+    })();
+  }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const select = (id: string | null) => { const next = new URLSearchParams(sp); if (id) next.set("c", id); else next.delete("c"); setSp(next); };
+  const togglePanel = () => { if (wide) { const v = !panelOpen; setPanelOpen(v); try { localStorage.setItem(PANEL_KEY, v ? "1" : "0"); } catch { /* sem storage */ } } else setSheet((v) => !v); };
+  const items = inbox.data ?? [];
+  const sel = selected ? items.find((c) => c.id === selected) : undefined;
+  // a ficha precisa de pessoa/oportunidade; se a conversa aberta não está na lista filtrada, busca os dados dela
+  const conv = useQuery({ queryKey: ["crm-conv-lite", selected], enabled: !!selected, queryFn: async () => {
+    const { data, error } = await supabase.from("crm_conversations").select("id, person_id, opportunity_id, unit_id, person:people(full_name, person_contacts(type, normalized, is_primary))").eq("id", selected!).single(); if (error) throw error;
+    return data as unknown as { id: string; person_id: string; opportunity_id: string | null; unit_id: string; person: { full_name: string; person_contacts: { type: string; normalized: string; is_primary: boolean }[] } | null };
+  } });
+  const phone = sel?.phone ?? [...(conv.data?.person?.person_contacts ?? [])].filter((c) => c.type === "phone").sort((a, b) => Number(b.is_primary) - Number(a.is_primary))[0]?.normalized ?? null;
+  const showPanel = !!selected && !!conv.data && wide && panelOpen;
+
+  const panel = conv.data && selected ? (
+    <LeadPanel personId={conv.data.person_id} opportunityId={conv.data.opportunity_id} name={conv.data.person?.full_name ?? "—"} phone={phone} conversationId={selected} myId={myId} isManager={isManager} />
+  ) : null;
 
   return (
     <div>
-      <PageHead eyebrow="CRM · Comunicação" title="Conversas" hint="Abre o WhatsApp com mensagem pronta para o contato da oportunidade e registra o contato automaticamente. Sem caixa de entrada integrada (dependeria de um provedor real — ver Configurações)." />
+      <div className={selected ? "hidden lg:block" : ""}><PageHead eyebrow="CRM · Comunicação" title="Conversas" hint="Atendimento por WhatsApp com a ficha do lead ao lado. O envio abre o WhatsApp e registra aqui; o HP não confirma entrega nem leitura." /></div>
       <Msg m={msg} />
-      <State loading={rows.isLoading} error={rows.error} empty={rows.data?.length === 0} emptyText="Nenhuma oportunidade em aberto." />
-      {rows.data && rows.data.length > 0 && (
-        <Table head={["Pessoa", "Oportunidade", "Último contato", ""]}>
-          {rows.data.map((r) => (
-            <tr key={r.id}>
-              <Td>{r.full_name}</Td>
-              <Td>{r.title}</Td>
-              <Td>{r.last_contact_at ? fmtDateTime(r.last_contact_at) : "Nunca"}</Td>
-              <Td>{r.phone ? <button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => openWhatsApp(r)}><MessageCircle size={14} aria-hidden />WhatsApp</button> : <span className="text-xs text-muted-foreground">Sem telefone</span>}</Td>
-            </tr>
-          ))}
-        </Table>
+      <div className={`hp-card overflow-hidden grid h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-16rem)] min-h-[30rem] ${showPanel ? "lg:grid-cols-[18rem_minmax(0,1fr)_19rem]" : "lg:grid-cols-[18rem_minmax(0,1fr)]"}`} data-testid="conversas">
+        <div className={`${selected ? "hidden lg:block" : "block"} min-h-0 h-full`}>
+          <ConversationList items={items} loading={inbox.isLoading} error={!!inbox.error} scope={scope} onScope={setScope} status={status} onStatus={setStatus} q={q} onQ={setQ} selected={selected} onSelect={select} counts={{ unread: unread.data ?? 0 }} />
+        </div>
+        <div className={`${selected ? "block" : "hidden lg:block"} min-h-0 h-full min-w-0`}>
+          {selected
+            ? <ConversationThread key={selected} id={selected} myId={myId} isManager={isManager} onBack={() => select(null)} panelOpen={wide ? panelOpen : sheet} onTogglePanel={togglePanel} onMsg={m} />
+            : <div className="h-full grid place-items-center p-6 text-center bg-background"><div className="max-w-xs grid gap-2 justify-items-center"><MessageCircle size={32} className="text-muted-foreground" aria-hidden /><p className="font-medium">Escolha uma conversa</p><p className="text-sm text-muted-foreground">A ficha do lead aparece ao lado, com os campos do nicho (Fisioterapia, Academy, Parceiros ou Empresas).</p></div></div>}
+        </div>
+        {showPanel && <aside aria-label="Ficha do lead" className="hidden xl:block min-h-0 h-full border-l border-border">{panel}</aside>}
+      </div>
+
+      {!wide && (
+        <Sheet open={sheet && !!panel} onOpenChange={setSheet}>
+          <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b border-border text-left"><SheetTitle>Ficha do lead</SheetTitle><SheetDescription>Dados administrativos e do nicho desta conversa.</SheetDescription></SheetHeader>
+            <div className="flex-1 min-h-0 overflow-hidden">{panel}</div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

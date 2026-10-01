@@ -22,7 +22,7 @@
 | Área do parceiro | ✅ perfil, código e indicações (só 1º nome + etapa), repasses autorizados | R03 |
 
 **Preservados e visíveis, sem ampliar escopo:** Academy, Pesquisas, Contas corporativas, Recorrência/DRE/Conciliação/Relatórios do Financeiro, Meu dia, metas do CRM.
-**Fora da navegação e das rotas da v1** (perfil de entrega, `src/lib/release.ts`): CRM › *Mensagens agendadas* e *Disparo de mensagens* (exigem provedor de envio automático que não existe), *Estado dos módulos* e os cartões *Pendente* de Configurações. **Fora desta release:** Contábil (pronto, em `feature/lead-quizzes`), Marketing, Jurídico, RH e provisionamento white label.
+**Fora da navegação e das rotas da v1** (perfil de entrega, `src/lib/release.ts`): CRM › *Disparo de mensagens* (exige provedor de envio automático que não existe; *Mensagens agendadas* foi **ligada na v1** como lembrete + registro manual, sem envio automático — `docs/conversas.md`), *Estado dos módulos* e os cartões *Pendente* de Configurações. **Fora desta release:** Contábil (pronto, em `feature/lead-quizzes`), Marketing, Jurídico, RH e provisionamento white label.
 > Ocultar menu/rota **não é autorização**: nenhuma permissão depende dessa flag. O acesso a cada dado é decidido no banco (RLS e funções) e verificado por chamadas diretas à API no R02.
 
 ## 2. Bloqueios encontrados na jornada de aceite (e como foram resolvidos)
@@ -96,6 +96,7 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 31 | `20260930000072_grant_access_existing_confirmed_account.sql` | Conta já confirmada, mas sem `user_accounts`, é criada e ligada na hora (profissional e paciente); antes o convite nunca seria processado |
 | 32 | `20260930000073_reassessment_decided_at_clock.sql` | `patient_reassessments.decided_at` usa `clock_timestamp()` (desempate determinístico da “última decisão”) |
 | 33 | `20260930000074_crm_lists_rls_roles.sql` | **Correção de segurança:** listas do CRM (`crm_lead_lists`, `crm_lead_list_members`) só para papéis do CRM; antes paciente, parceiro e fisioterapeuta criavam/liam/apagavam listas pela API (`in_org` apenas) |
+| 34 | `20260930000077_crm_conversations.sql` | Central de Conversas do CRM: conversas por pessoa/canal, multiatendimento, mensagens imutáveis, mensagens agendadas (lembrete + registro; sem envio automático) e ficha do lead por nicho (`opportunities.profile`) — `docs/conversas.md`. *(As migrations 075/076, de Repasses, entram nesta tabela quando esse trabalho for commitado.)* |
 
 **Contagem de migrations — Dev × produção (conferida em 2026-09-30 contra `supabase_migrations.schema_migrations` do Dev e contra os arquivos do repositório):**
 | | Registros | Composição |
