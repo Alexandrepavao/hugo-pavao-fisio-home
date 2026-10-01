@@ -1,7 +1,7 @@
 # HP Group Hub — Transferência para outra conta ou organização do Claude Code
 
 > Gerado em **2026-10-01** (fuso de Brasília, BRT = UTC−3) a partir das **conversas salvas nesta máquina**, das memórias do Claude Code, do histórico Git/GitHub e dos documentos do repositório. Nada aqui contém senha, token, chave ou `.env`.
-> Resumo: o HP Group Hub foi construído em `D:\Claude\hugo-pavao-fisio-home` por esta conta desde **2026-09-21**; o último estado confirmado é a branch **`release/v1`** (PR **#3**, rascunho), commit **`030753d`**, em sincronia com o remoto, **mais trabalho local não commitado** (seção 5.2).
+> Resumo: o HP Group Hub foi construído em `D:\Claude\hugo-pavao-fisio-home` por esta conta desde **2026-09-21**; o último estado confirmado é a branch **`release/v1`** (PR **#3**, rascunho), commit **`ce5d4d7`**, **tudo commitado e enviado** e preview publicado (seção 5). A rodada de 01/10 (tarde) concluiu a auditoria e as lacunas das jornadas Fisioterapeuta, Paciente e CRM; o que resta está na seção 7.
 
 ## 1. Evidências e limites do histórico
 
@@ -39,7 +39,7 @@ Horários em BRT. “PR” = GitHub `Alexandrepavao/hugo-pavao-fisio-home`.
 **Fase D — ADM e Contábil (29/09).** Commits `ec70712`/`2896f61` (ADM, planilha PF/PJ — migrations 045–046), depois `a840917`, `004db03`, `93ac116`, `8a6e93d` (22:13): Contábil (papel `accountant`, competências, documentos, fechamento — migrations 048–051, **só no Dev e em `feature/lead-quizzes`**), importação CSV de PJ e colunas por usuário (047). **Primeira conversa gravada na pasta do repositório** (`bed3789a…`, 29/09 20:57).
 **Fase E — mudança de prioridade: release v1 (29/09 22:15 → 30/09).** Usuário pausou Contábil/Marketing/Jurídico/RH/white label; branch **`release/v1`** (PR **#3**, rascunho, aberto 29/09 23:32), sem Contábil. Jornada de aceite R01, permissões R02, portais R03, salvaguarda de ambiente no build, selo “AMBIENTE DE TESTE”. Em 30/09: confirmação independente de paciente/profissional, falta do profissional, consumo de sessão (054); cancelamento pelo paciente e horário passado (055); preview no site Dev `hp-group-hub`; escopo ampliado — indicadores (056), financeiro por linha de negócio (057, 060), jornada do paciente e Bunny (058), calendários (059), `google-calendar` com `state` de uso único (061), central de pendências administrativas (062), Google Calendar como única integração com sincronização automática (063), mapa do Brasil (064).
 **Fase F — nova interface (30/09 noite → 01/10).** `a0b7d73`, `ab156cd`: header em largura total, filtro único, cartões em níveis, mapa, sidebar contextual; depois `e5e46f4`/`734dec5`: **8 aplicativos** com sidebar exclusiva e app ativo pela URL, linha de negócio no filtro, **Cartões corporativos** (065), Calendário (Dia/Semana/Mês, só Google). `1b858fc`: diagnóstico da falha do teste 07 (causa não determinada).
-**Fase G — rodadas de 01/10.** `030753d` (12:34): filtro único nos 6 módulos restantes, **edição de cartão** (066), diagnóstico e correção do `57014` da agenda (067, deadlock — `docs/diagnosticos/04-agenda-concurrency/`). Preview republicado (deploy `6abe7e58d75717d063c8cc93`). Depois: rodada **ainda em andamento e não commitada** (seção 5.2).
+**Fase G — rodadas de 01/10.** `030753d` (12:34): filtro único nos 6 módulos restantes, **edição de cartão** (066), diagnóstico e correção do `57014` da agenda (067, deadlock — `docs/diagnosticos/04-agenda-concurrency/`). Preview republicado (deploy `6abe7e58d75717d063c8cc93`). **Fase H — jornadas (01/10, tarde):** commits `98c22cb` e `ce5d4d7`: Hub sem “Seus aplicativos”; jornadas Fisioterapeuta, Paciente e CRM auditadas e concluídas (migrations 068–074, S15–S17, R15–R18, `docs/jornadas-fisioterapeuta-paciente-crm.md`), correção de segurança das listas do CRM (074); preview republicado (deploy `6abed1f6a20ecff377beff7e`).
 
 ### Pedidos, decisões e mudanças de escopo (ordem cronológica)
 1. 21/09 — escopo geral do ecossistema; regras de ouro: só em `D:`, nada da Brighter, sem DNS/produção sem apresentar impacto, segredos nunca no chat.
@@ -60,69 +60,63 @@ Horários em BRT. “PR” = GitHub `Alexandrepavao/hugo-pavao-fisio-home`.
 
 ## 5. Estado real conferido em 2026-10-01 (evidências)
 
-### 5.1 Git, remoto e PR
+### 5.1 Git, remoto e PR (conferido ao final da rodada de 01/10)
 | Item | Valor |
 |---|---|
 | Pasta | `D:\Claude\hugo-pavao-fisio-home` |
 | Branch atual / remoto | `release/v1` → `origin` = `https://github.com/Alexandrepavao/hugo-pavao-fisio-home.git` |
-| HEAD | `030753d2704911d8c54c65b583dd8074706979b1` (“Filtro unico nos seis modulos restantes, edicao de cartao e correcao do deadlock da agenda”) |
-| Sincronia | `origin/release/v1` = HEAD (0 commits à frente; `git fetch` feito) |
-| PR **#3** | `release/v1 → main`, **ABERTO, RASCUNHO**, mesclável, 49 commits; corpo atualizado com a 12ª rodada |
-| PR #2 | `feature/lead-quizzes → main`, aberto, rascunho (Contábil + redesign; 4 commits que `release/v1` não tem) |
+| HEAD | `ce5d4d7` (“R17: BOM como escape no teste (lint)”), logo após `98c22cb` (jornadas) e `030753d` (rodada anterior); `origin/release/v1` = HEAD |
+| PR **#3** | `release/v1 → main`, **ABERTO, RASCUNHO**, mesclável; corpo atualizado |
+| PR #2 | `feature/lead-quizzes → main`, aberto, rascunho (Contábil + redesign antigo) |
 | PR #1 | `feature/hp-group-hub → main`, **mesclado** em 23/09 — **não voltar a essa branch** |
-| `main` | `64add39` (HP Hub fundação + cutover); `release/v1` está 49 commits à frente |
+| `main` | `64add39`; `release/v1` está bem à frente |
 
-### 5.2 Alterações locais (NÃO commitadas, NÃO enviadas) — precisam acompanhar a transferência
-Modificados: `e2e/release/R13-…spec.ts` (Hub sem lançador), `e2e/release/helpers-release.ts` (+ `createConfirmedUser`, `deleteAuthUser`, `uiLogin`), `src/App.tsx` (rota `/admin/meu-resumo`), `src/components/hp/appNav.ts`, `apps.ts` (item e prefixo “Meu resumo”), `src/pages/admin/Agenda.tsx` (aba Profissionais → `ProfessionalsAdmin`), `Dashboard.tsx` (**bloco “Seus aplicativos” removido**), `JourneyPanel.tsx`, `JourneySettings.tsx`, `src/pages/admin/crm/Leads.tsx` (botão “Importar CSV”), `src/pages/portal/Journey.tsx`, `Patient.tsx`, `supabase/tests/release/S07_jornada_paciente.sql`. **Removido:** `src/components/hp/AppLauncher.tsx`.
-Novos (não versionados): `src/lib/crmImport.ts`, `src/pages/admin/MySummary.tsx`, `ProfessionalsAdmin.tsx`, `src/pages/admin/crm/CrmImportDialog.tsx`, `supabase/migrations/20260930000068_professional_onboarding_patient_gaps.sql`, `…069_crm_import.sql`, `supabase/tests/release/S15_fisioterapeuta_paciente.sql`, `S16_crm_importacao.sql`, `S17_crm_indicadores_recalculo.sql`. `.claude/launch.json` (config local do servidor de desenvolvimento, sem segredos) também não é versionado.
-`git stash list` vazio. Tudo está só neste disco: **antes de trocar de máquina ou conta, faça um commit de trabalho em andamento (de preferência numa branch `wip/…` ou em `release/v1` após revisão) ou copie a pasta**.
+### 5.2 Trabalho local
+Nada pendente de envio, exceto o arquivo não versionado `.claude/launch.json` (configuração local do servidor de desenvolvimento, sem segredos). Os arquivos da rodada anterior (migrations 068–069, telas, S15–S17) foram **commitados** em `98c22cb`. `git stash list` vazio.
 
-### 5.3 Funcionalidades — concluídas, parciais e pendentes
-**Concluídas e commitadas (até `030753d`, testadas no Dev):** autenticação/primeiro acesso/recuperação (telas), equipe e papéis, Pessoas (mesclagem, importação), HP Pages/formulários/quizzes, CRM (Kanban, tarefas, metas, listas, relatórios), agenda (confirmação, presença, falta do profissional, cancelamento, bloqueio ao passado, sem sobreposição, trava contra deadlock), pacotes/sessões, financeiro (vendas, recebíveis, contas a pagar, fluxo, DRE, MRR/ARR, conciliação, comissões, linha de negócio, **Cartões corporativos com edição**), indicadores (Administrativo, CRM, Captação), central de pendências administrativas, jornada do paciente (objetivos, plano, evolução, reavaliação, pedido de renovação/contato), calendários (Google), 8 aplicativos contextuais, filtro único, mapa do Brasil, Academy, Parceiros.
-**Em andamento (código no disco, migrations aplicadas no Dev, E2E de tela ainda NÃO escrito):**
-- **Item 1 (Hub):** bloco “Seus aplicativos” removido do dashboard; o teste R13 foi adaptado mas **não foi executado**.
-- **Jornada Fisioterapeuta:** cadastro de profissional com pessoa do cadastro central, registro profissional, unidades, disponibilidade editável, liberação de acesso (convite com vínculo ou vínculo imediato), “Meu resumo” com contagens e repasses reais (migration 068 + telas).
-- **Jornada Paciente:** sessões contratadas/realizadas/falta/cancelamento tardio/devolvidas/saldo separadas (`my_package_breakdown`), plano **sempre** definido pelo profissional (sem “10 por padrão”), renovação só com orientação do fisioterapeuta (068).
-- **Jornada CRM:** importação CSV de leads/oportunidades (modelo, mapeamento de colunas, prévia, validação por linha, deduplicação no servidor, reimportação idempotente, decisão explícita de conflitos, origem/campanha/unidade/responsável/lista/etapa inicial) — migration 069 + `CrmImportDialog`; conferência dos KPIs do CRM por recálculo independente (S17).
-**Pendentes:** documento de auditoria “implementado / parcial / ausente” das 3 jornadas (**ainda não escrito**), E2E R15 (fisioterapeuta), R16 (paciente), R17 (importação CSV do CRM), execução dos E2E de regressão depois dessas mudanças, build, capturas de tela, atualização de `docs/` (contagem de migrations, matriz de filtros/aplicativos), commit/push, atualização do PR e preview. **Lacunas conhecidas ainda sem solução:** convidar ao portal uma pessoa que **já tem conta** (o gatilho só processa convites na criação da conta; o profissional já foi coberto por `professional_grant_access`, o paciente não); teste real de reprodução Bunny; recuperação de senha com link real (e-mail é dependência externa).
+### 5.3 Funcionalidades
+**Concluídas, comprovadas por teste e enviadas:** tudo o que consta em `docs/project-status.md` até a 12ª rodada **mais** a 13ª: Hub sem “Seus aplicativos”; jornada do **fisioterapeuta** (cadastro com pessoa do cadastro central, registro, unidades, disponibilidade, liberação de acesso, Meu resumo, repasses reais, isolamento); jornada do **paciente** (vínculo ao paciente certo, portal, confirmação/cancelamento, sessões separadas, plano definido pelo profissional, renovação só com orientação, vídeo, isolamento, celular); jornada do **CRM** (importação CSV com prévia/conflitos/idempotência, listas, oportunidades, tarefas, metas, KPIs por recálculo independente). Detalhe item a item: [`docs/jornadas-fisioterapeuta-paciente-crm.md`](jornadas-fisioterapeuta-paciente-crm.md).
+**Correção de segurança desta rodada:** listas do CRM estavam abertas a paciente, parceiro e fisioterapeuta pela API → migration 074.
+**Parciais / limites conhecidos:** repasses do profissional provados em SQL e, na tela, só no estado “indisponível”; histórico do portal mostra os 100 atendimentos mais recentes; importação CSV limitada a 500 linhas/1 MB (origem/campanha de pessoa existente não são alteradas); registro profissional é texto livre.
+**Pendentes (precisam de você ou de configuração externa):** ver 5.7 e a seção 7.
 
-### 5.4 Testes (último resultado conhecido)
-| Suíte | Resultado | Observação |
-|---|---|---|
-| SQL `supabase/tests/release/S01–S14` | todos OK (S01 16, S02 32, S03 56, S04 47, S05 82, S06 44, S07 63, S08 39, S09 61, S10 127, S11 19, S12 26, S13 80, S14 43) | rodados em 01/10 contra o Dev (transação desfeita). S07 foi **adaptado** à nova regra de plano/renovação |
-| SQL **S15** (fisioterapeuta e paciente) | 63 OK | novo, **não commitado** |
-| SQL **S16** (importação CSV do CRM) | 49 OK | novo, **não commitado** |
-| SQL **S17** (KPIs do CRM por recálculo) | 22 OK | novo, **não commitado** |
-| E2E release R01–R14, novos N10–N11, gerais 01–09 | verdes em 01/10 no commit `030753d` (R14 = 15 testes; `04-agenda-concurrency` 10/10) | **não reexecutados** depois das mudanças locais |
-| `tsc` do código local | limpo | `vite build` do código local **não foi rodado** |
-| `vitest` | 1 suíte antiga falha (`supabase/tests/functions/google-sync-plan.test.mjs` chama `process.exit`) | pré-existente |
-| `eslint` | 23 erros em arquivos não tocados (functions do Supabase, `R06`) | pré-existente; nenhum nos arquivos novos |
-**Falhas observadas sem causa determinada:** (1) `07`/`08` na bateria longa de 01/10 01:32–01:37 (`docs/project-status.md`); (2) uma ocorrência do R04 em que `#pf-day.fill()` ficou 150 s (não reproduzida). Não classificar como “instabilidade” sem prova.
+### 5.4 Testes (resultado ao final da rodada, contra o Dev)
+| Suíte | Resultado |
+|---|---|
+| SQL `supabase/tests/release/S01–S17` | todos OK (S01 16, S02 32, S03 56, S04 47, S05 82, S06 44, S07 63, S08 39, S09 61, S10 127, S11 19, S12 26, S13 80, S14 43, S15 78, S16 55, S17 22) |
+| E2E novos desta rodada | R15 (fisioterapeuta) 10/10 · R16 (paciente) 10/10 · R17 (importação CSV) 9/9 · R18 (CRM: listas, oportunidade, tarefas, metas, permissões) 7/7 |
+| E2E regressão | R01–R14, N10–N11 e gerais 01–09 (inclui `04-agenda-concurrency`): verdes em grupos pequenos; R13 adaptado ao Hub sem lançador; R02/R07/R12/R17 reexecutados depois da migration 074 |
+| `tsc` / `vite build` | limpos |
+| `eslint` dos arquivos novos | limpo (restam os 23 erros antigos em arquivos não tocados: funções do Supabase e `R06`) |
+| `vitest` | 1 suíte antiga falha (`supabase/tests/functions/google-sync-plan.test.mjs` chama `process.exit`; pré-existente) |
+| Capturas | `docs/screenshots/jornadas/` (Hub, profissionais, disponibilidade, 4 passos da importação CSV, Meu resumo, portal do paciente; 1440 e 390 px; sem rolagem lateral nem erros de console) |
+**Falhas sem causa determinada (antigas, não reapareceram):** `07`/`08` na bateria longa de 01/10 01:32–01:37; um `fill` de 150 s no R04. Não classificar como “instabilidade” sem prova.
+**Falhas desta rodada, todas com causa conhecida e corrigida:** `S07` instável por empate de `decided_at` (073); “Agendados” sem futuras (071); convite para conta confirmada sem papel (072); listas do CRM abertas (074); seletores de teste ajustados (sem enfraquecer verificações).
 Máquina com pouca memória: rodar E2E em grupos pequenos, 1 worker; não reiniciar servidores em segundo plano sozinho.
 
 ### 5.5 Migrations: escritas × aplicadas
-| Ambiente | Situação (verificada em 2026-10-01 para o Dev; produção **não** foi consultada nesta rodada) |
+| Ambiente | Situação |
 |---|---|
-| **Repositório** | 63 arquivos versionados em `release/v1` (001–047 e 052–067) **+ 068 e 069 não versionadas** = 65 arquivos no disco; 048–051 (Contábil) só em `feature/lead-quizzes` |
-| **Dev** `fsvtzowcwhvwtluwrhnb` | **70 registros**; última versão `20260930000069`. 068 e 069 **aplicadas** (via Management API, ainda sem commit). As migrations 001–046 estão registradas com carimbos de data diferentes dos nomes dos arquivos (aplicadas por ferramenta); compare por **número/nome**, não por versão |
-| **Produção** `HP Group Core` `wfqkjrpqkaarpavjheoj` | pelos documentos: **37 migrations** (001–037), aplicadas em 22–23/09, sem dados reais; **nada além disso foi aplicado** |
-| A aplicar em produção (quando autorizado) | 038→047 e 052→069 = **28 migrations**; `list_migrations` final esperado = **65** (hoje `docs/release-v1.md` ainda diz 26/63: **atualizar**). Nunca aplicar 048–051 |
+| **Repositório** | 70 arquivos versionados em `release/v1` (001–047 e 052–074); 048–051 (Contábil) só em `feature/lead-quizzes` |
+| **Dev** `fsvtzowcwhvwtluwrhnb` | **75 registros** (verificado em 01/10), última `20260930000074`; 068–074 aplicadas pela Management API **antes** de serem versionadas. As 001–046 estão registradas com carimbos de data diferentes dos nomes dos arquivos (aplicadas por ferramenta): compare por **número/nome** |
+| **Produção** `HP Group Core` `wfqkjrpqkaarpavjheoj` | pelos documentos: **37 migrations** (001–037), sem dados reais; **nada além disso** (não consultada nesta rodada) |
+| A aplicar em produção (quando autorizado) | 038→047 e 052→074 = **33 migrations**; `list_migrations` final esperado = **70**. Nunca aplicar 048–051. `docs/release-v1.md` §4 já está atualizado |
 
 ### 5.6 Preview mais recente
 - Site Netlify **`hp-group-hub`** (id `2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`), rascunho de branch `release-v1`: https://release-v1--hp-group-hub.netlify.app (protegido por login do time Netlify: 401 sem sessão).
-- Deploy `6abe7e58d75717d063c8cc93`, commit **`030753d27049`**, `version.json`: perfil `v1`, ambiente `preview`, backend `Dev` (`fsvtzowcwhvwtluwrhnb`).
-- **O preview NÃO contém** o trabalho local da seção 5.2.
-- Produção (`hp-group-hub-producao`, domínio, DNS) intactos; esse site foi publicado em 23/09 com o `dist` compilado localmente e hoje não reflete a release.
+- Deploy `6abed1f6a20ecff377beff7e`, commit **`ce5d4d7448ad`**, `version.json`: perfil `v1`, ambiente `preview`, backend `Dev` (`fsvtzowcwhvwtluwrhnb`). Contém todo o trabalho desta rodada.
+- A URL exige login de equipe: as telas do preview foram validadas servindo o **mesmo `dist`** localmente contra o Dev (E2E e capturas), não pelo endereço publicado.
+- Produção (`hp-group-hub-producao`, domínio, DNS) intactos.
 
 ### 5.7 Dependências externas e configurações pendentes (separadas do que foi comprovado)
 | Item | Estado |
 |---|---|
-| **Resend / entrega de e-mail** | hook de e-mail do Supabase Auth e Edge Function implementados no Dev; envio real validado só para `jan.darioush@yahoo.com.br`; **produção:** `RESEND_API_KEY`, domínio (DKIM/SPF), Site URL/Redirect URLs e limite de e-mail pendentes. Testes E2E **não** enviam e-mail (interceptam `/api/send-email`) |
-| **Bunny (vídeos)** | atribuição, revogação, validade, log e função `bunny-playback` prontos; **segredo `BUNNY_EMBED_TOKEN_KEY` e ID da biblioteca não cadastrados** → reprodução real **não testada**; a tela mostra “indisponível por configuração” |
-| **Google Calendar** | Dev configurado (projeto Google Cloud “HPGroupCalendario”, OAuth, segredos, Vault, sincronização automática); cada usuário autoriza a própria conta; teste real de ponta a ponta depende de uma conta Google de teste autorizada. **Produção:** repetir segredos e callback em `HP Group Core` |
-| **DNS** `hpfisioterapia.com.br` | **não alterado** (GitHub Pages); depende de acesso ao provedor de DNS (nameservers `dns-parking.com`) — fora do alcance |
+| **Resend / entrega de e-mail** | hook do Supabase Auth e Edge Function implementados no Dev; envio real validado só para `jan.darioush@yahoo.com.br`. Os E2E provam o **registro** do convite, a conta (criada já confirmada no Auth do Dev) e a tela de nova senha — **não** a chegada do e-mail. **Produção:** `RESEND_API_KEY`, domínio (DKIM/SPF), Site URL/Redirect URLs e limite de e-mail pendentes |
+| **Bunny (vídeos)** | atribuição, revogação, validade, log, isolamento e função `bunny-playback` prontos; **segredo `BUNNY_EMBED_TOKEN_KEY` e ID da biblioteca não cadastrados** → reprodução real **não testada** (tela: “indisponível por configuração”) |
+| **Google Calendar** | Dev configurado (OAuth, segredos, Vault, sincronização automática); teste real de autorização depende de conta Google de teste. **Produção:** repetir segredos e callback em `HP Group Core` |
+| **DNS** `hpfisioterapia.com.br` | **não alterado** (GitHub Pages; nameservers em `dns-parking.com`) — fora do alcance |
 | **Painel Supabase de produção** | Auth Site URL/Redirect URLs, hook, limite de e-mails, PITR/backup |
-| **Netlify** | proteção de equipe nos previews; site duplicado público `leafy-cascaron-325147` (não usar; resolver depois); site de produção precisa ser reconectado ao repositório |
+| **Netlify** | proteção de equipe nos previews; site duplicado público `leafy-cascaron-325147` (não usar); site de produção a reconectar ao repositório |
 | **WhatsApp/pagamentos** | só links `wa.me`; sem API oficial/gateway |
 
 ## 6. Decisões que devem ser preservadas
@@ -137,20 +131,17 @@ Máquina com pouca memória: rodar E2E em grupos pequenos, 1 worker; não reinic
 9. **Relatórios:** sempre lembrar ao usuário de revogar o token do Supabase ao final.
 
 ## 7. Pendências e próximos passos, em ordem
-Última tarefa autorizada (pedido de 01/10 15:42Z, interrompido no meio): *remover “Seus aplicativos” do Hub; auditar e documentar o que está implementado/parcial/ausente nas jornadas Fisioterapeuta, Paciente e CRM; concluir as lacunas reaproveitando cadastros e serviços; testar cada jornada completa antes de declará-la concluída; registrar dependências externas separadamente; atualizar documentação, capturas, commit, push, PR em rascunho e preview autorizado.* Para concluir:
-1. Conferir `git status`, `tsc`, `vite build`; rever o diff da seção 5.2 (nada foi commitado).
-2. Escrever `docs/jornadas-fisioterapeuta-paciente-crm.md` (matriz item a item: implementado/parcial/ausente, com o código e o teste de cada item e as dependências externas à parte).
-3. Completar `e2e/release/helpers-release.ts` (`signInWith`) e escrever **R15** (fisioterapeuta: cadastro pela tela, disponibilidade, liberar acesso sem enviar e-mail — interceptar `/api/send-email` —, conta criada por `createConfirmedUser`, login pela tela, “Meu resumo”, agenda alheia negada, recuperação de senha com sessão), **R16** (paciente: convite/vínculo ao paciente correto, portal, confirmação/cancelamento, sessões separadas, plano definido pelo profissional, renovação só com orientação, isolamento entre dois pacientes, celular 390 px) e **R17** (importação CSV do CRM pela tela, arquivo com acentos e `;`, mapeamento, prévia, conflito, reimportação sem duplicar, relatório).
-4. Rodar R13 (Hub), R09/R03 (portal/jornada), R02, R12, R14 e os gerais em **grupos pequenos**; corrigir só falhas reais; rodar S01–S17.
-5. Resolver a lacuna “convidar ao portal quem já tem conta” (ou documentá-la como ausente).
-6. Atualizar `docs/aplicativos.md`, `docs/release-v1.md` (28 migrations; produção 65; Dev 70), `docs/project-status.md`, `docs/jornada-do-paciente.md`, `docs/indicadores.md` se necessário; gerar capturas (desktop e 390 px) com `e2e/tools/shots-*.mjs`.
-7. Commit e push em `release/v1`; atualizar o corpo do PR #3 (continua rascunho); republicar o preview com o comando da seção 6 e conferir `version.json` (commit, `preview`, `Dev`).
-8. Lembrar da revogação do token do Supabase.
-**Depois (precisa de ação do usuário, fora do Dev):** DNS e domínio do app; produção (migrations, e-mail, Auth, segredos); Bunny; backup/PITR; proteção dos previews; reconciliar `feature/lead-quizzes`.
+**A tarefa autorizada de 01/10 foi concluída** (auditoria e lacunas das jornadas Fisioterapeuta, Paciente e CRM, Hub sem “Seus aplicativos”, testes, documentação, capturas, commit/push, PR #3 em rascunho e preview). Não há tarefa autorizada em aberto. Próximos passos sugeridos, **todos dependem de nova autorização ou de ação sua**:
+1. **Revisão do PR #3** (continua em rascunho) e decisão sobre o que entra na primeira versão de produção.
+2. **Configurações externas** (seção 5.7): Bunny (segredo e biblioteca), e-mail em produção (Resend, DKIM/SPF, hook, URLs), Google em produção, backup/PITR.
+3. **Teste real das dependências externas** assim que configuradas: e-mail de convite/recuperação, vídeo no Bunny, autorização Google.
+4. **Produção (só com autorização explícita):** aplicar as 33 migrations (038→047, 052→074) uma a uma, conferir `list_migrations` = 70, publicar o front de produção com o banco de produção, DNS.
+5. **Melhorias conhecidas:** histórico do portal além de 100 atendimentos, teste de tela com repasse positivo, importação CSV acima de 500 linhas, validação do registro profissional por conselho, reconciliar `feature/lead-quizzes` (Contábil) com `release/v1`, corrigir os 23 erros de `eslint` antigos e a suíte `vitest` que chama `process.exit`.
+6. Ao final de qualquer rodada, lembrar da revogação do token do Supabase.
 
 ## 8. Como retomar na nova conta
 1. Abrir o Claude Code em `D:\Claude\hugo-pavao-fisio-home` (não em `D:\Claude Code`). Ler `CLAUDE.md`, este arquivo, `docs/project-status.md` (seção mais recente) e `docs/release-v1.md`.
-2. `git status --short --branch`, `git log -1`, `git fetch`, `gh pr view 3`. Confirmar `release/v1`, HEAD `030753d` e as alterações locais da seção 5.2. **Não** usar `reset`, `clean`, `checkout` que descarte arquivos nem `stash` sem avisar.
+2. `git status --short --branch`, `git log -1`, `git fetch`, `gh pr view 3`. Confirmar `release/v1`, HEAD `ce5d4d7` (ou um commit de documentação posterior) e que não há alterações locais além de `.claude/`. **Não** usar `reset`, `clean`, `checkout` que descarte arquivos nem `stash` sem avisar.
 3. Conferir variáveis (sem exibir valores): `SUPABASE_ACCESS_TOKEN` e `HP_QA_PASSWORD` no escopo **Usuário** do Windows; `gh auth status`; `netlify status` (time “Hp Group”); `supabase --version`.
 4. Servidor local: `node node_modules/vite/bin/vite.js --port 5180 --host 127.0.0.1` (o Playwright também sobe sozinho). E2E: `npx playwright test <arquivo>` com 1 worker.
 5. SQL no Dev: scripts em `supabase/tests/release/*.sql` rodam em transação desfeita (relatório sai no erro `RELATORIO_…`). Aplicar migration no Dev só se pendente, uma a uma, e nunca em produção.
@@ -173,8 +164,8 @@ Máquina com pouca memória: rodar E2E em grupos pequenos, 1 worker; não reinic
 Retome o HP Group Hub em D:\Claude\hugo-pavao-fisio-home (futura plataforma ERP white label; hoje a prioridade é a release v1 do HP Group).
 
 1) Leia, nesta ordem: CLAUDE.md, docs/transferencia-claude.md, docs/project-status.md (seção mais recente) e docs/release-v1.md.
-2) Confira o estado real antes de qualquer alteração: git status --short --branch, git log -1, git fetch, gh pr view 3. Último estado conhecido: branch release/v1, PR #3 em RASCUNHO, HEAD 030753d, com trabalho local NÃO commitado (lista na seção 5.2 do docs/transferencia-claude.md). Preserve todas as alterações locais: não use reset, clean, checkout que descarte arquivos nem stash sem me avisar. Não troque para feature/hp-group-hub (já mesclada).
+2) Confira o estado real antes de qualquer alteração: git status --short --branch, git log -1, git fetch, gh pr view 3. Último estado conhecido: branch release/v1, PR #3 em RASCUNHO, HEAD ce5d4d7 (tudo commitado e enviado; só .claude/ não é versionado). Preserve todas as alterações locais: não use reset, clean, checkout que descarte arquivos nem stash sem me avisar. Não troque para feature/hp-group-hub (já mesclada).
 3) Restrições: trabalhe somente no Supabase Dev (fsvtzowcwhvwtluwrhnb); sem merge, sem produção (HP Group Core), sem DNS, sem usar o site leafy-cascaron-325147; preview só com o comando de deploy de rascunho documentado. Não peça nem exiba tokens/senhas; SUPABASE_ACCESS_TOKEN e HP_QA_PASSWORD vêm das variáveis do usuário Windows (confira sem mostrar o valor). Se faltar acesso, diga qual ação eu devo fazer.
-4) Primeiro informe brevemente onde paramos e o que depende de mim. Depois retome a próxima tarefa autorizada, descrita na seção 7 do docs/transferencia-claude.md: concluir a auditoria e as lacunas das jornadas Fisioterapeuta, Paciente e CRM (documento de auditoria, E2E R15/R16/R17, regressão em grupos pequenos, documentação, capturas, commit/push em release/v1, PR #3 em rascunho e preview autorizado).
+4) Primeiro informe brevemente onde paramos e o que depende de mim. A última tarefa autorizada (jornadas Fisioterapeuta, Paciente e CRM; Hub sem “Seus aplicativos”) está CONCLUÍDA; não há tarefa em aberto: confirme comigo o próximo passo entre os listados na seção 7 do docs/transferencia-claude.md antes de implementar.
 5) Seja honesto nos relatórios: não declare concluída integração apenas preparada (Bunny, Google, e-mail), não classifique falha como instabilidade sem prova e registre causas não determinadas. Lembre-me ao final de revogar o token do Supabase.
 ```

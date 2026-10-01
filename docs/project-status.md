@@ -44,7 +44,7 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-01, 13ª rodada) — jornadas Fisioterapeuta, Paciente e CRM; Hub sem “Seus aplicativos”
+## Sessão mais recente (2026-10-01, 13ª rodada, concluída) — jornadas Fisioterapeuta, Paciente e CRM; Hub sem “Seus aplicativos”
 
 > `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Auditoria item a item (implementado/parcial/ausente, com o teste de cada item e as dependências externas): [`docs/jornadas-fisioterapeuta-paciente-crm.md`](jornadas-fisioterapeuta-paciente-crm.md). Histórico e continuidade: [`docs/transferencia-claude.md`](transferencia-claude.md).
 - **Hub:** o bloco “Seus aplicativos” saiu do dashboard (os acessos já estão na sidebar); indicadores, alertas e gráficos preservados.
@@ -56,6 +56,7 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 - **Migrations:** Dev = **75 registros** (última 074); repositório = 70 arquivos; produção (pelos documentos, não consultada hoje) = 37. Para produção, quando autorizado: 038→047 e 052→074 = **33**, `list_migrations` final **70**. Corrigidas as contagens antigas (26/63) em `docs/release-v1.md`.
 - **Dependências externas NÃO comprovadas:** entrega do e-mail de convite/recuperação (Resend: os E2E criam a conta já confirmada no Auth do Dev e a tela de nova senha usa uma sessão por API), clique no link do e-mail, reprodução real do vídeo no Bunny (segredo e biblioteca não cadastrados; a tela mostra a mensagem honesta), autorização real no Google Calendar, DNS e produção.
 - **Sem diagnóstico:** nenhuma falha nova sem causa; as duas antigas (07/08 da bateria longa de 01/10 e o `fill` de 150 s do R04) não reapareceram.
+- **Publicação:** commit `ce5d4d7`, preview (rascunho) deploy `6abed1f6a20ecff377beff7e`, `version.json` = perfil `v1`, ambiente `preview`, backend Dev; a URL exige login da equipe Netlify (401), então as telas foram validadas servindo o mesmo `dist` contra o Dev. PR #3 segue em rascunho.
 - **Segurança:** tokens do Supabase colados no chat em 30/09 ficaram nas transcrições locais — revogar e gerar novo.
 
 ## Sessão anterior (2026-10-01, 12ª rodada) — filtro único nos seis módulos, edição de cartão e diagnóstico do `57014`
