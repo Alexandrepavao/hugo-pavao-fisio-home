@@ -18,6 +18,8 @@ export const utmFromLocation = (): Record<string, string> => {
     if (stored) Object.assign(out, JSON.parse(stored));
     const q = new URLSearchParams(window.location.search);
     ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach((k) => { const v = q.get(k); if (v) out[k] = v.slice(0, 150); });
+    // código de indicação de parceiro (?ref=): guardado com a sessão para a indicação ser ligada ao enviar o formulário (o servidor ignora código inexistente)
+    const ref = q.get("ref"); if (ref && /^[a-z0-9]{4,32}$/i.test(ref)) out.ref = ref.toLowerCase();
     sessionStorage.setItem("hp_utm", JSON.stringify(out));
   } catch { /* storage indisponível */ }
   return out;
