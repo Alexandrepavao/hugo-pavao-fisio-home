@@ -1,10 +1,13 @@
 // ACEITE da release v1 — confirmação antecipada independente (paciente e fisioterapeuta, nos respectivos portais), presença efetiva e consumo de sessão.
 // Três coisas separadas: confirmar (antes) ≠ comparecer/faltar (depois do horário) ≠ consumir sessão (política do pacote).
 // Exige SUPABASE_ACCESS_TOKEN (Dev): cria o pacote de teste e desloca horários ao passado (o sistema não deixa marcar falta antes do horário).
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { api, collectErrors, devSql, loginAs, moveAppointment, QA, rest, runId, signIn, spDate } from "./helpers-release";
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
+
+// No portal do paciente o mesmo atendimento futuro aparece em “Meus atendimentos” e, se estiver entre os próximos, também em “Minha jornada”: as ações (confirmar, estados) são as da primeira lista.
+const mineOf = (p: Page) => p.locator("section").filter({ has: p.getByRole("heading", { name: "Meus atendimentos" }) }).getByRole("listitem");
 
 test.describe.serial("@release Confirmação, presença e consumo de sessão", () => {
   test.setTimeout(150_000);
@@ -44,7 +47,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
 
     // portal do paciente: confirma pela interface
     await page.goto("/paciente");
-    const rowA = page.getByRole("listitem").filter({ hasText: svcName("A") });
+    const rowA = mineOf(page).filter({ hasText: svcName("A") });
     await expect(rowA).toHaveCount(1); await expect(rowA.getByText("Aguardando confirmação do profissional.")).toBeVisible();
     await rowA.getByRole("button", { name: "Confirmar minha presença" }).click();
     await expect(page.getByText("Presença confirmada. Obrigado!")).toBeVisible();
@@ -85,9 +88,9 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     // paciente (contexto próprio)
     const ctxP = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const pageP = await ctxP.newPage(); await loginAs(ctxP, QA.paciente);
     await pageP.goto("/paciente");
-    const rowA = pageP.getByRole("listitem").filter({ hasText: svcName("A") });
+    const rowA = mineOf(pageP).filter({ hasText: svcName("A") });
     await expect(rowA.getByText("O profissional confirmou o atendimento.")).toBeVisible();
-    const rowB = pageP.getByRole("listitem").filter({ hasText: svcName("B") }); await expect(rowB.getByRole("button", { name: "Confirmar minha presença" })).toBeVisible();
+    const rowB = mineOf(pageP).filter({ hasText: svcName("B") }); await expect(rowB.getByRole("button", { name: "Confirmar minha presença" })).toBeVisible();
     await ctxP.close();
     // gestor: Agenda do dia
     await loginAs(context, QA.manager); const errors = collectErrors(page);
@@ -129,8 +132,8 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     // o paciente vê a verdade no portal
     const ctxP = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const pageP = await ctxP.newPage(); await loginAs(ctxP, QA.paciente);
     await pageP.goto("/paciente");
-    const pB = pageP.getByRole("listitem").filter({ hasText: svcName("B") }); await expect(pB.getByText("Você faltou")).toBeVisible(); await expect(pB.getByText(/foi descontada do seu pacote/)).toBeVisible();
-    const pC = pageP.getByRole("listitem").filter({ hasText: svcName("C") }); await expect(pC.getByText("O profissional não compareceu")).toBeVisible(); await expect(pC.getByText(/Sua sessão não foi descontada/)).toBeVisible();
+    const pB = mineOf(pageP).filter({ hasText: svcName("B") }); await expect(pB.getByText("Você faltou")).toBeVisible(); await expect(pB.getByText(/foi descontada do seu pacote/)).toBeVisible();
+    const pC = mineOf(pageP).filter({ hasText: svcName("C") }); await expect(pC.getByText("O profissional não compareceu")).toBeVisible(); await expect(pC.getByText(/Sua sessão não foi descontada/)).toBeVisible();
     await ctxP.close();
     expect(errors).toEqual([]);
   });
