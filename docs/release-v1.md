@@ -100,6 +100,7 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 31c | `20260930000076_commission_status_machine.sql` | Comissões: máquina de estados estrita (pendente → autorizada → paga; pago/estornado finais; repetir não muda) e auditoria de `commission_entries` — `docs/repasses.md` |
 | 34 | `20260930000077_crm_conversations.sql` | Central de Conversas do CRM: conversas por pessoa/canal, multiatendimento, mensagens imutáveis, mensagens agendadas (lembrete + registro; sem envio automático) e ficha do lead por nicho (`opportunities.profile`) — `docs/conversas.md`. *(075/076 = Repasses, linhas 31b/31c acima.)* |
 | 35 | `20260930000078_idempotent_sale_and_opportunity.sql` | Duplo clique e retentativa: `sale_create` ganha `p_idempotency_key` (mesma chave = mesma venda, inclusive em corrida) e uma oportunidade só pode ter UMA venda pendente; `crm_create_opportunity` recusa segunda oportunidade ABERTA da mesma pessoa no mesmo funil — `docs/integracao-ponta-a-ponta.md` |
+| 36 | `20260930000079_education_opportunity_follows_access.sql` | Academy: a oportunidade de educação só vai para a etapa final (“Acesso liberado”) quando a regra de acesso do produto se cumpre (`on_full_payment` = quitação; `on_first_payment` = 1º recebimento, como antes) — `docs/integracao-ponta-a-ponta.md` |
 
 **Contagem de migrations — Dev × produção (conferida em 2026-09-30 contra `supabase_migrations.schema_migrations` do Dev e contra os arquivos do repositório):**
 | | Registros | Composição |
