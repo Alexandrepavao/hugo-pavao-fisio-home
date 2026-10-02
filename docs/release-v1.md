@@ -58,6 +58,9 @@ Executados contra o **Supabase Dev** (dados de QA), com o front local da branch 
 
 **Não coberto / não provado:** entrega e clique dos e-mails (§7); convite por e-mail via Netlify; migrations numa cópia de produção; SQL legado 001–023 inteiro em base limpa (002, 003, 010, 012 falham por fixtures próprias; 001/005 têm cópias independentes de volume em `supabase/tests/release`); carga/concorrência além da restrição de exclusão da agenda.
 
+### 3.1 Reconciliação entre sessões (2026-10-02) — rodadas 14ª–17ª (Conversas, Repasses, idempotência, Academy, Parceiros)
+Suítes novas desde a tabela acima, revalidadas **ao vivo contra o Dev** nesta rodada de reconciliação (não só por documento): `S15_fisioterapeuta_paciente`, `S19_conversas` (96), `S18_repasses` (30), `S20_idempotencia_venda_oportunidade`, `S21_repasse_parceiro_financeiro` (16) — SQL completo `test:sql:release` (S01–S21): **1056/1056, 0 falha**. E2E `R19-central-conversas` (9), `R20-repasses` (8, inclusive um caso de valor positivo validado pela interface do profissional e do Financeiro, por pedido explícito), `R21-captacao-crm-venda` (8), `R22-academy-venda-acesso` (9), `R23-parceiro-indicacao-resultado` (7). Ver `docs/integracao-ponta-a-ponta.md` para a matriz das 9 jornadas ponta a ponta.
+
 ## 4. Migrations para produção (ordem exata)
 Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). Aplicar, **nesta ordem**, só estas 33 (todas já aplicadas no Dev e testadas por SQL; produção não foi tocada):
 

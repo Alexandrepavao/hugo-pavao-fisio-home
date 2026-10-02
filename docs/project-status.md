@@ -44,7 +44,15 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-01, 15ª rodada) — layout da central de Conversas e rótulos honestos
+## Sessão mais recente (2026-10-02, 16ª rodada) — reconciliação entre sessões, revalidação de Repasses e doc de integração ponta a ponta
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Esta rodada **não é trabalho novo de produto**: a sessão anterior (17/01–02/10) bateu o limite de uso no meio de uma sequência já comitada (Repasses, idempotência de venda/oportunidade, Academy, Parceiros) sem dar push nem fechar a documentação. Esta sessão leu tudo sem confiar na memória (`CLAUDE.md`, `docs/transferencia-claude.md`, status, release, docs de Repasses/Conversas), conferiu o estado real do git/Dev contra o que os documentos afirmavam, e **corrigiu duas afirmações desatualizadas**: Repasses já estava comitado (não "pendente") e as migrations 075/076 já estavam no repositório (não "ausentes").
+- **Revalidado ao vivo contra o Dev (não só por documento):** SQL completo `test:sql:release` S01–S21 = **1056/1056, 0 falha**; `S18_repasses` isolado = 30/30; E2E `R20-repasses` isolado = 8/8 (caso de valor positivo pela interface do profissional **e** do Financeiro, por pedido explícito desta rodada).
+- **Lacuna fechada:** `docs/integracao-ponta-a-ponta.md` (referenciado três vezes em `docs/release-v1.md` desde a rodada anterior, mas nunca criado) — matriz das 9 jornadas ponta a ponta do escopo autorizado, cada uma classificada com evidência real; duas seguem **bloqueadas por configuração externa** (vídeo Bunny — falta a chave e o ID da biblioteca; Google Calendar — falta a autorização real na conta do Google), nenhuma declarada concluída por mock.
+- **Preservado do working tree da sessão anterior:** correção real em `e2e/release/R04-confirmacao-presenca-consumo.spec.ts` (o atendimento futuro passou a aparecer em duas listas do portal do paciente — "Meus atendimentos" e "Minha jornada" — e o seletor do teste ficou ambíguo; corrigido sem enfraquecer nenhuma verificação) + 7 capturas de tela de Conversas.
+- **Pendência de segurança levada ao usuário:** token do Supabase colado no chat em 30/09 (registrado em `docs/transferencia-claude.md`) continua comprometido; revogação em `supabase.com/dashboard/account/tokens` depende do usuário.
+
+## Sessão anterior (2026-10-01, 15ª rodada) — layout da central de Conversas e rótulos honestos
 
 > `release/v1`, PR #3 em rascunho; Dev apenas. Escopo desta rodada: **somente o layout de Conversas** (referência: *Chats* do shadcn Admin). Provedor de WhatsApp, envio automático e recebimento ficam para depois (nada foi configurado nem contratado). **Repasses** (075/076, `S18`, `Commissions.tsx`, `MySummary.tsx`, `S15`) segue **sem commit e fora desta entrega**.
 - **Layout:** lista (avatar, nome, última interação, horário, busca) · conversa ocupando a maior parte da tela (cabeçalho com avatar e nome, separadores de data, horários nos balões, compositor fixo) · **ficha do lead recolhida por padrão**, abre ao clicar no nome; celular: uma coluna por vez com botão de voltar. Sem mensagens fictícias e sem botões sem função.
