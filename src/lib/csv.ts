@@ -1,19 +1,25 @@
 /** Parser CSV simples (aspas, separador , ou ;, quebras CRLF). Sem dependências. */
-export function parseCsv(text: string): string[][] {
+export function parseCsv(text: string): string[][] { return parseCsvWithLines(text).map((r) => r.cells); }
+
+/** Igual a parseCsv, mas informa a linha física (1 = primeira do arquivo) onde cada registro começa — linhas em
+ *  branco são ignoradas mas continuam contando, para o relatório de erros apontar a linha real do arquivo. */
+export function parseCsvWithLines(text: string): { cells: string[]; line: number }[] {
   const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const firstLine = src.split(/\r?\n/, 1)[0] ?? "";
   const delim = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ";" : ",";
-  const rows: string[][] = []; let row: string[] = []; let cell = ""; let quoted = false;
+  const rows: { cells: string[]; line: number }[] = []; let row: string[] = []; let cell = ""; let quoted = false;
+  let line = 1; let startLine = 1;
+  const flush = () => { row.push(cell); cell = ""; if (row.some((x) => x.trim() !== "")) rows.push({ cells: row, line: startLine }); row = []; };
   for (let i = 0; i < src.length; i++) {
     const c = src[i];
     if (quoted) {
-      if (c === '"') { if (src[i + 1] === '"') { cell += '"'; i++; } else quoted = false; } else cell += c;
+      if (c === '"') { if (src[i + 1] === '"') { cell += '"'; i++; } else quoted = false; } else { if (c === "\n") line++; cell += c; }
     } else if (c === '"') quoted = true;
     else if (c === delim) { row.push(cell); cell = ""; }
-    else if (c === "\n" || c === "\r") { if (c === "\r" && src[i + 1] === "\n") i++; row.push(cell); cell = ""; if (row.some((x) => x.trim() !== "")) rows.push(row); row = []; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && src[i + 1] === "\n") i++; flush(); line++; startLine = line; }
     else cell += c;
   }
-  row.push(cell); if (row.some((x) => x.trim() !== "")) rows.push(row);
+  flush();
   return rows;
 }
 

@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { fmtDateTime } from "@/lib/format";
+import JourneyPanel from "./JourneyPanel";
+import RenewalQueue from "./RenewalQueue";
 import { btnDanger, btnGhost, confirmDialog, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 const KIND: Record<string, string> = { guidance: "Orientação", exercise_video: "Vídeo de exercício", questionnaire: "Questionário", program: "Programa" };
@@ -12,8 +14,8 @@ const Care = () => {
   const { hasRole } = useAuth(); const [tab, setTab] = useState(hasRole("physio") ? "pacientes" : "vinculos");
   return (<div>
     <PageHead eyebrow="Assistencial" title="Acompanhamento de pacientes" hint="Conteúdos individualizados são definidos e liberados por profissionais autorizados — o sistema não gera prescrição automática. Vínculos podem ser revogados a qualquer momento." />
-    <Tabs tabs={[...(hasRole("physio") ? [["pacientes", "Meus pacientes"], ["conteudos", "Biblioteca de conteúdos"]] as [string, string][] : []), ...(hasRole("manager", "ops_admin", "unit_manager") ? [["vinculos", "Vínculos assistenciais"]] as [string, string][] : [])]} value={tab} onChange={setTab} />
-    {tab === "pacientes" && <Patients />}{tab === "conteudos" && <Contents />}{tab === "vinculos" && <Links />}
+    <Tabs tabs={[...(hasRole("physio") ? [["pacientes", "Meus pacientes"], ["conteudos", "Biblioteca de conteúdos"]] as [string, string][] : []), ...(hasRole("manager", "ops_admin", "unit_manager") ? [["vinculos", "Vínculos assistenciais"], ["renovacoes", "Pedidos de renovação"]] as [string, string][] : [])]} value={tab} onChange={setTab} />
+    {tab === "pacientes" && <Patients />}{tab === "conteudos" && <Contents />}{tab === "vinculos" && <Links />}{tab === "renovacoes" && <RenewalQueue />}
   </div>);
 };
 
@@ -34,6 +36,7 @@ const Patients = () => {
     {rels.data && rels.data.length > 0 && <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
       <ul className="border border-border bg-card divide-y divide-border">{rels.data.map((r) => <li key={r.id}><button className={`w-full text-left p-3 ${sel === r.person_id ? "bg-muted" : ""}`} onClick={() => setSel(r.person_id)}>{names.data?.[r.person_id] ?? "Paciente"}</button></li>)}</ul>
       {sel && detail.data && <div className="space-y-8">
+        <JourneyPanel person={sel} />
         <form onSubmit={assign} className="hp-card p-4 grid gap-3 sm:grid-cols-3 items-end"><div><label htmlFor="cc" className="block text-xs mb-1">Conteúdo</label><select id="cc"   value={content} onChange={(e) => setContent(e.target.value)}><option value="">…</option>{contents.data?.map((c) => <option key={c.id} value={c.id}>{c.title} ({KIND[c.kind]})</option>)}</select></div>
           <div><label htmlFor="cp" className="block text-xs mb-1">Momento</label><select id="cp"   value={phase} onChange={(e) => setPhase(e.target.value)}><option value="before">Antes do atendimento</option><option value="after">Depois do atendimento</option><option value="program">Programa</option></select></div>
           <div><label htmlFor="cn" className="block text-xs mb-1">Nota ao paciente</label><input id="cn"   value={note} onChange={(e) => setNote(e.target.value)} /></div><button className={btnGhost + " sm:w-fit"}>Liberar</button></form>

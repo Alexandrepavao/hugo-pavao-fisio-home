@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { validateSlug } from "@/lib/reserved-slugs";
 import { fmtDate } from "@/lib/format";
+import { ListFilterBar } from "@/lib/ListFilterBar";
 import { btnDanger, btnGhost, promptText, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
-interface Course { id: string; title: string; slug: string; kind: string; status: string; product_id: string | null; org_id: string }
+interface Course { id: string; title: string; slug: string; kind: string; status: string; product_id: string | null; org_id: string; certificate_min_progress: number }
 interface Lesson { id: string; title: string; kind: string; position: number; published: boolean; body: string | null; external_url: string | null; storage_path: string | null }
 const KIND: Record<string, string> = { course: "Curso", mentoring: "Mentoria", program: "Programa" };
 const STAT: Record<string, string> = { draft: "Rascunho", published: "Publicado", archived: "Arquivado" };
@@ -23,7 +24,8 @@ const AcademyAdmin = () => {
 const Courses = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [sel, setSel] = useState<string | null>(null);
   const [title, setTitle] = useState(""); const [slug, setSlug] = useState(""); const [kind, setKind] = useState("course"); const [prod, setProd] = useState("");
-  const courses = useQuery({ queryKey: ["courses"], queryFn: async () => (await supabase.from("courses").select("id, title, slug, kind, status, product_id, org_id").order("created_at", { ascending: false })).data as Course[] });
+  const [q, setQ] = useState(""); const [fKind, setFKind] = useState(""); const [fStatus, setFStatus] = useState("");   // filtros da lista (o formulário acima só cria)
+  const courses = useQuery({ queryKey: ["courses"], queryFn: async () => (await supabase.from("courses").select("id, title, slug, kind, status, product_id, org_id, certificate_min_progress").order("created_at", { ascending: false })).data as Course[] });
   const products = useQuery({ queryKey: ["prods-edu"], queryFn: async () => (await supabase.from("products").select("id, name, kind").in("kind", ["course", "mentoring"])).data ?? [] });
   const create = async (e: FormEvent) => {
     e.preventDefault(); const se = validateSlug(slug); if (se || !title.trim()) return m.err(se ?? "Informe o título.");
@@ -32,6 +34,7 @@ const Courses = () => {
     if (error) m.err(errText(error)); else { m.ok("Curso criado como rascunho."); setTitle(""); setSlug(""); void qc.invalidateQueries({ queryKey: ["courses"] }); }
   };
   const course = courses.data?.find((c) => c.id === sel);
+  const shown = (courses.data ?? []).filter((c) => (!q.trim() || c.title.toLowerCase().includes(q.trim().toLowerCase())) && (!fKind || c.kind === fKind) && (!fStatus || c.status === fStatus));
   return (<>
     <Msg m={msg} />
     <form onSubmit={create} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-5 items-end" noValidate>
@@ -40,8 +43,16 @@ const Courses = () => {
       <div><label htmlFor="ck" className="block text-xs mb-1">Tipo</label><select id="ck"   value={kind} onChange={(e) => setKind(e.target.value)}>{Object.entries(KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
       <div><label htmlFor="cp" className="block text-xs mb-1">Produto (acesso por compra)</label><select id="cp"   value={prod} onChange={(e) => setProd(e.target.value)}><option value="">Nenhum</option>{products.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
       <button className="hp-btn hp-btn-primary sm:col-span-5 sm:w-fit">Criar curso</button></form>
+    {/* filtro único (cursos são da organização inteira: sem unidade nem período) — busca visível; tipo e estado dentro do botão Filtros */}
+    <ListFilterBar search={{ id: "ac-q", label: "Buscar curso", placeholder: "Buscar curso pelo título…", value: q, onChange: setQ }} onClear={() => { setQ(""); setFKind(""); setFStatus(""); }}
+      extraCount={(fKind ? 1 : 0) + (fStatus ? 1 : 0)} extraSummary={[fKind ? `Tipo: ${KIND[fKind]}` : "", fStatus ? `Estado: ${STAT[fStatus]}` : ""].filter(Boolean).join(" · ") || undefined}
+      extra={<div className="grid gap-3">
+        <div><label htmlFor="acf-kind" className="block text-xs mb-1">Tipo</label><select id="acf-kind" value={fKind} onChange={(e) => setFKind(e.target.value)}><option value="">Todos</option>{Object.entries(KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <div><label htmlFor="acf-status" className="block text-xs mb-1">Estado</label><select id="acf-status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Todos</option>{Object.entries(STAT).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+      </div>} />
     <State loading={courses.isLoading} error={courses.error} empty={courses.data?.length === 0} emptyText="Nenhum curso criado." />
-    {courses.data && courses.data.length > 0 && <Table head={["Curso", "Tipo", "Estado", ""]}>{courses.data.map((c) => <tr key={c.id}><Td>{c.title}</Td><Td>{KIND[c.kind]}</Td><Td>{STAT[c.status]}</Td>
+    {courses.data && courses.data.length > 0 && shown.length === 0 && <p className="text-sm text-muted-foreground mb-3">Nenhum curso com os filtros escolhidos. Ajuste ou limpe os filtros.</p>}
+    {shown.length > 0 && <Table head={["Curso", "Tipo", "Estado", ""]}>{shown.map((c) => <tr key={c.id}><Td>{c.title}</Td><Td>{KIND[c.kind]}</Td><Td>{STAT[c.status]}</Td>
       <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => setSel(c.id === sel ? null : c.id)}>{c.id === sel ? "Fechar" : "Gerenciar"}</button></Td></tr>)}</Table>}
     {course && <CourseManager course={course} onChanged={() => qc.invalidateQueries({ queryKey: ["courses"] })} />}
   </>);
@@ -54,6 +65,7 @@ const TRACK_ST: Record<string, string> = { draft: "Rascunho", published: "Public
 const Tracks = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [sel, setSel] = useState<string | null>(null);
   const [title, setTitle] = useState(""); const [slug, setSlug] = useState(""); const [desc, setDesc] = useState("");
+  const [q, setQ] = useState(""); const [fStatus, setFStatus] = useState("");
   const tracks = useQuery({ queryKey: ["tracks"], queryFn: async () => (await supabase.from("learning_tracks").select("id, slug, title, description, status, position").order("position")).data as Track[] });
   const allCourses = useQuery({ queryKey: ["courses-for-tracks"], queryFn: async () => (await supabase.from("courses").select("id, title, status").order("title")).data as { id: string; title: string; status: string }[] });
   const linked = useQuery({ queryKey: ["track-courses", sel], enabled: !!sel, queryFn: async () => (await supabase.from("learning_track_courses").select("course_id, position, course:courses(id, title, status)").eq("track_id", sel).order("position")).data as unknown as { course_id: string; position: number; course: { id: string; title: string; status: string } }[] });
@@ -79,6 +91,7 @@ const Tracks = () => {
     if (error) m.err(errText(error)); else void qc.invalidateQueries({ queryKey: ["track-courses", trackId] });
   };
 
+  const shownTracks = (tracks.data ?? []).filter((t) => (!q.trim() || t.title.toLowerCase().includes(q.trim().toLowerCase())) && (!fStatus || t.status === fStatus));
   return (<>
     <Msg m={msg} />
     <p className="text-sm text-muted-foreground mb-3">Estrutura proposta como ponto de partida (rascunho). Publicar uma trilha vazia não expõe conteúdo — vincule cursos reais antes de publicar.</p>
@@ -88,9 +101,13 @@ const Tracks = () => {
       <div className="sm:col-span-2"><label htmlFor="td" className="block text-xs mb-1">Descrição</label><input id="td"   value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
       <button className="hp-btn hp-btn-primary sm:col-span-4 sm:w-fit">Criar trilha</button>
     </form>
+    <ListFilterBar search={{ id: "at-q", label: "Buscar trilha", placeholder: "Buscar trilha pelo título…", value: q, onChange: setQ }} onClear={() => { setQ(""); setFStatus(""); }}
+      extraCount={fStatus ? 1 : 0} extraSummary={fStatus ? `Estado: ${TRACK_ST[fStatus]}` : undefined}
+      extra={<div><label htmlFor="atf-status" className="block text-xs mb-1">Estado</label><select id="atf-status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Todos</option>{Object.entries(TRACK_ST).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>} />
     <State loading={tracks.isLoading} error={tracks.error} empty={tracks.data?.length === 0} emptyText="Nenhuma trilha criada." />
-    {tracks.data && tracks.data.length > 0 && <ul className="grid gap-2">
-      {tracks.data.map((t) => (
+    {tracks.data && tracks.data.length > 0 && shownTracks.length === 0 && <p className="text-sm text-muted-foreground mb-3">Nenhuma trilha com os filtros escolhidos. Ajuste ou limpe os filtros.</p>}
+    {shownTracks.length > 0 && <ul className="grid gap-2">
+      {shownTracks.map((t) => (
         <li key={t.id} className="hp-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div><p className="font-medium">{t.title}</p>{t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}</div>
@@ -123,8 +140,18 @@ const Tracks = () => {
 const CourseManager = ({ course, onChanged }: { course: Course; onChanged: () => void }) => {
   const [tab, setTab] = useState("aulas"); const [msg, m] = useMsg(); const qc = useQueryClient();
   const setStatus = async (s: string) => { const { error } = await supabase.from("courses").update({ status: s }).eq("id", course.id); if (error) m.err(errText(error)); else { m.ok("Estado atualizado."); onChanged(); } };
+  const setMinProgress = async (v: number) => {
+    if (!Number.isFinite(v) || v < 1 || v > 100) return m.err("Informe um valor entre 1 e 100.");
+    const { error } = await supabase.from("courses").update({ certificate_min_progress: v }).eq("id", course.id);
+    if (error) return m.err(errText(error)); m.ok("Critério de conclusão atualizado."); onChanged();
+  };
   return (<section className="mt-8 border-t border-border pt-6"><h2 className="text-2xl mb-1">{course.title}</h2>
-    <div className="flex gap-2 mb-4"><button className={btnGhost} onClick={() => setStatus("published")} disabled={course.status === "published"}>Publicar</button><button className={btnGhost} onClick={() => setStatus("draft")} disabled={course.status === "draft"}>Voltar a rascunho</button><button className={btnDanger} onClick={() => setStatus("archived")}>Arquivar</button></div>
+    <div className="flex flex-wrap items-center gap-2 mb-4">
+      <button className={btnGhost} onClick={() => setStatus("published")} disabled={course.status === "published"}>Publicar</button><button className={btnGhost} onClick={() => setStatus("draft")} disabled={course.status === "draft"}>Voltar a rascunho</button><button className={btnDanger} onClick={() => setStatus("archived")}>Arquivar</button>
+      <label htmlFor={`cmp-${course.id}`} className="text-xs text-muted-foreground ml-2">Conclusão (% mínimo)</label>
+      <input id={`cmp-${course.id}`} type="number" min={1} max={100} className="w-16" defaultValue={course.certificate_min_progress}
+        onBlur={(e) => { const v = Number(e.target.value); if (v !== course.certificate_min_progress) void setMinProgress(v); }} />
+    </div>
     <Msg m={msg} /><Tabs tabs={[["aulas", "Aulas"], ["provas", "Avaliações"], ["acessos", "Acessos"], ["turmas", "Turmas"], ["comunidade", "Comunidade"]]} value={tab} onChange={setTab} />
     {tab === "aulas" && <Lessons course={course} />}{tab === "provas" && <Quizzes course={course} />}{tab === "acessos" && <Access course={course} />}{tab === "turmas" && <Cohorts course={course} />}{tab === "comunidade" && <Community course={course} refresh={() => qc.invalidateQueries({ queryKey: ["posts", course.id] })} />}
   </section>);

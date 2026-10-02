@@ -1,0 +1,5099 @@
+{
+ "summary": {
+  "tag": "diag04-mupmbv9u",
+  "startedWith": {
+   "iterations": 30,
+   "concurrency": 6
+  },
+  "iterationsWithUnexpected": [
+   0
+  ],
+  "unexpectedCodes": [
+   "57014"
+  ],
+  "fireMs": {
+   "p50": 61,
+   "max": 117236
+  },
+  "requestMs": {
+   "p50": 53,
+   "p95": 111,
+   "max": 117223
+  },
+  "lockSamples": 70
+ },
+ "results": [
+  {
+   "iter": 0,
+   "setupMs": 587,
+   "fireMs": 117236,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 113161,
+     "code": "57014",
+     "message": "canceling statement due to statement timeout"
+    },
+    {
+     "status": 500,
+     "ms": 112177,
+     "code": "57014",
+     "message": "canceling statement due to statement timeout"
+    },
+    {
+     "status": 500,
+     "ms": 44168,
+     "code": "57014",
+     "message": "canceling statement due to statement timeout"
+    },
+    {
+     "status": 500,
+     "ms": 117223,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 117223,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 117222,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 1,
+   "setupMs": 871,
+   "fireMs": 112,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 106,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 111,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 109,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 109,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 102,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 108,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 2,
+   "setupMs": 261,
+   "fireMs": 112,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 112,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 111,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 111,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 111,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 106,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 110,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 3,
+   "setupMs": 287,
+   "fireMs": 75,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 68,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 67,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 67,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 58,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 4,
+   "setupMs": 276,
+   "fireMs": 72,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 65,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 67,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 59,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 66,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 70,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 65,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 5,
+   "setupMs": 222,
+   "fireMs": 58,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 50,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 6,
+   "setupMs": 228,
+   "fireMs": 50,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 7,
+   "setupMs": 237,
+   "fireMs": 67,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 67,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 67,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 66,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 57,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 66,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 8,
+   "setupMs": 215,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 9,
+   "setupMs": 211,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 56,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 10,
+   "setupMs": 229,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 48,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 11,
+   "setupMs": 248,
+   "fireMs": 50,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 48,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 12,
+   "setupMs": 224,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 49,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 13,
+   "setupMs": 181,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 14,
+   "setupMs": 219,
+   "fireMs": 65,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 55,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 15,
+   "setupMs": 204,
+   "fireMs": 69,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 68,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 16,
+   "setupMs": 205,
+   "fireMs": 52,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 17,
+   "setupMs": 207,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 52,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 18,
+   "setupMs": 219,
+   "fireMs": 57,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 54,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 19,
+   "setupMs": 249,
+   "fireMs": 58,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 49,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 20,
+   "setupMs": 209,
+   "fireMs": 62,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 48,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 21,
+   "setupMs": 203,
+   "fireMs": 57,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 22,
+   "setupMs": 208,
+   "fireMs": 55,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 23,
+   "setupMs": 235,
+   "fireMs": 89,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 88,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 24,
+   "setupMs": 228,
+   "fireMs": 64,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 25,
+   "setupMs": 245,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 38,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 26,
+   "setupMs": 240,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 50,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 27,
+   "setupMs": 258,
+   "fireMs": 56,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 28,
+   "setupMs": 256,
+   "fireMs": 48,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 29,
+   "setupMs": 226,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  }
+ ],
+ "samples": [
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:21.874Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.48",
+     "xact_s": "0.48",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.48",
+     "xact_s": "0.48",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.47",
+     "xact_s": "0.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.47",
+     "xact_s": "0.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.45",
+     "xact_s": "0.46",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.45",
+     "xact_s": "0.46",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:23.480Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.10",
+     "xact_s": "2.10",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.10",
+     "xact_s": "2.10",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.09",
+     "xact_s": "2.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.09",
+     "xact_s": "2.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.03",
+     "xact_s": "0.03",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.03",
+     "xact_s": "1.03",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:25.022Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.63",
+     "xact_s": "3.64",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.63",
+     "xact_s": "3.64",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.62",
+     "xact_s": "3.63",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.57",
+     "xact_s": "0.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.57",
+     "xact_s": "1.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.57",
+     "xact_s": "2.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:27.277Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.76",
+     "xact_s": "1.77",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.83",
+     "xact_s": "5.83",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.76",
+     "xact_s": "0.76",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.76",
+     "xact_s": "2.77",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.77",
+     "xact_s": "3.77",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.76",
+     "xact_s": "4.77",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:28.835Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.36",
+     "xact_s": "3.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.35",
+     "xact_s": "1.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.35",
+     "xact_s": "2.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.36",
+     "xact_s": "4.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.35",
+     "xact_s": "0.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.35",
+     "xact_s": "6.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:30.337Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.88",
+     "xact_s": "4.88",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.88",
+     "xact_s": "2.88",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.88",
+     "xact_s": "3.88",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.88",
+     "xact_s": "5.88",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.88",
+     "xact_s": "1.88",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.88",
+     "xact_s": "0.88",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:31.988Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.52",
+     "xact_s": "0.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.52",
+     "xact_s": "4.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.52",
+     "xact_s": "5.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.52",
+     "xact_s": "1.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.52",
+     "xact_s": "3.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.52",
+     "xact_s": "2.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:33.480Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.03",
+     "xact_s": "2.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.03",
+     "xact_s": "1.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.03",
+     "xact_s": "0.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.04",
+     "xact_s": "3.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.04",
+     "xact_s": "5.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.04",
+     "xact_s": "4.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:35.075Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.62",
+     "xact_s": "3.62",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.62",
+     "xact_s": "2.62",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.62",
+     "xact_s": "1.62",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.62",
+     "xact_s": "4.62",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.62",
+     "xact_s": "6.62",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.62",
+     "xact_s": "0.62",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:36.527Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.07",
+     "xact_s": "0.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.07",
+     "xact_s": "4.08",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.07",
+     "xact_s": "3.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.07",
+     "xact_s": "6.08",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.07",
+     "xact_s": "1.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.07",
+     "xact_s": "2.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:38.072Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.57",
+     "xact_s": "1.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.57",
+     "xact_s": "5.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.57",
+     "xact_s": "4.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.57",
+     "xact_s": "0.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.57",
+     "xact_s": "2.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.57",
+     "xact_s": "3.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:39.518Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.07",
+     "xact_s": "3.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.07",
+     "xact_s": "1.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.07",
+     "xact_s": "6.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.07",
+     "xact_s": "2.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.06",
+     "xact_s": "0.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.07",
+     "xact_s": "0.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:41.033Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.58",
+     "xact_s": "4.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.58",
+     "xact_s": "2.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.58",
+     "xact_s": "0.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.58",
+     "xact_s": "3.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.58",
+     "xact_s": "1.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.58",
+     "xact_s": "1.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:42.537Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.04",
+     "xact_s": "0.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.04",
+     "xact_s": "4.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.04",
+     "xact_s": "2.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.04",
+     "xact_s": "1.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.04",
+     "xact_s": "3.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.04",
+     "xact_s": "3.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:44.298Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.85",
+     "xact_s": "1.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.85",
+     "xact_s": "0.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.85",
+     "xact_s": "3.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.85",
+     "xact_s": "2.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.85",
+     "xact_s": "4.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.85",
+     "xact_s": "4.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:45.984Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.53",
+     "xact_s": "3.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.53",
+     "xact_s": "2.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.53",
+     "xact_s": "1.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.53",
+     "xact_s": "4.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.53",
+     "xact_s": "1.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.53",
+     "xact_s": "0.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:47.489Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.03",
+     "xact_s": "0.03",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.04",
+     "xact_s": "4.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.03",
+     "xact_s": "3.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.03",
+     "xact_s": "1.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.03",
+     "xact_s": "3.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.04",
+     "xact_s": "2.04",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:50.089Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.65",
+     "xact_s": "1.65",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.65",
+     "xact_s": "0.65",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.65",
+     "xact_s": "4.66",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.65",
+     "xact_s": "2.66",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.65",
+     "xact_s": "4.66",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.66",
+     "xact_s": "3.66",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:51.679Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.21",
+     "xact_s": "4.21",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.21",
+     "xact_s": "3.21",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.21",
+     "xact_s": "2.21",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.21",
+     "xact_s": "5.21",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.21",
+     "xact_s": "0.21",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.21",
+     "xact_s": "1.21",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:53.146Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.69",
+     "xact_s": "0.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.69",
+     "xact_s": "4.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.69",
+     "xact_s": "3.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.69",
+     "xact_s": "6.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.69",
+     "xact_s": "1.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.69",
+     "xact_s": "2.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:56.803Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.33",
+     "xact_s": "4.33",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.33",
+     "xact_s": "2.33",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.33",
+     "xact_s": "1.33",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.33",
+     "xact_s": "3.33",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.33",
+     "xact_s": "0.33",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.33",
+     "xact_s": "6.34",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:58.485Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.01",
+     "xact_s": "0.01",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.02",
+     "xact_s": "4.02",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.02",
+     "xact_s": "3.02",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.02",
+     "xact_s": "5.02",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.02",
+     "xact_s": "2.02",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.02",
+     "xact_s": "1.02",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:17:59.952Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.47",
+     "xact_s": "1.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.48",
+     "xact_s": "5.48",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.47",
+     "xact_s": "4.48",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.47",
+     "xact_s": "0.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.48",
+     "xact_s": "3.48",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.47",
+     "xact_s": "2.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:01.886Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.34",
+     "xact_s": "3.34",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.33",
+     "xact_s": "0.34",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.34",
+     "xact_s": "1.34",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.34",
+     "xact_s": "2.35",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.34",
+     "xact_s": "1.34",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.35",
+     "xact_s": "4.35",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:04.369Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.10",
+     "xact_s": "0.10",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.09",
+     "xact_s": "0.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.10",
+     "xact_s": "0.10",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.11",
+     "xact_s": "0.11",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.10",
+     "xact_s": "0.10",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100700,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.12",
+     "xact_s": "6.12",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:05.872Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.38",
+     "xact_s": "1.38",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.37",
+     "xact_s": "1.38",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.38",
+     "xact_s": "1.38",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.39",
+     "xact_s": "1.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.38",
+     "xact_s": "1.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:07.420Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.94",
+     "xact_s": "2.94",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.93",
+     "xact_s": "2.93",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.94",
+     "xact_s": "2.94",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.96",
+     "xact_s": "0.96",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.94",
+     "xact_s": "2.94",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:09.033Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.56",
+     "xact_s": "0.56",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.56",
+     "xact_s": "0.56",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.54",
+     "xact_s": "4.54",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.56",
+     "xact_s": "2.56",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.56",
+     "xact_s": "1.56",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:10.748Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.25",
+     "xact_s": "2.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.25",
+     "xact_s": "2.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.25",
+     "xact_s": "1.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.26",
+     "xact_s": "4.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.25",
+     "xact_s": "0.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:12.645Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.11",
+     "xact_s": "0.11",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.11",
+     "xact_s": "4.11",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.11",
+     "xact_s": "3.11",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.11",
+     "xact_s": "1.11",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.11",
+     "xact_s": "2.11",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:14.160Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.69",
+     "xact_s": "1.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.69",
+     "xact_s": "5.70",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.69",
+     "xact_s": "0.69",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.69",
+     "xact_s": "2.70",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.69",
+     "xact_s": "3.70",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:15.874Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.36",
+     "xact_s": "3.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.36",
+     "xact_s": "1.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.36",
+     "xact_s": "2.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.36",
+     "xact_s": "0.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.36",
+     "xact_s": "5.36",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:17.479Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.01",
+     "xact_s": "0.01",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.01",
+     "xact_s": "3.01",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.01",
+     "xact_s": "4.01",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.01",
+     "xact_s": "2.01",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.01",
+     "xact_s": "1.01",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:18.991Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.52",
+     "xact_s": "1.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.53",
+     "xact_s": "4.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.52",
+     "xact_s": "0.52",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.53",
+     "xact_s": "3.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.52",
+     "xact_s": "2.53",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:20.731Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.24",
+     "xact_s": "3.24",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.24",
+     "xact_s": "1.24",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.24",
+     "xact_s": "2.24",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.24",
+     "xact_s": "0.24",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.24",
+     "xact_s": "4.24",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:22.343Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.85",
+     "xact_s": "4.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.85",
+     "xact_s": "2.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.85",
+     "xact_s": "3.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.85",
+     "xact_s": "1.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.85",
+     "xact_s": "0.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:24.068Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.57",
+     "xact_s": "1.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.57",
+     "xact_s": "0.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.58",
+     "xact_s": "5.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.58",
+     "xact_s": "3.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.57",
+     "xact_s": "2.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:27.147Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.57",
+     "xact_s": "4.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.57",
+     "xact_s": "3.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.57",
+     "xact_s": "2.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.57",
+     "xact_s": "0.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.57",
+     "xact_s": "1.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:28.624Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.14",
+     "xact_s": "0.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.14",
+     "xact_s": "1.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.15",
+     "xact_s": "4.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.14",
+     "xact_s": "2.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.15",
+     "xact_s": "3.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:30.269Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.71",
+     "xact_s": "1.71",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.71",
+     "xact_s": "2.71",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.71",
+     "xact_s": "0.71",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.71",
+     "xact_s": "3.71",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.71",
+     "xact_s": "4.71",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:31.944Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.42",
+     "xact_s": "3.42",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.42",
+     "xact_s": "1.42",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.42",
+     "xact_s": "2.42",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.42",
+     "xact_s": "1.42",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.42",
+     "xact_s": "0.42",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:33.573Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.09",
+     "xact_s": "0.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.09",
+     "xact_s": "3.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.09",
+     "xact_s": "1.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.09",
+     "xact_s": "3.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.09",
+     "xact_s": "2.09",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:35.479Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.95",
+     "xact_s": "1.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.95",
+     "xact_s": "4.96",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.95",
+     "xact_s": "2.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.95",
+     "xact_s": "0.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.95",
+     "xact_s": "3.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:36.921Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.44",
+     "xact_s": "3.44",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.44",
+     "xact_s": "1.44",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.44",
+     "xact_s": "0.44",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.44",
+     "xact_s": "2.44",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.45",
+     "xact_s": "5.45",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:38.647Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.13",
+     "xact_s": "5.13",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.12",
+     "xact_s": "0.13",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.13",
+     "xact_s": "2.13",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.12",
+     "xact_s": "0.13",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.13",
+     "xact_s": "1.13",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:40.227Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.74",
+     "xact_s": "0.74",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.74",
+     "xact_s": "1.74",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.74",
+     "xact_s": "3.75",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.74",
+     "xact_s": "1.75",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.74",
+     "xact_s": "2.75",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:41.738Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.26",
+     "xact_s": "2.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.26",
+     "xact_s": "3.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.26",
+     "xact_s": "1.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.26",
+     "xact_s": "3.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.26",
+     "xact_s": "0.26",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:43.212Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.72",
+     "xact_s": "0.72",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.72",
+     "xact_s": "0.72",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.72",
+     "xact_s": "2.72",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.72",
+     "xact_s": "4.72",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.72",
+     "xact_s": "1.72",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:44.851Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.37",
+     "xact_s": "2.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.37",
+     "xact_s": "2.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.37",
+     "xact_s": "4.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.37",
+     "xact_s": "1.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.37",
+     "xact_s": "0.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:46.401Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.92",
+     "xact_s": "3.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.92",
+     "xact_s": "3.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.91",
+     "xact_s": "0.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.92",
+     "xact_s": "2.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.92",
+     "xact_s": "1.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:47.958Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.47",
+     "xact_s": "0.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.47",
+     "xact_s": "1.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.47",
+     "xact_s": "2.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.47",
+     "xact_s": "4.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.47",
+     "xact_s": "3.47",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:49.667Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.15",
+     "xact_s": "2.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.15",
+     "xact_s": "3.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.15",
+     "xact_s": "4.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.15",
+     "xact_s": "0.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.15",
+     "xact_s": "1.15",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:51.465Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.92",
+     "xact_s": "3.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.92",
+     "xact_s": "0.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.92",
+     "xact_s": "5.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.92",
+     "xact_s": "1.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.92",
+     "xact_s": "2.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:53.107Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.57",
+     "xact_s": "0.57",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.58",
+     "xact_s": "2.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.57",
+     "xact_s": "1.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.58",
+     "xact_s": "3.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.58",
+     "xact_s": "4.58",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:54.556Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.07",
+     "xact_s": "2.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.07",
+     "xact_s": "4.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.07",
+     "xact_s": "3.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.07",
+     "xact_s": "1.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.07",
+     "xact_s": "0.07",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:55.995Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.51",
+     "xact_s": "3.51",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.51",
+     "xact_s": "5.51",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.51",
+     "xact_s": "0.51",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.51",
+     "xact_s": "2.51",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.51",
+     "xact_s": "1.51",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:57.445Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.95",
+     "xact_s": "4.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.95",
+     "xact_s": "0.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.95",
+     "xact_s": "1.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.95",
+     "xact_s": "3.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.95",
+     "xact_s": "2.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:18:58.892Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.39",
+     "xact_s": "0.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.39",
+     "xact_s": "2.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.39",
+     "xact_s": "3.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.39",
+     "xact_s": "1.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.39",
+     "xact_s": "4.39",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:00.412Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.87",
+     "xact_s": "1.87",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.87",
+     "xact_s": "3.87",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.87",
+     "xact_s": "4.87",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.87",
+     "xact_s": "2.87",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.87",
+     "xact_s": "0.87",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:01.860Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.37",
+     "xact_s": "3.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.37",
+     "xact_s": "5.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.37",
+     "xact_s": "1.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.37",
+     "xact_s": "0.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.37",
+     "xact_s": "2.37",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:03.404Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.91",
+     "xact_s": "4.92",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.91",
+     "xact_s": "0.91",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.91",
+     "xact_s": "2.91",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.91",
+     "xact_s": "1.91",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.91",
+     "xact_s": "3.91",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:04.909Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.41",
+     "xact_s": "1.41",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.41",
+     "xact_s": "2.41",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.41",
+     "xact_s": "4.41",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.41",
+     "xact_s": "3.41",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.41",
+     "xact_s": "0.41",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:06.335Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.84",
+     "xact_s": "2.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.85",
+     "xact_s": "3.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.84",
+     "xact_s": "0.84",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.85",
+     "xact_s": "4.85",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.84",
+     "xact_s": "1.84",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:07.988Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.49",
+     "xact_s": "0.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.50",
+     "xact_s": "5.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.50",
+     "xact_s": "2.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.49",
+     "xact_s": "1.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.50",
+     "xact_s": "3.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:09.440Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.94",
+     "xact_s": "1.94",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.94",
+     "xact_s": "0.94",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.94",
+     "xact_s": "3.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.94",
+     "xact_s": "2.94",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.95",
+     "xact_s": "4.95",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:11.000Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.50",
+     "xact_s": "0.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.50",
+     "xact_s": "1.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.50",
+     "xact_s": "5.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.50",
+     "xact_s": "4.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.50",
+     "xact_s": "1.50",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:12.457Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.96",
+     "xact_s": "1.96",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.96",
+     "xact_s": "0.96",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100698,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.97",
+     "xact_s": "6.97",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "5.97",
+     "xact_s": "5.97",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.96",
+     "xact_s": "2.96",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:13.967Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.45",
+     "xact_s": "1.45",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "2.45",
+     "xact_s": "2.45",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100703,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "7.45",
+     "xact_s": "7.45",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.45",
+     "xact_s": "4.45",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:15.560Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "3.05",
+     "xact_s": "3.05",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.06",
+     "xact_s": "0.06",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "6.06",
+     "xact_s": "6.06",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  },
+  {
+   "iter": 0,
+   "at": "2026-10-01T14:19:17.040Z",
+   "rows": [
+    {
+     "pid": 1100704,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "4.54",
+     "xact_s": "4.54",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100702,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "1.54",
+     "xact_s": "1.54",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    },
+    {
+     "pid": 1100705,
+     "state": "active",
+     "wait_event_type": "Lock",
+     "wait_event": "transactionid",
+     "age_s": "0.54",
+     "xact_s": "0.54",
+     "q": "WITH pgrst_source AS (SELECT pgrst_call.pgrst_scalar FROM (SELECT $1 AS json_data) pgrst_payload, LATERAL (SELECT \"p_person\", \"p_unit\", \"p_p"
+    }
+   ]
+  }
+ ]
+}

@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SALE_LINE_FILTERS, saleLineLabel, saleLineMatches, useSaleLines, type SaleLineFilter } from "./saleLines";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, fmtDateTime, newKey, parseCents } from "@/lib/format";
 import { btnDanger, btnGhost, promptText, errText, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
@@ -8,8 +9,10 @@ import { REC_ST, SALE_ST, type Account, type Pay, type Rec, type Sale } from "./
 
 /** "Vendas e recebimentos": venda contratada (vendas), valor a receber e recebimento efetivo (recebíveis) — conceitos separados, na mesma tela por fluxo de trabalho. */
 const FinanceSales = () => {
-  const [sp] = useSearchParams();
-  const [tab, setTab] = useState(sp.get("venda") ? "vendas" : "recebiveis");
+  const [sp, setSp] = useSearchParams();
+  // a aba vive na URL (?aba=vendas|recebiveis): o menu do Financeiro aponta direto para "Vendas" e "Contas a receber"
+  const aba = sp.get("aba"); const tab = aba === "vendas" || aba === "recebiveis" ? aba : sp.get("venda") ? "vendas" : "recebiveis";
+  const setTab = (v: string) => { const n = new URLSearchParams(sp); n.set("aba", v); setSp(n, { replace: true }); };
   return (
     <div>
       <PageHead eyebrow="Financeiro" title="Vendas e recebimentos" hint="Venda contratada, valor a receber e recebimento efetivo são conceitos separados. Valores em reais, calculados em centavos inteiros." />
@@ -25,18 +28,23 @@ const SalesTab = () => {
   const [person, setPerson] = useState(sp.get("pessoa") ?? ""); const [unit, setUnit] = useState(sp.get("unidade") ?? ""); const [opp] = useState(sp.get("venda") ?? "");
   const [product, setProduct] = useState(""); const [qty, setQty] = useState("1"); const [discount, setDiscount] = useState("0,00"); const [inst, setInst] = useState("1"); const [due, setDue] = useState(new Date().toISOString().slice(0, 10));
   const [search, setSearch] = useState(""); const [busy, setBusy] = useState(false);
+  // trava SÍNCRONA contra duplo clique (o estado `busy` só vale depois do próximo render) e chave de idempotência por TENTATIVA: se a mesma tentativa for repetida, o servidor devolve a mesma venda
+  const lock = useRef(false); const attempt = useRef<string | null>(null);
   const products = useQuery({ queryKey: ["products"], queryFn: async () => (await supabase.from("products").select("id, name, price_cents, kind").eq("active", true).order("name")).data ?? [] });
   const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
   const chosen = useQuery({ queryKey: ["person", person], enabled: !!person, queryFn: async () => (await supabase.from("people").select("id, full_name").eq("id", person).single()).data });
   const found = useQuery({ queryKey: ["ppl", search], enabled: search.length >= 2, queryFn: async () => (await supabase.from("people").select("id, full_name, unit_id").ilike("full_name", `%${search.replace(/[%_]/g, "")}%`).is("merged_into_id", null).limit(6)).data ?? [] });
   const sales = useQuery({ queryKey: ["sales"], queryFn: async () => (await supabase.from("sales").select("id, status, total_cents, discount_cents, installments, sold_at, created_at, unit_id, person:people(full_name)").order("created_at", { ascending: false }).limit(100)).data as unknown as Sale[] });
+  const [lineFilter, setLineFilter] = useState<SaleLineFilter>("");
+  const saleLines = useSaleLines((sales.data ?? []).map((x) => x.id));
+  const shownSales = (sales.data ?? []).filter((x) => saleLineMatches(saleLines.data?.[x.id], lineFilter));
 
   const create = async (e: FormEvent) => {
     e.preventDefault(); const disc = parseCents(discount); const pr = products.data?.find((p) => p.id === product);
     if (!person || !unit) return m.err("Selecione a pessoa e a unidade."); if (!pr) return m.err("Selecione o produto."); if (disc == null) return m.err("Desconto inválido.");
-    setBusy(true);
-    const { error } = await supabase.rpc("sale_create", { p_person: person, p_unit: unit, p_opportunity: opp || null, p_items: [{ product_id: pr.id, qty: Number(qty) || 1 }], p_discount_cents: disc, p_installments: Number(inst) || 1, p_first_due: due });
-    setBusy(false); if (error) return m.err(errText(error)); m.ok("Venda criada como pendente. Confirme para gerar contrato e parcelas."); void qc.invalidateQueries({ queryKey: ["sales"] });
+    if (lock.current) return; lock.current = true; setBusy(true); attempt.current ??= newKey("sale");
+    const { error } = await supabase.rpc("sale_create", { p_person: person, p_unit: unit, p_opportunity: opp || null, p_items: [{ product_id: pr.id, qty: Number(qty) || 1 }], p_discount_cents: disc, p_installments: Number(inst) || 1, p_first_due: due, p_idempotency_key: attempt.current });
+    setBusy(false); lock.current = false; if (error) return m.err(errText(error)); attempt.current = null; m.ok("Venda criada como pendente. Confirme para gerar contrato e parcelas."); void qc.invalidateQueries({ queryKey: ["sales"] });
   };
   const act = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); if (error) m.err(errText(error)); else { m.ok(ok); void qc.invalidateQueries({ queryKey: ["sales"] }); } };
 
@@ -56,8 +64,10 @@ const SalesTab = () => {
       <div className="sm:col-span-3"><button disabled={busy} className="hp-btn hp-btn-primary disabled:opacity-60">{busy ? "Criando…" : "Criar venda"}</button></div>
     </form>
     <State loading={sales.isLoading} error={sales.error} empty={sales.data?.length === 0} emptyText="Nenhuma venda registrada." />
-    {sales.data && sales.data.length > 0 && <Table head={["Pessoa", "Total", "Desconto", "Parcelas", "Estado", "Data", ""]} right={[1, 2, 3]}>
-      {sales.data.map((s) => <tr key={s.id}><Td>{s.person?.full_name}</Td><Td num>{brl(s.total_cents)}</Td><Td num>{brl(s.discount_cents)}</Td><Td num>{s.installments}</Td><Td>{SALE_ST[s.status]}</Td><Td>{fmtDate(s.sold_at ?? s.created_at)}</Td>
+    {sales.data && sales.data.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-2 text-sm"><label htmlFor="sale-line" className="text-xs text-muted-foreground">Linha de negócio</label>
+      <select id="sale-line" className="!w-auto" value={lineFilter} onChange={(e) => setLineFilter(e.target.value as SaleLineFilter)}>{SALE_LINE_FILTERS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>}
+    {sales.data && shownSales.length > 0 && <Table head={["Pessoa", "Total", "Desconto", "Parcelas", "Linha", "Estado", "Data", ""]} right={[1, 2, 3]}>
+      {shownSales.map((s) => <tr key={s.id}><Td>{s.person?.full_name}</Td><Td num>{brl(s.total_cents)}</Td><Td num>{brl(s.discount_cents)}</Td><Td num>{s.installments}</Td><Td>{saleLineLabel(saleLines.data?.[s.id])}</Td><Td>{SALE_ST[s.status]}</Td><Td>{fmtDate(s.sold_at ?? s.created_at)}</Td>
         <Td>{s.status === "pending" && <button className={btnGhost + " hp-btn-sm"} onClick={() => act("sale_confirm", { p_sale: s.id }, "Venda confirmada: contrato, parcelas e regras do produto aplicados.")}>Confirmar</button>}
           {s.status !== "cancelled" && <button className={btnDanger + " hp-btn-sm ml-2"} onClick={async () => { const r = await promptText("Cancelar venda", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar venda", danger: true }); if (r) void act("sale_cancel", { p_sale: s.id, p_reason: r }, "Venda cancelada."); }}>Cancelar</button>}</Td></tr>)}</Table>}
   </>);
@@ -66,6 +76,8 @@ const SalesTab = () => {
 const Receivables = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [filter, setFilter] = useState("aberto"); const [pay, setPay] = useState<Rec | null>(null);
   const recs = useQuery({ queryKey: ["recs"], queryFn: async () => (await supabase.from("receivables").select("id, installment_no, installments_total, due_date, amount_cents, status, sale_id, person:people(full_name)").order("due_date").limit(300)).data as unknown as Rec[] });
+  const [recLineFilter, setRecLineFilter] = useState<SaleLineFilter>("");
+  const recLines = useSaleLines((recs.data ?? []).map((x) => x.sale_id));
   const pays = useQuery({ queryKey: ["pays"], queryFn: async () => (await supabase.from("payments").select("id, kind, amount_cents, paid_at, method, receivable_id, refund_of").order("paid_at", { ascending: false }).limit(300)).data as Pay[] });
   const today = new Date().toISOString().slice(0, 10);
   const rows = (recs.data ?? []).filter((r) => filter === "todos" ? true : filter === "vencidos" ? ["open", "partial"].includes(r.status) && r.due_date < today : filter === "pagos" ? r.status === "paid" : ["open", "partial"].includes(r.status));
@@ -81,9 +93,11 @@ const Receivables = () => {
     <div className="mb-4 flex gap-2">{[["aberto", "Em aberto"], ["vencidos", "Vencidos"], ["pagos", "Pagos"], ["todos", "Todos"]].map(([k, l]) => <button key={k} className={filter === k ? "hp-btn hp-btn-primary" : btnGhost} onClick={() => setFilter(k)}>{l}</button>)}</div>
     {pay && <PayForm rec={pay} balance={pay.amount_cents - net(pay.id)} onClose={() => setPay(null)} onDone={() => { setPay(null); m.ok("Recebimento registrado."); void qc.invalidateQueries(); }} />}
     <State loading={recs.isLoading} error={recs.error} empty={rows.length === 0} emptyText="Nenhuma parcela neste filtro." />
-    {rows.length > 0 && <Table head={["Pessoa", "Parcela", "Vencimento", "Valor", "Recebido (líquido)", "Estado", ""]} right={[3, 4]}>
-      {rows.map((r) => <tr key={r.id}><Td>{r.person?.full_name}</Td><Td>{r.installment_no}/{r.installments_total}</Td><Td><span className={["open", "partial"].includes(r.status) && r.due_date < today ? "text-destructive" : ""}>{fmtDate(r.due_date + "T12:00:00Z")}</span></Td>
-        <Td num>{brl(r.amount_cents)}</Td><Td num>{brl(net(r.id))}</Td><Td>{REC_ST[r.status]}</Td><Td>{["open", "partial"].includes(r.status) && <button className={btnGhost + " hp-btn-sm"} onClick={() => setPay(r)}>Receber</button>}</Td></tr>)}</Table>}
+    <div className="mb-3 flex flex-wrap items-center gap-2 text-sm"><label htmlFor="rec-line" className="text-xs text-muted-foreground">Linha de negócio</label>
+      <select id="rec-line" className="!w-auto" value={recLineFilter} onChange={(e) => setRecLineFilter(e.target.value as SaleLineFilter)}>{SALE_LINE_FILTERS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+    {rows.filter((r) => saleLineMatches(recLines.data?.[r.sale_id], recLineFilter)).length > 0 && <Table head={["Pessoa", "Parcela", "Vencimento", "Valor", "Recebido (líquido)", "Linha", "Estado", ""]} right={[3, 4]}>
+      {rows.filter((r) => saleLineMatches(recLines.data?.[r.sale_id], recLineFilter)).map((r) => <tr key={r.id}><Td>{r.person?.full_name}</Td><Td>{r.installment_no}/{r.installments_total}</Td><Td><span className={["open", "partial"].includes(r.status) && r.due_date < today ? "text-destructive" : ""}>{fmtDate(r.due_date + "T12:00:00Z")}</span></Td>
+        <Td num>{brl(r.amount_cents)}</Td><Td num>{brl(net(r.id))}</Td><Td>{saleLineLabel(recLines.data?.[r.sale_id])}</Td><Td>{REC_ST[r.status]}</Td><Td>{["open", "partial"].includes(r.status) && <button className={btnGhost + " hp-btn-sm"} onClick={() => setPay(r)}>Receber</button>}</Td></tr>)}</Table>}
     <h2 className="text-xl mt-10 mb-3">Últimos recebimentos e estornos</h2>
     {pays.data && pays.data.length > 0 ? <Table head={["Data", "Tipo", "Valor", "Forma", ""]} right={[2]}>
       {pays.data.slice(0, 30).map((p) => <tr key={p.id}><Td>{fmtDateTime(p.paid_at)}</Td><Td>{p.kind === "payment" ? "Recebimento" : "Estorno"}</Td><Td num>{brl(p.amount_cents)}</Td><Td>{p.method ?? "—"}</Td><Td>{p.kind === "payment" && <button className="text-destructive text-sm" onClick={() => refund(p)}>Estornar</button>}</Td></tr>)}</Table> : <p className="text-muted-foreground">Sem movimentos.</p>}

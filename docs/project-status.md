@@ -1,5 +1,572 @@
 # HP Group Hub — Status do Projeto
 
+## ESCOPO AMPLIADO AUTORIZADO (2026-09-30) — lista de acompanhamento (preservar entre sessões)
+
+> **Autorização do usuário**: executar no **Dev**, em `release/v1`, preservando o que funciona, conferindo o estado antes de alterar. **Sem merge, sem publicação em produção, sem DNS.** Pode criar migrations no Dev (convenções do projeto). Testar cálculos, permissões e jornadas reais de cada etapa. Atualizar o PR #3 (rascunho) e o preview do `hp-group-hub`. **Não pedir nova aprovação deste escopo.** Se uma integração exigir credencial/decisão não inferível: explicar o bloqueio específico e seguir com o resto. **Não declarar tudo concluído enquanto houver item pendente.** Ordem: indicadores → financeiro → jornada do paciente → calendários.
+
+**Regras transversais**: usar dados reais; documentar fórmula, período e denominador de cada indicador (`docs/indicadores.md`); diferenciar respostas, pessoas e oportunidades; clique no WhatsApp ≠ mensagem enviada; se faltar histórico, começar a registrar e informar a limitação (sem inventar retroativo); credenciais/tokens só no servidor; acesso administrativo não libera informação de saúde.
+
+**1. Indicadores e gráficos** — filtros compactos, cartões clicáveis que abrem os registros.
+- *Administrativo*: totais PF/PJ, novos por período, ativos/inativos, incompletos + campos faltantes, distribuição por vínculo e unidade.
+- *CRM*: tempo na etapa atual, tempo médio e mediano por etapa, oportunidades paradas, conversão entre etapas, conversão geral, ciclo de venda, motivos de perda, desempenho por responsável e origem.
+- *Captação*: entradas por formulário/quiz, conclusão e abandono dos quizzes, origem/campanha, evolução temporal, conversão em oportunidade, agendamento e venda.
+
+**2. Financeiro por linha de negócio** (mesma organização; não são unidades/empresas/bancos): seletor Geral / HP Fisioterapia / HP Academy em vendas, recebimentos, contas a receber, despesas, comissões, relatórios e DRE; venda com itens de ambas as linhas; parcial/desconto/estorno reconciliam; despesa compartilhada com rateio explícito ou "compartilhada/não alocada"; histórico sem classificação = "Não classificado"; Geral reconcilia com as duas linhas + compartilhados + não classificados, sem duplicar; preservar caixa × competência × previsão.
+
+**3. Área do paciente / jornada de acompanhamento**: objetivos com o fisioterapeuta; plano de sessões, próximas consultas e histórico; realizadas, faltas e saldo separados; gráficos de evolução com avaliações reais (data e autoria); vídeos Bunny atribuídos pelo profissional; reavaliação e indicação de continuidade/manutenção/alta; solicitar renovação/contato sem cobrança automática; 10 sessões como modelo inicial configurável; sem prometer resultado nem tratar consumo de sessão como prova de melhora; acesso individual e restrições clínicas.
+
+**4. Meu dia e calendários**: visões diária/semanal/mensal; agenda própria por padrão; seleção/visão conjunta só com autorização e por unidade; nenhuma confirmação em nome de outro profissional; tarefas pessoais privadas; cada usuário conecta o próprio Google Calendar e usa a agenda no Calendário da Apple/iPhone (distinguir assinatura somente leitura de sincronização bidirecional; `.ics` avulso não basta); tratar criação/alteração/cancelamento/fuso/desconexão/duplicidade; compromisso externo nunca gera atendimento, cobrança ou consumo.
+
+### Tabela única de acompanhamento (atualizada a cada entrega)
+Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linha) · — não se aplica.
+
+| # | Item | Implementado | Testado | Pendente / Bloqueado |
+|---|---|---|---|---|
+| 0 | Escopo registrado neste documento | ✅ | — | — |
+| 1a | Indicadores Administrativo (+ detalhes clicáveis) | ✅ código + migration 056 **aplicada no Dev** | ✅ SQL `S05` (82 OK) · ✅ E2E `R07` (cartões = servidor; detalhe reconcilia) | — |
+| 1b | Indicadores CRM (tempo/etapa, conversão, ciclo, perdas, responsável/origem) | ✅ código + migration 056 **aplicada no Dev** | ✅ SQL `S05` (fórmulas, permissões, detalhes que reconciliam com os cartões) · ✅ E2E `R07` | — |
+| 1c | Indicadores Captação (quiz/formulário, conversão até venda) | ✅ código + migration 056 **aplicada no Dev** | ✅ SQL `S05` (respostas ≠ pessoas ≠ oportunidades; clique no WhatsApp ≠ mensagem) · ✅ E2E `R07` | Limitação: formulário não registra início/abandono (só envio) |
+| 1d | `docs/indicadores.md` (fórmula, período, denominador) | ✅ | — | revisar depois dos testes |
+| 1e | **Administrativo — central de pendências administrativas** (6 cartões prioritários, indicadores complementares, gráficos, lista de prioridades, fluxos de pendências/documentos/contratos/contatos/requisitos) | ✅ código + migration 062 **aplicada no Dev** (`docs/indicadores-administrativo.md`) | ✅ SQL `S10` (127 OK) · ✅ E2E `R11` desktop e celular · suíte SQL S01–S10 = 565 OK · regressão R02/R07/N10/N11 verde | depende de **você configurar** quais documentos/contratos cada tipo/vínculo exige (hoje só vêm requisitos de dado); verificação de contato é manual; sem histórico retroativo; upload de arquivo de documento fica para depois |
+| 2a | Linha de negócio no modelo (Fisioterapia / Academy / Não classificado) | ✅ código + migration 057 **aplicada no Dev** | ✅ SQL `S06` (44 OK) | classificar os produtos em Configurações › Operação (nada é adivinhado) |
+| 2b | Seletor Geral/Fisioterapia/Academy em vendas, recebíveis, despesas, comissões, relatórios, DRE | ✅ Visão geral, DRE, Vendas, Recebíveis, Comissões, Contas a pagar, Produtos (057) · Recorrência (MRR/ARR), Relatórios de eficiência e Conciliação (060) — **aplicadas no Dev** | ✅ SQL `S06` (44 OK) e `S09` (61 OK); todas as RPCs respondem 200 para o gestor · ✅ E2E `R08` (Visão geral, DRE, Recorrência, Relatórios, Conciliação) | —. Conciliação: extrato original preservado; linha = camada separada |
+| 2c | Venda com itens das duas linhas; parcial/desconto/estorno reconciliam | ✅ divisão proporcional exata (venda mista, desconto, parcial, estorno) | ✅ SQL `S06` (valores calculados à mão) | — |
+| 2d | Despesas compartilhadas com rateio / não alocadas; Geral reconcilia sem duplicar | ✅ rateio explícito + compartilhado/não alocado + quadro de conferência | ✅ SQL `S06` | — |
+| 2e | Recorrência, eficiência e conciliação por linha (migration 060) | ✅ código + migration 060 **aplicada no Dev** (`mrr_by_line`, `mrr_history_by_line`, `efficiency_by_line`, `bank_by_line`, `bank_line_set_allocation`, `bank_line_shares`) + telas | ✅ SQL `S09` (61 OK: MRR, eficiência, conciliação, extrato intacto, auditoria, permissões) · ✅ E2E `R08` | CAC/LTV seguem indisponíveis e não são divididos por linha. Achado e corrigido: `efficiency_report` (migration 020) falhava sempre (função de janela dentro de agregado) — corrigido na 060 |
+| 3a | Objetivos, plano de sessões, próximas consultas, histórico, saldo separado | ✅ código + migration 058 **aplicada no Dev** | ✅ SQL `S07` (60 OK) · ✅ E2E `R09` (portal e painel do fisioterapeuta) | — |
+| 3b | Avaliações de evolução (registro com data/autoria) e gráficos | ✅ avaliações imutáveis com data e autoria + gráfico (dor/funcionalidade/bem-estar, 0–10) | ✅ SQL `S07` | Sem escalas clínicas validadas específicas |
+| 3c | Vídeos Bunny atribuídos pelo profissional | ✅ atribuição, revogação, validade, log de acesso; função `bunny-playback` **publicada no Dev**; UI 'indisponível por configuração' | 🟡 SQL `S07` (autorização, log, revogação, isolamento) e função responde 503 `bunny_not_configured` sem chave — **reprodução real NÃO testada** | 🔒 **precisa de você**: cadastrar `BUNNY_EMBED_TOKEN_KEY` nos Secrets do Supabase e o ID da biblioteca em Configurações › Operação; configurar a biblioteca no Bunny (`docs/jornada-do-paciente.md`). Pendente de configuração e de teste real |
+| 3d | Reavaliação e indicação continuidade/manutenção/alta; solicitar renovação/contato | ✅ reavaliação (continuidade/manutenção/alta, nota clínica restrita) + pedido de renovação/contato sem cobrança + fila administrativa | ✅ SQL `S07` · ✅ E2E `R09` | — |
+| 4a | Meu dia: visões diária/semanal/mensal; agenda conjunta por autorização | ✅ visões Dia/Semana/Mês, agenda própria por padrão, outras agendas só por permissão/unidade, sem confirmar por outro (migration 059 **aplicada no Dev**) | ✅ SQL `S08` (39 OK) · ✅ E2E `R10` (Dia/Semana/Mês, navegação) | — |
+| 4b | Assinatura de calendário (Apple/iPhone, Google "por URL"): somente leitura | ➖ **aposentada por decisão**: assinatura .ics/Apple/iPhone removida da interface; função `calendar-feed` despublicada e código removido; tabelas/funções da 059 ficam como histórico | — (o teste real do .ics feito antes vale como histórico) | — |
+| 4c | Google Calendar do próprio usuário (sincronização) | ✅ Google Calendar é a única integração: credenciais, chave de criptografia, URL de retorno e Vault configurados no Dev; sincronização **automática** (gatilho + job de 5 min); tela com status/desconectar | ✅ planejador (22) · SQL `S11` (19) · função publicada (`state` de uso único, escopos, Google aceita cliente/callback) · E2E `R10` | 🔒 **falta a sua autorização no Google** (escolher a conta e conceder as permissões): só depois disso o evento aparece de fato no Google — pendente de teste real |
+| 5 | PR #3 e preview `hp-group-hub` atualizados | ✅ preview `release-v1` publicado como **rascunho** (deploy `6abd7eb3784e286f70c75e93`, commit `e45716da5466`, `ready`, não publicado na URL principal) · PR #3 segue em rascunho | ✅ mesmo bundle servido localmente: 20 E2E (R02, R07, R11) passaram · `version.json` confere (perfil v1, backend Dev) | 🔒 URL publicada exige login da equipe Netlify (401 sem sessão): telas não abertas por HTTP nesse endereço |
+
+---
+
+## Sessão mais recente (2026-10-02, 16ª rodada) — reconciliação entre sessões, revalidação de Repasses e doc de integração ponta a ponta
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Esta rodada **não é trabalho novo de produto**: a sessão anterior (17/01–02/10) bateu o limite de uso no meio de uma sequência já comitada (Repasses, idempotência de venda/oportunidade, Academy, Parceiros) sem dar push nem fechar a documentação. Esta sessão leu tudo sem confiar na memória (`CLAUDE.md`, `docs/transferencia-claude.md`, status, release, docs de Repasses/Conversas), conferiu o estado real do git/Dev contra o que os documentos afirmavam, e **corrigiu duas afirmações desatualizadas**: Repasses já estava comitado (não "pendente") e as migrations 075/076 já estavam no repositório (não "ausentes").
+- **Revalidado ao vivo contra o Dev (não só por documento):** SQL completo `test:sql:release` S01–S21 = **1056/1056, 0 falha**; `S18_repasses` isolado = 30/30; E2E `R20-repasses` isolado = 8/8 (caso de valor positivo pela interface do profissional **e** do Financeiro, por pedido explícito desta rodada).
+- **Lacuna fechada:** `docs/integracao-ponta-a-ponta.md` (referenciado três vezes em `docs/release-v1.md` desde a rodada anterior, mas nunca criado) — matriz das 9 jornadas ponta a ponta do escopo autorizado, cada uma classificada com evidência real; duas seguem **bloqueadas por configuração externa** (vídeo Bunny — falta a chave e o ID da biblioteca; Google Calendar — falta a autorização real na conta do Google), nenhuma declarada concluída por mock.
+- **Preservado do working tree da sessão anterior:** correção real em `e2e/release/R04-confirmacao-presenca-consumo.spec.ts` (o atendimento futuro passou a aparecer em duas listas do portal do paciente — "Meus atendimentos" e "Minha jornada" — e o seletor do teste ficou ambíguo; corrigido sem enfraquecer nenhuma verificação) + 7 capturas de tela de Conversas.
+- **Pendência de segurança levada ao usuário:** token do Supabase colado no chat em 30/09 (registrado em `docs/transferencia-claude.md`) continua comprometido; revogação em `supabase.com/dashboard/account/tokens` depende do usuário.
+
+## Sessão anterior (2026-10-01, 15ª rodada) — layout da central de Conversas e rótulos honestos
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Escopo desta rodada: **somente o layout de Conversas** (referência: *Chats* do shadcn Admin). Provedor de WhatsApp, envio automático e recebimento ficam para depois (nada foi configurado nem contratado). **Repasses** (075/076, `S18`, `Commissions.tsx`, `MySummary.tsx`, `S15`) segue **sem commit e fora desta entrega**.
+- **Layout:** lista (avatar, nome, última interação, horário, busca) · conversa ocupando a maior parte da tela (cabeçalho com avatar e nome, separadores de data, horários nos balões, compositor fixo) · **ficha do lead recolhida por padrão**, abre ao clicar no nome; celular: uma coluna por vez com botão de voltar. Sem mensagens fictícias e sem botões sem função.
+- **Rótulos (nunca “enviada” para a abertura do WhatsApp):** “**Abrir WhatsApp**” só abre o `wa.me` e registra a abertura; “**Lembrete de envio**” (antes “agendar mensagem”; menu “Lembretes de envio”, estados Vencido/Agendado/WhatsApp aberto/Cancelado); prévia da lista “WhatsApp aberto: …”.
+- **Testes (Dev, 01/10):** E2E `R19` (9) reescrito para o novo layout/rótulos + regressão `R02` (13), `R12` (9), `R13` e `R18` (7) verdes; `tsc` e `eslint` limpos. `R13`: o teste lia os links da sidebar do CRM antes de ela renderizar (instantâneo da falha mostra a sidebar completa; lista vazia no momento da leitura) — incluí a espera pela sidebar; **não** foi enfraquecida nenhuma verificação. Capturas desktop e celular em `docs/screenshots/conversas/`.
+- **Publicação:** preview do `hp-group-hub` (rascunho) a partir de **worktree isolado** do commit desta rodada, sem Repasses (ver o fechamento da rodada no chat/`transferencia`). A migration 077 é a única dependência de banco e já está no Dev; as 075/076 de Repasses também já estão **aplicadas no Dev** (sem commit no repositório) e **não** são necessárias a Conversas.
+
+## Sessão anterior (2026-10-01, 14ª rodada) — Central de Conversas (CRM)
+
+> `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Detalhes, limites e fórmulas: [`docs/conversas.md`](conversas.md). O trabalho de **Repasses** (migrations 075/076, `S18`, `Commissions.tsx`, `MySummary.tsx`, `S15`) ficou **fora** dos commits desta rodada e permanece sem commit.
+- **Ponto de partida conferido:** a sessão anterior caiu no item Repasses; a central de Conversas ainda era a tabela simples de 24/09 (abre o WhatsApp e registra o contato), sem tabelas de mensagem/atendente/ficha. Layout de referência: padrão de 3 colunas do *Chats* do shadcn Admin (indicado pelo usuário), recriado com componentes próprios do HP.
+- **Migration 077 (aplicada no Dev):** `crm_conversations`, `crm_conversation_participants`, `crm_conversation_reads`, `crm_messages` (imutáveis), `crm_scheduled_messages`, `opportunities.profile`; funções de abrir/postar/entrar/sair/adicionar/transferir/estado/lida, caixa de entrada (`crm_conversations_inbox`, invoker/RLS), agendar/remarcar/cancelar/registrar envio e `crm_lead_profile_save`.
+- **Tela:** lista · mensagens · ficha do lead (recolhível; gaveta abaixo de 1280 px; uma coluna por vez no celular); **ficha por nicho** (Fisioterapia, Academy, Parceiros, Empresas); **multiatendimento** (responsável + colaboradores, fila, entrar/sair/transferir, não lida por usuário); **Mensagens agendadas** agora está **ligada na v1** (lembrete + registro; *Disparo* continua fora).
+- **Honestidade de envio:** sem provedor, “enviar” abre o `wa.me` e registra “WhatsApp aberto · sem confirmação de entrega”; respostas são registradas à mão; mensagem agendada **não é enviada sozinha** (vira lembrete e “pronta para enviar”). Nada na interface promete entrega ou leitura.
+- **Integração:** só a mensagem enviada entra no histórico do lead (último contato/primeira resposta); lembretes aparecem em Tarefas; a transferência leva oportunidade, agendadas e lembretes; botão “Abrir conversa” na oportunidade.
+- **Testes (Dev, 01/10):** SQL **S19 = 96 OK** (permissões por unidade/papel, multiatendimento, imutabilidade, não lidas, histórico do lead, agendadas, ficha por nicho); S15/S16/S17 seguem OK (251 OK no conjunto S15+S16+S17+S19). E2E **R19 (9)** + regressão **R02 (13), R06, R18 (7)** = 29 verdes; `tsc` e `eslint` (arquivos tocados) limpos. **R02 ajustado por mudança intencional:** “Mensagens agendadas” agora aparece na v1. Capturas em `docs/screenshots/conversas/`.
+- **Defeito encontrado e corrigido no caminho:** com a barra lateral aberta a ficha de 21 rem espremia o centro e o botão da ficha ficava coberto pela coluna (clique interceptado); colunas reduzidas, rótulos do cabeçalho só em telas largas e o estado da conversa foi para o diálogo “Atendimento”.
+- **Dependências externas NÃO comprovadas:** envio/recebimento reais no WhatsApp (o teste intercepta `wa.me`; nenhuma mensagem real saiu), provedor de WhatsApp, atualização em tempo real (hoje consulta periódica).
+- **Migrations:** Dev = **78 registros** (última 077); repositório = 72 arquivos (a 077 e as 075/076 de Repasses; para produção, quando autorizado, entram 075→077 além das 33 já listadas — contagem final a recalcular quando o Repasses for commitado).
+- **Segurança:** o token do Supabase do chat de 30/09 continua nas transcrições locais — **revogar e gerar novo** (https://supabase.com/dashboard/account/tokens).
+
+## Sessão anterior (2026-10-01, 13ª rodada, concluída) — jornadas Fisioterapeuta, Paciente e CRM; Hub sem “Seus aplicativos”
+
+> `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Auditoria item a item (implementado/parcial/ausente, com o teste de cada item e as dependências externas): [`docs/jornadas-fisioterapeuta-paciente-crm.md`](jornadas-fisioterapeuta-paciente-crm.md). Histórico e continuidade: [`docs/transferencia-claude.md`](transferencia-claude.md).
+- **Hub:** o bloco “Seus aplicativos” saiu do dashboard (os acessos já estão na sidebar); indicadores, alertas e gráficos preservados.
+- **Fisioterapeuta (068, 071, 072):** cadastro pela tela (pessoa do cadastro central ou nova, registro no conselho, unidades), disponibilidade editável sem sobreposição, liberação de acesso (convite com vínculo ou vínculo imediato), “Meu resumo” (`/admin/meu-resumo`) com agendados/realizados/cancelamentos/faltas/pacientes atendidos e repasses só com regra e dados reais.
+- **Paciente (068, 070, 072, 073):** portal com sessões **separadas** (contratadas, realizadas, consumidas por falta/cancelamento tardio, devolvidas, ajustes, saldo); plano de sessões **sempre definido pelo profissional** (fim do “10 por padrão”); renovação só após orientação (continuidade/manutenção); convite ou vínculo imediato do portal (`person_portal_access`).
+- **CRM (069):** importação CSV em 4 passos (modelo, mapeamento, prévia com erros por linha, relatório), deduplicação no servidor, reimportação idempotente, conflitos só com decisão explícita (nunca sobrescreve sozinho); KPIs do CRM conferidos por recálculo independente (`S17`).
+- **Defeitos reais encontrados e corrigidos nesta rodada:** (e) **segurança:** paciente, parceiro e fisioterapeuta conseguiam criar listas do CRM direto pela API (as políticas só checavam `in_org`; só a interface barrava) → 074, com testes no `S16` e no `R18`; (a) “Agendados” do resumo nunca mostrava consultas futuras (só contava dentro do período) → 071; (b) conta já confirmada **sem** `user_accounts` nunca receberia o convite (o gatilho só roda na criação/confirmação) → 072; (c) “última decisão” da reavaliação dependia de desempate por uuid quando duas decisões tinham o mesmo `now()`: o `S07` só passava por sorte → 073 (`clock_timestamp()`); (d) portal tinha texto “modelo inicial de 10 sessões” → removido.
+- **Testes (Dev, 01/10):** SQL **S01–S17 todos OK** (S15 78, S16 55, S17 22, S07 63 estável em 5 execuções); E2E novos **R15 (10), R16 (10), R17 (9), R18 (7: listas, oportunidade com histórico e tarefa, Tarefas, metas, permissões no servidor sobre 7 tabelas do CRM)** e regressão **R01–R14, N10–N11 e 01–09 verdes** (R13 adaptado ao Hub sem lançador); `tsc` e `vite build` limpos. Capturas desktop e celular em `docs/screenshots/jornadas/` (sem rolagem lateral nem erros de console).
+- **Migrations:** Dev = **75 registros** (última 074); repositório = 70 arquivos; produção (pelos documentos, não consultada hoje) = 37. Para produção, quando autorizado: 038→047 e 052→074 = **33**, `list_migrations` final **70**. Corrigidas as contagens antigas (26/63) em `docs/release-v1.md`.
+- **Dependências externas NÃO comprovadas:** entrega do e-mail de convite/recuperação (Resend: os E2E criam a conta já confirmada no Auth do Dev e a tela de nova senha usa uma sessão por API), clique no link do e-mail, reprodução real do vídeo no Bunny (segredo e biblioteca não cadastrados; a tela mostra a mensagem honesta), autorização real no Google Calendar, DNS e produção.
+- **Sem diagnóstico:** nenhuma falha nova sem causa; as duas antigas (07/08 da bateria longa de 01/10 e o `fill` de 150 s do R04) não reapareceram.
+- **Publicação:** commit `ce5d4d7`, preview (rascunho) deploy `6abed1f6a20ecff377beff7e`, `version.json` = perfil `v1`, ambiente `preview`, backend Dev; a URL exige login da equipe Netlify (401), então as telas foram validadas servindo o mesmo `dist` contra o Dev. PR #3 segue em rascunho.
+- **Segurança:** tokens do Supabase colados no chat em 30/09 ficaram nas transcrições locais — revogar e gerar novo.
+
+## Sessão anterior (2026-10-01, 12ª rodada) — filtro único nos seis módulos, edição de cartão e diagnóstico do `57014`
+
+> `release/v1`, PR #3 em rascunho; Dev apenas; produção, DNS e merge intocados. Sem integração com bancos emissores e sem parcelamento (fora do escopo). Detalhes: `docs/aplicativos.md` §4, `docs/cartoes-corporativos.md` §6, `docs/diagnosticos/04-agenda-concurrency/README.md`.
+- **Filtro único (item 1):** Agenda (unidade e dia à vista; profissional e estado no botão Filtros), Academy (cursos e trilhas), Parceiros (por aba), Contas a pagar (estado, linha, origem, vencimento), Conciliação (+ relatório por linha com período do filtro único) e Planilha administrativa
+  migrados para `PeriodFilter`/`ListFilterBar`, com contador, chips e “Limpar filtros”; os filtros e parâmetros de URL que já existiam foram preservados e nenhuma permissão mudou (`R14`, `R02`).
+- **Edição de cartão (item 2, migration 066):** limite, fechamento e vencimento, com motivo e auditoria; **faturas e despesas existentes não mudam**; os novos dias valem só para faturas que ainda não existem (documentado com exemplo em `docs/cartoes-corporativos.md` §6). Limite não pode ficar abaixo do em aberto.
+- **`57014` do `04-agenda-concurrency` (item 3) — causa determinada:** deadlock no banco entre reservas simultâneas do mesmo horário (exclusion constraints), com reexecução automática até o timeout de 8 s — **não é o ambiente nem o valor do timeout (não foi aumentado)**. Provado com 2 reproduções
+  (1/30 e 1/40 iterações travadas, `pg_stat_database.deadlocks` +154, grafo de bloqueio em ciclo) e **direto no banco** (27 deadlocks em 33 tentativas sem a trava; 0 em 970 com ela). Correção: migration 067 (trava transacional por profissional e pessoa). Depois dela: 100 iterações × 6 requisições sem deadlock
+  (pior 214 ms) e o teste real 10/10. Artefatos das falhas preservados em `docs/diagnosticos/04-agenda-concurrency/`. **Sem diagnóstico:** qual camada reexecuta (PostgREST x gateway) e a linha de log do deadlock (API de logs indisponível).
+- **Testes:** SQL S01–S14 todos OK (S14 novo, 43); E2E: `R14` novo (15), R01–R13, N10/N11 e os gerais 01–09 verdes; `04` ×10. Ajustes por mudança **intencional** de interface: `#au/#ad` → `#pf-unit/#pf-day` (R01/R04/R05), “Estado” do Diretório e “Conta bancária” do relatório agora no popover (R12/R08).
+  Falhas encontradas e tratadas: (a) **R04** — o paciente QA compartilhado acumulou 127 atendimentos e `my_appointments` mostra só 100 (`limit 100`): o “ontem” da execução ficava fora da lista; o teste agora remove atendimentos de execuções anteriores (`R0x`, outro runId) antes de começar;
+  (b) **07** — sobra de um recebimento de R$ 150,00 não conciliado de rodada antiga gerava duas sugestões; o teste passou a conferir e confirmar a da própria pessoa; (c) **R12** — chaves React duplicadas na busca global (`CommandMenu`: a mesma rota aparecia no Hub e no app); corrigido (defeito real, de rodada anterior).
+- **Sem diagnóstico:** uma única ocorrência, no **R04**, em que `#pf-day.fill()` ficou 150 s “aguardando o elemento” — não se repetiu (4 execuções seguintes passaram; o `fill` isolado leva ~60 ms) e o artefato foi sobrescrito pela execução seguinte; não sei se foi o navegador com ~0,7 GB livres ou outra causa.
+  O `vitest` tem 1 suíte que falha há tempos (`supabase/tests/functions/google-sync-plan.test.mjs` chama `process.exit`; não foi tocada) e o `eslint` tem 23 erros em arquivos que não mudaram (funções do Supabase, `R06`).
+- **Migrations para produção:** 26 (038→047, 052→067); `list_migrations` final = **63**; o Dev tem **68**.
+
+## Sessão anterior (2026-10-01, 11ª rodada) — aplicativos contextuais, filtros, Cartões corporativos e Calendário
+
+> `release/v1` (a indicação `feature/hp-group-hub` do pedido foi corrigida pelo usuário: essa branch é antiga, já mesclada, e o PR em rascunho é o #3); Dev apenas; produção, DNS e merge intocados.
+> Documentos novos: `docs/aplicativos.md` (rotas, menus, filtros, referências), `docs/cartoes-corporativos.md` (modelo, regras, testes). Capturas: `docs/screenshots/apps-cartoes-calendario/`.
+- **Aplicativos:** Gestão, Financeiro, CRM, Pages, Operação, Academy (administração), Parceiros e Produtividade, cada um com sidebar exclusiva, identidade própria, “Voltar ao Hub” e seletor; o Hub tem o lançador
+  “Seus aplicativos” (só os permitidos). O app ativo vem da URL (link direto, recarregar e voltar/avançar). Rotas antigas preservadas; atalhos `/admin/gestao`, `/admin/operacao`, `/admin/pages`, `/admin/produtividade`,
+  `/admin/administrativo`. “Contas a receber” e “Unidades/Produtos e serviços” ganharam entrada de menu própria apontando para as telas que já existiam (aba/seção na URL). O app **Administrativo** passou a se chamar **Gestão**.
+- **Filtro único:** linha de negócio (Geral/Fisioterapia/Academy) dentro do popover no Financeiro; Recorrência (mês), Fluxo de caixa e Pessoas migrados; trocar o período não apaga mais a linha na URL. Agenda, Academy, Parceiros,
+  Contas a pagar, Conciliação e Planilha administrativa **não** foram migrados (documentado).
+- **Cartões corporativos (migration 065):** cartão visual seguro (sem número completo/CVV), compra = uma despesa em `payables` (uma vez na DRE, no fluxo e na linha de negócio), ciclo/fechamento/vencimento, limite e disponível,
+  bloqueio com motivo, fatura paga baixa as despesas, **conciliação da fatura agregada sem criar despesa nem alterar o extrato**; RLS, escopo por unidade, auditoria; SQL `S13` (80 verificações).
+- **Calendário (Meu dia):** barra com ‹ Hoje ›, título do mês, Dia/Semana/Mês, data, agenda de outro profissional (quando permitido) e **categorias** (atendimentos, CRM, pessoais, Google Calendar) como filtros; grade mensal
+  legível (hoje destacado, eventos coloridos com “+N mais”; pontos no celular). Só Google Calendar (OAuth individual, status, sincronizar, desconectar) — sem iPhone/Apple/`.ics`.
+- **Testes:** SQL S01–S13 e N01–N02 OK; E2E: `R02` reescrito (menus por papel e por aplicativo), novo `R13` (14), ajustes por mudança intencional em `R08` (linha de negócio no filtro) e `R12`; correções de fragilidade que dependiam de
+  data/dados acumulados em `R01` (parcela “1/2” exata), `R03` (contagem na seção certa e dia livre para o paciente QA compartilhado) e do isolamento do `S13` (auditoria só das próprias compras).
+  `04-agenda-concurrency` era **intermitente** (`57014` em vez de `P0409`); **investigado e corrigido na 12ª rodada** (deadlock entre reservas simultâneas; migration 067) — ver a seção acima.
+- **Falhas da bateria longa (`07` DRE e `08` quizzes), investigadas — causa NÃO determinada:** numa bateria de 35 testes (01:32–01:37, horário de Brasília) falharam, em sequência, `07 › DRE` (a linha da categoria
+  “Custo E2E …” não apareceu em 10 s) e dois testes do `08` (a próxima pergunta do quiz não apareceu / timeout). O que foi **descartado com evidência**: (a) *dados*: a despesa estava paga no banco (04:33:50 UTC), com categoria
+  classificada e competência de outubro, e a `dre_report` devolve a categoria para a janela da tela; (b) *janela de datas/fuso*: o intervalo calculado pela tela cobre o pagamento; (c) *latência do RPC*: `dre_report`,
+  `finance_by_line` e `efficiency_report` respondem em ~60–450 ms; (d) *limitador de quiz*: em `private.rate_limits` a janela 04:30 tem só 3 de 8 inícios de “atendimento” e nenhum de “parceria”, e **não há nenhuma chamada de
+  consentimento/progresso do quiz** nessa janela — o fluxo travou logo depois do início, antes de qualquer limite; (e) *código desta etapa*: o `07` passou 6/6 isolado e a mesma sequência (com e sem `02`) passou 3 vezes; o `08` passou
+  3/3 isolado. O padrão (duas especificações diferentes falhando no mesmo intervalo de poucos minutos, com o Dev já tendo dado `57014` em `04-agenda-concurrency` e o computador com ~0,3–0,9 GB livres) é compatível com uma
+  interrupção momentânea do ambiente, mas **isso é uma hipótese, não uma prova**: os artefatos da falha foram apagados pela execução seguinte e a API de logs do Supabase não respondeu de forma utilizável. Para que uma
+  recorrência explique a si mesma, o `07` agora espera a tabela OU o alerta de erro e confere que a DRE não carregou com erro antes de procurar a linha.
+- **Migrations para produção:** 24 (038→047, 052→065); `list_migrations` final = **61**; o Dev tem **66**.
+
+## Sessão anterior (2026-09-30, 10ª rodada) — reformulação visual de verdade
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho; nenhuma migration nova (a 064 é da rodada anterior). Detalhes, tabela antes × agora e capturas: `docs/interface-v2.md`.
+- A 9ª rodada tinha mudado só tokens, filtros e responsividade (visual quase igual). Esta mudou a **composição**: cabeçalho em largura total, **sidebar contextual clara por aplicativo** (Hub, Administrativo, CRM e **Financeiro, agora com shell próprio**), cor de identidade por app, cartões em quatro pesos (faixa prioritária com minigráfico só com série real, painel de Atenção, resumo, compacto), gráficos redesenhados (áreas, rosca, ranking), tabelas e estados vazios novos, tipografia e espaçamento novos, mapa maior com estado sem dado hachurado.
+- Telas reorganizadas: Hub, Administrativo, CRM (painel e relatórios), Financeiro (visão geral e relatórios). As demais herdam header, sidebar, tipografia, tabelas e filtros, sem reorganização. `/admin/administrativo` → `/admin/adm`.
+- **Testes:** SQL S01–S12 OK (Dev, somente leitura); E2E release 65, novos 4 e gerais 32 passando ao final; ajustes de teste: `R11` (`Limpar` exato, 9ª rodada), `07` (`h1` virou breadcrumb → locator exato), `R04` (espera pelo estado real no banco em vez de lê-lo antes da hora). Intermitentes sob pouca memória/limitador de quiz registrados em `docs/interface-v2.md` §8.
+- **Limitação real:** “Linha de negócio” ainda não está dentro do componente único de filtros; o tema escuro foi conferido só nas telas principais.
+
+## Sessão anterior (2026-09-30, 9ª rodada) — nova interface (Hub, Administrativo, CRM, Financeiro)
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho. Detalhes, decisões e capturas: `docs/interface-v2.md`; atribuições: `docs/creditos.md`.
+- **Tokens próprios do HP** (`src/styles/app.css`): paleta de gráficos, escala do mapa, níveis dos cartões e **tema escuro** (escolha da pessoa, guardada no navegador).
+- **Cabeçalho único** (`HeaderBar`) nos três shells: logo + aplicativo e seção atuais, busca discreta (Ctrl K), troca de app, **notificações com dados reais** (tarefas comerciais e pendências administrativas atrasadas *do próprio usuário*), tema e perfil; selo de ambiente no cabeçalho (não sobrepõe mais a barra lateral). Busca global ganhou título acessível.
+- **Filtro único** (`PeriodFilter`): período e unidade visíveis, contador de filtros ativos, “Limpar filtros”, resumo dos ativos; no celular, gaveta com Aplicar/Limpar sempre à vista e chips dos filtros ativos.
+- **Cartões em três níveis** (`StatCard` + `LevelSection`): Atenção, Resumo e Análise, com nome, número, unidade, período, comparação **só com base real** (`makeDelta`) e descrição curta; aplicado em Hub, Administrativo, CRM e Financeiro (que agora também compara de verdade com o período anterior).
+- **Mapa do Brasil** (`BrazilMap`, geometria `@svg-maps/brazil`, CC BY 4.0 — atribuição só na documentação): Administrativo (“Cadastros por estado”, migration **064** `adm_geo`) e Hub; balão com nome/quantidade/percentual, estado sem dado neutro, clique lista os cadastros do estado e abre o Diretório já filtrado (`uf`). A migration 064 também fez a listagem do Diretório respeitar o escopo de unidade do gestor de unidade.
+- **Estouro horizontal** no celular corrigido (Administrativo 151 px e CRM 188 px → 0); botões do cabeçalho voltaram a esconder/mostrar por tamanho de tela.
+- **Testado:** SQL S01–S12 (S12 novo: 26), N02; E2E da release inteiro + `R12` (10 novos: cabeçalho/tema/ambiente, filtro, níveis, comparação, mapa com dado real, Diretório por UF, permissões, celular).
+- **Migrations para produção:** 23 (038→047, 052→064); `list_migrations` final = **60**; o Dev tem **65**.
+
+## Sessão anterior (2026-09-30, 8ª rodada) — Google Calendar concluído até a autorização
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho.
+- **Configurado no Dev (sem exibir valores):** `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (seus), `GOOGLE_TOKEN_ENC_KEY` (gerada: 32 bytes aleatórios, não substituiu nada), `GOOGLE_RETURN_URL` = `https://release-v1--hp-group-hub.netlify.app` (**só do calendário**; `PUBLIC_SITE_URL` dos e-mails intocado), `CALENDAR_SYNC_SECRET` e os itens `calendar_sync_url`/`calendar_sync_secret` do Vault. O `GOOGLE_CLIENT_ID` tinha uma quebra de linha no meio (vinda da colagem): a função agora ignora espaços nas credenciais (o Google já o aceitava).
+- **Só Google na interface:** removidos iPhone/Apple e a assinatura `.ics` (tela e função `calendar-feed`, despublicada e removida do repositório). Existia **1 link ativo** (do seu usuário, criado hoje, nunca lido): foi revogado antes de retirar o endpoint. Migrations históricas e tabelas da 059 preservadas.
+- **Sincronização automática** (migration 063): criação, remarcação e cancelamento de atendimento chamam a sincronização do usuário conectado na hora; job de 5 em 5 minutos como rede de segurança; primeira sincronização logo ao conectar. Planejador testado isolado (nada de dado clínico no evento; id determinístico; sem duplicar).
+- **Testado:** planejador 22 OK · `S11` 19 OK · função publicada: 401 sem sessão, `state` de uso único, escopos exatos, **o Google aceita o cliente e o callback** (abre a escolha de conta), retorno vai para a URL configurada · cadeia real Vault → pg_net → função respondeu 200 · `R10` (Meu dia, só Google, navegação ao Google inspecionada, status/erro/desconexão). Bug meu achado e corrigido pelo E2E: a tela tratava a resposta do status como objeto em vez de lista.
+- **Falta (depende de você):** escolher a conta e autorizar no Google. URL: `https://release-v1--hp-group-hub.netlify.app/admin/meu-dia` (login da equipe Netlify + login no app) → “Conectar Google Calendar”. Conferir no Google Cloud a tela de consentimento com os escopos `calendar.app.created`, `calendar.events.readonly`, `openid`, `userinfo.email` e seu e-mail nos usuários de teste. Em modo Teste o acesso expira em 7 dias.
+- **Migrations para produção:** 22 (038→047, 052→063); `list_migrations` final = **59**; o Dev tem **64**.
+
+## Sessão anterior (2026-09-30, 7ª rodada) — Administrativo: central de pendências administrativas
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho.
+- **Implementado:** cartões prioritários (pendências vencidas, cadastros incompletos, documentos vencendo, contratos aguardando assinatura, pacientes aguardando agendamento, profissionais com integração incompleta), indicadores complementares, gráficos (evolução, tempo de resolução por tipo, responsável e unidade), lista de prioridades e o fluxo mínimo de pendências (criar, atribuir, prazo, concluir, reabrir, cancelar, histórico), documentos, contratos administrativos (assinatura registrada manualmente — não é assinatura eletrônica), verificação de contato e requisitos/prazos configuráveis. Reaproveitados: `waitlist` (solicitação de agendamento), `invitations`, `client_packages`, `professionals`, `legal_entity_documents`, `person_contacts`, `role_assignments`. Fórmulas, fontes, períodos e critérios: `docs/indicadores-administrativo.md`.
+- **Aplicado no Dev:** migration `062` (registrada; Dev = 63 registros, produção prevista = 58 com 21 migrations a aplicar).
+- **Testado:** `S10` = 127 OK (cada cartão × lista, limites de vencimento, ausência de dados com motivo, permissões, isolamento por unidade, privacidade, superfície pública); suíte SQL S01–S10 = **565 OK, 0 FALHA**; E2E `R11` (desktop: cartões = servidor, detalhes reconciliados, filtros, ciclo da pendência, prioridades, documentos/contratos/contatos, permissões; **celular 390×844**: sem rolagem lateral, filtro em gaveta, abas); regressão `R02`, `R07`, `N10`, `N11` verdes; typecheck, lint (0 erros) e build.
+- **Achados corrigidos nesta etapa:** (1) o popover de filtros compartilhado (`PeriodFilter`) ficava mais alto que a janela e escondia Limpar/Aplicar — agora rola por dentro; (2) o diálogo de seleção exigia valor, então “sem responsável/sem prazo” não seriam aceitos — corrigido; (3) contato fora do padrão `x@y` não era mascarado — corrigido com função de máscara; (4) desempate de eventos no mesmo instante na evolução semanal.
+- **Preview:** deploy `6abd7eb3784e286f70c75e93` (branch-deploy `release-v1`, `ready`, não publicado na URL principal), commit `e45716da5466`, `version.json` do bundle: perfil `v1`, ambiente `preview`, backend `Dev`. **Bloqueio de acesso:** a URL `https://release-v1--hp-group-hub.netlify.app` exige login da equipe Netlify (401 sem sessão), então não foi aberta por HTTP; o mesmo `dist/` foi servido localmente e 20 E2E (R02, R07, R11) passaram. Para conferir no endereço publicado: abrir logado na Netlify e ver `/version.json`.
+- **Depende de você (configuração):** definir em `Pendências › Requisitos e prazos` quais documentos e contratos cada tipo/vínculo exige e os prazos; designar responsáveis. Sem isso, “documentos ausentes” fica em 0 por falta de requisito (a tela avisa).
+
+## Sessão anterior (2026-09-30, 6ª rodada) — Validação pelas telas, `google-calendar` endurecido e preview publicado
+
+> `release/v1`, Dev apenas; produção, DNS e merge intocados; PR #3 segue em rascunho.
+- **E2E (um worker, sem servidores duplicados):** novos `R07` indicadores/detalhamentos, `R08` financeiro por linha (inclui conciliação com extrato intacto), `R09` jornada do paciente (vídeo privado → “indisponível por configuração”), `R10` calendários (.ics baixado de verdade e revogação) + regressão `R01`, `R02`, `R04`, `R05`, `R06`: **tudo verde** (rodada completa de `e2e/release`: 39 OK + o R09 reexecutado após ajuste de asserção = 5 OK). Ajustes só em testes (locators ambíguos no portal, horário livre na remarcação, asserção de “Sem permissão”).
+- **`cash_flow_monthly`** reexecutada com os parâmetros corretos (`p_from`, `p_to`, `p_unit`): 200.
+- **`google-calendar` (publicada sem JWT na plataforma):** `start`, `sync` e `disconnect` exigem sessão de usuário validada dentro da função (sem token, só a chave pública ou JWT inválido → 401). Achado: o `state` era assinado e expirava em 10 min, mas **não era de uso único**. Corrigido com a migration **061** (`google_oauth_state`, nonce guardado e consumido no callback). 25 verificações com segredos **fictícios temporários** (já removidos do Dev): state adulterado/forjado/vencido/de outro usuário/repetido → `google=estado`; só o 1º uso do state legítimo segue. Script: `supabase/tests/functions/google-calendar-auth.mjs`.
+- **Preview:** `https://release-v1--hp-group-hub.netlify.app` (deploy `6abd3c27ec571eb924ec12b2`, branch-deploy, `ready`, sem `--prod`). **Bloqueio de acesso:** o endereço exige login da equipe Netlify (401 sem sessão), então o `version.json` servido e as telas não puderam ser abertos por HTTP. Verificação alternativa: o `dist/` gerado pelo próprio build do deploy foi servido localmente e 32 E2E (R01, R02, R07–R10) passaram; o `version.json` desse bundle diz commit `bcc6db8f649f`, perfil `v1`, ambiente `preview`, backend `Dev` (`fsvtzowcwhvwtluwrhnb`). Para conferir no endereço publicado: abrir a URL **logado na Netlify** e ver `/version.json`.
+- **Contagem de migrations:** Dev 75 × produção prevista 70 — ver `docs/release-v1.md` §4 (diferença de 5 = 048–051 só do Dev + a 045 registrada em duas partes).
+- **Ainda pendente (não declarado concluído):** Bunny e Google em **configuração e teste reais**; `.ics` num iPhone/Google Agenda de verdade.
+
+## Sessão anterior (2026-09-30, 5ª rodada) — Escopo ampliado aplicado no Dev e testado no banco
+
+> `release/v1`, Dev apenas; sem merge, produção ou DNS. Com a credencial do Dev disponível: **migrations 056–060 aplicadas e registradas** (`list_migrations` = 61 registros na época; hoje 62 com a 061), **suíte SQL de release S01–S09 = 438 OK, 0 FALHA**, e as Edge Functions `calendar-feed` (sem JWT), `bunny-playback` (JWT) e `google-calendar` (sem JWT) **publicadas no Dev**.
+- **O que os testes acharam e foi corrigido**: (1) o relatório de eficiência consolidado (`efficiency_report`, migration 020) **falhava sempre** — função de janela dentro de agregado; corrigido na 060 (mesma assinatura); (2) auxiliares internos do schema `private` (`journey_payload` — dado clínico —, `bank_line_split`, divisões de vendas/despesas, escopo de indicadores) estavam executáveis por `anon`/`authenticated` dentro do banco (o schema não é exposto pela API); revogado nas próprias migrations 056–060; (3) expectativas erradas de fixtures nos testes S05/S06/S07/S09.
+- **Assinatura .ics testada de verdade** contra a função publicada (criação, download, unicidade de UID, UTC, conteúdo mínimo, novo link derruba o antigo, revogação, token inválido, método, anônimo).
+- **Ainda NÃO feito**: (a) **E2E das telas novas e regressão das jornadas afetadas** — não executado porque a máquina está com ~0,7 GB de RAM livre e o navegador do Playwright + servidor de desenvolvimento não cabem (o sistema já encerrou o servidor local por falta de memória); (b) preview do `hp-group-hub` não republicado por (a); (c) Bunny e Google: **pendentes de configuração e de teste real**; (d) teste manual do `.ics` num iPhone/Google Agenda.
+- **Migrations para produção:** 22 (038→047, 052→063); `list_migrations` final = **59**. O Dev tem **64** registros: a diferença de 5 são as 4 migrations 048–051 (só do Dev) e a 045, registrada no Dev em duas partes — detalhes em `docs/release-v1.md` §4.
+
+## Sessão anterior (2026-09-30, 3ª rodada) — Cancelamento pelo paciente, horário passado, agendas por permissão, Administrativo
+
+> Branch `release/v1`, Dev apenas — sem merge e sem produção/DNS. Detalhes em **`docs/release-v1.md` §10.1**.
+
+- **Implementado (código + migration `055`)**: paciente cancela pelo portal respeitando prazo e consumo do produto (avisado antes); agendar/remarcar no passado bloqueado no servidor (removida a exceção de `p_rescheduled_from`) e na Agenda; "Meu dia" com a própria agenda + seletor de agendas de outros profissionais só para gestor/administrador operacional (e gestor de unidade nas suas unidades); rótulo "ADM" → "Administrativo".
+- **Verificado no Dev (migrations 054 e 055 aplicadas)**: SQL `test:sql:release` **151/151** (S01–S04); aceite E2E `R01` 8/8, `R04` 4/4, `R05` 4/4; regressão E2E 01–09 + R02 + R03 + N10/N11 **45/45**; unit 25/25; typecheck, eslint e build ok. O token de gestão do Dev foi usado só em variável de ambiente por comando, sem gravar em arquivo — **revogar** em supabase.com/dashboard/account/tokens.
+- **Defeito real achado e corrigido**: a coluna *Sessão do pacote* da Agenda não atualizava após marcar falta.
+- **Preview (Netlify, site Dev oficial `hp-group-hub`)**: variáveis `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` do Dev configuradas no site (o plano gratuito não permite escopo por contexto, então valem para todos os contextos **deste** site Dev, onde `VITE_APP_ENV=preview` em todos; a salvaguarda de build recusa o banco de produção). Preview publicado como **rascunho** (sem `--prod`) em `https://release-v1--hp-group-hub.netlify.app`, commit `86f50f4`, `version.json`: `profile v1 · environment preview · backend Dev (fsvtz…)`. O site publicado do Dev e o de produção **não foram alterados**. O preview do PR #3 no site duplicado `leafy-cascaron-325147` **não foi usado** e segue sem backend.
+- **Migrations para produção**: agora 14 (038→047, 052, 053, 054, 055); `list_migrations` final = 51.
+
+## Sessão anterior (2026-09-30, continuação) — Confirmação de paciente/profissional, presença e consumo (release v1)
+
+> Branch `release/v1`, Dev apenas — sem merge, publicação em produção, DNS ou push. Detalhes e regras em **`docs/release-v1.md` §10**.
+
+- **Implementado** (migration `054`, telas e testes): confirmação antecipada **independente** do paciente (portal) e do fisioterapeuta ("Meu dia"), registro pela recepção do que o paciente confirmou por telefone, falta do profissional (`professional_no_show`, nunca consome e devolve sessão descontada por engano), e leitura de "sessão consumida" no portal e na Agenda. Confirmar não muda status, não consome e não prova presença; presença e consumo seguem separados. Permissões no servidor e auditoria do autor.
+- **Testado**: verificação interina pela API (38/39; a falha era do script), telas conferidas com dados reais, regressão E2E 33/33. **Pendentes por falta do token do Dev**: `S03` (SQL), `R04` e `R01` (E2E) — escritos e compilando, não executados.
+- **Migrations para produção**: agora 13 (038→047, 052, 053, **054**); `list_migrations` final = 50. Nada foi aplicado em produção.
+- **Observação aberta**: o gestor consegue remarcar um atendimento para um horário **passado** (`reschedule_appointment` dispensa a checagem de "horário no passado"); usado na verificação interina. Não alterado — decidir se deve ser restringido.
+
+## Sessão anterior (mesmo dia) (2026-09-30) — Mudança de prioridade: release v1 (primeira versão operacional)
+
+> Expansão de Contábil (já pronto), Marketing, Jurídico, RH e provisionamento white label **pausada**; nada foi apagado. Prioridade: operação real do
+> HP Group, com jornada de aceite completa, separação entrega × desenvolvimento e plano de publicação. **Nada foi publicado, nem em produção, DNS ou dados reais.**
+
+- **Separação**: `release/v1` (a partir de `93ac116`, sem Contábil) é a versão de entrega; `feature/lead-quizzes` segue para desenvolvimento e já recebeu a release de volta
+  (merge sem perder o Contábil). Documento de entrega completo: **`docs/release-v1.md`**; guia da equipe: **`docs/guia-operacao-v1.md`**.
+- **Jornada de aceite** (`e2e/release/R01`): lead pelo quiz → 1 pessoa + 1 oportunidade (repetir não duplica) → responsável automático e troca com histórico → tarefa e contato →
+  avaliação agendada, remarcada e realizada → “Converter em venda” → venda de pacote com contrato/parcelas/pacote → recebimento parcial (duplo clique e mesma chave não duplicam,
+  excedente recusado) → estorno parcial com comissão proporcional → sessões (comparecimento, falta, cancelamento tardio consomem; antecipado e da clínica não; sem consumo duplicado;
+  pacote esgotado não agenda) → dashboard reconciliado com os pagamentos → histórico. **8/8**.
+- **Bloqueios achados e corrigidos**: link “Converter em venda” para a tela errada; falta marcável antes do horário consumindo sessão (052); indicação de parceiro pelo quiz sem rastreio (053) —
+  e o `CREATE OR REPLACE` que zerou o GRANT de `anon` em `quiz_start` (pego pelo teste).
+- **Achados de ambiente (críticos)**: o site `hp-group-hub-producao` foi publicado com o **banco Dev** no bundle (build local leu `.env.local`); o site Dev `hp-group-hub` está **público**; produção não tem
+  Resend/hook/URLs de autenticação e não tem backup/PITR. Salvaguarda no build (`vite.config.ts`), contextos de deploy no `netlify.toml`, `version.json` e selo “AMBIENTE DE TESTE”.
+- **Permissões** (`R02`): menu, rota digitada e backend por papel (gestor, gestor de unidade, comercial, financeiro, fisioterapeuta, parceiro, paciente); decisão registrada: o Financeiro lê
+  as pessoas **da própria unidade** (identificar quem paga), sem tela de Pessoas. **Portais** (`R03`): paciente vê só o próprio; parceiro vê indicações só com 1º nome + etapa.
+- **Auth/Resend (Dev)**: Site URL/Redirect URLs do Dev corrigidos; 1 e-mail de recuperação ao destinatário autorizado (nível 1 verificado); função `diag-email-config` removida.
+- **Testes SQL legados**: `001` e `005` ganharam cópias independentes de volume (`supabase/tests/release`); `002`, `003`, `010`, `012` falham por fixtures próprias (e-mail/slug fixos, coluna ambígua no script)
+  e continuam sem correção (as jornadas equivalentes passam nos E2E).
+- Quirk de teste: o limitador do quiz (8 inícios/10 min por IP/jornada) é atingido por baterias seguidas — não é defeito do produto.
+
+## Sessão anterior (2026-09-29) — Novos apps do Hub: ADM (etapa 1 de 5) concluído
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+> Pedido: ampliar o Hub com 5 apps (ADM, Contábil, Marketing, Jurídico, RH), seguindo a navegação contextual do
+> CRM, executados em etapas com entrega funcional completa antes de avançar. Esta rodada cobre a etapa de
+> inspeção e a etapa 1 (ADM). Contábil, Marketing, Jurídico, RH e a validação conjunta final ainda não foram
+> construídos — ficam para as próximas rodadas, na mesma ordem pedida.
+
+**Inspeção prévia** (antes de qualquer código): conferido o schema de `people`/`person_kinds`/`person_contacts`,
+o modelo de papéis (`app_role`, sem papéis dedicados a contábil/jurídico/RH ainda), `corporate_accounts`
+(contas corporativas de bem-estar — propósito mais estreito que "empresa genérica") e a infraestrutura de
+dedup/mesclagem/importação já existente (`create_person`, `merge_preview`/`merge_people`,
+`import_people_check`/`import_people_commit`) para reutilizar em vez de duplicar.
+
+**ADM** (`/admin/adm`): consolida a área de Gestão existente numa planilha PF/PJ sobre o cadastro central —
+nunca uma base paralela. Sidebar exclusiva via um shell genérico novo (`ContextualAppShell`, também usado pelo
+CRM a partir de agora — os próximos apps reaproveitam o mesmo componente). PF = `people` (estendida com CEP/
+endereço/status cadastral/origem/responsável interno/unidades extras via `person_units`); PJ = tabela nova
+`legal_entities` (razão social, CNPJ, inscrições estadual/municipal, CNAE, regime tributário, endereço,
+representantes sempre vinculados a `people` existentes via `legal_entity_representatives`, documentos em bucket
+privado `legal-documents`). `corporate_accounts` não virou "empresa genérica" — ganhou um link opcional
+(`corporate_account_id`) para quando uma PJ do ADM também for uma conta corporativa.
+
+Backend: `private.is_valid_cpf`/`is_valid_cnpj` (dígito verificador — formato, não identidade);
+`adm_directory` (busca/filtro/ordenação/paginação no servidor, união PF+PJ, documento mascarado por padrão,
+completo só para manager/ops_admin); `adm_directory_indicators` (total/PF/PJ/novos/incompletos);
+`legal_entity_upsert` (valida CNPJ e duplicidade). Dois bugs reais encontrados e corrigidos durante os próprios
+testes: `can_adm(unit)` usava `has_unit_role(roles, null)`, que só bate com atribuição SEM unidade — um
+comercial ou gestor de unidade com papel POR unidade ficava bloqueado (mesma armadilha já documentada em
+`private.dash_units`/`crm_units`); e o filtro de busca por documento virava `%%` (batendo com qualquer
+documento não nulo) quando o termo buscado não tinha nenhum dígito, misturando resultados de PF e PJ sem
+relação com a busca.
+
+**Pendências explícitas desta etapa**: importação CSV de PJ (PF já reutiliza `import_people_check`/
+`import_people_commit` existentes; PJ não foi construído); seleção/reordenação de colunas e preferências de
+visualização por usuário (a tabela tem um conjunto fixo de colunas, sem customização); papéis dedicados de
+contábil/jurídico/RH/marketing (ainda não existem no `app_role` — entram junto com os apps correspondentes).
+
+**Testes**: verificação manual completa no navegador com sessão real de QA (busca, filtros, indicadores,
+criar/editar PF e PJ, vincular representante, máscara de documento por permissão, todos confirmados via banco
+depois). Suíte E2E completa revalidada, 32/32 (uma falha de concorrência de agenda, não relacionada, confirmada
+como flaky ao rodar isolada). `tsc`/`eslint`/`vite build` sem erros novos.
+
+## Sessão anterior (2026-09-24) — App HP CRM: dashboard, sidebar exclusiva, pipeline preservado
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+
+Substitui a entrada direta em Oportunidades por um app CRM próprio dentro do Hub. Clicar em "CRM" na sidebar
+geral abre `/admin/crm` (dashboard comercial) com **sidebar exclusiva** (`CrmShell`/`crmNav.ts`) — a sidebar
+geral do Hub nunca aparece junto; "Voltar ao Hub" e "Trocar de app" no cabeçalho trocam de contexto. Baseado
+numa inspeção funcional de um CRM de referência (relatório completo de 12 áreas obtido via agente de
+exploração antes de qualquer código — rotas, dashboard, leads vs. pipeline, contatos, listas, tarefas, metas,
+time/"view as", comunicação, relatórios, configurações, comissão), adaptado ao modelo de dados do HP — nunca
+copiou dados, credenciais, infraestrutura ou identidade visual da referência.
+
+**Backend novo:**
+- `crm_dashboard_metrics`/`crm_card_detail` (migration 042) — dashboard comercial com escopo próprio
+  (`private.crm_units`/`private.crm_effective_owner`): inclui o papel `sales` vendo os próprios negócios,
+  diferente de `dashboard_metrics` (só quem gerencia). 8 indicadores: novos leads (fluxo, por `created_at` —
+  propositalmente diferente de "na primeira etapa", que é a fila de Gestão de leads), total de negócios,
+  em aberto, valor em negociação, ganhos, conversão, sem retorno, comissão potencial (estimativa sobre negócios
+  abertos usando `commission_rules` já existente — nunca confundida com `commission_entries`, que só nasce de
+  pagamento real).
+- `crm_goal_progress`/`crm_team_snapshot` (migration 043, tabela `crm_goals` nova) — metas mensais por usuário,
+  progresso, ticket médio, negócios necessários, ritmo diário (R$/dia útil). O CRM de referência mede ritmo por
+  contagem de mensagens de WhatsApp — o HP não rastreia isso (ver Comunicação abaixo), então o ritmo aqui é
+  sobre negócios/valor reais, não uma métrica inventada.
+- `crm_lead_lists`/`crm_lead_list_members` (migration 044) — listas estáticas de pessoas (não filtro salvo),
+  nunca duplica o cadastro central.
+
+**Páginas novas** (`src/pages/admin/crm/`): Dashboard (8 cards clicáveis + gráficos + tarefas + atividades
+recentes), Gestão de leads (fila da primeira etapa — diferente do Pipeline), Contatos (lente comercial sobre
+Pessoas, sem duplicar cadastro), Listas, Pipeline (Kanban existente, movido de `/admin/crm` para
+`/admin/crm/oportunidades`, comportamento preservado), Tarefas, Minha meta/Ritmo do dia/Time, Relatórios
+(Análises: funil + motivos de perda; Desempenho comercial: por responsável). Conversas usa WhatsApp real
+(`wa.me` com mensagem pronta + registro automático de interação) — funcionalidade real, não um link decorativo.
+Mensagens agendadas e Disparo de mensagens mostram bloqueio explícito com o motivo real (exigem um provedor de
+envio automático — Evolution API/Chatwoot ou similar — que a organização não tem conectado hoje); nenhuma tela
+finge enviar mensagem. "Configurações do CRM" abre a mesma seção "Comercial e CRM" da central de Configurações
+já construída na sessão anterior (mesma implementação, mesma fonte de dados).
+
+**Testes novos:** `supabase/tests/022_crm_dashboard.sql` (5/5) — comercial só vê os próprios negócios mesmo
+tentando forçar o filtro de responsável; gestor de unidade vê o time inteiro e filtra por responsável
+específico. `supabase/tests/023_crm_goals_permissoes.sql` (3/3) — só quem gerencia cadastra meta; um comercial
+comum não cria a própria meta nem lê a meta de outra pessoa.
+
+**Regressão:** suíte E2E completa revalidada, 32/32 passando (um teste precisou de correção — a jornada
+Checkup verificava o Kanban em `/admin/crm`, endereço que virou o dashboard; corrigido para
+`/admin/crm/oportunidades`). `tsc`/`eslint`/`vite build` sem erros novos.
+
+**Pendências explícitas desta rodada:** matriz de equivalência formal (o relatório de 12 áreas foi produzido
+e usado para guiar a implementação, mas não foi entregue como documento separado); "Ritmo do dia" mede negócios
+reais em vez de contagem de conversas (dependência de log de mensagens ainda não existente); "view as"
+(visualizar como outro vendedor) não foi construído — a referência implementa isso só no frontend
+(`sessionStorage`, sem verificação real no servidor), incompatível com o padrão de segurança do HP; o filtro
+"Responsável" no dashboard e relatórios já é reforçado no banco (um comercial não vê dados de outra pessoa
+mesmo tentando forçar o parâmetro), então a ausência de "view as" não é uma lacuna de segurança, só de
+conveniência de gestor.
+
+## Sessão anterior (2026-09-23, continuação) — Lacunas do relatório do Mosaic: preview Netlify, cards restantes, Configurações reais, testes novos
+
+> Mesma branch `feature/lead-quizzes`, PR #2 em rascunho, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+> Esta seção fecha 4 lacunas apontadas no relatório da rodada anterior (a seção "Redesign Mosaic" abaixo).
+
+**1. Preview HTTPS da Netlify (Dev).** Deploy publicado em `https://hp-group-hub.netlify.app`, site `hp-group-hub`
+(id `2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`), conectado exclusivamente às env vars do Supabase Dev, com a
+proteção de SSO de equipe já existente preservada (`requiresSSOTeamLogin: all`, inalterada). O site de produção
+(`hp-group-hub-producao`, `hpfisioterapia.com.br`, sem SSO) não foi tocado.
+
+**2. Detalhamento dos demais cards (migration `20260924000041_dashboard_card_detail_expand.sql`).** Inventário
+completo dos ~40 `StatCard` do admin. `dashboard_card_detail(p_kind, ...)` ampliado de 6 para 23 tipos, todos
+reconciliando com a mesma tabela/filtro/escopo de unidade da métrica original (`dashboard_metrics`/
+`dashboard_alerts`/`mrr_report`). **Bug real corrigido**: nos 6 tipos originais (migration 039), `total_items`
+vinha de um `count(*)` sobre a subconsulta já limitada a 20 — subestimava o total real quando havia mais de 20
+registros. Corrigido em todos os ~23 tipos (agregado exato reaproveitado ou uma segunda consulta sem `LIMIT`).
+Cartões agora com detalhamento: Início (Recebimentos, Contas vencidas, Novos pacientes, Avaliações agendadas,
+Atendimentos realizados, Conversão comercial, Tarefas atrasadas, Alunos ativos no Academy, Ticket médio,
+Comparecimento, Pacientes com pacote ativo, Parceiros ativos, e os 6 alertas); Financeiro › Visão geral
+(+ Vendas confirmadas, Contas a receber/pagar 30 dias, Resultado de caixa); Financeiro › Recorrência (MRR do
+mês, Clientes recorrentes, Churn de clientes — mês de referência passou a ser o mês selecionado na tela, não
+mais fixo no mês corrente, pra respeitar o filtro de mês da própria tela).
+**Indisponíveis com motivo real documentado (não uma mensagem genérica de pendência):**
+- NPS (Início): sem detalhamento próprio — a pesquisa de satisfação já tem seu próprio painel com k-anonimato
+  em Pesquisas; abrir a lista de respondentes individuais aqui contradiria essa proteção de privacidade.
+- ARR, Receita média por cliente, Retenções bruta/líquida, Churn de receita (Recorrência): derivados da mesma
+  ponte de movimentação (`bridge`) de `mrr_report()`, que ainda não tem detalhamento por registro próprio —
+  precisaria de uma consulta nova sobre expansão/contração/cancelamento em R$, não construída nesta rodada.
+- Estornos, Resultado de caixa (DRE): usam `v_despesas`/`v_estornos` de `dre_report()`, que não é a mesma base
+  de `cash_result` do Financeiro › Visão geral (inclui despesas classificadas por categoria) — reaproveitar o
+  cartão existente mostraria um total incoerente; precisaria de uma branch própria, não construída nesta rodada.
+- Receita por paciente pagante, Receita por sessão, Taxa de recompra, CAC, LTV, Prazo de recuperação do CAC
+  (Relatórios): CAC/LTV/payback já eram honestamente `unavailable` desde antes (`efficiency_report()` — sem
+  fonte de custo de aquisição no sistema); os outros três são métricas de cohort sem uma lista de registros
+  única por trás — não construídas nesta rodada.
+- Contas corporativas / Pesquisas: os `StatCard` dessas telas são relatórios por conta/pesquisa individual
+  (já com k-anonimato próprio), não indicadores do painel geral — fora do escopo de `dashboard_card_detail`.
+
+**3. Configurações — reinvestigação das 6 categorias pendentes.** Duas tinham suporte real de backend não
+utilizado e ganharam telas funcionais nesta rodada:
+- **Operação**: `services` (nome/duração/preço) e `products` (nome/tipo/preço/sessões/validade) já tinham RLS
+  de escrita pra manager/ops_admin desde a migration 004, mas nenhuma tela em todo o app gravava nessas
+  tabelas — confirmado por busca no código. Tela nova em `SettingsHub.tsx` (`OperationSettings`).
+- **Comercial e CRM**: `pipelines`/`pipeline_stages`/`loss_reasons`, mesma situação (RLS pronta desde a
+  migration 004, zero tela de escrita). Tela nova (`CrmSettings`): criar funil, adicionar etapas, motivos de
+  perda.
+- **Academy**: achado um campo real sem UI (`courses.certificate_min_progress`, criador do certificado) —
+  exposto como campo editável na própria tela do curso (`AcademyAdmin.tsx`), já que é uma configuração por
+  curso, não uma configuração central. `SettingsHub` passou a linkar pra lá em vez de "pendente".
+- **Parceiros, Comunicação e integrações, Aparência**: reconfirmadas como pendências reais (não apenas
+  copiadas do relatório anterior) — não há coluna nem tabela de suporte no schema (ex.: nenhum campo de
+  percentual padrão de repasse em `partner_payouts`; `organizations` só tem `name`/`slug`, sem logo/remetente).
+  Continuam exibindo o motivo específico, nunca uma mensagem genérica.
+
+**4. Testes novos desta rodada** (nenhum reaproveita a suíte anterior como prova de cobertura nova):
+- `supabase/tests/020_dashboard_card_detail.sql` (novo, 9/9) — `total_items` sobe exatamente o esperado mesmo
+  acima de 20 (regressão do bug corrigido); lista trunca em 20; recebimentos reconciliam por delta; indicador
+  indisponível traz o motivo real; snapshot marcado corretamente; comercial (sales) bloqueado do painel inteiro;
+  gestor de unidade acessa cartão comum mas não `eventos_falhos` (exige manager); tipo desconhecido gera erro
+  explícito.
+- `supabase/tests/021_settings_operacao_crm.sql` (novo, 11/11) — manager cria/edita serviço, produto/pacote
+  (com `service_id` obrigatório pra pacote — constraint real do banco, corrigido na tela depois de o teste
+  pegar o erro), funil, etapa e motivo de perda; comercial (sales) e gestor de unidade bloqueados de escrever
+  em qualquer uma das 5 tabelas (`42501`), mas continuam lendo o catálogo normalmente.
+- Persistência de filtros: não existia (nem em Início, nem em Financeiro) — implementada nesta rodada
+  (`usePeriodFilterState` em `src/lib/period.ts`, período/unidade/comparação na URL) em vez de documentada como
+  pendência, já que era um ajuste pequeno e bem contido.
+- Regressão: `020`/`021` são adição pura (nenhum teste antigo foi alterado); `008_dashboard.sql` reexecutado
+  numa unidade nova isolada para confirmar que a expansão da migration 041 não quebrou `dashboard_metrics`/
+  `dashboard_alerts` (7/7 OK) — a suíte antiga passar sozinha não prova cobertura dos recursos novos, por isso
+  020/021 existem.
+
+## Sessão anterior (2026-09-23) — Redesign Mosaic: filtros, cards com detalhe, header financeiro, Configurações
+
+> Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge. Ordem de
+> implementação seguida à risca: filtros compactos → cards com detalhe → header financeiro → Configurações.
+
+**1. Filtros compactos** (`src/lib/PeriodFilter.tsx`, reescrito mantendo a mesma assinatura de props):
+pílula de período ("Mês atual") + seletor de unidade + botão "Filtros" com contador, todos abrindo o mesmo
+popover (drawer no celular) com atalhos de período, intervalo personalizado (só aplica em "Aplicar" — estado
+de rascunho local, não dispara consulta a cada tecla), comparação com período anterior e os filtros
+específicos da tela (`extra`). Período/unidade ficam ocultos quando a tela não tem essa dimensão (CRM).
+Aplicado a **Início, Financeiro (Visão geral/DRE/Relatórios), CRM e Captação de leads** — e de graça em
+Pesquisas/Contas corporativas, que já usavam o mesmo componente compartilhado.
+
+**2. Cards clicáveis com painel de detalhe**: nova função `dashboard_card_detail(p_kind,...)` (migration
+039) — reconcilia sempre com o mesmo escopo (tabelas/data/unidade/permissão) do cartão que abriu, via
+`private.dash_units()` (mesmo guard de `dashboard_metrics`/`dashboard_alerts`). Implementado para os 6
+cartões pedidos como exemplo: **Recebimentos, Contas vencidas, Novos pacientes, Avaliações agendadas,
+Conversão comercial, Tarefas atrasadas** (esta última via o alerta "Tarefas atrasadas"). Indisponível mostra
+"Indisponível: <motivo>" (nunca lista vazia como resultado); "Contas vencidas"/"Tarefas atrasadas" são
+sinalizadas como **situação atual** (não mudam com o período, e nunca calculam comparação — decidido
+estaticamente, sem esperar a resposta do servidor). `StatCard` ganhou `onClick` opcional (vira `<button>`,
+hover/foco visíveis, "Ver detalhes"). `CardDetailSheet` (`src/lib/CardDetailSheet.tsx`) é o painel lateral —
+Escape fecha e devolve o foco automaticamente (Radix). Aplicado ao **Início** (6 cartões de indicador + 2
+alertas) e ao **Financeiro › Visão geral** (Recebimentos, Vencidos). CRM e Captação de leads não ganharam
+esse painel nesta etapa — não têm uma função de detalhamento própria ainda (documentado como pendência).
+
+**3. Header financeiro sem "Mais"**: `AppShell` não separa mais os filhos de uma seção em "primeiros N" +
+dropdown — todos os 10 destinos do Financeiro aparecem direto, na ordem pedida (Visão geral, Vendas, Contas
+a pagar, Fluxo de caixa, Recorrência, DRE, Conciliação, Comissões e repasses, Relatórios, Configurações).
+"Contas a receber" não entrou como item próprio — não existe como destino/rota hoje (só como cartão de
+indicador dentro de Visão geral); criar uma tela dedicada ficou fora do escopo desta etapa. No celular a
+faixa rola horizontalmente sozinha (nunca a página — confirmado via `scrollWidth`/`clientWidth`), com
+degradê de continuidade e o item ativo sempre scrollado à vista; a partir de 768px, quebra para uma segunda
+linha organizada em vez de rolar. Estado ativo continua vindo só da URL (recarregar/voltar mantém o item).
+
+**4. Central de Configurações** (`/admin/configuracoes`, sidebar › Sistema, ícone de engrenagem): 10
+categorias. Só o que já tem suporte real no backend virou tela **gerenciável** agora:
+- **Organização e unidades**: lista/cria/edita unidades (nome, cidade, UF) — tabela `units` já existente, já
+  com trigger de auditoria (`private.audit_row`, migration 001). Dados institucionais gerais (contatos,
+  endereço, horários) não têm coluna no banco — documentado como pendência, não inventado.
+- **Captação**: números de WhatsApp por jornada/unidade (`quiz_whatsapp_numbers`, migration 038) — a mesma
+  tabela que `quiz_whatsapp_number()` já lê nos quizzes publicados; editar aqui muda o número real usado no
+  botão "Continuar pelo WhatsApp". Novo trigger de auditoria (migration 040).
+- **Equipe e acessos** e **Financeiro** linkam para as telas já existentes (`/admin/equipe`,
+  `/admin/financeiro/config`) — mesma implementação, mesma fonte de dados, nunca duplicada. O
+  "Configurações" do header financeiro já apontava para essa mesma rota — satisfeito automaticamente.
+- **Operação, Comercial e CRM, Academy, Parceiros, Comunicação e integrações, Aparência**: card
+  "Pendente" com o motivo real e específico de cada uma (ex.: segredos do Resend nunca são expostos ao
+  frontend por desenho; funis/etapas só existem via migration, sem tela de admin; logo é asset estático no
+  código) — nunca um switch ou formulário decorativo.
+
+**Testes**: suíte E2E completa **32/32**, sem regressão (inclui `07-finance-behaviors` — prova que
+`FinanceSettings` continua funcionando idêntico depois de virar destino também da central). `tsc`/`eslint`/
+`vite build` ok. Validado ao vivo no navegador: abrir cada painel de detalhe, abrir/aplicar/limpar os
+filtros no desktop e no celular (viewport emulado), navegar o header financeiro sem "Mais", editar uma
+unidade e um número de WhatsApp na central e confirmar o registro real em `audit_log` (valores antes/depois).
+
+**Preview para revisão**: `npm run dev -- --port 5181 --host 127.0.0.1` → `http://127.0.0.1:5181/admin`
+(login necessário — conta de gestor).
+
+**Pendências reais desta etapa** (nenhuma tela finge funcionar; tudo abaixo está documentado, não implementado):
+- CRM e Captação de leads sem painel de detalhamento de cartão (só Início e Financeiro › Visão geral).
+- "Contas a receber" sem rota própria no header financeiro.
+- Operação, Comercial/CRM, Academy, Parceiros, Comunicação/integrações e Aparência sem tela de configuração
+  centralizada — motivo específico documentado em cada card de `/admin/configuracoes`.
+
+---
+
+## Sessão anterior (2026-09-23) — Quizzes de captação (atendimento/parceria)
+
+> **Trabalho feito inteiramente no Dev e no preview**, por instrução explícita — produção
+> (`HP Group Core`, DNS, domínio oficial) **não foi tocada**. Branch `feature/lead-quizzes`
+> a partir da `main` (que já contém o cutover de produção executado em sessão anterior — ver
+> `docs/go-live-plan.md`/`docs/deployment.md`, ainda não refletido no restante deste arquivo).
+
+- **Duas jornadas de quiz** (`/avaliacao` — atendimento, `/seja-parceiro` — parceria), 10 perguntas
+  cada, texto e opções seguindo exatamente o que foi especificado. Nome/e-mail/WhatsApp juntos na
+  etapa 1 (com autorização de contato); cidade/UF na etapa 2; gate de consentimento específico de
+  dados de saúde antes das perguntas 5–7 do quiz de atendimento (a jornada de parceria não tem
+  pergunta de saúde); consentimento de marketing opcional e **desmarcado por padrão** no fim.
+- **Integração automática ao CRM**: reaproveita a mesma lógica de deduplicação de
+  `submit_public_form` (contato igual + nome semelhante reaproveita a pessoa; nome bem diferente
+  cria pessoa nova e sinaliza revisão via `crm_tasks` `dedupe_review` — nunca mescla sozinho).
+  Atendimento → funil "Pacientes"; parceria → funil "Parceiros" (ambos já semeados). "Quiz iniciado"
+  e "Quiz concluído — aguardando contato" registrados em `interactions`; tarefa `first_contact`
+  criada com `dedupe_key` (idempotente). Segmento **"Potencial Academy"**: toda captação de
+  parceria ganha a tag `Potencial Academy` (reaproveitando `tags`/`person_tags` já existentes) —
+  nunca matrícula, nunca acesso a curso, nunca uma segunda oportunidade.
+- **Schema novo** (migration `20260924000038_lead_quizzes.sql`, aplicada e testada só no Dev
+  `fsvtzowcwhvwtluwrhnb`): tabelas `quiz_leads` (sem GRANT direto a nenhum papel — acesso só pelas
+  funções abaixo, RLS habilitado como reforço) e `quiz_whatsapp_numbers` (seedada com os números já
+  reais em uso no site, `src/lib/contact.ts` — nunca inventados). Funções públicas (`anon`):
+  `quiz_start`, `quiz_save_progress`, `quiz_set_health_consent`, `quiz_complete`,
+  `quiz_log_whatsapp_click`, `quiz_whatsapp_number`. Funções administrativas (`authenticated`):
+  `list_quiz_leads`, `get_quiz_lead_detail` (mascara as 3 respostas de saúde para quem não tem papel
+  de gestão — `sales` nunca vê, `manager`/`ops_admin`/`unit_manager` veem), `quiz_lead_metrics`.
+- **Identificador da submissão = `id` (uuid aleatório)**: o navegador nunca informa
+  `person_id`/`opportunity_id` — só pode agir sobre a própria submissão. Idempotência por
+  `dedupe_key` (contato + jornada + dia): reenvio no mesmo dia retoma a mesma submissão, nunca
+  duplica. Validação de resposta é um allowlist rígido por jornada+chave
+  (`private.quiz_validate_answer`), igual ao padrão de `forms_validate`/`validate_blocks`.
+  Abandono/inatividade: **não há status "abandonado" gravado** — é calculado na leitura por
+  `quiz_lead_metrics` (>24h sem `last_activity_at` e status ≠ completed), documentado aqui como a
+  regra escolhida em vez de marcar abandono ao fechar a aba.
+- **WhatsApp obrigatório ao final**: mensagem gerada a partir das respostas, com prévia
+  editável, opção desmarcada por padrão para incluir dor/qualidade de vida (só atendimento) e
+  outra para incluir a faixa de investimento; "Copiar mensagem"; número vem de
+  `quiz_whatsapp_number()` (admin-configurável por jornada/unidade em `quiz_whatsapp_numbers`,
+  nunca inventado); clique registrado separadamente da conclusão (`whatsapp_clicked_at`).
+- **Admin "Gestão → Captação de leads"** (`/admin/captacao-leads`, mesmos papéis do CRM/Pessoas):
+  busca/filtros (jornada, status, revisão)/paginação, detalhe da submissão, indicadores reais
+  (capturados por jornada, taxa de conclusão, aguardando contato, tempo até 1º contato, conversão
+  em avaliação agendada/parceiro aprovado, segmento Academy, interesse por tema, origem/UF, cliques
+  no WhatsApp) com período explícito — nunca confunde clique com envio real.
+- **CTAs**: "Quero cuidar da minha dor" (home, bloco logo após o método + rodapé) e "Quero ser
+  fisioterapeuta parceiro" (`/trabalhe-conosco`, destacado + rodapé), componentes reutilizáveis
+  (`QuizCta`/`QuizFloatButton`), botão fixo discreto só no mobile, chamadas específicas existentes
+  preservadas.
+- **Testes**: `supabase/tests/019_lead_quizzes.sql` (21/21, transação sempre desfeita) + E2E novo
+  `e2e/08-lead-quizzes.spec.ts` (3/3 — as duas jornadas completas com WhatsApp interceptado via
+  `route.fulfill` nunca chegando ao servidor real, e reenvio same-day sem duplicar) — suíte E2E
+  completa **30/30**, sem regressão. `tsc`/`eslint`/`vite build` ok. Dados sintéticos de QA
+  removidos do Dev ao final de cada rodada de teste.
+- PR **#2 aberto em rascunho**, branch `feature/lead-quizzes`, sem merge na `main`.
+
+## Sessão seguinte (2026-09-23) — Destino do CTA no editor de páginas (finaliza a pendência acima)
+
+> Mesma branch `feature/lead-quizzes`, mesmo escopo Dev/preview — sem DNS, produção ou merge.
+
+- **Bloco `cta` do editor** (`src/features/pages/blocks.ts`/`BlockEditor.tsx`) ganhou o campo
+  **"Destino do botão"**: *Avaliação de paciente* (`/avaliacao`), *Parceria profissional*
+  (`/seja-parceiro`) ou *Link personalizado* (comportamento anterior, inalterado). O texto do botão
+  (`label`) continua independente do destino. Blocos já existentes **não têm a chave `target`** —
+  tratados como `custom` automaticamente (`ctaTargetOf()`), então nenhum CTA/página antiga muda de
+  destino sozinha; testado publicando de propósito um bloco sem `target` e confirmando que o link
+  personalizado antigo continua intacto (`e2e/09-cta-block-quiz-target.spec.ts`, 2º teste).
+- **Mesma função resolve preview e publicada**: `resolveCtaHref()` (`blocks.ts`) é chamada pelo
+  `PageRenderer`/`BlockView` tanto na pré-visualização do editor quanto na página `/:slug` real —
+  nunca podem divergir. Link para link personalizado continua validado por `safeUrl()` (mesmos
+  protocolos seguros de sempre); link para jornada de quiz é sempre a rota interna confiável, sem
+  validação de URL externa (não é entrada do usuário).
+- **Origem registrada + campanha preservada, sem PII na URL**: `resolveCtaHref()` monta
+  `/avaliacao?from=/<slug-da-página>&utm_*` (só as 5 chaves `utm_` já usadas em `submit_public_form`
+  — nunca um parâmetro arbitrário, nunca dado pessoal). `QuizRunner` lê `from` e usa como
+  `origin_path`/`page_slug` no `quiz_start` (antes disto, esses campos só continham a própria rota
+  do quiz, "/avaliacao"/"/seja-parceiro" — agora registram de fato a landing page de origem). Os
+  CTAs fixos (`QuizCta`/`QuizFloatButton` — home, rodapé, `/trabalhe-conosco`) foram atualizados do
+  mesmo jeito, por consistência.
+- **Persistência**: como o destino é só mais uma chave dentro do JSON do bloco (`draft_content`/
+  `published_content`), salvar rascunho, reabrir, criar versão e publicar já funcionam de graça pelo
+  mecanismo existente (`page_save_draft`/`page_publish`/`add_version`) — nenhuma migration nova foi
+  necessária (`validate_blocks` já valida só o `type`, não os campos internos de cada bloco).
+- **Validado ao vivo no Dev** (não só em teste automatizado): criada e publicada uma landing page
+  com CTA → `/avaliacao` (clicado, quiz concluído, `origin_path`/`page_slug` corretos, oportunidade
+  no funil Pacientes) e outra com CTA → `/seja-parceiro` (mesma checagem, funil Parceiros); uma
+  terceira página com um bloco `cta` deliberadamente **sem** `target` (simulando dado legado)
+  confirmada apontando para o link personalizado original, sem alteração. As 3 páginas de teste e os
+  cadastros/oportunidades sintéticos foram removidos do Dev ao final.
+- **Testes**: `e2e/09-cta-block-quiz-target.spec.ts` (2/2) + suíte completa **32/32** (o
+  `04-agenda-concurrency` falhou uma vez em lote, como já documentado — passou isolado, flake de
+  timing conhecido, não é regressão desta mudança). `tsc`/`eslint`/`vite build` ok.
+- **Preview para revisão**: `npm run dev -- --port 5181 --host 127.0.0.1` → `http://127.0.0.1:5181/`
+  (editor em `/admin/paginas`, quizzes em `/avaliacao` e `/seja-parceiro`).
+
+---
+
 Atualizado: 2026-09-22 (sessão 7) · Branch `feature/hp-group-hub` · [PR #1](https://github.com/Alexandrepavao/hugo-pavao-fisio-home/pull/1) em rascunho (sem merge na `main`)
 
 > Todo o trabalho abaixo foi implementado e validado no ambiente **Dev** (banco + servidor local apontando para o Supabase Dev) e por **27 testes E2E automatizados** (Playwright, suíte anterior preservada) + **3 arquivos de teste SQL novos** (016–018, 32/32 asserções). O deploy publicado na Netlify **ainda não foi validado ao vivo** — segue atrás da proteção de equipe (bloqueio externo inalterado). Produção (`HP Group Core`) segue vazia e não foi tocada.

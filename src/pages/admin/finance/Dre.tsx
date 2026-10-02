@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { brl } from "@/lib/format";
 import { PageHead, State, StatCard, Table, Td } from "@/lib/ui";
 import { PeriodFilter } from "./PeriodFilter";
+import LineBreakdown from "./LineBreakdown";
+import { useLineFilter } from "./lineFilter";
 import { mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./shared";
 
 interface Dre {
@@ -68,12 +70,22 @@ const FinanceDre = () => {
     return data as unknown as { id: string; description: string; amount_cents: number; paid_at: string; status: string; category: { name: string; dre_classification: string | null } | null }[];
   } });
 
+  const [line, setLine] = useLineFilter();
+
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Rentabilidade e DRE" hint="Receita de caixa ≠ receita reconhecida. Quando faltar classificação, o lançamento aparece separado como 'sem classificação' — nunca vira despesa operacional por padrão, e o total consolidado não é travado por isso." />
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <PageHead eyebrow="Financeiro" title="Rentabilidade e DRE" hint="Receita de caixa ≠ receita reconhecida. Quando faltar classificação, o lançamento aparece separado como 'sem classificação' — nunca vira despesa operacional por padrão, e o total consolidado não é travado por isso."
+        actions={
+          <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+            onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
+            onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); setLine("geral"); }} line={line} onLine={setLine} />
+        } />
+      <section className="mb-8" aria-label="DRE por linha de negócio">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div><h2 className="text-xl">DRE por linha de negócio</h2><p className="text-xs text-muted-foreground">HP Fisioterapia, HP Academy, compartilhado/não alocado e não classificado; a DRE consolidada logo abaixo não muda.</p></div>
+        </div>
+        <LineBreakdown mode="dre" fromIso={`${from}T00:00:00.000Z`} toIso={toExclusive(to)} unit={unit} line={line} />
+      </section>
       <State loading={dre.isLoading} error={dre.error} />
       {dre.data && (<>
         {dre.data.cobertura_classificacao_pct.available && (

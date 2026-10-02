@@ -8,4 +8,4 @@ export const REC_ST: Record<string, string> = { open: "Em aberto", partial: "Par
 // Utilitários de período/unidade/métrica: uso geral (não é particularidade do Financeiro) — vivem em @/lib/period.
 // Reexportados aqui para não quebrar os imports existentes das telas de Financeiro.
 export type { Metric, RangePreset } from "@/lib/period";
-export { mfmt, useUnits, iso, monthStart, RANGE_PRESETS, RANGE_LABEL, presetRange, axisBrl, toExclusive, fromInclusive } from "@/lib/period";
+export { mfmt, useUnits, iso, monthStart, RANGE_PRESETS, RANGE_LABEL, presetRange, axisBrl, toExclusive, fromInclusive, usePeriodFilterState } from "@/lib/period";

@@ -33,7 +33,7 @@ test.describe.serial("Financeiro — comportamentos", () => {
   test("configurações: cria categoria com classificação DRE e conta financeira pela interface", async ({ page }) => {
     const m = await signIn(MANAGER); await useSession(page.context(), m);
     await page.goto("/admin/financeiro/config");
-    await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Configurações", exact: true })).toBeVisible();
     await page.getByLabel("Nome da categoria").fill(`Custo E2E ${runId}`);
     await page.locator("#fc-class").selectOption("custo_direto");
     await page.getByRole("button", { name: "Criar categoria" }).click();
@@ -99,6 +99,9 @@ test.describe.serial("Financeiro — comportamentos", () => {
     await useSession(page.context(), m);
     await page.goto("/admin/financeiro/dre");
     await expect(page.getByRole("heading", { name: "Rentabilidade e DRE" })).toBeVisible();
+    // diagnóstico: espera a tabela de categorias OU o alerta de erro e só então confere — uma recorrência mostra se a DRE falhou ao carregar ou veio sem a linha
+    await expect(page.getByRole("heading", { name: "Despesas por categoria" }).or(page.getByRole("alert"))).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("alert"), "a DRE não pode ter carregado com erro").toHaveCount(0);
     await expect(page.getByRole("cell", { name: `Custo E2E ${runId}` }).first()).toBeVisible();
     const catRow = page.locator("tr", { hasText: `Custo E2E ${runId}` }).first();
     await expect(catRow).toContainText("Custo direto");
@@ -151,17 +154,19 @@ test.describe.serial("Financeiro — comportamentos", () => {
 
     await useSession(page.context(), m);
     await page.goto("/admin/financeiro/conciliacao");
-    await page.getByLabel("Conta bancária").selectOption({ label: `Conta E2E ${runId}` });
+    await page.locator("#rec-acc").selectOption({ label: `Conta E2E ${runId}` });
     await page.setInputFiles("#rec-file", csvPath);
     await expect(page.getByText("1 linha(s) importada(s).", { exact: false })).toBeVisible();
     await expect(page.getByText(desc)).toBeVisible();
 
     const line = page.locator(".hp-card", { hasText: desc }).first();
     await line.getByRole("button", { name: "Conciliar" }).click();
-    await expect(line.getByText("R$ 150,00")).toBeVisible();                           // sugestão aparece, mas nada foi conciliado ainda
+    // outras execuções podem ter deixado recebimentos de R$ 150,00 não conciliados (Dev compartilhado): a sugestão conferida e confirmada é a da PRÓPRIA pessoa desta execução
+    const mine = line.getByRole("listitem").filter({ hasText: `Pessoa Financeiro E2E ${runId}` });
+    await expect(mine.getByText("R$ 150,00")).toBeVisible();                           // sugestão aparece, mas nada foi conciliado ainda
     const beforeConfirm = await g.get(`bank_statement_lines?select=id,status&description=eq.${encodeURIComponent(desc)}`);
     expect(beforeConfirm.body[0].status).toBe("unmatched");
-    await line.getByRole("button", { name: "Confirmar" }).first().click();
+    await mine.getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText("Conciliado.")).toBeVisible();
     const afterConfirm = await g.get(`bank_statement_lines?select=id,status&description=eq.${encodeURIComponent(desc)}`);
     expect(afterConfirm.body[0].status).toBe("matched");
