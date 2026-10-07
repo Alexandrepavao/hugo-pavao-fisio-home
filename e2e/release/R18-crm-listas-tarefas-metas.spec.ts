@@ -33,15 +33,15 @@ test.describe.serial("@release CRM: listas, oportunidades, tarefas e metas", () 
 
   test("Listas: criar, abrir, adicionar pessoa pelo cadastro central (sem copiar dados), remover e excluir", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
-    await page.goto("/admin/crm/listas"); await page.locator("#lst-name").fill(listName); await page.getByRole("button", { name: "Criar lista" }).click();
+    await page.goto("/admin/crm/listas"); await page.locator("#lst-name").fill(listName); await page.locator("#lst-kind").selectOption("patients"); await page.getByRole("button", { name: "Criar lista" }).click();
     await expect(page.getByText("Lista criada.")).toBeVisible({ timeout: 20_000 });
-    const row = page.getByRole("row").filter({ hasText: listName }); await expect(row.getByRole("cell").nth(1)).toHaveText("0");
+    const row = page.getByRole("row").filter({ hasText: listName }); await expect(row.getByRole("cell").nth(1)).toContainText("Paciente"); await expect(row.getByRole("cell").nth(2)).toHaveText("0 pessoas");
     await row.getByRole("button", { name: "Abrir" }).click(); await page.locator("#lst-search").fill(person);
     await page.getByRole("button", { name: person, exact: true }).click();
-    await expect(page.getByRole("row").filter({ hasText: listName }).getByRole("cell").nth(1)).toHaveText("1", { timeout: 20_000 });
+    await expect(page.getByRole("row").filter({ hasText: listName }).getByRole("cell").nth(2)).toHaveText("1 pessoa", { timeout: 20_000 });
     const m = (await devSql(`select count(*)::int n, (select count(*)::int from public.people where full_name = '${person}') people from public.crm_lead_list_members m join public.crm_lead_lists l on l.id = m.list_id where l.name = '${listName}' and m.person_id = '${personId}'`)) as { n: number; people: number }[];
     expect(m[0]).toEqual({ n: 1, people: 1 });                                                                    // a lista só referencia a pessoa: não duplicou o cadastro
-    await page.getByRole("button", { name: /Remover/ }).first().click(); await expect(page.getByRole("row").filter({ hasText: listName }).getByRole("cell").nth(1)).toHaveText("0", { timeout: 20_000 });
+    await page.getByRole("button", { name: /Remover/ }).first().click(); await expect(page.getByRole("row").filter({ hasText: listName }).getByRole("cell").nth(2)).toHaveText("0 pessoas", { timeout: 20_000 });
     await page.getByRole("row").filter({ hasText: listName }).getByRole("button", { name: "Excluir" }).click();
     await expect(page.getByText(/Lista removida/)).toBeVisible({ timeout: 20_000 });
     expect(((await devSql(`select count(*)::int n from public.people where full_name = '${person}'`)) as { n: number }[])[0].n).toBe(1);   // a pessoa continua cadastrada

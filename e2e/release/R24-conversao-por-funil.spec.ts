@@ -5,6 +5,7 @@ import { api, collectErrors, expectNoFatal, loginAs, QA, signIn } from "./helper
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
 const pct = (v: number | null) => (v == null ? "—" : `${v.toString().replace(".", ",")}%`);
+const LABEL: Record<string, string> = { patients: "Paciente", partners: "Fisioterapeuta · Equipe", education: "Fisioterapeuta · HP Academy", companies: "Empresa · B2B" };
 
 test.describe("@release CRM: conversão por funil", () => {
   test.setTimeout(120_000);
@@ -12,7 +13,8 @@ test.describe("@release CRM: conversão por funil", () => {
     await loginAs(context, QA.manager); const errors = collectErrors(page); const mgr = api(await signIn(QA.manager));
     const calls: { pipe: string; from: string; to: string }[] = [];
     page.on("request", (r) => { if (r.url().includes("/rpc/crm_analytics") && r.method() === "POST") { const b = JSON.parse(r.postData() ?? "{}"); if (b.p_pipeline && !b.p_owner && !b.p_unit) calls.push({ pipe: b.p_pipeline, from: b.p_from, to: b.p_to }); } });
-    const pipes = (await mgr.get("pipelines?select=id,name&active=eq.true&order=name")).body as { id: string; name: string }[];
+    const raw = (await mgr.get("pipelines?select=id,name,kind&active=eq.true")).body as { id: string; name: string; kind: string }[];
+    const order = ["patients", "partners", "education", "companies"]; const pipes = raw.map((p) => ({ id: p.id, name: LABEL[p.kind] ?? p.name })).sort((x, y) => { const kx = raw.find((p) => p.id === x.id)!.kind; const ky = raw.find((p) => p.id === y.id)!.kind; return (order.indexOf(kx) < 0 ? 9 : order.indexOf(kx)) - (order.indexOf(ky) < 0 ? 9 : order.indexOf(ky)); });
     expect(pipes.length).toBeGreaterThan(1);
 
     await page.goto("/admin/crm/relatorios");

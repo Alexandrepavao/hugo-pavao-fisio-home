@@ -53,7 +53,7 @@ test.describe.serial("@release Importação CSV do CRM", () => {
     const u = (await devSql(`select id, name, org_id from public.units where slug = 'sao-paulo'`)) as { id: string; name: string; org_id: string }[]; unitId = u[0].id; unitName = u[0].name; orgId = u[0].org_id;
     pipeId = ((await devSql(`select id from public.pipelines where active and kind = 'patients' order by created_at limit 1`)) as { id: string }[])[0].id;
     expect(((await devSql(`select count(*)::int n from public.pipeline_stages where pipeline_id = '${pipeId}' and kind = 'open'`)) as { n: number }[])[0].n).toBeGreaterThan(0);
-    listId = ((await devSql(`insert into public.crm_lead_lists (org_id, name) values ('${orgId}', '${listName}') returning id`)) as { id: string }[])[0].id;
+    listId = ((await devSql(`insert into public.crm_lead_lists (org_id, name, kind) values ('${orgId}', '${listName}', 'patients') returning id`)) as { id: string }[])[0].id;
     mariaId = ((await devSql(`insert into public.people (org_id, unit_id, full_name) values ('${orgId}', '${unitId}', '${nMaria}') returning id`)) as { id: string }[])[0].id;
     await devSql(`insert into public.person_kinds (person_id, kind) values ('${mariaId}', 'lead')`);
     await devSql(`insert into public.person_contacts (org_id, person_id, type, value, is_primary) values ('${orgId}', '${mariaId}', 'email', '${mail("maria")}', true), ('${orgId}', '${mariaId}', 'phone', '(11) 98888-1111', true)`);

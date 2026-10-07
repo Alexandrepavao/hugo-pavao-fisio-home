@@ -107,6 +107,7 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 37 | `20260930000080_partner_payout_finance_link.sql` | Repasse a PARCEIRO (decisão expressa do Financeiro): autorizar cria a conta a pagar (compromisso), pagar fecha a mesma conta (caixa/DRE), cancelar a cancela; `partner_payouts.payable_id`; repetir o clique não duplica — `docs/integracao-ponta-a-ponta.md` |
 | 38 | `20260930000081_quiz_programa_clinica.sql` | Quiz de parceria: perguntas finais sobre interesse (e prazo) em um futuro programa de ensino para ter a própria clínica; `quiz_validate_answer` e `quiz_complete` (+ GRANT) — `docs/captacao-site-quiz.md` |
 | 39 | `20260930000082_quiz_step_reached_limit.sql` | `quiz_leads.step_reached` de 1..10 para 1..20 (o quiz de parceria passou a ter 8 perguntas) — `docs/captacao-site-quiz.md` |
+| 40 | `20260930000083_crm_lead_types_lists_companies.sql` | CRM com tipos de lead: lista com tipo (`crm_lead_lists.kind`), empresas em listas (`crm_lead_list_companies`), empresa na oportunidade (`opportunities.legal_entity_id`), `crm_create_opportunity` com empresa, `crm_company_create`/`crm_company_link_contact`, `crm_pipeline_overview` e oportunidade da HP Academy a partir do quiz — `docs/crm-tipos-de-lead.md` |
 
 **Contagem de migrations — Dev × produção (conferida em 2026-09-30 contra `supabase_migrations.schema_migrations` do Dev e contra os arquivos do repositório):**
 | | Registros | Composição |

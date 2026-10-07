@@ -44,7 +44,17 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-06, 17ª rodada) — botões do site → quiz, quiz novo e perguntas do programa de clínica própria
+## Sessão mais recente (2026-10-06, 18ª rodada) — CRM com tipos de lead, listas com tipo, empresas B2B e várias oportunidades por lead
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Regras, telas e limites: [`docs/crm-tipos-de-lead.md`](crm-tipos-de-lead.md). Migration **083** aplicada no Dev.
+- **Quatro tipos de lead** (Paciente · Fisioterapeuta-Equipe · Fisioterapeuta-HP Academy · Empresa-B2B) = tipo do funil, visíveis no Pipeline (cartões com contagem), no Painel comercial, na Gestão de leads (coluna e filtro), nas Listas, na importação e na ficha.
+- **Um lead, várias oportunidades:** a ficha lista as oportunidades da pessoa em todos os funis, cada uma com a própria etapa (avançar uma não move a outra), “Abrir” a de outro funil e “Adicionar a outro funil”. O quiz de parceria com interesse no programa de clínica própria também abre a oportunidade da HP Academy.
+- **Listas com tipo obrigatório** (filtro, selo, classificação das antigas); a importação CSV segue o tipo da lista (funil travado); lista de empresas guarda empresas.
+- **Empresas (B2B):** menu Cadastro › Empresas, planilha administrativa com abas Pessoas físicas × Empresas (PJ), “Nova empresa” sem duplicar (CNPJ/nome/contato) e oportunidade B2B ligada à empresa (uma aberta por empresa e funil).
+- **Testes:** SQL `S22` (39/39, direto no Dev), E2E `R27` (6/6), `R25` (5/5, com a oportunidade da Academy), `R24`, `R07`, `R02`, `R12`, `R13` (menu) e o filtro da planilha (`R14`) verdes. `R17`/`R18` ajustados e **não reexecutados** (token de gestão do Dev sem leitura de banco).
+- **Limpeza de leads (06/10):** os leads só-lead foram apagados do Dev (164 pessoas/oportunidades, 121 leads de quiz, 40 captações) com filtro que preservou quem já tem venda, atendimento, pacote, matrícula, login, profissional ou parceria.
+
+## Sessão anterior (2026-10-06, 17ª rodada) — botões do site → quiz, quiz novo e perguntas do programa de clínica própria
 
 > `release/v1`, PR #3 em rascunho; Dev apenas. Detalhes, regras e limites: [`docs/captacao-site-quiz.md`](captacao-site-quiz.md).
 - **Botões do site sem WhatsApp direto:** cabeçalho, Hero, Cobertura, botão flutuante, rodapé, “Quero fazer parte” (Trabalhe Conosco e WorkWithUs) agora levam ao quiz da jornada (paciente → `/avaliacao`; fisioterapeuta → `/seja-parceiro`), cuja 1ª etapa captura **nome completo**, e-mail e WhatsApp; o WhatsApp só aparece no fim.

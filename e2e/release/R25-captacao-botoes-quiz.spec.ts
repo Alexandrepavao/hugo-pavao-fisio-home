@@ -93,6 +93,9 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     const full = await g.rpc("get_quiz_lead_detail", { p_id: list.body[0].id }); const a = full.body.answers;
     expect(a.interesse_programa_clinica).toMatchObject({ value: "quero_entender", label: "Quero entender melhor como funcionaria" });
     expect(a.prazo_programa_clinica).toMatchObject({ value: "tres_seis_meses", label: "Entre 3 e 6 meses" });
+    // o mesmo lead ganha DUAS oportunidades: parceria (equipe) e HP Academy (interesse no programa), cada uma no seu funil
+    const opps = (await g.get(`opportunities?select=source,pipeline:pipelines(kind)&person_id=eq.${list.body[0].person_id}&status=eq.open`)).body as { source: string; pipeline: { kind: string } }[];
+    expect(opps.map((o) => `${o.pipeline.kind}|${o.source}`).sort()).toEqual(["education|quiz:academy", "partners|quiz:parceria"]);
   });
 
   test("fisioterapeuta sem interesse no programa: a pergunta de prazo é dispensada e o total de etapas diminui", async ({ browser }) => {
@@ -111,6 +114,10 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     await p.getByRole("button", { name: "Concluir" }).click(); await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible({ timeout: 30_000 });
     await expect(p.getByLabel("Prévia da mensagem (você pode editar)")).not.toHaveValue(/Quando gostaria de começar/);
     expect(errors, errors.join("\n")).toEqual([]); await ctx.close();
+    // sem interesse no programa: só a oportunidade de parceria (equipe), nenhuma na HP Academy
+    const g = api(await signIn(QA.manager)); const lead = await g.rpc("list_quiz_leads", { p_journey: "parceria", p_search: `fisio.sem.${runId.toLowerCase()}`, p_limit: 5, p_offset: 0 }); expect(lead.body).toHaveLength(1);
+    const opps = (await g.get(`opportunities?select=source,pipeline:pipelines(kind)&person_id=eq.${lead.body[0].person_id}&status=eq.open`)).body as { source: string; pipeline: { kind: string } }[];
+    expect(opps.map((o) => `${o.pipeline.kind}|${o.source}`)).toEqual(["partners|quiz:parceria"]);
   });
 
   test("paciente no celular: o quiz tem a interface nova (Voltar, progresso, escala 0–10 e opções em cartões), cabe na tela e conclui", async ({ browser }) => {

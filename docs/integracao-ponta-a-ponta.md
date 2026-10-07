@@ -13,6 +13,7 @@
 | Regra | Contato já cadastrado com **mesmo contato e nome semelhante** reaproveita a pessoa; reenvio no mesmo dia não duplica pessoa/oportunidade/captação; homônimo com outro contato OU mesmo contato com nome muito diferente **nunca são mesclados automaticamente** — vira pessoa separada marcada para revisão (`dedupe_review`); envios simultâneos (corrida) do mesmo contato novo geram UMA pessoa/oportunidade/captação |
 | Evidência | SQL `S20_idempotencia_venda_oportunidade.sql` (oportunidade duplicada recusada) · E2E `R21-captacao-crm-venda.spec.ts` (8 testes: contato existente, reenvio, homônimo, contato compartilhado, 3 envios simultâneos, indicador de captação reconciliando, permissões) |
 | Estado | ✅ **Validada ponta a ponta** — revalidada em 2026-10-02 |
+| Tipos de lead (06/10) | o lead entra no funil do tipo certo (Paciente, Fisioterapeuta·Equipe, Fisioterapeuta·HP Academy, Empresa·B2B); a mesma pessoa pode ter uma oportunidade em cada funil — `docs/crm-tipos-de-lead.md`, E2E `R27`/`R25`, SQL `S22` |
 | Entrada pelos botões do site (06/10) | nenhum botão abre o WhatsApp direto: todos levam ao quiz (nome completo, e-mail e WhatsApp na 1ª etapa) — `docs/captacao-site-quiz.md`, E2E `R25` |
 
 ## 2. CRM → Conversas → tarefas → venda
