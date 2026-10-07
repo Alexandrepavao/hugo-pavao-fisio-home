@@ -49,9 +49,16 @@ const Reports = () => {
   } });
   const d = a.data;
   const pipeName = pipes.data?.find((p) => p.id === (pipeline || d?.pipeline_id))?.name ?? "";
-  const open = (kind: "created" | "won" | "lost" | "open" | "stalled", dim?: "owner" | "source" | "reason" | "stage", value?: string) => setSheet({
-    rpc: "crm_indicator_detail", scope: `${pipeName}${kind === "open" || kind === "stalled" ? " · situação de hoje" : ` · ${from} a ${to}`}`,
-    params: { p_kind: kind, p_dim: dim ?? null, p_value: value ?? null, p_from: range.from, p_to: range.to, p_unit: unit || null, p_owner: owner || null, p_pipeline: pipeline || d?.pipeline_id || null, p_stalled_days: stalledDays } });
+  const pipeList = (pipes.data ?? []) as { id: string; name: string; kind: string }[];
+  // um funil por chamada (mesma função e mesma fórmula do funil escolhido no filtro), para comparar os funis lado a lado
+  const byPipe = useQuery({ enabled: tab === "analises" && pipeList.length > 0, queryKey: ["crm-analytics-by-pipe", range.from, range.to, unit, owner, stalledDays, pipeList.map((p) => p.id).join(",")], queryFn: async () =>
+    Promise.all(pipeList.map(async (p) => {
+      const { data, error } = await supabase.rpc("crm_analytics", { p_from: range.from, p_to: range.to, p_unit: unit || null, p_owner: owner || null, p_pipeline: p.id, p_stalled_days: stalledDays });
+      if (error) throw error; return { pipe: p, a: data as Analytics };
+    })) });
+  const open = (kind: "created" | "won" | "lost" | "open" | "stalled", dim?: "owner" | "source" | "reason" | "stage", value?: string, pipe?: { id: string; name: string }) => setSheet({
+    rpc: "crm_indicator_detail", scope: `${pipe?.name ?? pipeName}${kind === "open" || kind === "stalled" ? " · situação de hoje" : ` · ${from} a ${to}`}`,
+    params: { p_kind: kind, p_dim: dim ?? null, p_value: value ?? null, p_from: range.from, p_to: range.to, p_unit: unit || null, p_owner: owner || null, p_pipeline: pipe?.id ?? (pipeline || d?.pipeline_id || null), p_stalled_days: stalledDays } });
   const clickBtn = (n: number, onClick: () => void) => n > 0 ? <button className="text-accent font-medium hover:underline tabular" onClick={onClick}>{n.toLocaleString("pt-BR")}</button> : <span className="tabular text-muted-foreground">0</span>;
 
   const filterExtra = (
@@ -83,6 +90,22 @@ const Reports = () => {
               <StatCard level="hero" icon={Percent} period="Período" label="Conversão geral" value={num(d.overall_conversion, pct)} basis={d.overall_conversion.basis} unavailable={!d.overall_conversion.available} onClick={() => open("created")} />
             </KpiGrid>
           </LevelSection>
+          <section aria-label="Conversão por funil" data-testid="conversao-por-funil">
+            <h2 className="text-[1.0625rem] font-bold mb-1">Conversão por funil</h2>
+            <p className="text-xs text-muted-foreground mb-2">Todos os funis ativos lado a lado, com o mesmo período, unidade e responsável do filtro. <b>Conversão geral</b> = ganhas da coorte ÷ criadas no período (oportunidades ainda abertas contam no denominador, então a taxa cresce conforme elas fecham). <b>Taxa de ganho</b> = ganhas ÷ (ganhas + perdidas) fechadas no período. “—” = sem base para calcular (nada é inventado). Clique num número para abrir as oportunidades.</p>
+            <State loading={byPipe.isLoading} error={byPipe.error} />
+            {byPipe.data && (byPipe.data.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum funil ativo.</p> : (
+              <Table head={["Funil", "Conversão geral", "Taxa de ganho", "Criadas", "Ganhas", "Perdidas", "Em aberto"]} right={[1, 2, 3, 4, 5, 6]}>
+                {byPipe.data.map(({ pipe, a: x }) => (
+                  <tr key={pipe.id} data-testid="conv-funil-row"><Td>{pipe.name}</Td>
+                    <Td num><b>{num(x.overall_conversion, pct)}</b></Td><Td num><b>{num(x.win_rate_closed, pct)}</b></Td>
+                    <Td num>{clickBtn(x.cohort.value ?? 0, () => open("created", undefined, undefined, pipe))}</Td>
+                    <Td num>{clickBtn(x.won_in_period.value ?? 0, () => open("won", undefined, undefined, pipe))}</Td>
+                    <Td num>{clickBtn(x.lost_in_period.value ?? 0, () => open("lost", undefined, undefined, pipe))}</Td>
+                    <Td num>{clickBtn(x.open_total.value ?? 0, () => open("open", undefined, undefined, pipe))}</Td></tr>))}
+              </Table>))}
+          </section>
+
           <LevelSection level="attention" title="Atenção" hint="Oportunidades sem movimento além do limite definido no filtro.">
             <KpiGrid kind="lg">
               <StatCard level={(d.stalled.value ?? 0) > 0 ? "attention" : "compact"} icon={AlertTriangle} period="Hoje" status={(d.stalled.value ?? 0) > 0 ? "Crítico" : undefined} unit="oportunidades" label="Paradas" value={num(d.stalled)} basis={d.stalled.basis} tone={(d.stalled.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("stalled")} />
