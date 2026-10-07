@@ -52,6 +52,8 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 - **Quiz do fisioterapeuta:** duas perguntas finais sobre um futuro programa de ensino para ter a própria clínica (interesse; prazo só com interesse). O texto diz que o programa ainda não existe e que não há garantia de faturamento.
 - **Migrations 081 e 082** (aplicadas no Dev): validação/conclusão das perguntas novas e limite de `step_reached` (1..20; o E2E achou que o limite 10 recusava a resposta).
 - **Testes:** E2E novo `R25` (5/5) + `08` e `09` (5/5) e `R03` (2/2) com os rótulos atualizados; `tsc` e `eslint` limpos. `R01` teve só os rótulos trocados e **não foi reexecutado** (precisa do token de gestão do Dev, que hoje não tem leitura de banco).
+- **Mapa do site refeito** (seção “Cobertura nacional”): o contorno desenhado à mão foi trocado pela geometria real dos 26 estados + DF (`@svg-maps/brazil`, mesma do painel), com as 16 cidades posicionadas por latitude/longitude (conferidas por computação dentro do estado certo), destaque ao escolher a cidade e lista de cidades; E2E `R26` (desktop e celular).
+- **Limpeza de leads no Dev (06/10):** apagados os leads que eram só lead (164 pessoas, 164 oportunidades, 121 leads de quiz, 40 captações de formulário), em uma transação, com filtro que preservou quem já tem venda, atendimento, pacote, matrícula, login, profissional ou parceria (30 pessoas, 30 leads de quiz e as vendas/pagamentos/pacotes seguem). Sem registros órfãos.
 - **Pendente de decisão:** a tag “Potencial Academy” segue valendo para todo lead de parceria (não alterada); usar a resposta nova para refiná-la é decisão de produto.
 
 ## Sessão anterior (2026-10-02, 16ª rodada) — reconciliação entre sessões, revalidação de Repasses e doc de integração ponta a ponta

@@ -4,6 +4,7 @@ Este arquivo registra as atribuições exigidas por licenças de materiais de te
 crédito visual de modelo externo** (sem “Powered by”); a atribuição exigida pela licença fica aqui, na documentação técnica.
 
 ## Mapa do Brasil (`BrazilMap`)
+- **Onde é usado:** Administrativo/Hub (`src/components/hp/BrazilMap.tsx`, coroplético por UF) e **site público**, seção “Cobertura nacional” (`src/components/BrazilMap.tsx`, desde 06/10: as mesmas formas dos estados, pintadas com a paleta do site, com os pontos das 16 cidades da rede posicionados por latitude e longitude). A atribuição abaixo vale para os dois.
 - **Geometria dos estados:** pacote npm [`@svg-maps/brazil`](https://www.npmjs.com/package/@svg-maps/brazil) 2.0.0, de Victor Cazanave — mapa SVG do Brasil com os 26 estados e o Distrito Federal,
   derivado do mapa do Brasil da **MapSVG** (<https://mapsvg.com/maps/brazil>).
 - **Licença:** [Creative Commons Atribuição 4.0 Internacional (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). A licença permite uso, adaptação e distribuição, inclusive comercial,
