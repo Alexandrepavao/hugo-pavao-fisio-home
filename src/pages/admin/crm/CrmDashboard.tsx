@@ -12,6 +12,8 @@ import { PeriodFilter } from "@/lib/PeriodFilter";
 import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "../finance/shared";
 import { RANGE_LABEL } from "@/lib/period";
 import type { StaffUser, Task } from "./types";
+import LeadTypesOverview from "./LeadTypesOverview";
+import { pipeLabel } from "./leadTypes";
 
 
 const CrmDashboard = () => {
@@ -28,7 +30,7 @@ const CrmDashboard = () => {
 
   const units = useUnits();
   const users = useQuery({ queryKey: ["assignable"], queryFn: async () => ((await supabase.rpc("list_assignable_users", {})).data ?? []) as StaffUser[] });
-  const pipes = useQuery({ queryKey: ["pipelines-crm-dash"], queryFn: async () => (await supabase.from("pipelines").select("id, name").eq("active", true).order("name")).data ?? [] });
+  const pipes = useQuery({ queryKey: ["pipelines-crm-dash"], queryFn: async () => (await supabase.from("pipelines").select("id, name, kind").eq("active", true).order("name")).data ?? [] });
 
   const metrics = useQuery({ queryKey: ["crm-dash", range.from, range.to, unit, owner, pipeline], queryFn: async () => {
     const { data, error } = await supabase.rpc("crm_dashboard_metrics", { p_from: range.from, p_to: range.to, p_unit: unit || null, p_owner: owner || null, p_pipeline: pipeline || null });
@@ -137,10 +139,12 @@ const CrmDashboard = () => {
                 <div><label htmlFor="crm-owner" className="block text-xs mb-1">Responsável</label>
                   <select id="crm-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos (conforme sua permissão)</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
                 <div><label htmlFor="crm-pipe" className="block text-xs mb-1">Funil</label>
-                  <select id="crm-pipe" value={pipeline} onChange={(e) => setPipeline(e.target.value)}><option value="">Todos</option>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                  <select id="crm-pipe" value={pipeline} onChange={(e) => setPipeline(e.target.value)}><option value="">Todos</option>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{pipeLabel(p)}</option>)}</select></div>
               </div>
             } />
         } />
+
+      <LeadTypesOverview />
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {m && (

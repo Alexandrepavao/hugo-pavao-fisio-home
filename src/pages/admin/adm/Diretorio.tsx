@@ -4,13 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Columns3, Download, Search, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { download, fmtDate, toCsv } from "@/lib/format";
-import { Badge, errText, Msg, PageHead, State, StatCard, btnGhost, btnPrimary, useMsg } from "@/lib/ui";
+import { Badge, errText, Msg, PageHead, State, StatCard, Tabs, btnGhost, btnPrimary, useMsg } from "@/lib/ui";
 import { ListFilterBar } from "@/lib/ListFilterBar";
 import { useUnits } from "../finance/shared";
 import ImportDialog from "../people/ImportDialog";
 import PersonAdmSheet from "./PersonAdmSheet";
 import LegalEntitySheet from "./LegalEntitySheet";
 import NewRecordDialog from "./NewRecordDialog";
+import CompanyDialog from "../crm/CompanyDialog";
 import PjImportDialog from "./PjImportDialog";
 import ColumnsDialog, { type CatalogColumn } from "./ColumnsDialog";
 
@@ -55,7 +56,8 @@ const Diretorio = () => {
   const qc = useQueryClient();
   const [sp, setSp] = useSearchParams();
   const [search, setSearch] = useState(sp.get("q") ?? "");
-  const [type, setType] = useState(sp.get("tipo") ?? "");
+  const type = sp.get("tipo") === "pf" || sp.get("tipo") === "pj" ? (sp.get("tipo") as string) : "";
+  const setType = (v: string) => { const n = new URLSearchParams(sp); if (v) n.set("tipo", v); else n.delete("tipo"); setSp(n, { replace: true }); setPage(0); };
   const [kind, setKind] = useState(sp.get("vinculo") ?? "");
   const [unit, setUnit] = useState(sp.get("unidade") ?? "");
   const [status, setStatus] = useState(sp.get("status") ?? "");
@@ -70,6 +72,7 @@ const Diretorio = () => {
   const [showCols, setShowCols] = useState(false);
   const [showPj, setShowPj] = useState(false);
   const [showPf, setShowPf] = useState(false);
+  const [showCompany, setShowCompany] = useState(false);
   const [msg, m] = useMsg();
   const pageSize = 25;
 
@@ -139,15 +142,19 @@ const Diretorio = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Administrativo" title="Planilha administrativa" hint="Interface sobre o cadastro central — pessoa física (people) e jurídica (legal_entities). Uma pessoa pode ter vários vínculos sem duplicar cadastro."
+      <PageHead eyebrow={type === "pj" ? "Cadastro" : "Administrativo"} title={type === "pj" ? "Empresas" : "Planilha administrativa"} hint={type === "pj" ? "Empresas e estabelecimentos para parcerias B2B (pessoa jurídica). Cada empresa pode ter vários contatos, que são pessoas do cadastro central." : "Interface sobre o cadastro central — pessoa física (people) e jurídica (legal_entities). Uma pessoa pode ter vários vínculos sem duplicar cadastro."}
         actions={<>
           <button className={btnGhost} onClick={() => setShowCols(true)} disabled={!catalog.data || !view.data}><Columns3 size={15} />Colunas</button>
           <button className={btnGhost} onClick={() => exportCsv.mutate()} disabled={exportCsv.isPending || !view.data}><Download size={15} />{exportCsv.isPending ? "Exportando…" : "Exportar CSV"}</button>
           {canSensitive && <button className={btnGhost} onClick={() => setShowPj(true)}><Upload size={15} />Importar PJ (CSV)</button>}
           {canSensitive && <button className={btnGhost} onClick={() => setShowPf(true)}><Upload size={15} />Importar PF (CSV)</button>}
-          <button className={btnPrimary} onClick={() => setShowNew(true)}>Novo cadastro</button>
+          {type === "pj" ? <button className={btnPrimary} data-testid="nova-empresa" onClick={() => setShowCompany(true)}>Nova empresa</button> : <button className={btnPrimary} onClick={() => setShowNew(true)}>Novo cadastro</button>}
         </>} />
       <Msg m={msg} />
+
+      <div className="mb-4" data-testid="adm-abas-tipo">
+        <Tabs tabs={[["", `Todos${indicators.data ? ` (${indicators.data.total.value.toLocaleString("pt-BR")})` : ""}`], ["pf", `Pessoas físicas${indicators.data ? ` (${indicators.data.pf.value.toLocaleString("pt-BR")})` : ""}`], ["pj", `Empresas (PJ)${indicators.data ? ` (${indicators.data.pj.value.toLocaleString("pt-BR")})` : ""}`]]} value={type} onChange={(v) => setType(v)} />
+      </div>
 
       <State loading={indicators.isLoading} error={indicators.error} />
       {indicators.data && (
@@ -163,18 +170,18 @@ const Diretorio = () => {
       {/* filtro único: busca e unidade visíveis; tipo, vínculo, status, estado e “só incompletos” dentro do botão Filtros (com contador, chips e “Limpar filtros”) — mesmos parâmetros de URL e mesma consulta de antes */}
       <ListFilterBar search={{ id: "dir-q", label: "Buscar", placeholder: "Nome, razão social, e-mail, telefone ou documento", value: search, onChange: (v) => { setSearch(v); setPage(0); } }}
         unit={unit} units={units.data ?? []} onUnit={(v) => { setUnit(v); setPage(0); }}
-        onClear={() => { setSearch(""); setType(""); setKind(""); setUnit(""); setStatus(""); setIncompleteOnly(false); setUf(""); setSp({}); setPage(0); }}
+        onClear={() => { setSearch(""); setKind(""); setUnit(""); setStatus(""); setIncompleteOnly(false); setUf(""); setSp({}); setPage(0); }}
         extraCount={[type, kind, status, uf].filter(Boolean).length + (incompleteOnly ? 1 : 0)}
         extraSummary={[type ? `Tipo: ${type === "pf" ? "Pessoa física" : "Pessoa jurídica"}` : "", kind ? `Vínculo: ${KIND_LABEL[kind] ?? kind}` : "", status ? `Status: ${STATUS_LABEL[status] ?? status}` : "", uf ? `Estado: ${uf}` : "", incompleteOnly ? "Só incompletos" : ""].filter(Boolean).join(" · ") || undefined}
         extra={<div className="grid gap-3">
-          <div><label htmlFor="dir-f-tipo" className="block text-xs mb-1">Tipo</label><select id="dir-f-tipo" value={type} onChange={(e) => { setType(e.target.value); setPage(0); }}><option value="">PF e PJ</option><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option></select></div>
+          <div><label htmlFor="dir-f-tipo" className="block text-xs mb-1">Tipo</label><select id="dir-f-tipo" value={type} onChange={(e) => setType(e.target.value)}><option value="">PF e PJ</option><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option></select></div>
           <div><label htmlFor="dir-f-vinculo" className="block text-xs mb-1">Vínculo</label><select id="dir-f-vinculo" value={kind} onChange={(e) => { setKind(e.target.value); setPage(0); }}><option value="">Todos os vínculos</option>{Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           <div><label htmlFor="dir-f-status" className="block text-xs mb-1">Status</label><select id="dir-f-status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}><option value="">Todos os status</option>{Object.entries(STATUS_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           <div><label htmlFor="dir-f-uf" className="block text-xs mb-1">Estado</label><select id="dir-f-uf" value={uf} onChange={(e) => { setUf(e.target.value); setPage(0); }}><option value="">Todos os estados</option>{UFS.map((x) => <option key={x} value={x}>{x}</option>)}</select></div>
           <label className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={incompleteOnly} onChange={(e) => { setIncompleteOnly(e.target.checked); setPage(0); }} />Só incompletos</label>
         </div>} />
 
-      <State loading={dir_.isLoading || view.isLoading} error={dir_.error ?? view.error} empty={dir_.data?.rows.length === 0} emptyText="Nenhum cadastro encontrado com estes filtros." />
+      <State loading={dir_.isLoading || view.isLoading} error={dir_.error ?? view.error} empty={dir_.data?.rows.length === 0} emptyText={type === "pj" ? "Nenhuma empresa cadastrada com estes filtros. Use “Nova empresa” para cadastrar." : "Nenhum cadastro encontrado com estes filtros."} />
       {dir_.data && dir_.data.rows.length > 0 && view.data && (
         <>
           <div className="hp-card overflow-x-auto">
@@ -213,6 +220,7 @@ const Diretorio = () => {
 
       <PersonAdmSheet personId={openPerson} onClose={() => setOpenPerson(null)} onChanged={refresh} />
       <LegalEntitySheet entityId={openEntity} onClose={() => setOpenEntity(null)} onChanged={refresh} />
+      <CompanyDialog open={showCompany} onOpenChange={setShowCompany} onDone={(r) => { setShowCompany(false); setOpenEntity(r.id); refresh(); }} />
       <NewRecordDialog open={showNew} onOpenChange={setShowNew}
         onCreatedPerson={(id) => { setShowNew(false); setOpenPerson(id); refresh(); }}
         onCreatedEntity={(id) => { setShowNew(false); setOpenEntity(id); refresh(); }} />

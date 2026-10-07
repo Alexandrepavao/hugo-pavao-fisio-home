@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { download, toCsv } from "@/lib/format";
 import { Badge, errText } from "@/lib/ui";
 import { CRM_FIELDS, TEMPLATE_CSV, autoMap, buildRows, readCsv, type CrmFieldKey, type CrmMapping, type ParsedCsv } from "@/lib/crmImport";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LEAD_TYPE, isLeadKind, pipeLabel } from "./leadTypes";
 
 interface Cand { id: string | null; name: string | null; reason: string; visible: boolean }
 interface Diff { field: "name" | "phone" | "email"; existing: string | null; incoming: string }
@@ -21,7 +22,7 @@ const COMMERCIAL = ["manager", "ops_admin", "unit_manager", "sales"];
 
 /** Importação de leads/oportunidades do CRM em 4 passos: arquivo e padrões → mapeamento de colunas → prévia com validação e decisão de conflitos → relatório.
  *  Nada é gravado antes de “Importar”; o servidor revalida e deduplica (reimportar o mesmo arquivo não duplica) e NUNCA altera um cadastro existente sem decisão explícita. */
-const CrmImportDialog = ({ open, onOpenChange, onDone }: { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void }) => {
+const CrmImportDialog = ({ open, onOpenChange, onDone, presetListId }: { open: boolean; onOpenChange: (v: boolean) => void; onDone: () => void; presetListId?: string }) => {
   const [step, setStep] = useState<"arquivo" | "mapa" | "previa" | "resultado">("arquivo");
   const [fileName, setFileName] = useState(""); const [data, setData] = useState<ParsedCsv | null>(null); const [map, setMap] = useState<CrmMapping>({});
   const [def, setDef] = useState({ unit: "", pipeline: "", stage: "", owner: "", list: "", source: "", campaign: "" });
@@ -31,13 +32,19 @@ const CrmImportDialog = ({ open, onOpenChange, onDone }: { open: boolean; onOpen
 
   const units = useQuery({ queryKey: ["crmi-units"], enabled: open, queryFn: async () => ((await supabase.from("units").select("id, name").eq("active", true).order("name")).data ?? []) as { id: string; name: string }[] });
   const pipes = useQuery({ queryKey: ["crmi-pipes"], enabled: open, queryFn: async () => ((await supabase.from("pipelines").select("id, name, kind").eq("active", true).order("name")).data ?? []) as { id: string; name: string; kind: string }[] });
-  const stages = useQuery({ queryKey: ["crmi-stages", def.pipeline], enabled: open && !!def.pipeline, queryFn: async () => ((await supabase.from("pipeline_stages").select("id, name, position").eq("pipeline_id", def.pipeline).eq("kind", "open").order("position")).data ?? []) as { id: string; name: string }[] });
+  const lists = useQuery({ queryKey: ["crmi-lists"], enabled: open, queryFn: async () => ((await supabase.from("crm_lead_lists").select("id, name, kind").order("name")).data ?? []) as { id: string; name: string; kind: string | null }[] });
+  // a lista com tipo decide o funil (paciente → funil de pacientes etc.): importar uma lista de fisioterapeutas num funil de pacientes não é possível
+  const peopleLists = (lists.data ?? []).filter((l) => l.kind !== "companies");
+  const selList = peopleLists.find((l) => l.id === def.list);
+  const forcedPipe = selList?.kind ? pipes.data?.find((p) => p.kind === selList.kind) : undefined;
+  const pipelineId = forcedPipe?.id ?? def.pipeline;
+  useEffect(() => { if (open && presetListId) setDef((d) => (d.list === presetListId ? d : { ...d, list: presetListId })); }, [open, presetListId]);
+  const stages = useQuery({ queryKey: ["crmi-stages", pipelineId], enabled: open && !!pipelineId, queryFn: async () => ((await supabase.from("pipeline_stages").select("id, name, position").eq("pipeline_id", pipelineId).eq("kind", "open").order("position")).data ?? []) as { id: string; name: string }[] });
   const users = useQuery({ queryKey: ["crmi-users", def.unit], enabled: open, queryFn: async () => ((await supabase.rpc("list_assignable_users", { p_unit: def.unit || null })).data ?? []) as { user_id: string; name: string; roles: string[] }[] });
-  const lists = useQuery({ queryKey: ["crmi-lists"], enabled: open, queryFn: async () => ((await supabase.from("crm_lead_lists").select("id, name").order("name")).data ?? []) as { id: string; name: string }[] });
-  const owners = (users.data ?? []).filter((u) => u.roles.some((r) => COMMERCIAL.includes(r)));
+    const owners = (users.data ?? []).filter((u) => u.roles.some((r) => COMMERCIAL.includes(r)));
 
   const reset = () => { setStep("arquivo"); setFileName(""); setData(null); setMap({}); setChecks([]); setDec({}); setResult(null); setFatal(null); setBusy(false); };
-  const defaults = () => ({ unit_id: def.unit || null, pipeline_id: def.pipeline || null, stage_id: def.stage || null, owner_user_id: def.owner || null, list_id: def.list || null, source: def.source.trim() || null, campaign: def.campaign.trim() || null });
+  const defaults = () => ({ unit_id: def.unit || null, pipeline_id: pipelineId || null, stage_id: def.stage || null, owner_user_id: def.owner || null, list_id: def.list || null, source: def.source.trim() || null, campaign: def.campaign.trim() || null });
 
   const onFile = async (f: File | undefined) => {
     setFatal(null); setData(null); if (!f) return; setFileName(f.name);
@@ -48,7 +55,7 @@ const CrmImportDialog = ({ open, onOpenChange, onDone }: { open: boolean; onOpen
   const goMap = () => {
     if (!data) return setFatal("Escolha o arquivo .csv.");
     if (!def.unit) return setFatal("Escolha a unidade padrão do lote.");
-    if (!def.pipeline) return setFatal("Escolha o funil.");
+    if (!pipelineId) return setFatal("Escolha o funil.");
     setFatal(null); setStep("mapa");
   };
   const mapOk = map.name !== undefined && (map.email !== undefined || map.phone !== undefined);
@@ -96,10 +103,10 @@ const CrmImportDialog = ({ open, onOpenChange, onDone }: { open: boolean; onOpen
             </div>
             <fieldset className="grid gap-3 sm:grid-cols-3 rounded-lg border border-border p-3"><legend className="px-1 text-xs font-semibold">Padrões do lote (a coluna da linha, quando preenchida, vale mais)</legend>
               <div><label htmlFor="crmi-unit" className="block text-xs mb-1">Unidade *</label><select id="crmi-unit" value={def.unit} onChange={(e) => setDef({ ...def, unit: e.target.value, owner: "" })}><option value="">Selecione…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-              <div><label htmlFor="crmi-pipe" className="block text-xs mb-1">Funil *</label><select id="crmi-pipe" value={def.pipeline} onChange={(e) => setDef({ ...def, pipeline: e.target.value, stage: "" })}><option value="">Selecione…</option>{pipes.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-              <div><label htmlFor="crmi-stage" className="block text-xs mb-1">Etapa inicial</label><select id="crmi-stage" value={def.stage} onChange={(e) => setDef({ ...def, stage: e.target.value })} disabled={!def.pipeline}><option value="">Primeira etapa do funil</option>{stages.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+              <div><label htmlFor="crmi-pipe" className="block text-xs mb-1">Funil *</label><select id="crmi-pipe" value={pipelineId} disabled={!!forcedPipe} onChange={(e) => setDef({ ...def, pipeline: e.target.value, stage: "" })}><option value="">Selecione…</option>{pipes.data?.map((p) => <option key={p.id} value={p.id}>{pipeLabel(p)}</option>)}</select>{forcedPipe && <p className="text-[11px] text-muted-foreground mt-1">O funil segue o tipo da lista ({isLeadKind(selList?.kind) ? LEAD_TYPE[selList.kind].label : ""}).</p>}</div>
+              <div><label htmlFor="crmi-stage" className="block text-xs mb-1">Etapa inicial</label><select id="crmi-stage" value={def.stage} onChange={(e) => setDef({ ...def, stage: e.target.value })} disabled={!pipelineId}><option value="">Primeira etapa do funil</option>{stages.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
               <div><label htmlFor="crmi-owner" className="block text-xs mb-1">Responsável</label><select id="crmi-owner" value={def.owner} onChange={(e) => setDef({ ...def, owner: e.target.value })}><option value="">Distribuição automática</option>{owners.map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
-              <div><label htmlFor="crmi-list" className="block text-xs mb-1">Lista</label><select id="crmi-list" value={def.list} onChange={(e) => setDef({ ...def, list: e.target.value })}><option value="">Nenhuma</option>{lists.data?.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
+              <div><label htmlFor="crmi-list" className="block text-xs mb-1">Lista</label><select id="crmi-list" value={def.list} onChange={(e) => setDef({ ...def, list: e.target.value, stage: "" })}><option value="">Nenhuma</option>{peopleLists.map((l) => <option key={l.id} value={l.id}>{l.name}{isLeadKind(l.kind) ? ` — ${LEAD_TYPE[l.kind].label}` : " — sem tipo"}</option>)}</select></div>
               <div><label htmlFor="crmi-source" className="block text-xs mb-1">Origem</label><input id="crmi-source" value={def.source} onChange={(e) => setDef({ ...def, source: e.target.value })} placeholder="Importação CSV" /></div>
               <div className="sm:col-span-3"><label htmlFor="crmi-campaign" className="block text-xs mb-1">Campanha</label><input id="crmi-campaign" value={def.campaign} onChange={(e) => setDef({ ...def, campaign: e.target.value })} placeholder="Ex.: Feira de saúde 2026" /></div>
             </fieldset>

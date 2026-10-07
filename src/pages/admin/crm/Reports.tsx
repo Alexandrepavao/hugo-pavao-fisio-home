@@ -10,6 +10,7 @@ import { presetRange, toExclusive, usePeriodFilterState, useUnits } from "@/lib/
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { BarBlock } from "@/lib/IndicatorCharts";
 import type { StaffUser } from "./types";
+import { LEAD_KINDS, pipeLabel } from "./leadTypes";
 import { StageDurations, StageFunnel } from "./StageViews";
 
 interface Metric { value: number | null; available: boolean; basis: string }
@@ -49,8 +50,9 @@ const Reports = () => {
     if (error) throw error; return data as Analytics;
   } });
   const d = a.data;
-  const pipeName = pipes.data?.find((p) => p.id === (pipeline || d?.pipeline_id))?.name ?? "";
-  const pipeList = (pipes.data ?? []) as { id: string; name: string; kind: string }[];
+  const pipeName = (() => { const p = pipes.data?.find((x) => x.id === (pipeline || d?.pipeline_id)); return p ? pipeLabel(p) : ""; })();
+  const kindRank = (k: string) => { const i = (LEAD_KINDS as string[]).indexOf(k); return i < 0 ? 9 : i; };
+  const pipeList = [...((pipes.data ?? []) as { id: string; name: string; kind: string }[])].sort((a, b) => kindRank(a.kind) - kindRank(b.kind) || a.name.localeCompare(b.name));
   // um funil por chamada (mesma função e mesma fórmula do funil escolhido no filtro), para comparar os funis lado a lado
   const byPipe = useQuery({ enabled: tab === "analises" && pipeList.length > 0, queryKey: ["crm-analytics-by-pipe", range.from, range.to, unit, owner, stalledDays, pipeList.map((p) => p.id).join(",")], queryFn: async () =>
     Promise.all(pipeList.map(async (p) => {
@@ -65,7 +67,7 @@ const Reports = () => {
   const filterExtra = (
     <div className="grid gap-3">
       <div><label htmlFor="rp-pipe" className="block text-xs mb-1">Funil</label>
-        <select id="rp-pipe" value={pipeline} onChange={(e) => setPipeline(e.target.value)}><option value="">Padrão (pacientes)</option>{(pipes.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+        <select id="rp-pipe" value={pipeline} onChange={(e) => setPipeline(e.target.value)}><option value="">Padrão (pacientes)</option>{pipeList.map((p) => <option key={p.id} value={p.id}>{pipeLabel(p)}</option>)}</select></div>
       <div><label htmlFor="rp-owner" className="block text-xs mb-1">Responsável</label>
         <select id="rp-owner" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
       <div><label htmlFor="rp-stall" className="block text-xs mb-1">“Parada” = sem movimento há mais de (dias)</label>
@@ -101,7 +103,7 @@ const Reports = () => {
                   const counts: [string, string, number, "created" | "won" | "lost" | "open"][] = [["Criadas", "criadas", x.cohort.value ?? 0, "created"], ["Ganhas", "ganhas", x.won_in_period.value ?? 0, "won"], ["Perdidas", "perdidas", x.lost_in_period.value ?? 0, "lost"], ["Em aberto", "abertas", x.open_total.value ?? 0, "open"]];
                   return (
                     <li key={pipe.id} className="grid gap-3 px-4 py-3" data-testid="conv-funil-row">
-                      <div className="flex items-baseline justify-between gap-3"><span className="font-semibold" data-testid="m-nome">{pipe.name}</span></div>
+                      <div className="flex items-baseline justify-between gap-3"><span className="font-semibold" data-testid="m-nome">{pipeLabel(pipe)}</span></div>
                       <div className="grid grid-cols-2 gap-3">
                         <div><p className="text-xs text-muted-foreground">Conversão geral</p><p className="tabular text-2xl font-bold" data-testid="m-conv">{num(x.overall_conversion, pct)}</p></div>
                         <div><p className="text-xs text-muted-foreground">Taxa de ganho</p><p className="tabular text-2xl font-bold" data-testid="m-taxa">{num(x.win_rate_closed, pct)}</p></div>
