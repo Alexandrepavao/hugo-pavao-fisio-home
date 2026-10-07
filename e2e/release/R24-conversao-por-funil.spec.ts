@@ -18,7 +18,7 @@ test.describe("@release CRM: conversão por funil", () => {
     await page.goto("/admin/crm/relatorios");
     const section = page.getByTestId("conversao-por-funil"); await expect(section.getByRole("heading", { name: "Conversão por funil" })).toBeVisible({ timeout: 40_000 });
     const rows = section.getByTestId("conv-funil-row"); await expect(rows).toHaveCount(pipes.length, { timeout: 40_000 });
-    expect(await rows.evaluateAll((r) => r.map((x) => (x.querySelector("td")?.textContent ?? "").trim()))).toEqual(pipes.map((p) => p.name));
+    expect(await rows.getByTestId("m-nome").allTextContents()).toEqual(pipes.map((p) => p.name));
 
     for (const p of pipes) {
       const c = calls.find((x) => x.pipe === p.id); expect(c, `a tela consultou o funil ${p.name}`).toBeTruthy();
@@ -27,9 +27,31 @@ test.describe("@release CRM: conversão por funil", () => {
       const e = { created: opps.filter((o) => inR(o.created_at)).length, cohort_won: opps.filter((o) => inR(o.created_at) && o.status === "won").length,
         won: opps.filter((o) => o.status === "won" && inR(o.closed_at)).length, lost: opps.filter((o) => o.status === "lost" && inR(o.closed_at)).length, open: opps.filter((o) => o.status === "open").length };
       const conv = e.created > 0 ? Math.round((1000 * e.cohort_won) / e.created) / 10 : null; const rate = e.won + e.lost > 0 ? Math.round((1000 * e.won) / (e.won + e.lost)) / 10 : null;
-      const cells = (await rows.filter({ has: page.getByRole("cell", { name: p.name, exact: true }) }).locator("td").allTextContents()).map((t) => t.trim());
-      expect(cells, p.name).toEqual([p.name, pct(conv), pct(rate), String(e.created), String(e.won), String(e.lost), String(e.open)]);
+      const row = rows.filter({ has: page.getByTestId("m-nome").getByText(p.name, { exact: true }) }); const t = async (id: string) => (await row.getByTestId(id).innerText()).trim();
+      expect([await t("m-nome"), await t("m-conv"), await t("m-taxa"), await t("m-criadas"), await t("m-ganhas"), await t("m-perdidas"), await t("m-abertas")], p.name)
+        .toEqual([p.name, pct(conv), pct(rate), String(e.created), String(e.won), String(e.lost), String(e.open)]);
     }
     await expectNoFatal(page); expect(errors, errors.join("\n")).toEqual([]);
+  });
+
+  test("celular: “Conversão entre etapas” e “Duração por etapa” são listas que cabem na tela (sem rolagem lateral) e mostram os números do servidor", async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/Sao_Paulo", locale: "pt-BR", isMobile: true, hasTouch: true });
+    await loginAs(ctx, QA.manager); const page = await ctx.newPage(); const errors = collectErrors(page);
+    const resp = page.waitForResponse((r) => r.url().includes("/rpc/crm_analytics") && r.request().method() === "POST" && !JSON.parse(r.request().postData() ?? "{}").p_pipeline, { timeout: 40_000 });
+    await page.goto("/admin/crm/relatorios");
+    const a = (await (await resp).json()) as { chain: { name: string; reached: number; conv_prev_pct: number | null; conv_first_pct: number | null }[]; won_step: { won: number }; stage_history: { name: string; n: number }[] };
+    const funil = page.getByTestId("funil-etapas"); await expect(funil).toBeVisible({ timeout: 40_000 });
+    const steps = funil.getByTestId("funil-etapa"); await expect(steps).toHaveCount(a.chain.length + 1);
+    for (const [i, c] of a.chain.entries()) {
+      const t = (await steps.nth(i).innerText()).replace(/\s+/g, " ");
+      expect(t, c.name).toContain(c.name); expect(t).toContain(String(c.reached)); expect(t).toContain(`${pct(c.conv_first_pct)} sobre a 1ª etapa`);
+      if (i > 0) expect(t).toContain(`${pct(c.conv_prev_pct)} da etapa anterior`);
+    }
+    expect((await steps.last().innerText()).replace(/\s+/g, " ")).toContain(`Ganho ${a.won_step.won}`);
+    const dur = page.getByTestId("duracao-etapas"); await expect(dur.getByTestId("duracao-etapa")).toHaveCount(a.stage_history.length);
+    for (const box of [funil, dur, page.getByTestId("conversao-por-funil")]) expect(await box.evaluate((el) => el.scrollWidth <= el.clientWidth), "sem rolagem lateral no bloco").toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sem rolagem lateral na página").toBe(true);
+    await expect(page.locator("table").filter({ hasText: "Conversão da etapa anterior" })).toHaveCount(0);
+    await expectNoFatal(page); expect(errors, errors.join("\n")).toEqual([]); await ctx.close();
   });
 });

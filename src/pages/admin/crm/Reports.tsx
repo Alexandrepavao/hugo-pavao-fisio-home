@@ -10,6 +10,7 @@ import { presetRange, toExclusive, usePeriodFilterState, useUnits } from "@/lib/
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { BarBlock } from "@/lib/IndicatorCharts";
 import type { StaffUser } from "./types";
+import { StageDurations, StageFunnel } from "./StageViews";
 
 interface Metric { value: number | null; available: boolean; basis: string }
 interface Analytics {
@@ -95,15 +96,22 @@ const Reports = () => {
             <p className="text-xs text-muted-foreground mb-2">Todos os funis ativos lado a lado, com o mesmo período, unidade e responsável do filtro. <b>Conversão geral</b> = ganhas da coorte ÷ criadas no período (oportunidades ainda abertas contam no denominador, então a taxa cresce conforme elas fecham). <b>Taxa de ganho</b> = ganhas ÷ (ganhas + perdidas) fechadas no período. “—” = sem base para calcular (nada é inventado). Clique num número para abrir as oportunidades.</p>
             <State loading={byPipe.isLoading} error={byPipe.error} />
             {byPipe.data && (byPipe.data.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum funil ativo.</p> : (
-              <Table head={["Funil", "Conversão geral", "Taxa de ganho", "Criadas", "Ganhas", "Perdidas", "Em aberto"]} right={[1, 2, 3, 4, 5, 6]}>
-                {byPipe.data.map(({ pipe, a: x }) => (
-                  <tr key={pipe.id} data-testid="conv-funil-row"><Td>{pipe.name}</Td>
-                    <Td num><b>{num(x.overall_conversion, pct)}</b></Td><Td num><b>{num(x.win_rate_closed, pct)}</b></Td>
-                    <Td num>{clickBtn(x.cohort.value ?? 0, () => open("created", undefined, undefined, pipe))}</Td>
-                    <Td num>{clickBtn(x.won_in_period.value ?? 0, () => open("won", undefined, undefined, pipe))}</Td>
-                    <Td num>{clickBtn(x.lost_in_period.value ?? 0, () => open("lost", undefined, undefined, pipe))}</Td>
-                    <Td num>{clickBtn(x.open_total.value ?? 0, () => open("open", undefined, undefined, pipe))}</Td></tr>))}
-              </Table>))}
+              <ul className="hp-card divide-y divide-border overflow-hidden">
+                {byPipe.data.map(({ pipe, a: x }) => {
+                  const counts: [string, string, number, "created" | "won" | "lost" | "open"][] = [["Criadas", "criadas", x.cohort.value ?? 0, "created"], ["Ganhas", "ganhas", x.won_in_period.value ?? 0, "won"], ["Perdidas", "perdidas", x.lost_in_period.value ?? 0, "lost"], ["Em aberto", "abertas", x.open_total.value ?? 0, "open"]];
+                  return (
+                    <li key={pipe.id} className="grid gap-3 px-4 py-3" data-testid="conv-funil-row">
+                      <div className="flex items-baseline justify-between gap-3"><span className="font-semibold" data-testid="m-nome">{pipe.name}</span></div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><p className="text-xs text-muted-foreground">Conversão geral</p><p className="tabular text-2xl font-bold" data-testid="m-conv">{num(x.overall_conversion, pct)}</p></div>
+                        <div><p className="text-xs text-muted-foreground">Taxa de ganho</p><p className="tabular text-2xl font-bold" data-testid="m-taxa">{num(x.win_rate_closed, pct)}</p></div>
+                      </div>
+                      <dl className="grid grid-cols-4 gap-2 text-sm">
+                        {counts.map(([label, id, n, kind]) => <div key={id}><dt className="text-xs text-muted-foreground">{label}</dt><dd data-testid={`m-${id}`}>{clickBtn(n, () => open(kind, undefined, undefined, pipe))}</dd></div>)}
+                      </dl>
+                    </li>);
+                })}
+              </ul>))}
           </section>
 
           <LevelSection level="attention" title="Atenção" hint="Oportunidades sem movimento além do limite definido no filtro.">
@@ -132,19 +140,13 @@ const Reports = () => {
           <section>
             <h2 className="text-[1.0625rem] font-bold mb-1">Conversão entre etapas</h2>
             <p className="text-xs text-muted-foreground mb-2">Denominador: quem chegou à etapa anterior (mesma coorte de {num(d.cohort)} oportunidades criadas no período). “Sobre a 1ª etapa” divide pelo total da primeira etapa.</p>
-            {d.chain.length === 0 ? <p className="text-sm text-muted-foreground">Sem etapas abertas neste funil.</p> : (
-              <Table head={["Etapa", "Chegaram", "Conversão da etapa anterior", "Sobre a 1ª etapa"]} right={[1, 2, 3]}>
-                {d.chain.map((c) => <tr key={c.stage_id}><Td>{c.name}</Td><Td num>{c.reached}</Td><Td num>{pct(c.conv_prev_pct)}</Td><Td num>{pct(c.conv_first_pct)}</Td></tr>)}
-                <tr><Td><b>Ganho</b></Td><Td num>{d.won_step.won}</Td><Td num>{pct(d.won_step.conv_prev_pct)}</Td><Td num>{pct(d.chain[0]?.reached ? Math.round((1000 * d.won_step.won) / d.chain[0].reached) / 10 : null)}</Td></tr>
-              </Table>)}
+            {d.chain.length === 0 ? <p className="text-sm text-muted-foreground">Sem etapas abertas neste funil.</p> : <StageFunnel chain={d.chain} won={d.won_step} />}
           </section>
 
           <section>
             <h2 className="text-[1.0625rem] font-bold mb-1">Duração por etapa (histórico)</h2>
             <p className="text-xs text-muted-foreground mb-2">Passagens já concluídas que terminaram no período, a partir do registro de eventos do CRM. Oportunidades sem evento de criação não têm a duração da 1ª etapa; não há retroativo inventado.</p>
-            <Table head={["Etapa", "Passagens", "Média", "Mediana"]} right={[1, 2, 3]}>
-              {d.stage_history.map((h) => <tr key={h.stage_id}><Td>{h.name}</Td><Td num>{h.n}</Td><Td num>{days(h.avg_days)}</Td><Td num>{days(h.median_days)}</Td></tr>)}
-            </Table>
+            <StageDurations history={d.stage_history} />
           </section>
 
           <section>
