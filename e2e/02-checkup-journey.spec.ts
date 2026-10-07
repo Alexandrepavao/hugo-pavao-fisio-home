@@ -37,7 +37,8 @@ test.describe("jornada Checkup", () => {
     expect(task.body.map((t: { kind: string }) => t.kind)).toContain("first_contact");
 
     // UI do CRM: o card existe e a mudança de etapa pelo menu persiste após recarregar
-    await page.goto("/admin/crm");
+    // (Pipeline agora vive em /admin/crm/oportunidades — /admin/crm passou a ser o dashboard comercial)
+    await page.goto("/admin/crm/oportunidades");
     await expect(page.getByRole("region", { name: "Quadro do funil" })).toBeVisible();
     const card = page.getByRole("button", { name: new RegExp(`^${lead},`) });
     await expect(card).toBeVisible();

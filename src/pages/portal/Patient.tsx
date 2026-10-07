@@ -2,15 +2,16 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
-import { btnGhost, btnPrimary, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
+import { btnDanger, btnGhost, btnPrimary, confirmDialog, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
 import PortalShell from "./PortalShell";
+import Journey from "./Journey";
 
-interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean }
+interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean; can_cancel: boolean; cancel_consumes: boolean; late_cancel_hours: number | null }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
 interface Me { full_name: string; preferred_name: string | null; birth_date: string | null; city: string | null; state_uf: string | null }
 interface Contact { type: string; value: string; is_primary: boolean }
 const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
-const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Faltou", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
+const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Você faltou", professional_no_show: "O profissional não compareceu", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
 const PHASE: Record<string, string> = { before: "Antes do atendimento", after: "Depois do atendimento", program: "Programa de acompanhamento" };
 
 const Patient = () => {
@@ -18,8 +19,23 @@ const Patient = () => {
   const appts = useQuery({ queryKey: ["my-appts"], queryFn: async () => ((await supabase.rpc("my_appointments")).data ?? []) as Appt[] });
   const pkgs = useQuery({ queryKey: ["my-pkgs"], queryFn: async () => ((await supabase.rpc("my_packages")).data ?? []) as { id: string; product_name: string; balance: number; total_sessions: number; valid_until: string | null; status: string }[] });
   const assigns = useQuery({ queryKey: ["my-care"], queryFn: async () => (await supabase.from("care_assignments").select("id, phase, note, released_at, content:care_contents(id, title, kind, body, storage_path, questions)").order("released_at", { ascending: false })).data as unknown as Assign[] });
+  const bks = useQuery({ queryKey: ["my-pkg-breakdown"], retry: false, queryFn: async () => ((await supabase.rpc("my_package_breakdown")).data ?? []) as { id: string; contracted: number; adjusted: number; attended: number; no_show: number; late_cancel: number; consumed_other: number; refunded: number; balance: number }[] });
   const survey = useQuery({ queryKey: ["survey"], queryFn: async () => (await supabase.from("surveys").select("id").eq("active", true).limit(1).maybeSingle()).data });
 
+  const confirm = async (a: Appt) => { const { error } = await supabase.rpc("my_appointment_confirm", { p_id: a.id });
+    if (error) m.err(errText(error)); else { m.ok("Presença confirmada. Obrigado!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
+  // A regra de consumo é a do produto do pacote: cancelar com menos de `late_cancel_hours` de antecedência desconta 1 sessão. O paciente é avisado ANTES.
+  const cancel = async (a: Appt) => {
+    const h = a.late_cancel_hours;
+    const consequence = !a.uses_package ? "Este atendimento não usa pacote, então nenhuma sessão é descontada."
+      : a.cancel_consumes ? `Faltam menos de ${h} h para o atendimento: pela regra do seu pacote, esta sessão SERÁ DESCONTADA.`
+      : `Você está cancelando com mais de ${h} h de antecedência: nenhuma sessão será descontada.`;
+    if (!(await confirmDialog("Cancelar atendimento?", `${a.service_name} com ${a.professional_name}, ${fmtDateTime(a.starts_at, a.timezone)}. ${consequence}`, "Cancelar atendimento", true))) return;
+    const { data, error } = await supabase.rpc("my_appointment_cancel", { p_id: a.id, p_reason: null });
+    if (error) return m.err(errText(error));
+    m.ok((data as { session_consumed?: boolean } | null)?.session_consumed ? "Atendimento cancelado. A sessão foi descontada do seu pacote, conforme a regra de cancelamento tardio." : "Atendimento cancelado. Nenhuma sessão foi descontada.");
+    void qc.invalidateQueries({ queryKey: ["my-appts"] }); void qc.invalidateQueries({ queryKey: ["my-pkgs"] }); void qc.invalidateQueries({ queryKey: ["my-pkg-breakdown"] });
+  };
   const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null });
     if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
 
@@ -29,10 +45,28 @@ const Patient = () => {
       <section className="mb-10"><h2 className="text-xl mb-3">Meus atendimentos</h2>
         <State loading={appts.isLoading} error={appts.error} empty={appts.data?.length === 0} emptyText="Você ainda não tem atendimentos agendados." />
         <ul className="space-y-2">{appts.data?.map((a) => <li key={a.id} className="hp-card p-3 flex flex-wrap justify-between gap-2"><span>{fmtDateTime(a.starts_at, a.timezone)} — {a.service_name} com {a.professional_name} <span className="text-muted-foreground">({a.unit_name})</span></span><span className="text-sm">{ST[a.status]}</span>
+          {["scheduled", "confirmed"].includes(a.status) && new Date(a.starts_at) > new Date() && <span className="basis-full text-sm flex flex-wrap items-center gap-2">
+            {a.patient_confirmed_at ? <span>Você confirmou presença em {fmtDateTime(a.patient_confirmed_at, a.timezone)}.</span> : a.can_confirm ? <button className={btnPrimary} onClick={() => confirm(a)}>Confirmar minha presença</button> : null}
+            <span className="text-muted-foreground">{a.professional_confirmed_at ? "O profissional confirmou o atendimento." : "Aguardando confirmação do profissional."}</span></span>}
+          {a.can_cancel && <span className="basis-full text-sm"><button className={btnDanger} onClick={() => cancel(a)}>Cancelar atendimento</button>{a.uses_package && a.late_cancel_hours != null && <span className="text-muted-foreground"> {a.cancel_consumes ? `Cancelar agora desconta 1 sessão (prazo: ${a.late_cancel_hours} h antes).` : `Sem custo até ${a.late_cancel_hours} h antes.`}</span>}</span>}
+          {a.status === "cancelled_by_patient" && a.uses_package && <span className="basis-full text-sm text-muted-foreground">{a.session_consumed ? "Cancelado com menos de " + (a.late_cancel_hours ?? "") + " h de antecedência: a sessão foi descontada." : "Cancelado dentro do prazo: nenhuma sessão foi descontada."}</span>}
+          {a.status === "no_show" && a.uses_package && <span className="basis-full text-sm text-muted-foreground">{a.session_consumed ? "Como não houve cancelamento, esta sessão foi descontada do seu pacote." : "Esta falta não descontou sessão do seu pacote."}</span>}
+          {a.status === "professional_no_show" && <span className="basis-full text-sm text-muted-foreground">Sua sessão não foi descontada. A equipe entrará em contato para reagendar sem custo.</span>}
           {a.status === "attended" && !a.survey_answered && survey.data && <span className="basis-full text-sm">Como foi? {[...Array(11).keys()].map((n) => <button key={n} className="w-7 h-7 border border-border mx-0.5 text-xs hover:bg-primary hover:text-primary-foreground" onClick={() => rate(a, n)} aria-label={`Nota ${n}`}>{n}</button>)}</span>}</li>)}</ul></section>
 
+      <Journey />
+
       <section className="mb-10"><h2 className="text-xl mb-3">Meus pacotes</h2>
-        {pkgs.data && pkgs.data.length > 0 ? <ul className="space-y-2">{pkgs.data.map((p) => <li key={p.id} className="hp-card p-3 flex justify-between"><span>{p.product_name}</span><span className="tabular">{p.balance} de {p.total_sessions} sessões {p.valid_until ? `· válido até ${new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR")}` : ""}</span></li>)}</ul> : <p className="text-muted-foreground">Nenhum pacote.</p>}</section>
+        {pkgs.data && pkgs.data.length > 0 ? <ul className="space-y-3">{pkgs.data.map((p) => { const b = bks.data?.find((x) => x.id === p.id); return (
+          <li key={p.id} className="hp-card p-3" aria-label={`Pacote ${p.product_name}`}>
+            <div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{p.product_name}</span><span className="tabular">{p.balance} de {p.total_sessions} sessões {p.valid_until ? `· válido até ${new Date(p.valid_until + "T12:00:00Z").toLocaleDateString("pt-BR")}` : ""}</span></div>
+            {b && <dl className="grid gap-2 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mt-3 text-sm">
+              {([["Contratadas", b.contracted, "sessões compradas no pacote"], ["Realizadas", b.attended, "comparecimentos que descontaram do pacote"], ["Consumidas por falta", b.no_show, "você faltou sem cancelar"], ["Consumidas por cancelamento tardio", b.late_cancel, "cancelou fora do prazo do pacote"],
+                ["Devolvidas", b.refunded, "sessões devolvidas à sua conta"], ["Ajustes", b.adjusted, "acertos feitos pela equipe"], ["Saldo", b.balance, "sessões que ainda pode usar"]] as [string, number, string][]).map(([label, v, hint]) => (
+                <div key={label} className="rounded-md border border-border p-2"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-xl font-bold tabular" aria-label={`${label}: ${v}`}>{v}</dd><p className="text-[11px] leading-4 text-muted-foreground">{hint}</p></div>))}
+            </dl>}
+            {b && b.consumed_other > 0 && <p className="text-xs text-muted-foreground mt-2">Há também {b.consumed_other} sessão(ões) descontada(s) por outro motivo, registrada(s) pela equipe.</p>}
+          </li>); })}</ul> : <p className="text-muted-foreground">Nenhum pacote.</p>}</section>
 
       <section className="mb-10"><h2 className="text-xl mb-1">Orientações liberadas pela sua equipe</h2><p className="text-sm text-muted-foreground mb-3">Conteúdos definidos por profissionais autorizados. Em caso de dor intensa ou piora, procure atendimento — este espaço não substitui uma avaliação.</p>
         <State loading={assigns.isLoading} error={assigns.error} empty={assigns.data?.length === 0} emptyText="Nenhum conteúdo liberado no momento." />

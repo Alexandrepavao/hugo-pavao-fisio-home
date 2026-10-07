@@ -1,11 +1,13 @@
 import { useEffect } from "react";
-import { MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import WorkWithUs from "@/components/WorkWithUs";
 import Divider from "@/components/Divider";
-import { openProfissional } from "@/lib/contact";
+import QuizCta from "@/components/QuizCta";
+import QuizFloatButton from "@/components/QuizFloatButton";
+import { useStartJourney } from "@/lib/useStartJourney";
 
 const criterios = [
   "Registro ativo no CREFITO e formação comprovada",
@@ -21,6 +23,7 @@ const etapas = [
 ];
 
 const TrabalheConosco = () => {
+  const startParceria = useStartJourney("parceria");
   useEffect(() => {
     document.title = "Trabalhe Conosco | HP Fisioterapia — Rede Nacional de Home Care";
   }, []);
@@ -44,16 +47,22 @@ const TrabalheConosco = () => {
               definido e pacientes encaminhados.
             </p>
             <button
-              onClick={openProfissional}
+              onClick={startParceria}
               className="inline-flex items-center justify-center gap-3 bg-accent text-accent-foreground text-[13px] uppercase tracking-[0.16em] px-8 py-4 mt-10 hover:opacity-90 transition-opacity"
             >
-              <MessageCircle className="w-4 h-4" />
               Quero fazer parte
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </section>
 
         <WorkWithUs full />
+
+        <QuizCta
+          journey="parceria"
+          heading="Quero ser fisioterapeuta parceiro HP Group"
+          description="Responda um formulário rápido sobre sua formação e área de atuação — a aprovação e a verificação profissional acontecem depois, em um processo administrativo separado."
+        />
 
         <section className="section">
           <div className="container-hp grid lg:grid-cols-2 gap-14 lg:gap-20">
@@ -94,8 +103,9 @@ const TrabalheConosco = () => {
           </div>
         </section>
       </main>
-      <Footer />
-      <WhatsAppFloat />
+      <Footer highlightJourney="parceria" />
+      <WhatsAppFloat journey="parceria" />
+      <QuizFloatButton journey="parceria" label="Seja parceiro" />
     </div>
   );
 };

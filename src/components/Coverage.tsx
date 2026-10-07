@@ -1,6 +1,6 @@
-import { MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Divider from "./Divider";
-import { openPaciente } from "@/lib/contact";
+import { useStartJourney } from "@/lib/useStartJourney";
 import BrazilMap from "./BrazilMap";
 
 const regioes = [
@@ -14,7 +14,9 @@ const regioes = [
   { nome: "Demais estados do Brasil", tag: "Rede parceira" },
 ];
 
-const Coverage = () => (
+const Coverage = () => {
+  const startAtendimento = useStartJourney("atendimento");
+  return (
   <section id="cobertura" className="section bg-card border-y border-border">
     <div className="container-hp grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
       <div>
@@ -38,9 +40,9 @@ const Coverage = () => (
 
         <BrazilMap className="mt-10" />
 
-        <button onClick={openPaciente} className="btn-primary mt-10">
-          <MessageCircle className="w-4 h-4" />
+        <button onClick={startAtendimento} className="btn-primary mt-10">
           Consultar disponibilidade na minha cidade
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -73,6 +75,7 @@ const Coverage = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default Coverage;

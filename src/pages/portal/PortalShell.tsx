@@ -3,7 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
-import { useAppTheme } from "@/components/hp/AppShell";
+import { useAppTheme } from "@/components/hp/theme";
 import { ROLE_LABEL } from "@/components/hp/nav";
 
 /** Layout da área do aluno/paciente/parceiro: mesma identidade da gestão, navegação superior simples. */

@@ -29,7 +29,7 @@ const Greeting = () => {
   });
   const name = profile.data?.display_name?.trim().split(" ")[0];
   // AppShell já renderiza o h1 da página (breadcrumb "Início"); esta saudação é h2, como o título de qualquer outra tela.
-  return <h2 className="!text-2xl sm:!text-3xl !leading-tight font-bold text-foreground mb-1">{greetingFor(hour)}{name ? `, ${name}!` : "!"}</h2>;
+  return <h2 className="!text-[1.75rem] sm:!text-[2rem] !leading-tight font-extrabold text-foreground mb-1">{greetingFor(hour)}{name ? `, ${name}!` : "!"}</h2>;
 };
 
 export default Greeting;

@@ -1,0 +1,4462 @@
+{
+ "summary": {
+  "tag": "diag04-mupmru7n",
+  "startedWith": {
+   "iterations": 100,
+   "concurrency": 6
+  },
+  "iterationsWithUnexpected": [],
+  "unexpectedCodes": [],
+  "fireMs": {
+   "p50": 58,
+   "max": 214
+  },
+  "requestMs": {
+   "p50": 50,
+   "p95": 88,
+   "max": 214
+  },
+  "lockSamples": 2,
+  "deadlocksDelta": 0,
+  "rollbackDelta": 491,
+  "commitDelta": 1246
+ },
+ "results": [
+  {
+   "iter": 0,
+   "setupMs": 440,
+   "fireMs": 143,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 123,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 121,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 118,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 124,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 123,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 123,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 1,
+   "setupMs": 260,
+   "fireMs": 138,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 128,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 138,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 121,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 94,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 2,
+   "setupMs": 255,
+   "fireMs": 62,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 54,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 3,
+   "setupMs": 255,
+   "fireMs": 65,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 65,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 4,
+   "setupMs": 268,
+   "fireMs": 81,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 81,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 81,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 80,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 80,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 80,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 74,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 5,
+   "setupMs": 244,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 6,
+   "setupMs": 227,
+   "fireMs": 50,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 7,
+   "setupMs": 294,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 8,
+   "setupMs": 274,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 49,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 59,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 9,
+   "setupMs": 232,
+   "fireMs": 70,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 48,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 69,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 10,
+   "setupMs": 257,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 50,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 11,
+   "setupMs": 226,
+   "fireMs": 143,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 39,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 143,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 40,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 12,
+   "setupMs": 250,
+   "fireMs": 48,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 13,
+   "setupMs": 220,
+   "fireMs": 47,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 43,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 14,
+   "setupMs": 231,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 15,
+   "setupMs": 235,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 16,
+   "setupMs": 220,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 39,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 17,
+   "setupMs": 233,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 18,
+   "setupMs": 218,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 39,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 19,
+   "setupMs": 223,
+   "fireMs": 46,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 40,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 20,
+   "setupMs": 242,
+   "fireMs": 75,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 73,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 75,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 75,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 75,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 21,
+   "setupMs": 225,
+   "fireMs": 54,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 22,
+   "setupMs": 233,
+   "fireMs": 47,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 39,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 23,
+   "setupMs": 253,
+   "fireMs": 73,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 70,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 73,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 24,
+   "setupMs": 237,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 25,
+   "setupMs": 242,
+   "fireMs": 48,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 40,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 38,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 26,
+   "setupMs": 232,
+   "fireMs": 55,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 35,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 39,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 27,
+   "setupMs": 222,
+   "fireMs": 74,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 50,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 73,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 28,
+   "setupMs": 248,
+   "fireMs": 58,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 39,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 29,
+   "setupMs": 220,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 30,
+   "setupMs": 226,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 31,
+   "setupMs": 244,
+   "fireMs": 46,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 32,
+   "setupMs": 250,
+   "fireMs": 54,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 33,
+   "setupMs": 293,
+   "fireMs": 64,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 40,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 34,
+   "setupMs": 263,
+   "fireMs": 55,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 35,
+   "setupMs": 288,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 49,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 36,
+   "setupMs": 271,
+   "fireMs": 79,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 79,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 49,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 70,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 37,
+   "setupMs": 261,
+   "fireMs": 59,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 38,
+   "setupMs": 278,
+   "fireMs": 57,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 52,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 39,
+   "setupMs": 242,
+   "fireMs": 52,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 40,
+   "setupMs": 239,
+   "fireMs": 75,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 75,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 75,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 73,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 41,
+   "setupMs": 311,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 40,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 42,
+   "setupMs": 237,
+   "fireMs": 79,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 79,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 40,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 43,
+   "setupMs": 266,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 44,
+   "setupMs": 293,
+   "fireMs": 98,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 73,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 69,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 97,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 71,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 56,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 45,
+   "setupMs": 504,
+   "fireMs": 214,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 166,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 214,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 103,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 199,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 151,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 150,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 46,
+   "setupMs": 489,
+   "fireMs": 141,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 94,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 140,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 88,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 97,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 79,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 94,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 47,
+   "setupMs": 299,
+   "fireMs": 72,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 48,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 48,
+   "setupMs": 263,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 40,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 40,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 36,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 40,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 49,
+   "setupMs": 307,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 50,
+   "setupMs": 308,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 39,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 51,
+   "setupMs": 242,
+   "fireMs": 47,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 43,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 52,
+   "setupMs": 254,
+   "fireMs": 52,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 53,
+   "setupMs": 277,
+   "fireMs": 56,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 54,
+   "setupMs": 243,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 55,
+   "setupMs": 228,
+   "fireMs": 47,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 38,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 37,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 37,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 56,
+   "setupMs": 246,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 57,
+   "setupMs": 234,
+   "fireMs": 72,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 58,
+   "setupMs": 247,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 59,
+   "setupMs": 276,
+   "fireMs": 54,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 60,
+   "setupMs": 277,
+   "fireMs": 59,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 61,
+   "setupMs": 289,
+   "fireMs": 71,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 54,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 68,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 70,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 62,
+   "setupMs": 258,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 63,
+   "setupMs": 236,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 33,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 42,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 64,
+   "setupMs": 277,
+   "fireMs": 79,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 79,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 65,
+   "setupMs": 239,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 66,
+   "setupMs": 250,
+   "fireMs": 62,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 60,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 67,
+   "setupMs": 229,
+   "fireMs": 46,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 33,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 41,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 41,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 36,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 34,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 68,
+   "setupMs": 243,
+   "fireMs": 47,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 69,
+   "setupMs": 261,
+   "fireMs": 57,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 70,
+   "setupMs": 263,
+   "fireMs": 75,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 71,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 73,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 74,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 57,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 71,
+   "setupMs": 276,
+   "fireMs": 58,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 46,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 57,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 72,
+   "setupMs": 497,
+   "fireMs": 109,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 88,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 109,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 90,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 107,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 86,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 88,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 73,
+   "setupMs": 402,
+   "fireMs": 72,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 72,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 71,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 68,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 67,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 62,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 74,
+   "setupMs": 327,
+   "fireMs": 85,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 66,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 84,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 57,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 75,
+   "setupMs": 291,
+   "fireMs": 62,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 56,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 76,
+   "setupMs": 323,
+   "fireMs": 71,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 50,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 59,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 70,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 77,
+   "setupMs": 325,
+   "fireMs": 87,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 87,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 75,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 86,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 78,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 86,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 79,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 78,
+   "setupMs": 384,
+   "fireMs": 64,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 54,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 64,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 63,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 79,
+   "setupMs": 289,
+   "fireMs": 77,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 77,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 77,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 77,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 77,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 75,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 77,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 80,
+   "setupMs": 315,
+   "fireMs": 63,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 62,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 53,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 59,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 81,
+   "setupMs": 289,
+   "fireMs": 50,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 82,
+   "setupMs": 260,
+   "fireMs": 97,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 38,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 97,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 83,
+   "setupMs": 277,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 84,
+   "setupMs": 239,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 40,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 85,
+   "setupMs": 250,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 86,
+   "setupMs": 242,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 56,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 61,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 87,
+   "setupMs": 258,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 59,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 56,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 55,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 88,
+   "setupMs": 250,
+   "fireMs": 61,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 60,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 89,
+   "setupMs": 265,
+   "fireMs": 52,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 46,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 90,
+   "setupMs": 241,
+   "fireMs": 54,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 47,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 52,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 91,
+   "setupMs": 329,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 40,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 92,
+   "setupMs": 253,
+   "fireMs": 53,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 37,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 53,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 93,
+   "setupMs": 248,
+   "fireMs": 50,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 94,
+   "setupMs": 262,
+   "fireMs": 55,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 44,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 54,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 95,
+   "setupMs": 247,
+   "fireMs": 49,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 48,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 200,
+     "ms": 41,
+     "code": null,
+     "message": null
+    }
+   ]
+  },
+  {
+   "iter": 96,
+   "setupMs": 254,
+   "fireMs": 59,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 57,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 59,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 58,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 97,
+   "setupMs": 253,
+   "fireMs": 51,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 45,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 51,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 98,
+   "setupMs": 249,
+   "fireMs": 95,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 95,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 50,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 49,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 47,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 55,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  },
+  {
+   "iter": 99,
+   "setupMs": 206,
+   "fireMs": 45,
+   "winners": 1,
+   "requests": [
+    {
+     "status": 200,
+     "ms": 42,
+     "code": null,
+     "message": null
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 45,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 43,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    },
+    {
+     "status": 500,
+     "ms": 44,
+     "code": "P0409",
+     "message": "Horário indisponível: já existe agendamento neste período"
+    }
+   ]
+  }
+ ],
+ "samples": [
+  {
+   "iter": 74,
+   "at": "2026-10-01T14:30:11.908Z",
+   "rows": [
+    {
+     "pid": 1101814,
+     "state": "active",
+     "wait_event_type": null,
+     "wait_event": null,
+     "blocked_by": [],
+     "xid": null,
+     "age_s": "1.17",
+     "xact_s": "1.20",
+     "q": "WITH pgrst_source AS ( SELECT \"public\".\"people\".\"id\", COALESCE( \"people_person_kinds_1\".\"people_person_kinds_1\", '[]') AS \"person_kinds\" FRO"
+    }
+   ]
+  },
+  {
+   "iter": 78,
+   "at": "2026-10-01T14:30:13.500Z",
+   "rows": [
+    {
+     "pid": 1101814,
+     "state": "active",
+     "wait_event_type": null,
+     "wait_event": null,
+     "blocked_by": [],
+     "xid": null,
+     "age_s": "2.80",
+     "xact_s": "2.82",
+     "q": "WITH pgrst_source AS ( SELECT \"public\".\"people\".\"id\", COALESCE( \"people_person_kinds_1\".\"people_person_kinds_1\", '[]') AS \"person_kinds\" FRO"
+    }
+   ]
+  }
+ ]
+}

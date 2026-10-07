@@ -4,11 +4,15 @@ import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
 import { parseCsv } from "@/lib/csv";
 import { btnDanger, btnGhost, errText, Msg, PageHead, promptText, State, Table, Td, useMsg } from "@/lib/ui";
-import type { Account } from "./shared";
+import { ListFilterBar } from "@/lib/ListFilterBar";
+import { useUnits, type Account } from "./shared";
+import BankByLine from "./BankByLine";
+import BankLineAllocator from "./BankLineAllocator";
+import { ORIGIN_LABEL, sharesLabel, useBankShares } from "./lineReports";
 
-interface Line { id: string; txn_date: string; description: string; amount_cents: number; external_ref: string | null; status: string }
+interface Line { id: string; unit_id: string; txn_date: string; description: string; amount_cents: number; external_ref: string | null; status: string }
 interface Import { id: string; filename: string | null; row_count: number; imported_at: string }
-interface Suggestion { payment_id?: string; payable_id?: string; amount_cents: number; paid_at: string; method?: string; person?: string; description?: string }
+interface Suggestion { payment_id?: string; payable_id?: string; invoice_id?: string; amount_cents: number; paid_at: string; method?: string; person?: string; description?: string }
 
 const HEADERS: Record<string, "date" | "description" | "amount" | "ref"> = {
   data: "date", date: "date", descrição: "description", descricao: "description", description: "description", histórico: "description", historico: "description",
@@ -21,11 +25,22 @@ const FinanceReconciliation = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [account, setAccount] = useState(""); const [busy, setBusy] = useState(false); const [report, setReport] = useState<{ ok: number; dup: number; bad: string[] } | null>(null);
   const [openLine, setOpenLine] = useState<string | null>(null);
+  const [allocLine, setAllocLine] = useState<string | null>(null);
+  // filtros das listas de linhas (a “Conta bancária” do envio do extrato abaixo é campo do formulário, não filtro)
+  const units = useUnits(); const [q, setQ] = useState(""); const [fUnit, setFUnit] = useState(""); const [fKind, setFKind] = useState(""); const [fState, setFState] = useState("");
 
   const accounts = useQuery({ queryKey: ["accounts-rec"], queryFn: async () => (await supabase.from("financial_accounts").select("id, name").eq("active", true)).data as Account[] });
   const imports = useQuery({ queryKey: ["bsi"], queryFn: async () => (await supabase.from("bank_statement_imports").select("id, filename, row_count, imported_at").order("imported_at", { ascending: false }).limit(20)).data as Import[] });
-  const lines = useQuery({ queryKey: ["bsl"], queryFn: async () => (await supabase.from("bank_statement_lines").select("id, txn_date, description, amount_cents, external_ref, status").order("txn_date", { ascending: false }).limit(300)).data as Line[] });
-  const suggestions = useQuery({ queryKey: ["bsl-sug", openLine], enabled: !!openLine, queryFn: async () => { const { data, error } = await supabase.rpc("bank_reconcile_suggestions", { p_line: openLine }); if (error) throw error; return data as Suggestion[]; } });
+  const lines = useQuery({ queryKey: ["bsl"], queryFn: async () => (await supabase.from("bank_statement_lines").select("id, unit_id, txn_date, description, amount_cents, external_ref, status").order("txn_date", { ascending: false }).limit(300)).data as Line[] });
+  const suggestions = useQuery({ queryKey: ["bsl-sug", openLine], enabled: !!openLine, queryFn: async () => {
+    const { data, error } = await supabase.rpc("bank_reconcile_suggestions", { p_line: openLine }); if (error) throw error;
+    const base = (data ?? []) as Suggestion[];
+    // saída do extrato: também sugere a FATURA de cartão já paga com o mesmo valor (a linha agregada do banco; as compras individuais não são conciliadas uma a uma)
+    const amount = lines.data?.find((l) => l.id === openLine)?.amount_cents ?? 0;
+    if (amount >= 0) return base;
+    const inv = await supabase.rpc("card_invoice_suggestions", { p_line: openLine }); if (inv.error) throw inv.error;
+    return [...base, ...((inv.data ?? []) as { invoice_id: string; card: string; closing_date: string; amount_cents: number; paid_at: string }[]).map((x) => ({ invoice_id: x.invoice_id, amount_cents: x.amount_cents, paid_at: x.paid_at, description: `Fatura do cartão ${x.card} (fechamento em ${fmtDate(x.closing_date + "T12:00:00Z")})` }))] as Suggestion[];
+  } });
 
   const parseAmount = (raw: string): number | null => {
     const cleaned = raw.trim().replace(/[R$\s]/g, "");
@@ -56,31 +71,40 @@ const FinanceReconciliation = () => {
     const res = data as { import_id: string; inserted: number; duplicates: number };
     setReport({ ok: res.inserted, dup: res.duplicates, bad });
     m.ok(res.duplicates > 0 ? `Extrato importado: ${res.inserted} linha(s) nova(s), ${res.duplicates} já existente(s) (ignorada(s), sem duplicar).` : `Extrato importado: ${res.inserted} linha(s).`);
-    void qc.invalidateQueries({ queryKey: ["bsi"] }); void qc.invalidateQueries({ queryKey: ["bsl"] });
+    void qc.invalidateQueries({ queryKey: ["bsi"] }); afterChange();
     if (fileRef.current) fileRef.current.value = "";
   };
 
   const confirm = async (line: string, s: Suggestion) => {
-    const { error } = await supabase.rpc("bank_reconcile_confirm", { p_line: line, p_payment_id: s.payment_id ?? null, p_payable_id: s.payable_id ?? null });
+    const { error } = s.invoice_id ? await supabase.rpc("card_invoice_reconcile", { p_line: line, p_invoice: s.invoice_id }) : await supabase.rpc("bank_reconcile_confirm", { p_line: line, p_payment_id: s.payment_id ?? null, p_payable_id: s.payable_id ?? null });
     if (error) return m.err(errText(error));
-    m.ok("Conciliado."); setOpenLine(null); void qc.invalidateQueries({ queryKey: ["bsl"] });
+    m.ok("Conciliado."); setOpenLine(null); setAllocLine(null); afterChange();
   };
   const ignore = async (line: string) => {
     const reason = await promptText("Ignorar linha do extrato", "Motivo (ex.: transferência entre contas próprias, tarifa)", { confirmLabel: "Ignorar" });
     if (!reason) return;
     const { error } = await supabase.rpc("bank_reconcile_ignore", { p_line: line, p_reason: reason });
-    if (error) m.err(errText(error)); else { m.ok("Linha ignorada."); void qc.invalidateQueries({ queryKey: ["bsl"] }); }
+    if (error) m.err(errText(error)); else { m.ok("Linha ignorada."); afterChange(); }
   };
   const undo = async (line: string) => {
     const { error } = await supabase.rpc("bank_reconcile_undo", { p_line: line });
-    if (error) m.err(errText(error)); else { m.ok("Desfeito."); void qc.invalidateQueries({ queryKey: ["bsl"] }); }
+    if (error) m.err(errText(error)); else { m.ok("Desfeito."); afterChange(); }
   };
 
-  const unmatched = (lines.data ?? []).filter((l) => l.status === "unmatched");
+  const lc = q.trim().toLowerCase();
+  const passes = (l: Line) => (!lc || l.description.toLowerCase().includes(lc) || (l.external_ref ?? "").toLowerCase().includes(lc)) && (!fUnit || l.unit_id === fUnit) && (!fKind || (fKind === "in" ? l.amount_cents > 0 : l.amount_cents < 0));
+  const unmatched = (lines.data ?? []).filter((l) => l.status === "unmatched" && passes(l));
+  const resolved = (lines.data ?? []).filter((l) => l.status !== "unmatched" && passes(l) && (!fState || l.status === fState));
+  const filtersOn = !!(lc || fUnit || fKind || fState);
+  // Linha de negócio de cada movimento (camada à parte: o extrato original não muda). Sem a migration 060 a coluna só mostra "—".
+  const shares = useBankShares((lines.data ?? []).map((l) => l.id));
+  const lineOf = (id: string) => sharesLabel(shares.data?.[id]);
+  const originOf = (id: string) => { const o = shares.data?.[id]?.[0]?.origin; return o ? ORIGIN_LABEL[o] : undefined; };
+  const afterChange = () => { void qc.invalidateQueries({ queryKey: ["bsl"] }); void qc.invalidateQueries({ queryKey: ["bank-shares"] }); void qc.invalidateQueries({ queryKey: ["bank-by-line"] }); };
 
   return (
     <div>
-      <PageHead eyebrow="Financeiro" title="Conciliação" hint="Importe o extrato e associe cada linha a um recebimento ou conta a pagar já lançado. A conciliação nunca cria um lançamento novo — só confirma o que já existe no sistema." />
+      <PageHead eyebrow="Financeiro" title="Conciliação" hint="Importe o extrato e associe cada linha a um recebimento, conta a pagar ou fatura de cartão já paga. A conciliação nunca cria nem altera lançamento — só confirma o que já existe no sistema. O débito agregado da fatura do cartão se concilia com a fatura (não com cada compra)." />
       <Msg m={msg} />
       <div className="hp-card p-4 mb-6 grid gap-3 sm:grid-cols-3 items-end">
         <div><label htmlFor="rec-acc" className="block text-xs mb-1">Conta bancária</label><select id="rec-acc" value={account} onChange={(e) => setAccount(e.target.value)}><option value="">Selecione…</option>{accounts.data?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
@@ -94,25 +118,37 @@ const FinanceReconciliation = () => {
         </div>
       )}
 
+      {/* filtro único: busca e unidade visíveis; tipo (entrada/saída) e estado dentro do botão Filtros */}
+      <ListFilterBar search={{ id: "rec-q", label: "Buscar no extrato", placeholder: "Buscar por descrição ou referência…", value: q, onChange: setQ }} unit={fUnit} units={units.data ?? []} onUnit={setFUnit}
+        onClear={() => { setQ(""); setFUnit(""); setFKind(""); setFState(""); }} extraCount={(fKind ? 1 : 0) + (fState ? 1 : 0)}
+        extraSummary={[fKind ? `Tipo: ${fKind === "in" ? "Entradas" : "Saídas"}` : "", fState ? `Estado: ${fState === "matched" ? "Conciliadas" : "Ignoradas"}` : ""].filter(Boolean).join(" · ") || undefined}
+        extra={<div className="grid gap-3">
+          <div><label htmlFor="rec-kind" className="block text-xs mb-1">Tipo de movimento</label><select id="rec-kind" value={fKind} onChange={(e) => setFKind(e.target.value)}><option value="">Entradas e saídas</option><option value="in">Entradas</option><option value="out">Saídas</option></select></div>
+          <div><label htmlFor="rec-state" className="block text-xs mb-1">Estado (lista de resolvidas)</label><select id="rec-state" value={fState} onChange={(e) => setFState(e.target.value)}><option value="">Conciliadas e ignoradas</option><option value="matched">Conciliadas</option><option value="ignored">Ignoradas</option></select></div>
+        </div>} />
+
       <section className="mb-8"><h2 className="text-xl mb-3">Pendentes de conciliação ({unmatched.length})</h2>
-        <State loading={lines.isLoading} error={lines.error} empty={unmatched.length === 0} emptyText="Nada pendente — todas as linhas importadas já foram conciliadas ou ignoradas." />
+        <State loading={lines.isLoading} error={lines.error} empty={unmatched.length === 0} emptyText={filtersOn ? "Nenhuma linha pendente com os filtros escolhidos." : "Nada pendente — todas as linhas importadas já foram conciliadas ou ignoradas."} />
         {unmatched.length > 0 && <ul className="grid gap-2">
           {unmatched.map((l) => (
             <li key={l.id} className="hp-card p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm">{fmtDate(l.txn_date + "T12:00:00Z")} — {l.description} {l.external_ref && <span className="text-muted-foreground">({l.external_ref})</span>}</span>
+                <span className="text-sm">{fmtDate(l.txn_date + "T12:00:00Z")} — {l.description} {l.external_ref && <span className="text-muted-foreground">({l.external_ref})</span>}
+                  {shares.data && <span className="block text-xs text-muted-foreground" title={originOf(l.id)}>Linha de negócio: {lineOf(l.id)}{originOf(l.id) ? ` (${originOf(l.id)})` : ""}</span>}</span>
                 <div className="flex items-center gap-2">
                   <span className={`tabular font-medium ${l.amount_cents > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>{brl(l.amount_cents)}</span>
                   <button className={btnGhost + " hp-btn-sm"} onClick={() => setOpenLine(openLine === l.id ? null : l.id)}>{openLine === l.id ? "Fechar" : "Conciliar"}</button>
+                  {shares.data && <button className={btnGhost + " hp-btn-sm"} aria-expanded={allocLine === l.id} onClick={() => setAllocLine(allocLine === l.id ? null : l.id)}>Linha de negócio</button>}
                   <button className={btnDanger + " hp-btn-sm"} onClick={() => ignore(l.id)}>Ignorar</button>
                 </div>
               </div>
+              {allocLine === l.id && <BankLineAllocator lineId={l.id} current={shares.data?.[l.id]} onDone={() => setAllocLine(null)} />}
               {openLine === l.id && (
                 <div className="mt-3 border-t border-border pt-3">
-                  <State loading={suggestions.isLoading} error={suggestions.error} empty={suggestions.data?.length === 0} emptyText="Nenhum lançamento com o mesmo valor em ±3 dias. Confira o valor ou registre o recebimento/pagamento primeiro." />
+                  <State loading={suggestions.isLoading} error={suggestions.error} empty={suggestions.data?.length === 0} emptyText="Nenhum lançamento com o mesmo valor em ±3 dias (nem fatura de cartão já paga com este valor). Confira o valor ou registre o recebimento/pagamento primeiro." />
                   {suggestions.data && suggestions.data.length > 0 && <ul className="grid gap-1.5">
                     {suggestions.data.map((s) => (
-                      <li key={s.payment_id ?? s.payable_id} className="flex items-center justify-between text-sm bg-muted/50 px-3 py-2">
+                      <li key={s.payment_id ?? s.payable_id ?? s.invoice_id} className="flex items-center justify-between text-sm bg-muted/50 px-3 py-2">
                         <span>{s.person ?? s.description} — {fmtDate(s.paid_at)} {s.method && `· ${s.method}`}</span>
                         <span className="flex items-center gap-2"><span className="tabular">{brl(s.amount_cents)}</span><button className={btnGhost + " hp-btn-sm"} onClick={() => confirm(l.id, s)}>Confirmar</button></span>
                       </li>
@@ -126,13 +162,20 @@ const FinanceReconciliation = () => {
       </section>
 
       <section className="mb-8"><h2 className="text-xl mb-3">Conciliadas e ignoradas (últimas)</h2>
-        {lines.data && lines.data.filter((l) => l.status !== "unmatched").length > 0 ? (
-          <Table head={["Data", "Descrição", "Valor", "Estado", ""]} right={[2]}>
-            {lines.data.filter((l) => l.status !== "unmatched").slice(0, 30).map((l) => <tr key={l.id}><Td>{fmtDate(l.txn_date + "T12:00:00Z")}</Td><Td>{l.description}</Td><Td num>{brl(l.amount_cents)}</Td><Td>{l.status === "matched" ? "Conciliada" : "Ignorada"}</Td>
-              <Td><button className="text-accent text-sm" onClick={() => undo(l.id)}>Desfazer</button></Td></tr>)}
+        {lines.data && resolved.length > 0 ? (
+          <Table head={["Data", "Descrição", "Valor", "Estado", "Linha de negócio", ""]} right={[2]}>
+            {resolved.slice(0, 30).flatMap((l) => [
+              <tr key={l.id}><Td>{fmtDate(l.txn_date + "T12:00:00Z")}</Td><Td>{l.description}</Td><Td num>{brl(l.amount_cents)}</Td><Td>{l.status === "matched" ? "Conciliada" : "Ignorada"}</Td>
+                <Td><span title={originOf(l.id)}>{shares.data ? lineOf(l.id) : "—"}</span></Td>
+                <Td><span className="flex gap-3"><button className="text-accent text-sm" onClick={() => undo(l.id)}>Desfazer</button>
+                  {l.status === "ignored" && shares.data && <button className="text-accent text-sm" aria-expanded={allocLine === l.id} onClick={() => setAllocLine(allocLine === l.id ? null : l.id)}>Linha de negócio</button>}</span></Td></tr>,
+              ...(allocLine === l.id ? [<tr key={l.id + "-a"}><td colSpan={6} className="px-3 pb-3"><BankLineAllocator lineId={l.id} current={shares.data?.[l.id]} onDone={() => setAllocLine(null)} /></td></tr>] : []),
+            ])}
           </Table>
-        ) : <p className="text-sm text-muted-foreground">Nenhuma ainda.</p>}
+        ) : <p className="text-sm text-muted-foreground">{filtersOn ? "Nenhuma com os filtros escolhidos." : "Nenhuma ainda."}</p>}
       </section>
+
+      <BankByLine accounts={accounts.data} />
 
       <section><h2 className="text-xl mb-3">Importações</h2>
         {imports.data && imports.data.length > 0 ? <Table head={["Quando", "Linhas"]} right={[1]}>{imports.data.map((i) => <tr key={i.id}><Td>{fmtDate(i.imported_at)}</Td><Td num>{i.row_count}</Td></tr>)}</Table> : <p className="text-sm text-muted-foreground">Nenhuma importação ainda.</p>}

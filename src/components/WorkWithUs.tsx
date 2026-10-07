@@ -1,7 +1,7 @@
-import { ArrowRight, MessageCircle, Compass, Users, ShieldCheck, CalendarClock } from "lucide-react";
+import { ArrowRight, Compass, Users, ShieldCheck, CalendarClock } from "lucide-react";
 import { Link } from "react-router-dom";
 import Divider from "./Divider";
-import { openProfissional } from "@/lib/contact";
+import { useStartJourney } from "@/lib/useStartJourney";
 
 const benefits = [
   { icon: CalendarClock, title: "Flexibilidade de agenda", text: "Você define os horários e a região em que quer atender." },
@@ -10,7 +10,9 @@ const benefits = [
   { icon: Compass, title: "Presença nacional", text: "Faça parte de uma rede em expansão por todo o Brasil, não de um cadastro genérico." },
 ];
 
-const WorkWithUs = ({ full = false }: { full?: boolean }) => (
+const WorkWithUs = ({ full = false }: { full?: boolean }) => {
+  const startParceria = useStartJourney("parceria");
+  return (
   <section id="trabalhe-conosco" className="section bg-navy-900">
     <div className="container-hp">
       <div className="max-w-3xl">
@@ -40,11 +42,11 @@ const WorkWithUs = ({ full = false }: { full?: boolean }) => (
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-6 mt-14">
         <button
-          onClick={openProfissional}
+          onClick={startParceria}
           className="inline-flex items-center justify-center gap-3 bg-accent text-accent-foreground text-[13px] uppercase tracking-[0.16em] px-8 py-4 hover:opacity-90 transition-opacity"
         >
-          <MessageCircle className="w-4 h-4" />
           Quero fazer parte
+          <ArrowRight className="w-4 h-4" />
         </button>
         {!full && (
           <Link
@@ -58,6 +60,7 @@ const WorkWithUs = ({ full = false }: { full?: boolean }) => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default WorkWithUs;

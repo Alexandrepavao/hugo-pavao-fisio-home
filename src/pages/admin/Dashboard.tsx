@@ -1,22 +1,29 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AlertTriangle, CalendarCheck, CalendarClock, ClipboardCheck, Copy, GraduationCap, Handshake, Package, Receipt, Smile, Stethoscope, Target, UserPlus, UserX, Wallet, ZapOff, CheckCircle2, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
-import { State, StatCard } from "@/lib/ui";
+import { EmptyState, KpiGrid, LevelSection, State, StatCard, type CardLevel } from "@/lib/ui";
+import { AreaTrend, BarBlock } from "@/lib/IndicatorCharts";
+import { useAttention } from "@/components/hp/attention";
+import { makeDelta } from "@/lib/kpi";
+import { RANGE_LABEL } from "@/lib/period";
+import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
 import Greeting from "./Greeting";
 import GeoSection from "./GeoSection";
 import { PeriodFilter } from "./finance/PeriodFilter";
-import { axisBrl, mfmt, presetRange, toExclusive, useUnits, type Metric, type RangePreset } from "./finance/shared";
+import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./finance/shared";
 
 type Metrics = Record<string, Metric | { items: { reason: string; count: number }[]; basis: string }>;
 interface Alert { kind: string; label: string; link: string; count: number }
 
+const ALERT_ICON: Record<string, LucideIcon> = { cobrancas_vencidas: Receipt, tarefas_atrasadas: CalendarClock, leads_sem_retorno: UserX, pacotes_fim: Package, duplicidades: Copy, eventos_falhos: ZapOff };
+
 const Dashboard = () => {
-  const [preset, setPreset] = useState<RangePreset>("mes");
-  const [custom, setCustom] = useState(presetRange("mes"));
-  const [unit, setUnit] = useState(""); const [compare, setCompare] = useState(false);
+  const navigate = useNavigate();
+  const attention = useAttention();
+  const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const range = { from: `${from}T00:00:00.000Z`, to: toExclusive(to) };
   const prevRange = (() => {
@@ -58,79 +65,102 @@ const Dashboard = () => {
     return { newPatients: n.count ?? 0, activePackages: a.count ?? 0, activePartners: p.count ?? 0 };
   } });
 
+  const per = RANGE_LABEL[preset];
   const alertsTotal = (alerts.data ?? []).reduce((a, x) => a + x.count, 0);
+  const unitLabel = units.data?.find((u) => u.id === unit)?.name ?? "Todas as unidades";
+  const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
+  const openDetail = (kind: CardKind) => setDetail({ kind, from: range.from, to: range.to, unit, unitLabel, prevFrom: prevRange.from, prevTo: prevRange.to });
+  const ALERT_DANGER = new Set(["cobrancas_vencidas", "tarefas_atrasadas", "eventos_falhos"]);
+  const ALERT_DETAIL: Record<string, CardKind> = {
+    cobrancas_vencidas: "overdue", tarefas_atrasadas: "overdue_tasks",
+    leads_sem_retorno: "leads_sem_retorno", pacotes_fim: "pacotes_fim",
+    duplicidades: "duplicidades", eventos_falhos: "eventos_falhos",
+  };
+
+  const sparkIn = cash.data && cash.data.length > 1 ? cash.data.map((r) => r.Entradas) : undefined;
 
   return (
     <div>
-      <Greeting />
-      <p className="text-muted-foreground mb-5 max-w-2xl">Resumo da operação. Toque em qualquer cartão de alerta para ver a lista completa.</p>
-      <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
-        onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }} onFrom={(v) => setCustom((c) => ({ ...c, from: v }))} onTo={(v) => setCustom((c) => ({ ...c, to: v }))}
-        onUnit={setUnit} onCompare={setCompare} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setUnit(""); setCompare(false); }} />
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 mb-7">
+        <div className="min-w-0"><Greeting /><p className="text-muted-foreground text-[13.5px] max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
+        <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
+          onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
+      </div>
 
       <State loading={metrics.isLoading} error={metrics.error} />
+      {metrics.data && patients.data && (
+        <LevelSection level="summary" title="Indicadores prioritários" label="Visão executiva" hint="O essencial do período selecionado; o que é situação de hoje está marcado no cartão.">
+          <KpiGrid kind="hero">
+            <Exec level="hero" icon={Wallet} label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" period={per} spark={sparkIn} onOpen={() => openDetail("receipts")} />
+            <Exec level="hero" icon={Stethoscope} label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} unit="atendimentos" period={per} onOpen={() => openDetail("attended")} />
+            <Exec level="hero" icon={Target} label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("win_rate")} />
+            <Exec level="hero" icon={UserPlus} label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} unit="pacientes" period={per} onOpen={() => openDetail("new_patients")} />
+          </KpiGrid>
+        </LevelSection>
+      )}
+
       {alerts.data && (
-        <section aria-label="Alertas" className="mb-8">
-          <h2 className="text-xl mb-3">Alertas e ações prioritárias {alertsTotal === 0 && <span className="text-sm font-normal text-muted-foreground">— tudo em dia</span>}</h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {alerts.data.map((a) => (
-              <li key={a.kind}><Link to={a.link} className="hp-card flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors">
-                <span className={`grid place-items-center rounded-md tabular font-bold ${a.count > 0 ? "hp-badge-warning" : "bg-muted text-muted-foreground"}`} style={{ width: "2.5rem", height: "2.5rem", fontSize: "1.125rem" }}>{a.count}</span>
-                <span className="text-sm">{a.label}</span></Link></li>))}
-          </ul></section>
+        <LevelSection level="attention" title="Alertas e ações prioritárias" label="Alertas" hint={alertsTotal === 0 ? "Tudo em dia." : "Situação de hoje. Clique para ver os itens."}>
+          <KpiGrid kind="lg">
+            {alerts.data.map((a) => {
+              const dKind = ALERT_DETAIL[a.kind]; const danger = ALERT_DANGER.has(a.kind);
+              return <StatCard key={a.kind} level={a.count > 0 ? "attention" : "compact"} icon={a.count > 0 ? (ALERT_ICON[a.kind] ?? AlertTriangle) : CheckCircle2} label={a.label} value={a.count.toLocaleString("pt-BR")} unit={a.count === 1 ? "item" : "itens"} period="Hoje"
+                status={a.count > 0 ? (danger ? "Crítico" : "Atenção") : undefined} tone={a.count > 0 ? (danger ? "danger" : "warning") : "success"} onClick={() => (dKind ? openDetail(dKind) : navigate(a.link))} />;
+            })}
+          </KpiGrid>
+        </LevelSection>
       )}
 
       {metrics.data && patients.data && (
-        <section className="mb-8"><h2 className="text-xl mb-3">Visão executiva</h2>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Exec label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" />
-            <Exec label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" />
-            <Exec label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} />
-            <Exec label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} basis="pessoas com ao menos um pacote em status ativo (hoje)" />
-            <Exec label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} />
-            <Exec label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} />
-            <Exec label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" />
-            <Exec label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} />
-            <Exec label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} />
-            <Exec label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" />
-            <Exec label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" />
-            <Exec label="NPS" m={metrics.data.nps as Metric} />
-          </ul>
-        </section>
+        <LevelSection level="summary" title="Mais indicadores" hint="Apoio à leitura: situação atual e números do período.">
+          <KpiGrid kind="compact">
+            <Exec level="compact" icon={AlertTriangle} label="Contas vencidas" m={metrics.data.overdue_cents as Metric} kind="brl" tone="danger" period="Hoje" onOpen={() => openDetail("overdue")} />
+            <Exec level="compact" icon={Package} label="Pacientes com pacote ativo" value={patients.data.activePackages.toLocaleString("pt-BR")} unit="pacientes" period="Hoje" onOpen={() => openDetail("active_packages")} />
+            <Exec level="compact" icon={ClipboardCheck} label="Avaliações agendadas" m={metrics.data.evaluations_scheduled as Metric} unit="avaliações" period={per} onOpen={() => openDetail("evaluations_scheduled")} />
+            <Exec level="compact" icon={Handshake} label="Parceiros ativos" value={patients.data.activePartners.toLocaleString("pt-BR")} unit="parceiros" period="Hoje" onOpen={() => openDetail("active_partners")} />
+            <Exec level="compact" icon={GraduationCap} label="Alunos ativos no Academy" m={metrics.data.active_students as Metric} unit="alunos" period="Hoje" onOpen={() => openDetail("active_students")} />
+            <Exec level="compact" icon={Receipt} label="Ticket médio" m={metrics.data.average_ticket_cents as Metric} prev={prevMetrics.data?.average_ticket_cents as Metric} kind="brl" period={per} onOpen={() => openDetail("average_ticket")} />
+            <Exec level="compact" icon={CalendarCheck} label="Comparecimento" m={metrics.data.attendance_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("attendance_rate")} />
+            <Exec level="compact" icon={Smile} label="NPS" m={metrics.data.nps as Metric} basis="pesquisas de satisfação (NPS) têm detalhamento próprio em Pesquisas — não incluído neste cartão para preservar o k-anonimato já aplicado lá" />
+          </KpiGrid>
+        </LevelSection>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2 mb-8">
-        <section><h2 className="text-xl mb-3">Evolução financeira (6 meses)</h2>
-          {cash.data && cash.data.length > 0 ? (
-            <div className="hp-card p-4" style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%">
-              <LineChart data={cash.data}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="mes" fontSize={12} /><YAxis fontSize={12} tickFormatter={axisBrl} />
-                <Tooltip formatter={(v: number) => brl(Math.round(v * 100))} />
-                <Line type="monotone" dataKey="Entradas" stroke="hsl(var(--success))" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="Saídas" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
-              </LineChart></ResponsiveContainer></div>
-          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem movimentos suficientes.</p>}
-        </section>
-        <section><h2 className="text-xl mb-3">Leads, avaliações e contratos (período)</h2>
-          {funnel.data && funnel.data.some((f) => f.n > 0) ? (
-            <div className="hp-card p-4" style={{ height: 240 }}><ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnel.data}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="etapa" fontSize={12} /><YAxis fontSize={12} allowDecimals={false} />
-                <Tooltip /><Bar dataKey="n" name="Quantidade" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div>
-          ) : <p className="text-sm text-muted-foreground hp-card p-4">Sem dados suficientes no período.</p>}
-        </section>
-      </div>
+      <LevelSection level="analysis" title="Evolução e funil" hint="Gráficos com dados reais; sem movimento suficiente, o espaço explica o motivo em vez de inventar curva.">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <AreaTrend title="Evolução financeira (6 meses)" hint="Entradas e saídas realizadas por mês." data={(cash.data ?? []) as never} xKey="mes" isEmpty={!(cash.data && cash.data.length > 0)} empty="Ainda não há movimentos financeiros suficientes para traçar a evolução."
+            series={[{ key: "Entradas", label: "Entradas", color: "hsl(var(--success))" }, { key: "Saídas", label: "Saídas", color: "hsl(var(--destructive))" }]} format={(v) => brl(Math.round(v * 100))} yFormat={axisBrl} />
+          <BarBlock title="Leads, avaliações e contratos (período)" hint="Do primeiro contato ao contrato, no período selecionado." data={(funnel.data ?? []).filter(() => funnel.data?.some((f) => f.n > 0)).map((f) => ({ etapa: f.etapa, Quantidade: f.n }))} xKey="etapa"
+            series={[{ key: "Quantidade", label: "Quantidade" }]} empty="Sem leads, avaliações ou contratos no período selecionado." />
+        </div>
+      </LevelSection>
 
       <GeoSection unit={unit} />
+
+      <LevelSection level="summary" title="Minhas pendências" label="Pendências e atividades" hint="Tarefas comerciais e pendências administrativas atrasadas sob a sua responsabilidade.">
+        {attention.loading && <State loading />}
+        {!attention.loading && attention.items.length === 0 && <EmptyState icon={CheckCircle2} title="Nada atrasado sob a sua responsabilidade">Quando uma tarefa ou pendência sua vencer, ela aparece aqui e no sino do cabeçalho.</EmptyState>}
+        {attention.items.length > 0 && (
+          <ul className="hp-card divide-y divide-border">
+            {attention.items.map((i) => (
+              <li key={i.id}><Link to={i.to} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/60 transition-colors">
+                <span aria-hidden className="grid place-items-center w-8 h-8 rounded-lg bg-destructive/10 text-destructive"><CalendarClock size={16} /></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-medium truncate">{i.label}</span><span className="block text-xs text-destructive">{i.detail}</span></span>
+                <span className="text-xs font-semibold text-primary">Abrir</span>
+              </Link></li>
+            ))}
+          </ul>
+        )}
+      </LevelSection>
+
+      <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
   );
 };
 
-const Exec = ({ label, m, value, basis, kind = "int", prev, tone }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; prev?: Metric; tone?: "danger" }) => {
-  const shown = value ?? mfmt(m, kind);
-  const delta = prev && m?.available && prev.available && Number(prev.value) !== 0 ? Math.round(((Number(m.value) - Number(prev.value)) / Number(prev.value)) * 1000) / 10 : null;
-  return (
-    <StatCard label={label} value={shown} tone={tone ?? (m && !m.available ? undefined : undefined)}
-      basis={delta != null ? `${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta).toString().replace(".", ",")}% vs. período anterior` : prev !== undefined ? "Sem base de comparação" : (basis ?? m?.basis)}
-      unavailable={m ? !m.available || m.value == null : false} />
-  );
-};
+const Exec = ({ label, m, value, basis, kind = "int", unit, period, level, icon, spark, prev, tone, onOpen }: { label: string; m?: Metric; value?: string; basis?: string; kind?: "brl" | "pct" | "int"; unit?: string; period?: string; level?: CardLevel; icon?: LucideIcon; spark?: number[]; prev?: Metric; tone?: "danger"; onOpen?: () => void }) => (
+  <StatCard level={level} icon={icon} spark={spark} label={label} value={value ?? mfmt(m, kind)} unit={kind === "int" ? unit : undefined} period={period} tone={tone} delta={makeDelta(m, prev, { lowerIsBetter: tone === "danger" })}
+    basis={basis ?? m?.basis} unavailable={m ? !m.available || m.value == null : false} onClick={onOpen} />
+);
 
 export default Dashboard;

@@ -117,7 +117,7 @@ const PageEditor = () => {
 
       {preview ? (
         <div className="border border-border bg-background"><p className="bg-accent/10 text-accent text-xs uppercase tracking-wider p-2 text-center">Pré-visualização do rascunho — o envio de formulários está desativado</p>
-          <PageRenderer blocks={blocks} forms={forms as PublicForm[]} preview /></div>
+          <PageRenderer blocks={blocks} forms={forms as PublicForm[]} preview pageSlug={slug} /></div>
       ) : (
         <>
           <div role="tablist" className="flex gap-1 border-b border-border mb-6 overflow-x-auto">

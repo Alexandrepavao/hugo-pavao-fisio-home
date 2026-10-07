@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Circle, Pause, Play, Plus, Timer } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Circle, Pause, Play, Plus, Timer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { useAuth } from "@/auth/AuthProvider";
+import CalendarViews, { KIND_LABEL, type EventKind } from "./CalendarViews";
+import CalendarConnect from "./CalendarConnect";
+import { addDays, calTitle, dayKey, parseDay, type CalView } from "./calendarUtil";
 import { Badge, EmptyState, errText, FilterBar, FilterField, Msg, PageHead, State, Tabs, useMsg } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface MyDayTask { id: string; title: string; start_time: string | null; category: string; urgency: string; importance: string; completed: boolean; person: string | null; opportunity_title: string | null }
 interface CrmTaskRow { id: string; title: string; due_at: string; kind: string; person: string | null }
-interface ApptRow { id: string; starts_at: string; ends_at: string; status: string; person: string; service: string }
+interface ApptRow { id: string; starts_at: string; ends_at: string; status: string; person: string; service: string; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; unit?: string }
+interface AgendaProf { id: string; display_name: string; is_self: boolean }
 interface MyDay { tasks: MyDayTask[]; crm_tasks: CrmTaskRow[]; appointments: ApptRow[] }
 interface FocusSession { id: string; started_at: string; ended_at: string | null; planned_minutes: number }
 interface TeamItem { id: string; title: string; owner: string; start_time: string | null; category: string }
@@ -28,9 +32,20 @@ const Productivity = () => {
   const isManager = hasRole("manager", "ops_admin", "unit_manager");
 
   const day = useQuery({ queryKey: ["my-day", date], queryFn: async () => { const { data, error } = await supabase.rpc("my_day", { p_date: date }); if (error) throw error; return data as MyDay; } });
+  // Agendas de outros profissionais: só aparecem para quem o servidor autoriza (gestor, administrador operacional; gestor de unidade nas suas unidades).
+  const [view, setView] = useState<"dia" | CalView>("dia");
+  const shift = (dir: -1 | 1) => { const d = parseDay(date); setDate(dayKey(view === "mes" ? new Date(d.getFullYear(), d.getMonth() + dir, 1) : addDays(d, dir * (view === "semana" ? 7 : 1)))); };
+  const [viewProf, setViewProf] = useState("");
+  const [kinds, setKinds] = useState<Set<EventKind>>(new Set(["appt", "crm", "task", "ext"]));
+  const toggleKind = (k: EventKind) => setKinds((cur) => { const n = new Set(cur); if (n.has(k)) n.delete(k); else n.add(k); return n.size ? n : cur; });
+  const profs = useQuery({ queryKey: ["agenda-profs"], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_agenda_professionals"); if (error) throw error; return data as AgendaProf[]; } });
+  const others = (profs.data ?? []).filter((p) => !p.is_self);
+  const other = useQuery({ queryKey: ["prof-day", viewProf, date], enabled: !!viewProf, queryFn: async () => { const { data, error } = await supabase.rpc("professional_day", { p_professional: viewProf, p_date: date }); if (error) throw error; return data as { is_self: boolean; appointments: ApptRow[] }; } });
+  const apptList = (viewProf ? other.data?.appointments : day.data?.appointments) ?? [];
   const focus = useQuery({ queryKey: ["focus-open"], queryFn: async () => ((await supabase.from("focus_sessions").select("id, started_at, ended_at, planned_minutes").is("ended_at", null).order("started_at", { ascending: false }).limit(1)).data?.[0] ?? null) as FocusSession | null });
 
-  const refresh = () => { void qc.invalidateQueries({ queryKey: ["my-day"] }); void qc.invalidateQueries({ queryKey: ["focus-open"] }); };
+  const refresh = () => { void qc.invalidateQueries({ queryKey: ["my-day"] }); void qc.invalidateQueries({ queryKey: ["prof-day"] }); void qc.invalidateQueries({ queryKey: ["focus-open"] }); };
+  const confirmAppt = async (id: string) => { const { error } = await supabase.rpc("professional_appointment_confirm", { p_id: id }); if (error) m.err(errText(error)); else { m.ok("Atendimento confirmado."); refresh(); } };
   const toggle = async (id: string) => { const { error } = await supabase.rpc("staff_task_toggle", { p_id: id }); error ? m.err(errText(error)) : refresh(); };
 
   const pending = useMemo(() => (day.data?.tasks ?? []).filter((t) => !t.completed).length + (day.data?.crm_tasks ?? []).length, [day.data]);
@@ -41,22 +56,45 @@ const Productivity = () => {
         actions={<button className="hp-btn hp-btn-primary" onClick={() => setShowNew(true)}><Plus size={16} aria-hidden />Nova tarefa</button>} />
       {isManager && <Tabs tabs={[["dia", "Meu dia"], ["equipe", "Equipe"]]} value={tab} onChange={setTab} />}
       <Msg m={msg} />
-      <FilterBar>
-        <FilterField label="Data" htmlFor="pd-date"><input id="pd-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></FilterField>
-        {date !== todayISO() && <button className="hp-btn hp-btn-outline" onClick={() => setDate(todayISO())}>Hoje</button>}
-        {tab === "dia" && <span className="ml-auto self-center text-sm text-muted-foreground">{pending} pendente(s)</span>}
-      </FilterBar>
+      <div className="hp-cal-bar hp-card" role="toolbar" aria-label="Navegação do calendário">
+        <div className="flex items-center gap-1.5">
+          <button className="hp-cal-nav" onClick={() => shift(-1)} aria-label="Anterior"><ChevronLeft size={18} aria-hidden /></button>
+          <button className="hp-btn hp-btn-outline" onClick={() => setDate(todayISO())}>Hoje</button>
+          <button className="hp-cal-nav" onClick={() => shift(1)} aria-label="Próximo"><ChevronRight size={18} aria-hidden /></button>
+        </div>
+        <h2 className="hp-cal-title" aria-live="polite">{tab === "dia" && view === "dia" ? parseDay(date).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : calTitle(view === "dia" ? "mes" : view, date)}</h2>
+        <div className="hp-cal-bar-right">
+          {tab === "dia" && others.length > 0 && <><label htmlFor="pd-prof" className="sr-only">Agenda clínica de</label><select id="pd-prof" className="!w-auto" value={viewProf} onChange={(e) => setViewProf(e.target.value)}><option value="">Minha agenda</option>{others.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></>}
+          <label htmlFor="pd-date" className="sr-only">Data</label><input id="pd-date" type="date" className="!w-auto" value={date} onChange={(e) => setDate(e.target.value)} />
+          {tab === "dia" && (
+            <div role="group" aria-label="Visualização" className="inline-flex rounded-full border border-input overflow-hidden">
+              {([["dia", "Dia"], ["semana", "Semana"], ["mes", "Mês"]] as ["dia" | CalView, string][]).map(([k, l]) => <button key={k} aria-pressed={view === k} onClick={() => setView(k)} className={`hp-btn hp-btn-sm rounded-none border-0 ${view === k ? "hp-btn-primary" : "hp-btn-outline"}`}>{l}</button>)}
+            </div>)}
+        </div>
+        {tab === "dia" && view !== "dia" && (
+          <div className="hp-cal-kinds" role="group" aria-label="Categorias de evento">
+            {(Object.keys(KIND_LABEL) as EventKind[]).map((k) => <button key={k} type="button" aria-pressed={kinds.has(k)} onClick={() => toggleKind(k)} className={`hp-cal-chip hp-cal-chip-${k}`}><i aria-hidden />{KIND_LABEL[k]}</button>)}
+            <span className="text-xs text-muted-foreground ml-auto">{pending} pendente(s)</span>
+          </div>)}
+      </div>
 
-      {tab === "dia" && (
+      {tab === "dia" && view !== "dia" && <CalendarViews view={view} date={date} professionalId={viewProf} kinds={kinds} onPickDay={(d) => { setDate(d); setView("dia"); }} onConfirm={confirmAppt} />}
+      {tab === "dia" && view === "dia" && (
         <div className="grid gap-5 lg:grid-cols-[1fr_18rem] items-start">
           <div className="grid gap-5">
             <State loading={day.isLoading} error={day.error} />
             {day.data && (
               <>
-                <Section title="Agenda clínica" empty={day.data.appointments.length === 0} emptyText="Nenhum atendimento seu hoje.">
-                  <ul className="grid gap-2">{day.data.appointments.map((a) => (
-                    <li key={a.id} className="hp-card p-3 flex items-center justify-between gap-3 text-sm">
-                      <span><b className="tabular">{fmtDateTime(a.starts_at).split(" ")[1]}</b> — {a.person} · {a.service}</span><Badge tone="info">{{ scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu" }[a.status] ?? a.status}</Badge>
+                <Section title={viewProf ? `Agenda de ${others.find((p) => p.id === viewProf)?.display_name ?? ""}` : "Agenda clínica"} empty={apptList.length === 0 && !(viewProf && (other.isLoading || other.error))} emptyText={viewProf ? "Nenhum atendimento neste dia." : "Nenhum atendimento seu hoje."}>
+                  {viewProf && <State loading={other.isLoading} error={other.error} />}
+                  <ul className="grid gap-2">{apptList.map((a) => (
+                    <li key={a.id} className="hp-card p-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                      <span><b className="tabular">{fmtDateTime(a.starts_at).split(" ")[1]}</b> — {a.person} · {a.service}{viewProf && a.unit ? ` · ${a.unit}` : ""}</span>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {["scheduled", "confirmed"].includes(a.status) && <span className="text-xs text-muted-foreground">Paciente: {a.patient_confirmed_at ? "confirmou" : "não confirmou"}</span>}
+                        {a.can_confirm && <button className="hp-btn hp-btn-ghost hp-btn-sm" onClick={() => confirmAppt(a.id)}>Confirmo o atendimento</button>}
+                        {["scheduled", "confirmed"].includes(a.status) && a.professional_confirmed_at && <span className="text-xs text-muted-foreground">Você confirmou</span>}
+                        <Badge tone={a.status === "no_show" || a.status === "professional_no_show" ? "warning" : "info"}>{{ scheduled: "Agendado", confirmed: "Confirmado", attended: "Compareceu", no_show: "Paciente faltou", professional_no_show: "Profissional ausente" }[a.status] ?? a.status}</Badge></span>
                     </li>))}</ul>
                 </Section>
                 <Section title="Tarefas de CRM atribuídas" empty={day.data.crm_tasks.length === 0} emptyText="Nenhuma tarefa de CRM vencendo até esta data.">
@@ -87,6 +125,7 @@ const Productivity = () => {
         </div>
       )}
       {tab === "equipe" && isManager && <TeamDay date={date} />}
+      {tab === "dia" && <div className="mt-8"><CalendarConnect /></div>}
       <NewTaskDialog open={showNew} onOpenChange={setShowNew} date={date} onCreated={() => { setShowNew(false); refresh(); }} />
     </div>
   );
