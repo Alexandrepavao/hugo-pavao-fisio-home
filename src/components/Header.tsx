@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
-import { openPaciente } from "@/lib/contact";
+import { useStartJourney } from "@/lib/useStartJourney";
 
 const links = [
   { label: "Sobre", href: "#sobre" },
@@ -17,6 +17,7 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const startAtendimento = useStartJourney("atendimento");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -62,7 +63,7 @@ const Header = () => {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={openPaciente}
+            onClick={startAtendimento}
             className="hidden sm:inline-flex bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.14em] px-6 py-3 hover:bg-navy-900 transition-colors"
           >
             Agendar Avaliação
@@ -96,7 +97,7 @@ const Header = () => {
             Trabalhe Conosco
           </Link>
           <button
-            onClick={openPaciente}
+            onClick={() => { setOpen(false); startAtendimento(); }}
             className="bg-primary text-primary-foreground text-[13px] uppercase tracking-[0.14em] px-6 py-3"
           >
             Agendar Avaliação

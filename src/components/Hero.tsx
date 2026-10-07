@@ -1,12 +1,14 @@
-import { MessageCircle, ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import { openPaciente } from "@/lib/contact";
+import { useStartJourney } from "@/lib/useStartJourney";
 import heroAtendimento from "@/assets/hero-home-care.jpg";
 import p1 from "@/assets/paciente-1.jpg";
 import p2 from "@/assets/paciente-2.jpg";
 import p3 from "@/assets/paciente-3.jpg";
 
-const Hero = () => (
+const Hero = () => {
+  const startAtendimento = useStartJourney("atendimento");
+  return (
   <section id="inicio" className="relative overflow-hidden px-6 sm:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28">
     <div className="hero-glow" aria-hidden="true" />
 
@@ -31,9 +33,9 @@ const Hero = () => (
         </p>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 mt-10">
-          <button onClick={openPaciente} className="btn-primary">
-            <MessageCircle className="w-4 h-4" />
-            Agendar pelo WhatsApp
+          <button onClick={startAtendimento} className="btn-primary">
+            Agendar minha avaliação
+            <ArrowRight className="w-4 h-4" />
           </button>
 
           <Link
@@ -88,6 +90,7 @@ const Hero = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default Hero;

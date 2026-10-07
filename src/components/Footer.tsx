@@ -1,15 +1,11 @@
 import { MessageCircle, Instagram, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import Divider from "./Divider";
 import QuizCta from "./QuizCta";
-import {
-  linkPaciente,
-  linkProfissional,
-  WHATSAPP_PACIENTES_DISPLAY,
-  WHATSAPP_PROFISSIONAIS_DISPLAY,
-} from "@/lib/contact";
-import type { Journey } from "@/lib/quiz";
+import { WHATSAPP_PACIENTES_DISPLAY, WHATSAPP_PROFISSIONAIS_DISPLAY } from "@/lib/contact";
+import { buildJourneyHref, type Journey } from "@/lib/quiz";
+import { utmFromLocation } from "@/features/pages/PageRenderer";
 
 const menu = [
   { label: "Sobre", href: "/#sobre" },
@@ -20,16 +16,18 @@ const menu = [
   { label: "Perguntas Frequentes", href: "/#faq" },
 ];
 
-const Footer = ({ highlightJourney = "atendimento" }: { highlightJourney?: Journey }) => (
+const Footer = ({ highlightJourney = "atendimento", showCta = true }: { highlightJourney?: Journey; showCta?: boolean }) => {
+  const { pathname } = useLocation();
+  return (
   <footer className="bg-card border-t border-border">
-    <div className="container-hp px-6 sm:px-8 pt-12">
+    {showCta && <div className="container-hp px-6 sm:px-8 pt-12">
       <QuizCta
         variant="banner"
         journey={highlightJourney}
         heading={highlightJourney === "atendimento" ? "Quer cuidar da sua dor com acompanhamento individualizado?" : "Quer ser um fisioterapeuta parceiro HP Group?"}
         description={highlightJourney === "atendimento" ? "Responda algumas perguntas rápidas e receba um retorno da nossa equipe." : "Conte sua experiência e área de atuação — aprovação e verificação seguem em processo separado."}
       />
-    </div>
+    </div>}
     <div className="container-hp px-6 sm:px-8 py-16 grid lg:grid-cols-[1.2fr_1fr_1fr] gap-12">
       <div>
         <Logo className="h-16" />
@@ -56,12 +54,7 @@ const Footer = ({ highlightJourney = "atendimento" }: { highlightJourney?: Journ
         <p className="text-[12px] uppercase tracking-[0.22em] text-navy-900">Contato</p>
         <Divider className="justify-start my-5 [&::before]:hidden" />
 
-        <a
-          href={linkPaciente}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block group"
-        >
+        <Link to={buildJourneyHref("atendimento", { from: pathname, utm: utmFromLocation() })} className="block group">
           <span className="text-[12px] uppercase tracking-[0.16em] text-accent">
             Pacientes / Agendamentos
           </span>
@@ -69,14 +62,10 @@ const Footer = ({ highlightJourney = "atendimento" }: { highlightJourney?: Journ
             <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
             {WHATSAPP_PACIENTES_DISPLAY}
           </span>
-        </a>
+          <span className="block text-[12px] text-navy-400 mt-1">Cadastre-se e continue pelo WhatsApp</span>
+        </Link>
 
-        <a
-          href={linkProfissional}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block group mt-6"
-        >
+        <Link to={buildJourneyHref("parceria", { from: pathname, utm: utmFromLocation() })} className="block group mt-6">
           <span className="text-[12px] uppercase tracking-[0.16em] text-accent">
             Fisioterapeutas / Trabalhe Conosco
           </span>
@@ -84,7 +73,8 @@ const Footer = ({ highlightJourney = "atendimento" }: { highlightJourney?: Journ
             <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
             {WHATSAPP_PROFISSIONAIS_DISPLAY}
           </span>
-        </a>
+          <span className="block text-[12px] text-navy-400 mt-1">Cadastre-se e continue pelo WhatsApp</span>
+        </Link>
       </div>
 
       <div>
@@ -116,6 +106,7 @@ const Footer = ({ highlightJourney = "atendimento" }: { highlightJourney?: Journ
       </div>
     </div>
   </footer>
-);
+  );
+};
 
 export default Footer;

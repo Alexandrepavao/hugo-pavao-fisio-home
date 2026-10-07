@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
@@ -7,7 +7,7 @@ import WorkWithUs from "@/components/WorkWithUs";
 import Divider from "@/components/Divider";
 import QuizCta from "@/components/QuizCta";
 import QuizFloatButton from "@/components/QuizFloatButton";
-import { openProfissional } from "@/lib/contact";
+import { useStartJourney } from "@/lib/useStartJourney";
 
 const criterios = [
   "Registro ativo no CREFITO e formação comprovada",
@@ -23,6 +23,7 @@ const etapas = [
 ];
 
 const TrabalheConosco = () => {
+  const startParceria = useStartJourney("parceria");
   useEffect(() => {
     document.title = "Trabalhe Conosco | HP Fisioterapia — Rede Nacional de Home Care";
   }, []);
@@ -46,11 +47,11 @@ const TrabalheConosco = () => {
               definido e pacientes encaminhados.
             </p>
             <button
-              onClick={openProfissional}
+              onClick={startParceria}
               className="inline-flex items-center justify-center gap-3 bg-accent text-accent-foreground text-[13px] uppercase tracking-[0.16em] px-8 py-4 mt-10 hover:opacity-90 transition-opacity"
             >
-              <MessageCircle className="w-4 h-4" />
               Quero fazer parte
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </section>
@@ -103,7 +104,7 @@ const TrabalheConosco = () => {
         </section>
       </main>
       <Footer highlightJourney="parceria" />
-      <WhatsAppFloat />
+      <WhatsAppFloat journey="parceria" />
       <QuizFloatButton journey="parceria" label="Seja parceiro" />
     </div>
   );

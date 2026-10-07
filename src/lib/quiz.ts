@@ -18,6 +18,7 @@ export const MARKETING_CONSENT_VERSION = "marketing-v1";
 export const MARKETING_CONSENT_TEXT = "Aceito receber novidades e comunicações promocionais do HP Group por e-mail/WhatsApp.";
 
 export interface QuestionOption { value: string; label: string }
+export type AnswerMap = Record<string, { value: string | string[]; label: string; detalhe?: string }>;
 export interface Question {
   key: string;
   question: string;
@@ -25,7 +26,12 @@ export interface Question {
   options?: QuestionOption[];
   exclusiveValue?: string; // multi: essa opção é exclusiva das demais (ex.: "Nenhuma")
   healthSensitive?: boolean;
+  intro?: string; bullets?: string[]; note?: string; // texto explicativo mostrado acima das opções
+  showIf?: (answers: AnswerMap) => boolean; // pergunta condicional: some quando a resposta anterior a torna desnecessária
 }
+
+// Nome completo = pelo menos duas palavras (nome e sobrenome); iniciais são aceitas a partir da segunda.
+export const isFullName = (s: string) => /^\S{2,}(\s+\S+)+$/.test(s.trim());
 
 // Etapa 1 (nome/e-mail/whatsapp) e cidade/UF são tratadas fora desta lista (campos fixos do QuizRunner).
 export const ATENDIMENTO_QUESTIONS: Question[] = [
@@ -97,6 +103,31 @@ export const PARCERIA_QUESTIONS: Question[] = [
     ],
     exclusiveValue: "nenhuma",
   },
+  {
+    key: "interesse_programa_clinica",
+    question: "No futuro, se existisse um programa de ensino para você ter a sua própria clínica, você teria interesse?",
+    intro: "Imagine um programa de ensino pensado para o fisioterapeuta que quer ter o próprio negócio. Ele levaria você, passo a passo, do posicionamento da sua marca até a implementação de um sistema de gestão 360, com o objetivo de construir uma clínica com potencial de faturamento mensal de 5 dígitos ou mais.",
+    bullets: [
+      "Posicionamento de marca e proposta de valor",
+      "Precificação, captação de pacientes e vendas",
+      "Gestão 360: agenda, financeiro, CRM e indicadores",
+      "Implementação do sistema na sua clínica, do zero ao funcionamento",
+    ],
+    note: "Hoje esse programa ainda não existe: sua resposta nos ajuda a avaliar se faz sentido criá-lo. Não há inscrição nem cobrança agora. O resultado financeiro depende da sua dedicação, da sua região e da execução; não há garantia de faturamento.",
+    kind: "options",
+    options: [
+      { value: "sim", label: "Sim, teria interesse" }, { value: "quero_entender", label: "Quero entender melhor como funcionaria" },
+      { value: "nao_momento", label: "Não neste momento" },
+    ],
+  },
+  {
+    key: "prazo_programa_clinica", question: "Se esse programa existisse, quando você gostaria de começar?", kind: "options",
+    options: [
+      { value: "tres_meses", label: "Nos próximos 3 meses" }, { value: "tres_seis_meses", label: "Entre 3 e 6 meses" },
+      { value: "mais_seis_meses", label: "Em mais de 6 meses" }, { value: "nao_sei", label: "Ainda não sei" },
+    ],
+    showIf: (a) => a.interesse_programa_clinica?.value !== "nao_momento",
+  },
 ];
 
 export const JOURNEY_LABEL: Record<Journey, string> = { atendimento: "Avaliação inicial", parceria: "Parceria HP Group" };
@@ -116,8 +147,10 @@ export const buildJourneyHref = (journey: Journey, opts: { from?: string; utm?: 
 };
 export const JOURNEY_QUESTIONS: Record<Journey, Question[]> = { atendimento: ATENDIMENTO_QUESTIONS, parceria: PARCERIA_QUESTIONS };
 
-// 3 etapas fixas (contato) + cidade/UF + N perguntas específicas = 10 no total, igual à especificação.
-export const totalSteps = (j: Journey) => 4 + JOURNEY_QUESTIONS[j].length;
+// Perguntas que se aplicam às respostas dadas até agora (as condicionais saem quando a resposta anterior as dispensa).
+export const visibleQuestions = (j: Journey, answers: AnswerMap): Question[] => JOURNEY_QUESTIONS[j].filter((q) => !q.showIf || q.showIf(answers));
+// Etapas: contato, cidade/UF, as N perguntas aplicáveis e a conclusão ("Quase lá").
+export const totalSteps = (j: Journey, answers: AnswerMap = {}) => 3 + visibleQuestions(j, answers).length;
 
 export const UF_LIST = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
@@ -145,6 +178,7 @@ export const buildAtendimentoMessage = (
 
 export const buildParceriaMessage = (
   f: WhatsAppTemplateFields, momento: string | null, registro: string | null, area: string | null, modelo: string | null, objetivos: string | null, interesses: string | null,
+  programa: string | null = null, prazoPrograma: string | null = null,
 ): string => {
   const fields = [
     line("Nome", f.fullName), line("E-mail", f.email), line("WhatsApp", f.phone),
@@ -155,6 +189,8 @@ export const buildParceriaMessage = (
     modelo ? line("Modelo de atendimento", modelo) : null,
     objetivos ? line("Objetivos da parceria", objetivos) : null,
     interesses ? line("Interesses de desenvolvimento", interesses) : null,
+    programa ? line("Interesse em programa para ter a própria clínica", programa) : null,
+    prazoPrograma ? line("Quando gostaria de começar", prazoPrograma) : null,
     line("Protocolo", f.protocol),
   ].filter((x): x is string => Boolean(x));
   return "Olá! Preenchi o formulário de parceria do HP Group.\n\n" + fields.join("\n");
