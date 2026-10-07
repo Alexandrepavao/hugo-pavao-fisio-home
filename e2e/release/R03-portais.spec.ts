@@ -73,7 +73,7 @@ test.describe.serial("@release Portais (paciente e parceiro)", () => {
     const anon = await browser.newContext({ timezoneId: "America/Sao_Paulo" }); const p = await anon.newPage();
     const lead = { name: `Indicado E2E ${runId}`, email: `indicado.${runId}@example.com`, phone: `(11) 9${Math.floor(1000 + Math.random() * 8999)}-${Math.floor(1000 + Math.random() * 8999)}` };
     await p.goto(`/avaliacao?ref=${code}`);
-    await p.getByLabel("Como podemos chamar você?").fill(lead.name); await p.getByLabel("Qual é seu e-mail?").fill(lead.email); await p.getByLabel("Qual é seu WhatsApp com DDD?").fill(lead.phone);
+    await p.getByLabel("Nome completo").fill(lead.name); await p.getByLabel("E-mail", { exact: true }).fill(lead.email); await p.getByLabel("WhatsApp com DDD").fill(lead.phone);
     await p.getByRole("checkbox").click(); await p.getByRole("button", { name: "Continuar" }).click(); await expect(p.getByText("Em qual cidade e estado")).toBeVisible(); await anon.close();
 
     await expect(async () => {

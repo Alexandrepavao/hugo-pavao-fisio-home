@@ -37,7 +37,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
   test("1. lead preenche o quiz → aparece no CRM e no cadastro central; repetir não duplica", async ({ browser }) => {
     const anon = await browser.newContext({ timezoneId: "America/Sao_Paulo" }); const p = await anon.newPage(); const errors = collectErrors(p);
     await p.goto("/avaliacao");
-    await p.getByLabel("Como podemos chamar você?").fill(name); await p.getByLabel("Qual é seu e-mail?").fill(email); await p.getByLabel("Qual é seu WhatsApp com DDD?").fill(phone);
+    await p.getByLabel("Nome completo").fill(name); await p.getByLabel("E-mail", { exact: true }).fill(email); await p.getByLabel("WhatsApp com DDD").fill(phone);
     await p.getByRole("checkbox").click(); await p.getByRole("button", { name: "Continuar" }).click();
     await p.getByLabel("Cidade").fill("São Paulo"); await p.getByLabel("UF").selectOption("SP"); await p.getByRole("button", { name: "Continuar" }).click();
     await p.getByRole("button", { name: "Concordo, continuar" }).click();
@@ -52,7 +52,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     // tentativa repetida com o MESMO contato (outro navegador, outro nome digitado): continua sendo 1 pessoa e 1 oportunidade
     const again = await browser.newContext(); const p2 = await again.newPage();
     await p2.goto("/avaliacao");
-    await p2.getByLabel("Como podemos chamar você?").fill(`${name} (repetido)`); await p2.getByLabel("Qual é seu e-mail?").fill(email); await p2.getByLabel("Qual é seu WhatsApp com DDD?").fill(phone);
+    await p2.getByLabel("Nome completo").fill(`${name} (repetido)`); await p2.getByLabel("E-mail", { exact: true }).fill(email); await p2.getByLabel("WhatsApp com DDD").fill(phone);
     await p2.getByRole("checkbox").click(); await p2.getByRole("button", { name: "Continuar" }).click();
     await expect(p2.getByText("Em qual cidade e estado")).toBeVisible();
     await anon.close(); await again.close();

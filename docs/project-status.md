@@ -44,7 +44,17 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-02, 16ª rodada) — reconciliação entre sessões, revalidação de Repasses e doc de integração ponta a ponta
+## Sessão mais recente (2026-10-06, 17ª rodada) — botões do site → quiz, quiz novo e perguntas do programa de clínica própria
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Detalhes, regras e limites: [`docs/captacao-site-quiz.md`](captacao-site-quiz.md).
+- **Botões do site sem WhatsApp direto:** cabeçalho, Hero, Cobertura, botão flutuante, rodapé, “Quero fazer parte” (Trabalhe Conosco e WorkWithUs) agora levam ao quiz da jornada (paciente → `/avaliacao`; fisioterapeuta → `/seja-parceiro`), cuja 1ª etapa captura **nome completo**, e-mail e WhatsApp; o WhatsApp só aparece no fim.
+- **Interface do quiz refeita** (duas colunas, Voltar, progresso, cartões, escala 0–10, tela final); textos das perguntas existentes preservados.
+- **Quiz do fisioterapeuta:** duas perguntas finais sobre um futuro programa de ensino para ter a própria clínica (interesse; prazo só com interesse). O texto diz que o programa ainda não existe e que não há garantia de faturamento.
+- **Migrations 081 e 082** (aplicadas no Dev): validação/conclusão das perguntas novas e limite de `step_reached` (1..20; o E2E achou que o limite 10 recusava a resposta).
+- **Testes:** E2E novo `R25` (5/5) + `08` e `09` (5/5) e `R03` (2/2) com os rótulos atualizados; `tsc` e `eslint` limpos. `R01` teve só os rótulos trocados e **não foi reexecutado** (precisa do token de gestão do Dev, que hoje não tem leitura de banco).
+- **Pendente de decisão:** a tag “Potencial Academy” segue valendo para todo lead de parceria (não alterada); usar a resposta nova para refiná-la é decisão de produto.
+
+## Sessão anterior (2026-10-02, 16ª rodada) — reconciliação entre sessões, revalidação de Repasses e doc de integração ponta a ponta
 
 > `release/v1`, PR #3 em rascunho; Dev apenas. Esta rodada **não é trabalho novo de produto**: a sessão anterior (17/01–02/10) bateu o limite de uso no meio de uma sequência já comitada (Repasses, idempotência de venda/oportunidade, Academy, Parceiros) sem dar push nem fechar a documentação. Esta sessão leu tudo sem confiar na memória (`CLAUDE.md`, `docs/transferencia-claude.md`, status, release, docs de Repasses/Conversas), conferiu o estado real do git/Dev contra o que os documentos afirmavam, e **corrigiu duas afirmações desatualizadas**: Repasses já estava comitado (não "pendente") e as migrations 075/076 já estavam no repositório (não "ausentes").
 - **Revalidado ao vivo contra o Dev (não só por documento):** SQL completo `test:sql:release` S01–S21 = **1056/1056, 0 falha**; `S18_repasses` isolado = 30/30; E2E `R20-repasses` isolado = 8/8 (caso de valor positivo pela interface do profissional **e** do Financeiro, por pedido explícito desta rodada).

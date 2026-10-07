@@ -35,9 +35,9 @@ test.describe("bloco cta com destino de jornada", () => {
     await v.getByRole("link", { name: "Fazer avaliação" }).click();
     await expect(v).toHaveURL(new RegExp(`/avaliacao\\?from=%2F${slug}`));
     const email = `e2e.cta.target.${runId}@example.com`;
-    await v.getByLabel("Como podemos chamar você?").fill(`E2E CTA Target ${runId}`);
-    await v.getByLabel("Qual é seu e-mail?").fill(email);
-    await v.getByLabel("Qual é seu WhatsApp com DDD?").fill(`(11) 9${Math.floor(1000 + Math.random() * 8999)}-${Math.floor(1000 + Math.random() * 8999)}`);
+    await v.getByLabel("Nome completo").fill(`E2E CTA Target ${runId}`);
+    await v.getByLabel("E-mail", { exact: true }).fill(email);
+    await v.getByLabel("WhatsApp com DDD").fill(`(11) 9${Math.floor(1000 + Math.random() * 8999)}-${Math.floor(1000 + Math.random() * 8999)}`);
     await v.getByRole("checkbox").click();
     await v.getByRole("button", { name: "Continuar" }).click();
     await expect(v.getByText("Em qual cidade e estado")).toBeVisible(); // quiz_start aceitou — origem já registrada

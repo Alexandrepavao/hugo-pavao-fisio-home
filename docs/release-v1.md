@@ -105,6 +105,8 @@ Produção está na **037** (37 migrations, sem dados: 0 usuários, 0 pessoas). 
 | 35 | `20260930000078_idempotent_sale_and_opportunity.sql` | Duplo clique e retentativa: `sale_create` ganha `p_idempotency_key` (mesma chave = mesma venda, inclusive em corrida) e uma oportunidade só pode ter UMA venda pendente; `crm_create_opportunity` recusa segunda oportunidade ABERTA da mesma pessoa no mesmo funil — `docs/integracao-ponta-a-ponta.md` |
 | 36 | `20260930000079_education_opportunity_follows_access.sql` | Academy: a oportunidade de educação só vai para a etapa final (“Acesso liberado”) quando a regra de acesso do produto se cumpre (`on_full_payment` = quitação; `on_first_payment` = 1º recebimento, como antes) — `docs/integracao-ponta-a-ponta.md` |
 | 37 | `20260930000080_partner_payout_finance_link.sql` | Repasse a PARCEIRO (decisão expressa do Financeiro): autorizar cria a conta a pagar (compromisso), pagar fecha a mesma conta (caixa/DRE), cancelar a cancela; `partner_payouts.payable_id`; repetir o clique não duplica — `docs/integracao-ponta-a-ponta.md` |
+| 38 | `20260930000081_quiz_programa_clinica.sql` | Quiz de parceria: perguntas finais sobre interesse (e prazo) em um futuro programa de ensino para ter a própria clínica; `quiz_validate_answer` e `quiz_complete` (+ GRANT) — `docs/captacao-site-quiz.md` |
+| 39 | `20260930000082_quiz_step_reached_limit.sql` | `quiz_leads.step_reached` de 1..10 para 1..20 (o quiz de parceria passou a ter 8 perguntas) — `docs/captacao-site-quiz.md` |
 
 **Contagem de migrations — Dev × produção (conferida em 2026-09-30 contra `supabase_migrations.schema_migrations` do Dev e contra os arquivos do repositório):**
 | | Registros | Composição |

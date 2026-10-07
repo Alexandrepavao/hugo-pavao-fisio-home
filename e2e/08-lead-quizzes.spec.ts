@@ -16,9 +16,9 @@ test.describe("quizzes de captação", () => {
 
     await p.goto("/avaliacao");
     await expect(p.getByRole("heading", { name: "Avaliação inicial gratuita" })).toBeVisible();
-    await p.getByLabel("Como podemos chamar você?").fill(`Lead Quiz E2E ${runId}`);
-    await p.getByLabel("Qual é seu e-mail?").fill(email);
-    await p.getByLabel("Qual é seu WhatsApp com DDD?").fill(phone);
+    await p.getByLabel("Nome completo").fill(`Lead Quiz E2E ${runId}`);
+    await p.getByLabel("E-mail", { exact: true }).fill(email);
+    await p.getByLabel("WhatsApp com DDD").fill(phone);
     await p.getByRole("checkbox").click(); // autorização de contato
     await p.getByRole("button", { name: "Continuar" }).click();
 
@@ -86,9 +86,9 @@ test.describe("quizzes de captação", () => {
     await anon.route("https://wa.me/**", (route) => route.fulfill({ status: 200, contentType: "text/plain", body: "ok" }));
 
     await p.goto("/seja-parceiro");
-    await p.getByLabel("Como podemos chamar você?").fill(`Parceiro Quiz E2E ${runId}`);
-    await p.getByLabel("Qual é seu e-mail?").fill(emailPartner);
-    await p.getByLabel("Qual é seu WhatsApp com DDD?").fill(phonePartner);
+    await p.getByLabel("Nome completo").fill(`Parceiro Quiz E2E ${runId}`);
+    await p.getByLabel("E-mail", { exact: true }).fill(emailPartner);
+    await p.getByLabel("WhatsApp com DDD").fill(phonePartner);
     await p.getByRole("checkbox").click();
     await p.getByRole("button", { name: "Continuar" }).click();
 
@@ -123,10 +123,16 @@ test.describe("quizzes de captação", () => {
     await expect(p.getByRole("checkbox").nth(5)).toBeChecked();
     await p.getByRole("button", { name: "Continuar" }).click();
 
+    // perguntas finais: interesse em programa para ter a própria clínica ("Não neste momento" dispensa a pergunta de prazo)
+    await expect(p.getByText("programa de ensino para você ter a sua própria clínica")).toBeVisible();
+    await p.getByRole("radio", { name: "Não neste momento" }).click();
+    await p.getByRole("button", { name: "Continuar" }).click();
+
     await p.getByRole("button", { name: "Concluir" }).click(); // marketing opcional fica desmarcado
     await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible();
     const preview = p.getByLabel("Prévia da mensagem (você pode editar)");
     await expect(preview).toHaveValue(/Estudante/);
+    await expect(preview).toHaveValue(/Interesse em programa para ter a própria clínica: Não neste momento/);
     await expect(preview).toHaveValue(/Nenhuma no momento/);
     await expect(preview).not.toHaveValue(/dor/); // jornada de parceria nunca inclui pergunta de saúde
     await anon.close();
@@ -145,9 +151,9 @@ test.describe("quizzes de captação", () => {
     const dupPhone = `(11) 9${Math.floor(1000 + Math.random() * 8999)}-${Math.floor(1000 + Math.random() * 8999)}`;
     for (let i = 0; i < 2; i++) {
       await p.goto("/avaliacao");
-      await p.getByLabel("Como podemos chamar você?").fill(`Lead Dup E2E ${runId}`);
-      await p.getByLabel("Qual é seu e-mail?").fill(dupEmail);
-      await p.getByLabel("Qual é seu WhatsApp com DDD?").fill(dupPhone);
+      await p.getByLabel("Nome completo").fill(`Lead Dup E2E ${runId}`);
+      await p.getByLabel("E-mail", { exact: true }).fill(dupEmail);
+      await p.getByLabel("WhatsApp com DDD").fill(dupPhone);
       await p.getByRole("checkbox").click();
       await p.getByRole("button", { name: "Continuar" }).click();
       await expect(p.getByText("Em qual cidade e estado")).toBeVisible();
