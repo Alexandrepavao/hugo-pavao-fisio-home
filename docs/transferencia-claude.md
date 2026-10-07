@@ -60,6 +60,22 @@ Horários em BRT. “PR” = GitHub `Alexandrepavao/hugo-pavao-fisio-home`.
 
 ## 5. Estado real conferido em 2026-10-01 (evidências)
 
+> **Atenção:** 5.1–5.7 são o retrato de 01/10 (até `ce5d4d7`). O estado atual, reconciliado em 02/10 e reconferido em 06/10, está em **5.8** e prevalece onde diferir.
+
+### 5.8 Reconciliação entre sessões (02/10, reconferida em 06/10) — estado atual
+| Item | Valor (conferido nos arquivos, no Git e no Dev) |
+|---|---|
+| HEAD | `bee5317` em `release/v1`; `origin/release/v1` = HEAD (0 à frente/atrás); working tree limpo (só `.claude/`, não versionado); sem stash; worktree extra `D:/Claude/hp-before` (HEAD solto `819bca5`, de 21/09, sem processo ligado) |
+| Commits depois de `ce5d4d7` | Conversas (`d73e938`, `a50a8bf`) · Repasses (`2bd5060`) · venda/oportunidade idempotentes (`8f98d59`, `5ff8a60`) · Academy (`ca2efdc`) · Parceiros (`5346ad3`) · correção do seletor do `R04` + capturas (`a5376dc`) · reconciliação e matriz (`bee5317`) |
+| Por que a rodada anterior ficou incompleta | a sessão anterior chegou ao **limite de uso** (mensagem “session limit” no fim da transcrição local `4fb2b85e…`, 02/10 00:24Z), no meio de commits já feitos mas **sem push, sem docs e sem relatório final**; não houve erro, perda de dados nem commit quebrado |
+| Último prompt de integração | “Retome o HP Group Hub e conclua a integração operacional dos aplicativos…” (transcrição local `4fb2b85e…`, 01/10 23:30Z, `release/v1`). Foi **implementado e commitado** o que está acima; o que **só estava planejado** era a matriz `docs/integracao-ponta-a-ponta.md` (referenciada pelo `release-v1.md`, nunca criada) — **agora criada** |
+| Correção do “último estado conhecido” | Repasses **não** está pendente (commitado, `docs/repasses.md`); as migrations 075/076 **estão** no repositório e idênticas ao Dev; Conversas = 077, idempotência = 078, Academy = 079, repasse a parceiro = 080 |
+| Dev `fsvtzowcwhvwtluwrhnb` | última migration **`20260930000080`**; repositório e Dev batem (048–051 só no Dev, por desenho) |
+| Contas/sessões | a identificação da conta de cada sessão **não está disponível com evidência**; trabalho de duas contas no mesmo clone já foi preservado (nada foi descartado). A transcrição desta rodada fica em outra pasta de projeto do Claude Code (`D--Claude-Code`) |
+| Testes executados nesta rodada (contra o Dev) | SQL `test:sql:release` **S01–S21 = 1056/1056**; `S18` 30/30 e E2E `R20` 8/8 isolados (caso de valor positivo pela interface do profissional e do Financeiro); E2E `@release` completo com **1 worker = 174/174** (a 1ª tentativa com 2 workers deu falhas de concorrência em R09/R11/R12/R20 e **não vale**: contraria a regra de 1 worker; uma falha única `500` em `adm_central` não reproduziu — chamada direta 200 e `R11` isolado 9/9; tratada como transitória, **sem prova de causa**) |
+| Matriz das 9 jornadas | [`docs/integracao-ponta-a-ponta.md`](integracao-ponta-a-ponta.md): 7 validadas ponta a ponta; **vídeo Bunny** e **Google Calendar** bloqueados por configuração/autorização externa |
+| Publicado | **Nada novo publicado.** O preview `release-v1` continua o de `ce5d4d7`; publicar `bee5317` exige `netlify login` (a CLI não tem sessão nem `NETLIFY_AUTH_TOKEN`; o conector MCP não aceita `--context/--alias`, por isso não foi usado) |
+
 ### 5.1 Git, remoto e PR (conferido ao final da rodada de 01/10)
 | Item | Valor |
 |---|---|
@@ -131,7 +147,8 @@ Máquina com pouca memória: rodar E2E em grupos pequenos, 1 worker; não reinic
 9. **Relatórios:** sempre lembrar ao usuário de revogar o token do Supabase ao final.
 
 ## 7. Pendências e próximos passos, em ordem
-**A tarefa autorizada de 01/10 foi concluída** (auditoria e lacunas das jornadas Fisioterapeuta, Paciente e CRM, Hub sem “Seus aplicativos”, testes, documentação, capturas, commit/push, PR #3 em rascunho e preview). Não há tarefa autorizada em aberto. Próximos passos sugeridos, **todos dependem de nova autorização ou de ação sua**:
+**Atualização 06/10:** a integração operacional das 9 jornadas foi conferida e fechada no código (ver 5.8). **Falta só publicar o preview de `bee5317`** (precisa de `netlify login` ou `NETLIFY_AUTH_TOKEN` no ambiente do usuário) e as ações externas abaixo. Antes: a tarefa autorizada de 01/10 foi concluída (jornadas Fisioterapeuta, Paciente e CRM, Hub sem “Seus aplicativos”, testes, documentação, capturas, commit/push, PR #3 em rascunho e preview). Não há tarefa de código em aberto. Próximos passos, **dependem de ação sua ou de nova autorização**:
+0. **Ação mínima sua agora:** (a) `netlify login` (ou definir `NETLIFY_AUTH_TOKEN` nas variáveis do usuário) para eu publicar o rascunho; (b) revogar o token do Supabase comprometido; (c) para fechar Google: abrir **Operação › Meu dia › Conectar Google Calendar** com uma conta de teste e conceder a permissão; (d) para fechar Bunny: cadastrar `BUNNY_EMBED_TOKEN_KEY` nos Secrets do Supabase Dev e o ID da biblioteca em Configurações › Operação.
 1. **Revisão do PR #3** (continua em rascunho) e decisão sobre o que entra na primeira versão de produção.
 2. **Configurações externas** (seção 5.7): Bunny (segredo e biblioteca), e-mail em produção (Resend, DKIM/SPF, hook, URLs), Google em produção, backup/PITR.
 3. **Teste real das dependências externas** assim que configuradas: e-mail de convite/recuperação, vídeo no Bunny, autorização Google.

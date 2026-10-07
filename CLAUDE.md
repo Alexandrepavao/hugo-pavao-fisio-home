@@ -7,7 +7,7 @@ Instruções para qualquer sessão do Claude Code neste repositório. **Leia ant
 
 ## Estado atual (conferir no Git antes de confiar)
 - Repositório: `https://github.com/Alexandrepavao/hugo-pavao-fisio-home` · pasta de trabalho: `D:\Claude\hugo-pavao-fisio-home`.
-- **Branch ativa: `release/v1` · PR #3 (RASCUNHO)**. Último commit conhecido: `ce5d4d7` (tudo commitado e enviado; só `.claude/` não é versionado). Preview: deploy `6abed1f6a20ecff377beff7e`, commit `ce5d4d7448ad`.
+- **Branch ativa: `release/v1` · PR #3 (RASCUNHO)**. Último commit conhecido: `bee5317` (tudo commitado e enviado; só `.claude/` não é versionado; reconferir com `git log`). **Preview publicado ainda é o de `ce5d4d7`** (deploy `6abed1f6a20ecff377beff7e`): publicar `bee5317` depende de `netlify login`/`NETLIFY_AUTH_TOKEN` do usuário. Migrations: repositório e Dev vão até a **080**.
 - `feature/hp-group-hub` (PR #1) **já foi mesclada** — não voltar a ela. `feature/lead-quizzes` (PR #2, rascunho) guarda o Contábil e o redesign antigo.
 - Banco **Dev**: Supabase `fsvtzowcwhvwtluwrhnb` (único ambiente em que se trabalha). Preview: Netlify `hp-group-hub` (rascunho de branch `release-v1`).
 
@@ -21,9 +21,9 @@ Instruções para qualquer sessão do Claude Code neste repositório. **Leia ant
 
 ## Desenvolvimento
 - Stack: Vite + React 18 + TypeScript + Tailwind/shadcn + React Router + TanStack Query + Supabase (Postgres, Auth, RLS, Edge Functions) + Netlify. Playwright (Edge) para E2E.
-- Comandos: `npm ci` · `npm run dev` (ou `node node_modules/vite/bin/vite.js --port 5180 --host 127.0.0.1`) · `npm run typecheck` · `npm run lint` · `npm run build` · `npm run test:e2e:release` (`npx playwright test <arquivo>`, **1 worker**) · SQL de release: `supabase/tests/release/S*.sql` (transação desfeita; o relatório sai no erro `RELATORIO_…`).
+- Comandos: `npm ci` · `npm run dev` (ou `node node_modules/vite/bin/vite.js --port 5180 --host 127.0.0.1`) · `npm run typecheck` · `npm run lint` · `npm run build` · `npm run test:e2e:release` (`npx playwright test <arquivo>`, **sempre `--workers=1`**: com 2 workers a suíte compartilha o mesmo backend Dev e falha por concorrência) · SQL de release: `supabase/tests/release/S*.sql` (transação desfeita; o relatório sai no erro `RELATORIO_…`).
 - `.env.local` (não versionado) aponta **sempre para o Dev**; `vite.config.ts` recusa produção↔Dev. Perfil de entrega `VITE_RELEASE_PROFILE=v1` esconde recursos incompletos.
-- Migrations: `supabase/migrations/`, numeradas por ordem (001→074); aplicar no Dev só se pendente e uma a uma; nunca `db reset`. Funções públicas: `security definer` com `set search_path = ''`, **repetir `GRANT`/`REVOKE`** ao redefinir e partir da definição **mais recente** (`grep` em todas as migrations). Escrita só por função; leitura por RLS; auditoria por `private.audit_row`.
+- Migrations: `supabase/migrations/`, numeradas por ordem (001→080; 048–051 = Contábil, só em `feature/lead-quizzes`); aplicar no Dev só se pendente e uma a uma; nunca `db reset`. Funções públicas: `security definer` com `set search_path = ''`, **repetir `GRANT`/`REVOKE`** ao redefinir e partir da definição **mais recente** (`grep` em todas as migrations). Escrita só por função; leitura por RLS; auditoria por `private.audit_row`.
 - Testes: separar **novos** (`supabase/tests/novos`, `e2e/novos`) de **regressão**/release; só mudar expectativa por mudança **intencional** de interface; máquina com pouca memória → grupos pequenos de E2E, sem reiniciar servidores em segundo plano sozinho. Antes de culpar limitador ou instabilidade, confira o banco.
 - Edição de arquivos: use as ferramentas de edição (heredocs grandes com aspas quebram); muitos arquivos são CRLF.
 - Convenções de produto: app ativo decidido pela URL (`src/components/hp/apps.ts`, `appNav.ts`); **filtro único** (`PeriodFilter`/`ListFilterBar`); o plano de sessões do paciente é **sempre definido pelo profissional**; Google Calendar é a **única** integração de calendário; compra de cartão = 1 despesa; reservas serializadas por profissional (não aumentar timeouts para passar testes).
@@ -38,4 +38,4 @@ Instruções para qualquer sessão do Claude Code neste repositório. **Leia ant
 `jandaarioush/brightercore-4d41cb1d` (gestão/financeiro) · `jandaarioush/brighter-flow-20722354` (CRM Pro) · `jandaarioush/engage-nest-space-71c70a06` (Academy/Iaguara) · `jandaarioush/focussphere-51789` (produtividade) · `jandaarioush/brighter-vision-finance`. Inspirações visuais: Shadcn Admin, TailAdmin, Mosaic — recriar com componentes próprios do HP.
 
 ## Próxima tarefa autorizada
-Nenhuma em aberto: as jornadas Fisioterapeuta, Paciente e CRM foram concluídas e testadas ([`docs/jornadas-fisioterapeuta-paciente-crm.md`](docs/jornadas-fisioterapeuta-paciente-crm.md)). Os próximos passos (revisão do PR #3, configurações externas, produção) dependem de autorização ou de ação do usuário: `docs/transferencia-claude.md` §7.
+Nenhuma de código em aberto: as 9 jornadas operacionais estão conferidas em [`docs/integracao-ponta-a-ponta.md`](docs/integracao-ponta-a-ponta.md) (SQL S01–S21 = 1056/1056; E2E `@release` = 174/174 com 1 worker). Falta: publicar o preview de `bee5317` (login do Netlify), Bunny (chave e biblioteca) e Google (autorização real) — todos dependem do usuário — e a revogação do token do Supabase. Ver `docs/transferencia-claude.md` §5.8 e §7.
