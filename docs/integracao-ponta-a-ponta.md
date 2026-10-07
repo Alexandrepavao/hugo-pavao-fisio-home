@@ -97,6 +97,16 @@
 
 ---
 
+## Como conferir a qualquer momento se os apps conversam (verificação em 3 camadas)
+
+| Camada | O que prova | Como rodar | Resultado em 06/10 (Dev) |
+|---|---|---|---|
+| 1. Telas | cada tela de cada app abre, sem erro de console e sem resposta 4xx/5xx do banco | colar `e2e/tools/varredura-telas.js` no navegador logado e chamar `__crawl([...rotas])` | **48 rotas** (Gestão, Financeiro, CRM, Pages, Operação, Academy, Parceiros, Produtividade): 0 erros. `/admin/crm/configuracoes` redireciona para `/admin/configuracoes` (por desenho) |
+| 2. Dados reais | os registros de um app aparecem certos no seguinte (venda→parcelas→pagamentos→pacote→agenda/saldo→comissões→estorno→Academy→parceiros→CRM→captação→conversas) | `supabase/tests/integracao/auditoria-integracao.sql` (só leitura) | **21 verificações, 0 violações**, sobre 153 vendas, 182 pagamentos (19 estornos), 69 pacotes, 146 comissões, 103 matrículas, 18 indicações, 40 captações, 199 oportunidades. **Sem prova nos dados reais:** repasses a parceiros e conversas (0 registros no Dev — checks 14, 15 e 18 ficam vazios; quem os cobre são `S21`/`R23` e `S19`/`R19`) |
+| 3. Regras e jornadas | a ação em um app produz o resultado certo no outro, com permissão, retentativa, estorno e indicador | `npm run test:sql:release` e `npx playwright test --grep @release --workers=1` | SQL **1056/1056**; E2E **174/174** |
+
+A camada 1 e a 2 não substituem a 3: tela que abre e dados sem órfãos não provam que a regra está certa; e a 3 usa dados de QA próprios, apagados no fim.
+
 ## Resumo
 
 | Jornada | Estado |
