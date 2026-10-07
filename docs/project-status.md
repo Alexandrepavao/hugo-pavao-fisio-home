@@ -44,7 +44,14 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-06, 18ª rodada) — CRM com tipos de lead, listas com tipo, empresas B2B e várias oportunidades por lead
+## Sessão mais recente (2026-10-07, 19ª rodada) — suíte completa verde e preview publicado
+
+> `release/v1`, PR #3 em rascunho; Dev apenas. Token do Supabase **trocado** (o comprometido foi revogado) e Netlify autenticado por token de usuário.
+- **Suíte completa contra o Dev (token novo, 1 worker):** SQL `S01–S22` = **1.095 OK, 0 falha** (o `S16` foi ajustado: lista de teste agora tem tipo); E2E `@release` = **190/190** (185 na rodada inteira + os 5 do `R14` que ela não chegou a rodar, aprovados em rodada própria). A única falha da rodada inteira era interferência entre testes (o `R08` deixa uma linha de extrato com o mesmo identificador da rodada e o `R14` esperava só a dele): `R14` passou a buscar só as próprias linhas; `R08`+`R14` na mesma rodada = 20/20.
+- **Preview de rascunho publicado:** deploy `6ac62ffba311316afeef9cc2` (branch-deploy `release-v1`, sem data de publicação = não entrou na URL principal), commit `f5a0d07ed6e5`, `version.json`: perfil `v1`, ambiente `preview`, backend Dev (`fsvtzowcwhvwtluwrhnb`); o pacote só referencia o Dev. URL protegida por login do time Netlify.
+- **Falta para a `main`:** ver o passo a passo combinado (Fase 3 produção: backup/PITR, e-mail, variáveis do site de produção, 42 migrations; depois o merge do PR #3 com a sua autorização explícita).
+
+## Sessão anterior (2026-10-06, 18ª rodada) — CRM com tipos de lead, listas com tipo, empresas B2B e várias oportunidades por lead
 
 > `release/v1`, PR #3 em rascunho; Dev apenas. Regras, telas e limites: [`docs/crm-tipos-de-lead.md`](crm-tipos-de-lead.md). Migration **083** aplicada no Dev.
 - **Quatro tipos de lead** (Paciente · Fisioterapeuta-Equipe · Fisioterapeuta-HP Academy · Empresa-B2B) = tipo do funil, visíveis no Pipeline (cartões com contagem), no Painel comercial, na Gestão de leads (coluna e filtro), nas Listas, na importação e na ficha.

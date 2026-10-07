@@ -7,7 +7,7 @@ Instruções para qualquer sessão do Claude Code neste repositório. **Leia ant
 
 ## Estado atual (conferir no Git antes de confiar)
 - Repositório: `https://github.com/Alexandrepavao/hugo-pavao-fisio-home` · pasta de trabalho: `D:\Claude\hugo-pavao-fisio-home`.
-- **Branch ativa: `release/v1` · PR #3 (RASCUNHO)**. Último commit conhecido: `bee5317` (tudo commitado e enviado; só `.claude/` não é versionado; reconferir com `git log`). **Preview publicado ainda é o de `ce5d4d7`** (deploy `6abed1f6a20ecff377beff7e`): publicar `bee5317` depende de `netlify login`/`NETLIFY_AUTH_TOKEN` do usuário. Migrations: repositório e Dev vão até a **083**.
+- **Branch ativa: `release/v1` · PR #3 (RASCUNHO)**. Último commit conhecido: `bee5317` (tudo commitado e enviado; só `.claude/` não é versionado; reconferir com `git log`). **Preview publicado (rascunho): deploy `6ac62ffba311316afeef9cc2`, commit `f5a0d07ed6e5`** (06–07/10); o Netlify autentica por `NETLIFY_AUTH_TOKEN` (variável do usuário Windows). Migrations: repositório e Dev vão até a **083**.
 - `feature/hp-group-hub` (PR #1) **já foi mesclada** — não voltar a ela. `feature/lead-quizzes` (PR #2, rascunho) guarda o Contábil e o redesign antigo.
 - Banco **Dev**: Supabase `fsvtzowcwhvwtluwrhnb` (único ambiente em que se trabalha). Preview: Netlify `hp-group-hub` (rascunho de branch `release-v1`).
 
