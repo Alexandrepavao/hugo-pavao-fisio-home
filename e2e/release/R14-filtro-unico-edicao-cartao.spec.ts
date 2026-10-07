@@ -205,7 +205,7 @@ test.describe.serial("@release Filtro único: Agenda, Academy, Parceiros, Contas
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/financeiro/conciliacao");
     await expect(page.locator("#rec-q")).toBeVisible({ timeout: 40_000 }); await expect(page.locator("#rec-acc")).toBeVisible();
-    await page.locator("#rec-q").fill(runId);
+    await page.locator("#rec-q").fill(`FILTRO E2E ${runId}`);   // só as linhas deste teste (outros testes da mesma rodada deixam linhas com o mesmo runId)
     await expect(page.getByText(lIn)).toBeVisible({ timeout: 30_000 }); await expect(page.getByText(lOut)).toBeVisible();
     await openFilters(page); await page.locator("#rec-kind").selectOption("out"); await closeFilters(page);
     await expect(page.getByText(lIn)).toHaveCount(0); await expect(page.getByText(lOut)).toBeVisible();
