@@ -7,7 +7,7 @@ Instruções para qualquer sessão do Claude Code neste repositório. **Leia ant
 
 ## Estado atual (conferir no Git antes de confiar)
 - Repositório: `https://github.com/Alexandrepavao/hugo-pavao-fisio-home` · pasta de trabalho: `D:\Claude\hugo-pavao-fisio-home`.
-- **Branch ativa: `release/v1` · PR #3 (RASCUNHO)**. Último commit conhecido: `bee5317` (tudo commitado e enviado; só `.claude/` não é versionado; reconferir com `git log`). **Preview publicado (rascunho): deploy `6ac62ffba311316afeef9cc2`, commit `f5a0d07ed6e5`** (06–07/10); o Netlify autentica por `NETLIFY_AUTH_TOKEN` (variável do usuário Windows). Migrations: repositório e Dev vão até a **083**.
+- **Branch ativa: `release/v1` · PR #3 (RASCUNHO)**. Último commit conhecido: `00c389f` (tudo commitado e enviado; só `.claude/` não é versionado; reconferir com `git log`). **Preview publicado (rascunho): deploy `6ac62ffba311316afeef9cc2`, commit `f5a0d07ed6e5`** (06–07/10); o Netlify autentica por `NETLIFY_AUTH_TOKEN` (variável do usuário Windows). Migrations: repositório e Dev vão até a **083**.
 - `feature/hp-group-hub` (PR #1) **já foi mesclada** — não voltar a ela. `feature/lead-quizzes` (PR #2, rascunho) guarda o Contábil e o redesign antigo.
 - Banco **Dev**: Supabase `fsvtzowcwhvwtluwrhnb` (único ambiente em que se trabalha). Preview: Netlify `hp-group-hub` (rascunho de branch `release-v1`).
 
@@ -38,4 +38,4 @@ Instruções para qualquer sessão do Claude Code neste repositório. **Leia ant
 `jandaarioush/brightercore-4d41cb1d` (gestão/financeiro) · `jandaarioush/brighter-flow-20722354` (CRM Pro) · `jandaarioush/engage-nest-space-71c70a06` (Academy/Iaguara) · `jandaarioush/focussphere-51789` (produtividade) · `jandaarioush/brighter-vision-finance`. Inspirações visuais: Shadcn Admin, TailAdmin, Mosaic — recriar com componentes próprios do HP.
 
 ## Próxima tarefa autorizada
-Nenhuma de código em aberto: as 9 jornadas operacionais estão conferidas em [`docs/integracao-ponta-a-ponta.md`](docs/integracao-ponta-a-ponta.md) (SQL S01–S21 = 1056/1056; E2E `@release` = 174/174 com 1 worker). Falta: publicar o preview de `bee5317` (login do Netlify), Bunny (chave e biblioteca) e Google (autorização real) — todos dependem do usuário — e a revogação do token do Supabase. Ver `docs/transferencia-claude.md` §5.8 e §7.
+Nenhuma de código em aberto: as 9 jornadas operacionais estão conferidas em [`docs/integracao-ponta-a-ponta.md`](docs/integracao-ponta-a-ponta.md) (SQL S01–S22 = 1095/1095; E2E `@release` = 190/190 com 1 worker) e o preview de rascunho já foi publicado. Falta: Bunny (chave e biblioteca) e Google (autorização real) — dependem do usuário —, o preparo de produção (backup/PITR, e-mail, variáveis do site de produção, 42 migrations) e a autorização explícita para o merge na `main`. Ver `docs/transferencia-claude.md` §5.8 e §7.
