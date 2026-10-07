@@ -44,7 +44,17 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-07, 19ª rodada) — suíte completa verde e preview publicado
+## Sessão mais recente (2026-10-07, 20ª rodada) — v1 na `main` e na produção (DNS fora)
+
+> Autorização explícita do usuário em chat: backup, migrations em produção, merge na `main` e deploy de produção. **DNS não foi tocado** (`hpfisioterapia.com.br` continua no GitHub Pages, site antigo).
+- **Backup antes de tudo:** produção tinha só 66 linhas de seed, 0 usuários, 0 arquivos (registro em `D:\Claude\backups-hp-group\2026-10-07-producao-core\LEIA-ME.txt`, fora do Git). Tag de retorno do código: `pre-v1-main-64add39`. Backup gerenciado do Supabase: lista vazia e PITR desligado → **ativar no painel antes de entrar dado real**.
+- **Migrations em produção:** as 42 pendentes (038–047, 052–083) aplicadas uma a uma pelo endpoint de migrations (histórico registrado); o schema ficou igual ao do Dev, salvo o módulo Contábil (`acc_*`, só em `feature/lead-quizzes`) e 5 funções que no Dev perderam variáveis não usadas/comentários (mesma lógica; `audit_row`, `seed_default_pipelines`, `dashboard_metrics`, `get_public_page`, `submit_public_form`).
+- **Merge:** PR #3 saiu do rascunho e foi mesclado (merge commit `6b48f58`, histórico por tema preservado).
+- **Deploy de produção:** site Netlify `hp-group-hub-producao`, build feito a partir da `main` (numa branch `release/v1` o `netlify.toml` aplica o contexto de branch `preview` e a trava do build recusa — por isso o build de produção sai sempre da `main`). `version.json`: commit `6b48f58951e6`, perfil `v1`, ambiente `production`, backend produção (`wfqkjrpqkaarpavjheoj`); o pacote não cita o Dev. Variáveis do contexto production: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (pública), `VITE_APP_ENV=production`, `VITE_RELEASE_PROFILE=v1`. Endereço de teste: https://hp-group-hub-producao.netlify.app.
+- **`leafy-cascaron-325147`:** site Netlify de outra conta, ligado ao repositório pelo app do GitHub; decisão do usuário: pode ser sobrescrito. Não foi tocado por mim.
+- **Ainda manual / pendente:** (1) Auth da produção: `site_url` ainda `http://localhost:3000` e sem URLs permitidas (a alteração via API foi bloqueada; fazer em Authentication → URL Configuration: Site URL `https://hp-group-hub-producao.netlify.app` e redirects dele + do domínio); (2) e-mail: sem SMTP e sem o hook `auth-email-hook` atualizado (prod tem a v2, o Dev a v12), sem `RESEND_API_KEY`/`EMAIL_FROM` no Netlify; (3) edge functions `bunny-playback` e `google-calendar` não existem na produção (precisam de chaves); (4) backup/PITR; (5) gestores: contato@hpfisioterapia.com.br e jan.darioush@yahoo.com.br viram gestores no primeiro acesso verificado; (6) **DNS**: só com nova autorização.
+
+## Sessão anterior (2026-10-07, 19ª rodada) — suíte completa verde e preview publicado
 
 > `release/v1`, PR #3 em rascunho; Dev apenas. Token do Supabase **trocado** (o comprometido foi revogado) e Netlify autenticado por token de usuário.
 - **Suíte completa contra o Dev (token novo, 1 worker):** SQL `S01–S22` = **1.095 OK, 0 falha** (o `S16` foi ajustado: lista de teste agora tem tipo); E2E `@release` = **190/190** (185 na rodada inteira + os 5 do `R14` que ela não chegou a rodar, aprovados em rodada própria). A única falha da rodada inteira era interferência entre testes (o `R08` deixa uma linha de extrato com o mesmo identificador da rodada e o `R14` esperava só a dele): `R14` passou a buscar só as próprias linhas; `R08`+`R14` na mesma rodada = 20/20.
