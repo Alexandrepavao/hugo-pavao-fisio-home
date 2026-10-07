@@ -20,8 +20,8 @@ begin
   insert into public.pipeline_stages (org_id, pipeline_id, name, position, kind) values (v_org, pipe, 'Contato feito', 2, 'open') returning id into st_contact;
   insert into public.pipeline_stages (org_id, pipeline_id, name, position, kind) values (v_org, pipe, 'Ganho', 3, 'won') returning id into st_won;
   insert into public.pipeline_stages (org_id, pipeline_id, name, position, kind) values (v_org, pipe, 'Perdido', 4, 'lost') returning id into st_lost;
-  insert into public.crm_lead_lists (org_id, name) values (v_org, 'Lista S16') returning id into lst;
-  insert into public.crm_lead_lists (org_id, name) values (v_org, 'Lista B S16') returning id into lst2;
+  insert into public.crm_lead_lists (org_id, name, kind) values (v_org, 'Lista S16', 'patients') returning id into lst;
+  insert into public.crm_lead_lists (org_id, name, kind) values (v_org, 'Lista B S16', 'patients') returning id into lst2;
   insert into public.people (org_id, unit_id, full_name) values (v_org, ua, 'Maria Existente') returning id into p_maria;
   insert into public.person_kinds (person_id, kind) values (p_maria, 'lead');
   insert into public.person_contacts (org_id, person_id, type, value, is_primary) values (v_org, p_maria, 'email', 'maria.s16@example.com', true), (v_org, p_maria, 'phone', '(11) 98888-1111', true);
@@ -142,7 +142,7 @@ begin
   rep := rep || pg_temp.chk(pg_temp.err(format('insert into public.crm_lead_list_members (list_id, person_id) values (%L, %L)', lst, p_maria)) is not null, 'fisioterapeuta NÃO liga pessoa a lista');
   perform pg_temp.as_user(u_sales);
   select count(*) into n from public.crm_lead_lists where id = lst; rep := rep || pg_temp.chk(n = 1, 'comercial enxerga e usa as listas');
-  rep := rep || pg_temp.chk(pg_temp.err(format('insert into public.crm_lead_lists (org_id, name) values (%L, ''Lista comercial S16'')', v_org)) is null, 'comercial cria lista');
+  rep := rep || pg_temp.chk(pg_temp.err(format('insert into public.crm_lead_lists (org_id, name, kind) values (%L, ''Lista comercial S16'', ''patients'')', v_org)) is null, 'comercial cria lista');
   select count(*) into n from public.crm_lead_list_members where list_id = lst; rep := rep || pg_temp.chk(n >= 0, 'comercial lê participantes das pessoas que pode ler');
   perform pg_temp.as_user(u_mgr);
 
