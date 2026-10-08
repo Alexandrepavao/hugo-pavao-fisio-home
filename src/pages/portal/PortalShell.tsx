@@ -23,6 +23,7 @@ const PortalShell = ({ title, subtitle, actions, children }: { title: string; su
             {hasRole("member") && <NavLink to="/paciente" className={link}>Meu acompanhamento</NavLink>}
             {hasRole("partner") && <NavLink to="/parceiro" className={link}>Parceiro</NavLink>}
             <NavLink to="/pesquisas" className={link}>Pesquisas</NavLink>
+            <NavLink to="/boas-vindas" className={link}>Tutorial</NavLink>
             {isStaff && <NavLink to="/admin" className={link}>Painel</NavLink>}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
