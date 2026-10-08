@@ -30,71 +30,81 @@ const authError = (message: string) => {
   return "Não foi possível trocar a senha agora. Tente novamente.";
 };
 
-const Profile = () => {
-  const qc = useQueryClient(); const { user } = useAuth(); const account = useMyAccount();
+interface PersonRow { full_name: string; preferred_name: string | null; city: string | null; state_uf: string | null }
+const PERSON_KEY = "my-person-data";
+
+/** Cadastro de pessoa ligado à conta (nome completo, preferência de nome, cidade/UF e telefone principal). */
+const usePersonData = (personId: string | null | undefined) => useQuery({
+  queryKey: [PERSON_KEY, personId], enabled: !!personId,
+  queryFn: async () => {
+    const [p, c] = await Promise.all([
+      supabase.from("people").select("full_name, preferred_name, city, state_uf").eq("id", personId!).maybeSingle(),
+      supabase.from("person_contacts").select("value").eq("person_id", personId!).eq("type", "phone").eq("is_primary", true).maybeSingle(),
+    ]);
+    return { person: p.data as PersonRow | null, phone: (c.data as { value: string } | null)?.value ?? "" };
+  },
+});
+
+/** Nome: com cadastro de pessoa ligado, o nome mostrado no sistema É o do cadastro (preferência de nome; em branco, o nome completo). Sem cadastro, o nome de exibição da conta. */
+const Profile = ({ personId }: { personId: string | null }) => {
+  const qc = useQueryClient(); const { user } = useAuth(); const account = useMyAccount(); const person = usePersonData(personId);
+  const linked = !!personId; const full = person.data?.person?.full_name ?? "";
+  const initial = linked ? (person.data?.person?.preferred_name ?? "") : shownName(account.data, user?.email);
   const [msg, m] = useMsg(); const [name, setName] = useState(""); const [busy, setBusy] = useState(false);
-  useEffect(() => { if (account.data) setName(shownName(account.data, user?.email)); }, [account.data, user?.email]);
-  const current = shownName(account.data, user?.email);
+  useEffect(() => { if (linked ? person.data : account.data) setName(initial); }, [linked, person.data, account.data, initial]);
   const save = async (e: FormEvent) => {
     e.preventDefault(); m.clear();
-    if (name.trim().length < 2) return m.err("Informe um nome com ao menos 2 caracteres.");
+    if (!linked && name.trim().length < 2) return m.err("Informe um nome com ao menos 2 caracteres.");
+    if (linked && name.trim().length === 1) return m.err("Use ao menos 2 caracteres, ou deixe em branco para usar o nome completo.");
     setBusy(true);
     const { error } = await supabase.rpc("my_account_update", { p_display_name: name });
     setBusy(false);
     if (error) return m.err(errText(error));
-    m.ok("Nome atualizado."); void qc.invalidateQueries({ queryKey: [MY_ACCOUNT_KEY] });
+    m.ok("Nome atualizado."); void qc.invalidateQueries({ queryKey: [MY_ACCOUNT_KEY] }); void qc.invalidateQueries({ queryKey: [PERSON_KEY] });
   };
   return (
     <Card title="Perfil" hint="Como você aparece no sistema: no cabeçalho, na saudação, nas atribuições e nos históricos." testid="conta-perfil">
       <Msg m={msg} />
-      <State loading={account.isLoading} error={account.error} />
+      <State loading={account.isLoading || (linked && person.isLoading)} error={account.error ?? person.error} />
       <form onSubmit={save} className="grid gap-4 sm:grid-cols-2 items-end" noValidate>
-        <div><label htmlFor="ac-name" className="block text-xs mb-1">Nome de exibição</label>
-          <input id="ac-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" /></div>
+        {linked && <div className="sm:col-span-2"><label htmlFor="ac-full" className="block text-xs mb-1">Nome completo (do seu cadastro)</label>
+          <input id="ac-full" value={full} readOnly className="!bg-muted" /></div>}
+        <div><label htmlFor="ac-name" className="block text-xs mb-1">{linked ? "Como quer ser chamado(a)" : "Nome de exibição"}</label>
+          <input id="ac-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="nickname" placeholder={linked ? full : undefined} /></div>
         <div><label htmlFor="ac-email" className="block text-xs mb-1">E-mail de acesso</label>
-          <input id="ac-email" value={user?.email ?? ""} readOnly aria-describedby="ac-email-hint" className="!bg-muted" /></div>
-        <p id="ac-email-hint" className="sm:col-span-2 text-xs text-muted-foreground -mt-2">O e-mail é o login e não pode ser trocado por aqui. Para mudar, peça a um gestor em Equipe e acessos.</p>
-        <div className="sm:col-span-2 flex gap-2"><button className={btnPrimary} disabled={busy || name.trim() === current}>{busy ? "Salvando…" : "Salvar nome"}</button></div>
+          <input id="ac-email" value={user?.email ?? ""} readOnly aria-describedby="ac-hint" className="!bg-muted" /></div>
+        <p id="ac-hint" className="sm:col-span-2 text-xs text-muted-foreground -mt-2">
+          {linked ? "O nome que aparece no sistema vem do seu cadastro: o nome acima, ou o nome completo se ele ficar em branco. O nome completo só um gestor altera. " : ""}
+          O e-mail é o login e não pode ser trocado por aqui; para mudar, peça a um gestor em Equipe e acessos.
+        </p>
+        <div className="sm:col-span-2 flex gap-2"><button className={btnPrimary} disabled={busy || name.trim() === initial.trim()}>{busy ? "Salvando…" : "Salvar nome"}</button></div>
       </form>
     </Card>
   );
 };
 
-interface PersonRow { full_name: string; preferred_name: string | null; city: string | null; state_uf: string | null }
-
 const PersonalData = ({ personId }: { personId: string }) => {
-  const qc = useQueryClient(); const [msg, m] = useMsg(); const [busy, setBusy] = useState(false);
-  const [pref, setPref] = useState(""); const [phone, setPhone] = useState(""); const [city, setCity] = useState(""); const [uf, setUf] = useState("");
-  const data = useQuery({
-    queryKey: ["my-person-data", personId],
-    queryFn: async () => {
-      const [p, c] = await Promise.all([
-        supabase.from("people").select("full_name, preferred_name, city, state_uf").eq("id", personId).maybeSingle(),
-        supabase.from("person_contacts").select("value").eq("person_id", personId).eq("type", "phone").eq("is_primary", true).maybeSingle(),
-      ]);
-      return { person: p.data as PersonRow | null, phone: (c.data as { value: string } | null)?.value ?? "" };
-    },
-  });
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const [busy, setBusy] = useState(false); const data = usePersonData(personId);
+  const [phone, setPhone] = useState(""); const [city, setCity] = useState(""); const [uf, setUf] = useState("");
   useEffect(() => {
     if (!data.data?.person) return;
-    setPref(data.data.person.preferred_name ?? ""); setCity(data.data.person.city ?? ""); setUf(data.data.person.state_uf ?? ""); setPhone(data.data.phone);
+    setCity(data.data.person.city ?? ""); setUf(data.data.person.state_uf ?? ""); setPhone(data.data.phone);
   }, [data.data]);
   const save = async (e: FormEvent) => {
     e.preventDefault(); m.clear(); setBusy(true);
-    const { error } = await supabase.rpc("my_profile_update", { p_preferred_name: pref.trim(), p_phone: phone.trim() || null, p_city: city.trim(), p_state_uf: uf });
+    const { error } = await supabase.rpc("my_profile_update", { p_preferred_name: null, p_phone: phone.trim() || null, p_city: city.trim(), p_state_uf: uf });
     setBusy(false);
     if (error) return m.err(errText(error));
-    m.ok("Dados atualizados."); void qc.invalidateQueries({ queryKey: ["my-person-data", personId] });
+    m.ok("Dados atualizados."); void qc.invalidateQueries({ queryKey: [PERSON_KEY] });
   };
   return (
-    <Card title="Dados pessoais" hint="Do seu cadastro na base central. O nome completo e o documento só um gestor altera." testid="conta-dados">
+    <Card title="Dados pessoais" hint="Contato e localização do seu cadastro na base central. O nome completo e o documento só um gestor altera." testid="conta-dados">
       <Msg m={msg} />
       <State loading={data.isLoading} error={data.error} />
       {data.data?.person && (
         <form onSubmit={save} className="grid gap-4 sm:grid-cols-2" noValidate>
-          <div className="sm:col-span-2"><label className="block text-xs mb-1" htmlFor="pd-full">Nome completo</label><input id="pd-full" value={data.data.person.full_name} readOnly className="!bg-muted" /></div>
-          <div><label className="block text-xs mb-1" htmlFor="pd-pref">Como prefere ser chamado(a)</label><input id="pd-pref" value={pref} onChange={(e) => setPref(e.target.value)} maxLength={120} /></div>
           <div><label className="block text-xs mb-1" htmlFor="pd-phone">Telefone / WhatsApp</label><input id="pd-phone" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="(11) 98888-7777" autoComplete="tel" /></div>
+          <div />
           <div><label className="block text-xs mb-1" htmlFor="pd-city">Cidade</label><input id="pd-city" value={city} onChange={(e) => setCity(e.target.value)} autoComplete="address-level2" /></div>
           <div><label className="block text-xs mb-1" htmlFor="pd-uf">UF</label>
             <select id="pd-uf" value={uf} onChange={(e) => setUf(e.target.value)}><option value="">—</option>{UFS.map((u) => <option key={u} value={u}>{u}</option>)}</select></div>
@@ -154,12 +164,13 @@ const Security = () => {
 /** Configurações da conta de quem está logado (qualquer papel da equipe). As configurações do SISTEMA ficam em /admin/configuracoes, só para administradores. */
 const Account = () => {
   const { hasRole } = useAuth(); const account = useMyAccount();
+  const personId = account.data?.person_id ?? null;
   return (
     <div>
       <PageHead eyebrow="Conta" title="Configurações" hint="Seu nome, seus dados e a segurança do seu acesso." />
-      <Profile />
-      {account.data?.person_id
-        ? <PersonalData personId={account.data.person_id} />
+      <Profile personId={personId} />
+      {personId
+        ? <PersonalData personId={personId} />
         : account.data && <Card title="Dados pessoais" testid="conta-dados"><p className="text-sm text-muted-foreground">Sua conta ainda não está ligada a um cadastro de pessoa, então não há dados pessoais a editar aqui. Um gestor pode fazer essa ligação.</p></Card>}
       <Access />
       <Security />

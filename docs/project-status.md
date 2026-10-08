@@ -44,7 +44,15 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-08, 21ª rodada) — Configurações da conta (branch `feature/menu-configuracoes`)
+## Sessão mais recente (2026-10-08, 22ª rodada) — o nome mostrado é o nome do cadastro de pessoa (branch `feature/nome-do-cadastro`)
+
+> Pedido do usuário: “Nome no cabeçalho sempre será o Nome do contato que se cadastrar”. **Ainda não está em produção** (migration 085 + merge + deploy dependem de autorização).
+- **Migration 085:** `user_accounts.display_name` de contas LIGADAS a uma pessoa passa a ser sempre derivado do cadastro: nome de preferência (`people.preferred_name`) e, em branco, o nome completo (`people.full_name`). Gatilhos: ao criar/ligar a conta, ao mudar o cadastro (a conta acompanha na hora) e contra edição direta (gestor recebe “o nome deste usuário vem do cadastro de pessoa”). Contas sem pessoa mantêm o nome de exibição próprio (ou o prefixo do e-mail). Como o campo alimenta cabeçalho, saudação, responsáveis, históricos e relatórios, o nome do cadastro aparece em todos eles. Contas já ligadas são ajustadas na própria migration (em produção: Hugo Pavão e Jan Darioush Peres de Freitas).
+- **Configurações da conta:** com cadastro ligado, mostra o nome completo (só leitura) e o campo “Como quer ser chamado(a)” grava a preferência no cadastro (em branco = nome completo); os dados pessoais ficam com telefone, cidade e UF. Sem cadastro, continua o “Nome de exibição”.
+- **Limite:** o formulário de “Primeiro acesso” não pede nome; o nome vem do cadastro de pessoa ligado ao convite. Conta sem pessoa (ex.: gestor criado pelo bootstrap) mostra o prefixo do e-mail até alguém ligar o cadastro.
+- **Verificação:** SQL `S24` = 18/18 e `S23` = 15/15; suíte SQL completa 1.128/0 falha; E2E `R28` = 4/4 (inclui conta ligada a um cadastro temporário, desfeito no fim); typecheck, lint e build ok.
+
+## Sessão anterior (2026-10-08, 21ª rodada) — Configurações da conta (mesclada: PR #5)
 
 > Pedido do usuário (já logado como gestor em produção): menu de configurações no canto superior e na barra lateral para editar nome e informações da conta. **Ainda não está na `main` nem em produção** (precisa de autorização: merge, migration 084 e deploy).
 - **Migration 084** (`my_account_update`): qualquer usuário da equipe altera o PRÓPRIO nome de exibição (antes só gestor, pela política `accounts_update`); só essa coluna e só a própria linha; validações (2–80 caracteres, sem controle) e auditoria com valor antigo/novo. Aplicada **só no Dev**; produção não tem a função.
