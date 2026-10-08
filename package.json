@@ -18,7 +18,11 @@
     "test:e2e:novos": "playwright test --grep @novo",
     "test:e2e:release": "playwright test --grep @release",
     "test:sql:novos": "node supabase/tests/run-sql.mjs supabase/tests/novos",
-    "test:sql:release": "node supabase/tests/run-sql.mjs supabase/tests/release"
+    "test:sql:release": "node supabase/tests/run-sql.mjs supabase/tests/release",
+    "preview:publicar": "node supabase/tools/preview.mjs",
+    "migrar:producao": "node supabase/tools/migrar-producao.mjs",
+    "promover": "node supabase/tools/promover.mjs",
+    "backup:producao": "node supabase/tools/backup-projeto.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
