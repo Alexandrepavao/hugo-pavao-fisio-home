@@ -44,7 +44,16 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-07, 20ª rodada) — v1 na `main` e na produção (DNS fora)
+## Sessão mais recente (2026-10-08, 21ª rodada) — Configurações da conta (branch `feature/menu-configuracoes`)
+
+> Pedido do usuário (já logado como gestor em produção): menu de configurações no canto superior e na barra lateral para editar nome e informações da conta. **Ainda não está na `main` nem em produção** (precisa de autorização: merge, migration 084 e deploy).
+- **Migration 084** (`my_account_update`): qualquer usuário da equipe altera o PRÓPRIO nome de exibição (antes só gestor, pela política `accounts_update`); só essa coluna e só a própria linha; validações (2–80 caracteres, sem controle) e auditoria com valor antigo/novo. Aplicada **só no Dev**; produção não tem a função.
+- **Tela `/admin/conta`** ("Configurações"): Perfil (nome de exibição; e-mail só leitura), Dados pessoais (preferência de nome, telefone, cidade/UF — só se a conta estiver ligada a um cadastro de pessoa; senão aparece o aviso), Acesso e papéis (leitura), Segurança (trocar senha, mínimo de 10; sair de todos os aparelhos) e, para administradores, atalho para as configurações do sistema.
+- **Entradas:** menu do usuário no cabeçalho (“Configurações da conta” e, para administradores, “Configurações do sistema”), rodapé da barra lateral de TODOS os aplicativos (“Configurações”) e a busca Ctrl+K. O cabeçalho e a saudação passaram a usar o nome de exibição (antes mostravam o prefixo do e-mail, ex.: “contato”).
+- **Fora desta versão:** trocar o e-mail de acesso (o hook de e-mail só entrega para o endereço atual; o fluxo seguro de troca manda confirmação ao e-mail antigo e ao novo e o hook não cobre os dois).
+- **Verificação:** SQL `S23` = 15/15 e suíte SQL completa 1.110/0 falha; E2E novo `R28` = 3/3 (renomear gestor e fisioterapeuta, atalhos, validações de senha sem trocar a senha de QA); `01` = 5/5; typecheck, lint e build ok. Vitest: 2 falhas antigas e sem relação (`release.novo.test.ts` espera `crm_scheduled_messages` desligado; `google-sync-plan.test.mjs` é script com `process.exit`). O restante da suíte E2E depende de dados de base do Dev que a limpeza de 07/10 apagou.
+
+## Sessão anterior (2026-10-07, 20ª rodada) — v1 na `main` e na produção (DNS fora)
 
 > Autorização explícita do usuário em chat: backup, migrations em produção, merge na `main` e deploy de produção. **DNS não foi tocado** (`hpfisioterapia.com.br` continua no GitHub Pages, site antigo).
 - **Backup antes de tudo:** produção tinha só 66 linhas de seed, 0 usuários, 0 arquivos (registro em `D:\Claude\backups-hp-group\2026-10-07-producao-core\LEIA-ME.txt`, fora do Git). Tag de retorno do código: `pre-v1-main-64add39`. Backup gerenciado do Supabase: lista vazia e PITR desligado → **ativar no painel antes de entrar dado real**.
