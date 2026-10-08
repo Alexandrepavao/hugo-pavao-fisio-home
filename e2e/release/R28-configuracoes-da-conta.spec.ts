@@ -15,35 +15,38 @@ test.describe.serial("@release Configurações da conta", () => {
   test("gestor: menu do usuário e barra lateral levam às Configurações; renomear reflete no cabeçalho e na saudação", async ({ page, context }) => {
     const s = await loginAs(context, QA.manager); const errors = collectErrors(page);
     const cur = await api(s).get(`user_accounts?select=display_name&user_id=eq.${s.user.id}`); nomeOriginal = cur.body[0].display_name;
-    await page.goto("/admin"); await expect(page.getByRole("heading", { name: /^(Bom dia|Boa tarde|Boa noite)/ })).toBeVisible({ timeout: 40_000 });
+    try {
+      await page.goto("/admin"); await expect(page.getByRole("heading", { name: /^(Bom dia|Boa tarde|Boa noite)/ })).toBeVisible({ timeout: 40_000 });
 
-    // atalho na barra lateral (rodapé), no Hub e dentro de um aplicativo
-    const side = page.getByTestId("sidebar-configuracoes"); await expect(side).toBeVisible(); await expect(side).toContainText("Configurações");
-    await page.goto("/admin/crm"); await expect(page.getByTestId("sidebar-configuracoes")).toBeVisible({ timeout: 30_000 });
-    await page.goto("/admin/financeiro"); await expect(page.getByTestId("sidebar-configuracoes")).toBeVisible({ timeout: 30_000 });
+      // atalho na barra lateral (rodapé), no Hub e dentro de um aplicativo
+      const side = page.getByTestId("sidebar-configuracoes"); await expect(side).toBeVisible(); await expect(side).toContainText("Configurações");
+      await page.goto("/admin/crm"); await expect(page.getByTestId("sidebar-configuracoes")).toBeVisible({ timeout: 30_000 });
+      await page.goto("/admin/financeiro"); await expect(page.getByTestId("sidebar-configuracoes")).toBeVisible({ timeout: 30_000 });
 
-    // menu do usuário (canto superior): conta e, para administradores, sistema
-    await page.goto("/admin"); await page.getByRole("button", { name: "Menu do usuário" }).click();
-    await expect(page.getByTestId("menu-configuracoes-sistema")).toBeVisible();
-    await page.getByTestId("menu-configuracoes-conta").click();
-    await expect(page).toHaveURL(/\/admin\/conta$/); await expect(page.getByRole("heading", { name: "Configurações", exact: true })).toBeVisible();
-    await expect(page.getByTestId("sidebar-configuracoes")).toHaveAttribute("aria-current", "page");
-    await expectNoFatal(page);
+      // menu do usuário (canto superior): conta e, para administradores, sistema
+      await page.goto("/admin"); await page.getByRole("button", { name: "Menu do usuário" }).click();
+      await expect(page.getByTestId("menu-configuracoes-sistema")).toBeVisible();
+      await page.getByTestId("menu-configuracoes-conta").click();
+      await expect(page).toHaveURL(/\/admin\/conta$/); await expect(page.getByRole("heading", { name: "Configurações", exact: true })).toBeVisible();
+      await expect(page.getByTestId("sidebar-configuracoes")).toHaveAttribute("aria-current", "page");
+      await expectNoFatal(page);
 
-    // renomear
-    await expect(page.locator("#ac-name")).toHaveValue(nomeOriginal, { timeout: 20_000 });
-    await expect(page.getByRole("button", { name: "Salvar nome" })).toBeDisabled(); // nada mudou
-    await page.locator("#ac-name").fill("A"); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText(/ao menos 2 caracteres/)).toBeVisible();
-    await page.locator("#ac-name").fill(novoNome); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
-    await page.screenshot({ path: "docs/screenshots/conta/configuracoes-conta.png", fullPage: true });
-    await page.getByRole("button", { name: "Menu do usuário" }).click();
-    await expect(page.getByRole("menu")).toContainText(novoNome); await page.keyboard.press("Escape");
-    await page.goto("/admin"); await expect(page.getByRole("heading", { name: new RegExp(`, ${novoNome.split(" ")[0]}!$`) })).toBeVisible({ timeout: 30_000 });
-    await page.getByRole("button", { name: "Menu do usuário" }).click(); await page.screenshot({ path: "docs/screenshots/conta/menu-usuario.png", clip: { x: 900, y: 0, width: 540, height: 340 } }); await page.keyboard.press("Escape");
-    expect(errors, errors.join("\n")).toEqual([]);
+      // renomear
+      await expect(page.locator("#ac-name")).toHaveValue(nomeOriginal, { timeout: 20_000 });
+      await expect(page.getByRole("button", { name: "Salvar nome" })).toBeDisabled(); // nada mudou
+      await page.locator("#ac-name").fill("A"); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText(/ao menos 2 caracteres/)).toBeVisible();
+      await page.locator("#ac-name").fill(novoNome); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
+      await page.screenshot({ path: "docs/screenshots/conta/configuracoes-conta.png", fullPage: true });
+      await page.getByRole("button", { name: "Menu do usuário" }).click();
+      await expect(page.getByRole("menu")).toContainText(novoNome); await page.keyboard.press("Escape");
+      await page.goto("/admin"); await expect(page.getByRole("heading", { name: new RegExp(`, ${novoNome.split(" ")[0]}!$`) })).toBeVisible({ timeout: 30_000 });
+      await page.getByRole("button", { name: "Menu do usuário" }).click(); await page.screenshot({ path: "docs/screenshots/conta/menu-usuario.png", clip: { x: 900, y: 0, width: 540, height: 340 } }); await page.keyboard.press("Escape");
+      expect(errors, errors.join("\n")).toEqual([]);
 
-    // devolve o nome original
-    await page.goto("/admin/conta"); await page.locator("#ac-name").fill(nomeOriginal); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
+    } finally {
+      // devolve o nome original SEMPRE, mesmo se uma verificação acima falhar (não deixa lixo na conta de QA)
+      await api(s).rpc("my_account_update", { p_display_name: nomeOriginal });
+    }
   });
 
   test("segurança: senha curta e confirmação diferente são recusadas na tela (sem trocar a senha); sair de todos os aparelhos pede confirmação", async ({ page, context }) => {
@@ -70,6 +73,7 @@ test.describe.serial("@release Configurações da conta", () => {
     await page.locator("#ac-name").fill(nome); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
     const depois = await api(s).get(`user_accounts?select=display_name&user_id=eq.${s.user.id}`); expect(depois.body[0].display_name).toBe(nome);
     await page.locator("#ac-name").fill(original); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
+    await api(s).rpc("my_account_update", { p_display_name: original });
     // quem não é administrador não abre a tela de configurações do sistema
     await page.goto("/admin/configuracoes"); await expect(page.getByText(/Sem permissão|não tem permissão/i).first()).toBeVisible({ timeout: 20_000 });
     expect(errors, errors.join("\n")).toEqual([]);
@@ -91,7 +95,7 @@ test.describe.serial("@release Configurações da conta", () => {
       await page.goto("/admin"); await expect(page.getByRole("button", { name: "Menu do usuário" })).toContainText("Carla", { timeout: 30_000 });
       await page.getByRole("button", { name: "Menu do usuário" }).click(); await expect(page.getByRole("menu")).toContainText("Carla"); await page.keyboard.press("Escape");
       expect((await api(s).get(`user_accounts?select=display_name&user_id=eq.${uid}`)).body[0].display_name).toBe("Carla");
-      await page.goto("/admin/conta"); await page.locator("#ac-name").fill(""); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
+      await page.goto("/admin/conta"); await expect(page.locator("#ac-name")).toHaveValue("Carla", { timeout: 30_000 }); await page.locator("#ac-name").fill(""); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
       expect((await api(s).get(`user_accounts?select=display_name&user_id=eq.${uid}`)).body[0].display_name).toBe(completo);
       expect(errors, errors.join(" | ")).toEqual([]);
     } finally {
