@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronsUpDown, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { ChevronsUpDown, LayoutDashboard, Settings, type LucideIcon } from "lucide-react";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -40,7 +40,9 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
   const sections = useMemo(() => nav.map((s) => ({ ...s, items: s.items.filter(visible) })).filter((s) => s.items.length), [nav, isManagerLike, hasRole]); // eslint-disable-line react-hooks/exhaustive-deps
   const flatItems = useMemo(() => nav.flatMap((s) => s.items), [nav]);
   // Item ativo = o que melhor casa com a URL (caminho e, quando o item tem parâmetros, os parâmetros: ex. Unidades × Configurações em /admin/configuracoes).
+  const onAccount = location.pathname === "/admin/conta" || location.pathname.startsWith("/admin/conta/");
   const activeItem = useMemo(() => {
+    if (onAccount) return undefined; // Configurações da conta não é item de nenhum aplicativo: nada fica marcado na lista
     const cur = new URLSearchParams(location.search);
     const scored = flatItems.map((i) => {
       const [path, qs] = i.to.split("?");
@@ -54,7 +56,7 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
     const pool = ok.length ? ok : scored;
     pool.sort((a, b) => b.len - a.len || b.keys - a.keys);
     return pool[0]?.i ?? flatItems[0];
-  }, [flatItems, location.pathname, location.search]);
+  }, [flatItems, location.pathname, location.search, onAccount]);
   const apps = useMemo(() => APPS.filter((a) => a.id === "hub" || !a.roles || hasRole(...a.roles)), [hasRole]);
   const isHub = appId === "hub";
 
@@ -94,12 +96,17 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
       ))}
     </nav>
     {footer}
+    <div className="hp-sb-foot" style={footer ? { borderTop: 0, marginTop: 0, paddingTop: 0 } : undefined}>
+      <Link to="/admin/conta" onClick={onNavigate} title={compact ? "Configurações" : undefined} aria-label={compact ? "Configurações" : undefined} aria-current={onAccount ? "page" : undefined} className="hp-sb-link" data-testid="sidebar-configuracoes">
+        <Settings aria-hidden /><span className="hp-sb-text">Configurações</span>
+      </Link>
+    </div>
   </>);
 
   return (
     <div className="hp-shell" data-collapsed={collapsed} data-app={app.id} style={{ ["--app-accent" as string]: app.accent }}>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-card focus:px-3 focus:py-2 focus:rounded">Ir para o conteúdo</a>
-      <HeaderBar app={app} section={activeItem?.label ?? ""} apps={apps} collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} drawerOpen={drawer}
+      <HeaderBar app={app} section={onAccount ? "Configurações" : activeItem?.label ?? ""} apps={apps} collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} drawerOpen={drawer}
         onOpenDrawer={() => setDrawer(true)} onSearch={() => setCmd(true)} homeTo={flatItems[0]?.to ?? "/admin"}
         profileExtra={<>{!isHub && <DropdownMenuItem asChild><Link to="/admin">Voltar ao Hub</Link></DropdownMenuItem>}{profileExtra}</>} />
 

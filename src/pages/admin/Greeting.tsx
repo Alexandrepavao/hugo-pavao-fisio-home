@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/auth/AuthProvider";
+import { useMyAccount } from "@/components/hp/useMyAccount";
 
 /** "Bom dia/Boa tarde/Boa noite" pelo relógio LOCAL do dispositivo (nunca UTC/Brasília fixo) — só a saudação, nada de agenda/competência. */
 const greetingFor = (h: number) => (h < 12 ? "Bom dia" : h < 19 ? "Boa tarde" : "Boa noite");
@@ -20,13 +18,8 @@ const useLocalHour = () => {
 };
 
 const Greeting = () => {
-  const { user } = useAuth();
   const hour = useLocalHour();
-  const profile = useQuery({
-    queryKey: ["my-display-name", user?.id],
-    enabled: !!user,
-    queryFn: async () => (await supabase.from("user_accounts").select("display_name").eq("user_id", user!.id).maybeSingle()).data,
-  });
+  const profile = useMyAccount();
   const name = profile.data?.display_name?.trim().split(" ")[0];
   // AppShell já renderiza o h1 da página (breadcrumb "Início"); esta saudação é h2, como o título de qualquer outra tela.
   return <h2 className="!text-[1.75rem] sm:!text-[2rem] !leading-tight font-extrabold text-foreground mb-1">{greetingFor(hour)}{name ? `, ${name}!` : "!"}</h2>;

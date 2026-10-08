@@ -5,15 +5,17 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { featureOn } from "@/lib/release";
+import { UserCog } from "lucide-react";
 import { APPS } from "./apps";
 import { navForApp } from "./appNav";
+import type { FrameNavItem } from "./AppFrame";
 
 /** Busca global (Ctrl+K): páginas do painel e pessoas (respeitando a RLS: só aparece o que o perfil pode ler). */
 const CommandMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) => {
   const nav = useNavigate(); const { hasRole } = useAuth(); const [q, setQ] = useState(""); const [debounced, setDebounced] = useState("");
   useEffect(() => { const t = setTimeout(() => setDebounced(q.trim()), 250); return () => clearTimeout(t); }, [q]);
   useEffect(() => { if (!open) setQ(""); }, [open]);
-  const items = useMemo(() => APPS.flatMap((app) => navForApp(app.id).flatMap((sec) => sec.items.map((i) => ({ ...i, app: app.label })))).filter((i) => (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature))), [hasRole]);
+  const items = useMemo(() => [{ to: "/admin/conta", label: "Configurações da conta", icon: UserCog, keywords: "perfil nome senha segurança dados pessoais minha conta", app: "Conta" } as FrameNavItem & { app: string }, ...APPS.flatMap((app) => navForApp(app.id).flatMap((sec) => sec.items.map((i) => ({ ...i, app: app.label }))))].filter((i) => (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature))), [hasRole]);
   const people = useQuery({
     queryKey: ["cmd-people", debounced], enabled: open && debounced.length >= 2 && hasRole("manager", "ops_admin", "unit_manager", "sales"),
     queryFn: async () => (await supabase.from("people").select("id, full_name").ilike("full_name", `%${debounced.replace(/[%_]/g, "")}%`).is("merged_into_id", null).limit(6)).data ?? [],
