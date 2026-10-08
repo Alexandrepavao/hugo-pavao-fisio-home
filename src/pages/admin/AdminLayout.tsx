@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { HeartPulse, Settings } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AppFrame from "@/components/hp/AppFrame";
@@ -31,7 +31,6 @@ const AdminLayout = () => {
       profileExtra={<>
         {appId === "hub" && <DropdownMenuItem asChild><Link to="/academy">Academy (portal do aluno)</Link></DropdownMenuItem>}
         {appId === "hub" && hasRole("member") && <DropdownMenuItem asChild><Link to="/paciente">Área do paciente</Link></DropdownMenuItem>}
-        {appId === "crm" && hasRole("manager", "ops_admin", "unit_manager") && <DropdownMenuItem asChild><Link to="/admin/configuracoes"><Settings className="mr-2 h-4 w-4" aria-hidden />Configurações</Link></DropdownMenuItem>}
       </>}>
       <Outlet />
     </AppFrame>

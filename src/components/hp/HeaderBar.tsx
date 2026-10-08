@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Bell, ChevronDown, ChevronRight, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings, Sun, UserCog } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
+import { initialsOf, shownName, useMyAccount } from "./useMyAccount";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BUILD_INFO, IS_PRODUCTION } from "@/lib/release";
@@ -63,11 +64,12 @@ const HeaderBar = ({ app, section, apps, collapsed, onToggleCollapsed, drawerOpe
   app: HpApp; section: string; apps: HpApp[]; collapsed: boolean; onToggleCollapsed: () => void; drawerOpen: boolean; onOpenDrawer: () => void; onSearch: () => void;
   homeTo?: string; profileExtra?: ReactNode;
 }) => {
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, hasRole } = useAuth();
   const [theme, toggleTheme] = useThemeMode();
+  const account = useMyAccount();
   const roleNames = [...new Set(roles.map((r) => ROLE_LABEL[r.role]))].join(", ");
-  const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
-  const who = (user?.email ?? "").split("@")[0];
+  const who = shownName(account.data, user?.email);
+  const initials = initialsOf(who);
   return (
     <header className="hp-header">
       <div className="hp-hd-brandcol">
@@ -110,7 +112,10 @@ const HeaderBar = ({ app, section, apps, collapsed, onToggleCollapsed, drawerOpe
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel><span className="block text-sm font-medium break-all">{user?.email}</span><span className="block text-xs font-normal text-muted-foreground">{roleNames}</span></DropdownMenuLabel>
+          <DropdownMenuLabel><span className="block text-sm font-medium break-words">{who}</span><span className="block text-xs font-normal text-muted-foreground break-all">{user?.email}</span><span className="block text-xs font-normal text-muted-foreground">{roleNames}</span></DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild><Link to="/admin/conta" data-testid="menu-configuracoes-conta"><UserCog className="mr-2 h-4 w-4" aria-hidden />Configurações da conta</Link></DropdownMenuItem>
+          {hasRole("manager", "ops_admin") && <DropdownMenuItem asChild><Link to="/admin/configuracoes" data-testid="menu-configuracoes-sistema"><Settings className="mr-2 h-4 w-4" aria-hidden />Configurações do sistema</Link></DropdownMenuItem>}
           <DropdownMenuSeparator />
           {profileExtra}
           <DropdownMenuItem className="sm:hidden" onSelect={toggleTheme}>{theme === "dark" ? <Sun className="mr-2 h-4 w-4" aria-hidden /> : <Moon className="mr-2 h-4 w-4" aria-hidden />}{theme === "dark" ? "Tema claro" : "Tema escuro"}</DropdownMenuItem>
