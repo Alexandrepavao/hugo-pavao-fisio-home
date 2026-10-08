@@ -11,6 +11,8 @@ Regra de trabalho acordada com o responsável (08/10/2026): **toda mudança pass
 
 O preview usa o **mesmo perfil da produção (`v1`)**, só trocando o banco: é o que vai ao ar. A `vite.config.ts` recusa qualquer build de produção com banco Dev (e vice-versa).
 
+**Endereço principal do site de preview** (`https://hp-group-hub.netlify.app`): mostra só uma página fechada "Ambiente de testes" (`supabase/tools/placeholder-preview/`, com `noindex` e `robots.txt` bloqueando), publicada em 08/10/2026 no lugar de um build antigo de 24/09 que estava aberto, sem login e ligado ao Dev. O login da equipe só protege os endereços de **rascunho** (como `preview--…`); o endereço principal do site é público por padrão no Netlify, então ele nunca deve receber o app. Para republicar a página: `cd supabase/tools/placeholder-preview` e `netlify deploy --prod --dir . --site 2c2d11bc-f62c-42b7-bae6-4cf3b6f35756`.
+
 ## Comandos
 ```powershell
 npm run preview:publicar                      # publica o que está na pasta no preview (rascunho, nunca no domínio)
