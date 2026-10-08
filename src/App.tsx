@@ -71,6 +71,9 @@ const SejaParceiro = lazy(() => import("./pages/quiz/SejaParceiro"));
 const LeadCapture = lazy(() => import("./pages/admin/LeadCapture"));
 const SettingsHub = lazy(() => import("./pages/admin/SettingsHub"));
 const Account = lazy(() => import("./pages/admin/Account"));
+const OnboardingFisio = lazy(() => import("./pages/onboarding/OnboardingFisio"));
+const OnboardingPaciente = lazy(() => import("./pages/onboarding/OnboardingPaciente"));
+const Welcome = lazy(() => import("./pages/portal/Welcome"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -121,6 +124,8 @@ const App = () => (
               <Route path="/trabalhe-conosco" element={<TrabalheConosco />} />
               <Route path="/avaliacao" element={<Avaliacao />} />
               <Route path="/seja-parceiro" element={<SejaParceiro />} />
+              <Route path="/onboarding-fisio" element={<OnboardingFisio />} />
+              <Route path="/onboarding-paciente" element={<OnboardingPaciente />} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
@@ -186,6 +191,7 @@ const App = () => (
                 <Route path="conta" element={<Account />} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
               </Route>
+              <Route path="/boas-vindas" element={g(R.portal, <Welcome />)} />
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />
               <Route path="/academy/:slug" element={g(R.portal, <CourseView />)} />
               <Route path="/paciente" element={g(["member"], <Patient />)} />

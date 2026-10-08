@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Bell, ChevronDown, ChevronRight, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings, Sun, UserCog } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, GraduationCap, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings, Sun, UserCog } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
 import { initialsOf, shownName, useMyAccount } from "./useMyAccount";
@@ -115,6 +115,7 @@ const HeaderBar = ({ app, section, apps, collapsed, onToggleCollapsed, drawerOpe
           <DropdownMenuLabel><span className="block text-sm font-medium break-words">{who}</span><span className="block text-xs font-normal text-muted-foreground break-all">{user?.email}</span><span className="block text-xs font-normal text-muted-foreground">{roleNames}</span></DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild><Link to="/admin/conta" data-testid="menu-configuracoes-conta"><UserCog className="mr-2 h-4 w-4" aria-hidden />Configurações da conta</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link to="/boas-vindas" data-testid="menu-tutorial"><GraduationCap className="mr-2 h-4 w-4" aria-hidden />Tutorial do sistema</Link></DropdownMenuItem>
           {hasRole("manager", "ops_admin") && <DropdownMenuItem asChild><Link to="/admin/configuracoes" data-testid="menu-configuracoes-sistema"><Settings className="mr-2 h-4 w-4" aria-hidden />Configurações do sistema</Link></DropdownMenuItem>}
           <DropdownMenuSeparator />
           {profileExtra}

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { Badge, btnDanger, btnGhost, btnPrimary, confirmDialog, errText, Msg, State, Table, Td, useMsg } from "@/lib/ui";
+import OnboardingLinks from "./OnboardingLinks";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Unit { id: string; name: string }
@@ -93,6 +94,7 @@ const ProfessionalsAdmin = () => {
 
   return (<>
     <Msg m={msg} />
+    {canEdit && <OnboardingLinks units={units.data ?? []} />}
     {canEdit && (
       <form onSubmit={create} className="hp-card p-5 mb-6 grid gap-3" noValidate aria-label="Novo profissional">
         <h2 className="text-xl">Novo profissional</h2>

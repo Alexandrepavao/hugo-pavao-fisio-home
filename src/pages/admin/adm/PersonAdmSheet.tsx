@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { errText, Msg, useMsg, btnGhost, btnPrimary } from "@/lib/ui";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useUnits } from "../finance/shared";
+import OnboardingData from "./OnboardingData";
 import type { StaffUser } from "../crm/types";
 
 interface PersonDetail {
@@ -122,6 +123,7 @@ const PersonAdmSheet = ({ personId, onClose, onChanged }: { personId: string | n
                     <div className="sm:col-span-3"><label htmlFor="pf-notes" className="block text-xs mb-1">Observações administrativas</label><textarea id="pf-notes" rows={3} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} /></div>
                   </div>
                 </section>
+                <OnboardingData personId={personId} />
               </div>
             )}
           </div>
