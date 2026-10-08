@@ -44,7 +44,18 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
-## Sessão mais recente (2026-10-08, 22ª rodada) — o nome mostrado é o nome do cadastro de pessoa (branch `feature/nome-do-cadastro`)
+## Sessão mais recente (2026-10-08, 23ª rodada) — onboarding de fisioterapeuta e paciente, Primeiro acesso só para cadastrados (branch `feature/onboarding`)
+
+> Pedido do usuário. Decisões dele: fisioterapeuta **só por link único** gerado pelo gestor; paciente por **rota aberta** com acesso automático. **Ainda não está em produção** (migration 086 + merge + deploy dependem de autorização). Detalhes em [`docs/onboarding.md`](onboarding.md).
+- **Migration 086:** `onboarding_links` (token só como hash, uso único), `onboarding_submissions`, `professional_profiles`, `person_bank_info`, `person_intake` (RLS: só a própria pessoa e gestor/administrativo; sem acesso anônimo), `people.rg`; funções `onboarding_link_create/revoke` (gestor), `onboarding_link_info`, `onboarding_submit_physio`, `onboarding_submit_patient` e `first_access_email_status` (públicas, com limite por IP e isca anti-robô).
+- **Rotas:** `/onboarding-fisio?convite=…` (5 etapas: dados, contato/endereço com busca por CEP, atuação profissional, PIX, acesso) e `/onboarding-paciente` (4 etapas, com contato de emergência e saúde só com consentimento). PF × PJ pelos dados (CNPJ válido → empresa + representante). O fisioterapeuta nasce profissional ativo na unidade do convite.
+- **Segurança:** e-mail que já existe no cadastro NÃO é alterado no envio do paciente; os dados ficam retidos e só preenchem campos vazios depois que o dono do e-mail confirma o acesso; CPF já usado por outra pessoa nunca vira vínculo (cadastro novo pendente, sem CPF).
+- **Primeiro acesso:** agora confere o e-mail antes de criar a senha (`not_found` → mensagem “Este e-mail não está cadastrado no sistema…”, `registered_no_access`, `has_account`, `invited`).
+- **Tutorial** `/boas-vindas`: por perfil, abre no primeiro login (exceto gestão) e fica em “Tutorial do sistema” no menu. **Gestão:** link único em Operação › Agenda › Profissionais; dados do onboarding (RG, perfil, PIX, emergência, motivo) na ficha da pessoa (Planilha administrativa).
+- **Verificação:** SQL `S25` = 91/91 e suíte SQL completa 1.219/0 falha; E2E `R29` (fisioterapeuta, PJ, Primeiro acesso, tutorial) e `R30` (paciente) = 11/11, e `R28` = 4/4; typecheck, lint dos arquivos novos e build ok; formulário conferido no celular (390 px, sem rolagem horizontal). Os testes interceptam só a criação da senha (nenhum e-mail real) e simulam a confirmação no banco de teste.
+- **Limites:** a confirmação real por e-mail depende do Resend/hook de cada ambiente (em produção está configurado e já foi usado); o tutorial é de leitura, não um tour guiado na tela.
+
+## Sessão anterior (2026-10-08, 22ª rodada) — o nome mostrado é o nome do cadastro de pessoa (branch `feature/nome-do-cadastro`)
 
 > Pedido do usuário: “Nome no cabeçalho sempre será o Nome do contato que se cadastrar”. **Ainda não está em produção** (migration 085 + merge + deploy dependem de autorização).
 - **Migration 085:** `user_accounts.display_name` de contas LIGADAS a uma pessoa passa a ser sempre derivado do cadastro: nome de preferência (`people.preferred_name`) e, em branco, o nome completo (`people.full_name`). Gatilhos: ao criar/ligar a conta, ao mudar o cadastro (a conta acompanha na hora) e contra edição direta (gestor recebe “o nome deste usuário vem do cadastro de pessoa”). Contas sem pessoa mantêm o nome de exibição próprio (ou o prefixo do e-mail). Como o campo alimenta cabeçalho, saudação, responsáveis, históricos e relatórios, o nome do cadastro aparece em todos eles. Contas já ligadas são ajustadas na própria migration (em produção: Hugo Pavão e Jan Darioush Peres de Freitas).
