@@ -4,7 +4,7 @@
 //  · senha: validações na tela (curta, confirmação diferente) SEM trocar a senha das contas de QA; "Configurações do sistema" só aparece para administradores
 // Cada teste devolve o nome original no fim. Somente Dev/teste.
 import { expect, test } from "@playwright/test";
-import { api, collectErrors, expectNoFatal, loginAs, QA, runId } from "./helpers-release";
+import { api, canTimeTravel, collectErrors, devSql, expectNoFatal, loginAs, QA, runId } from "./helpers-release";
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } });
 
@@ -73,5 +73,30 @@ test.describe.serial("@release Configurações da conta", () => {
     // quem não é administrador não abre a tela de configurações do sistema
     await page.goto("/admin/configuracoes"); await expect(page.getByText(/Sem permissão|não tem permissão/i).first()).toBeVisible({ timeout: 20_000 });
     expect(errors, errors.join("\n")).toEqual([]);
+  });
+
+  test("conta LIGADA a um cadastro de pessoa: o nome mostrado é o do cadastro (preferência; em branco, o nome completo) e o cabeçalho acompanha", async ({ page, context }) => {
+    test.skip(!canTimeTravel(), "precisa de SUPABASE_ACCESS_TOKEN para ligar a conta de QA a um cadastro temporário");
+    const s = await loginAs(context, QA.comercial); const errors = collectErrors(page); const uid = s.user.id;
+    const original = (await api(s).get(`user_accounts?select=display_name&user_id=eq.${uid}`)).body[0].display_name as string;
+    const completo = `Carla Mendes R28 ${runId.toUpperCase()}`; let pid = "";
+    try {
+      const r = (await devSql(`with o as (select org_id from public.user_accounts where user_id = '${uid}'), p as (insert into public.people (org_id, full_name) select org_id, '${completo}' from o returning id), k as (insert into public.person_kinds (person_id, kind) select id, 'staff' from p) select id from p`)) as { id: string }[];
+      pid = r[0].id; await devSql(`update public.user_accounts set person_id = '${pid}' where user_id = '${uid}'`);
+      await page.goto("/admin/conta"); await expect(page.locator("#ac-full")).toHaveValue(completo, { timeout: 40_000 });
+      await expect(page.locator("#ac-name")).toHaveValue(""); await expect(page.locator('label[for="ac-name"]')).toHaveText("Como quer ser chamado(a)");
+      await expect(page.getByTestId("conta-dados")).toContainText("Telefone"); // cadastro ligado: dados pessoais editáveis
+      await expect(page.getByRole("button", { name: "Menu do usuário" })).toContainText(completo.split(" ").slice(0, 2).join(" "));
+      await page.locator("#ac-name").fill("Carla"); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
+      await page.goto("/admin"); await expect(page.getByRole("button", { name: "Menu do usuário" })).toContainText("Carla", { timeout: 30_000 });
+      await page.getByRole("button", { name: "Menu do usuário" }).click(); await expect(page.getByRole("menu")).toContainText("Carla"); await page.keyboard.press("Escape");
+      expect((await api(s).get(`user_accounts?select=display_name&user_id=eq.${uid}`)).body[0].display_name).toBe("Carla");
+      await page.goto("/admin/conta"); await page.locator("#ac-name").fill(""); await page.getByRole("button", { name: "Salvar nome" }).click(); await expect(page.getByText("Nome atualizado.")).toBeVisible();
+      expect((await api(s).get(`user_accounts?select=display_name&user_id=eq.${uid}`)).body[0].display_name).toBe(completo);
+      expect(errors, errors.join(" | ")).toEqual([]);
+    } finally {
+      await devSql(`update public.user_accounts set person_id = null, display_name = '${original.replace(/'/g, "''")}' where user_id = '${uid}'`);
+      if (pid) await devSql(`delete from public.people where id = '${pid}'`);
+    }
   });
 });
