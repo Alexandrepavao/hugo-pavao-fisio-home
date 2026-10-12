@@ -34,6 +34,8 @@ Opções do `promover`: `--e2e=arquivo1,arquivo2` (E2E específicos), `--e2e-com
 ## O que a promoção faz em produção (só depois de tudo acima)
 Backup → migrations pendentes (uma a uma) → merge do PR → deploy a partir da `main` → conferência no domínio (commit publicado, ambiente `production`, banco de produção). Ao final imprime como voltar o site ao deploy anterior.
 
+**Mudança só de documentação** (`docs/` e `*.md` na raiz): o `promover` não faz build, testes, preview nem deploy (o site não muda); só confere Git/PR e mescla. Por isso o commit publicado no domínio (`/version.json`) pode ficar atrás da `main` quando as últimas mudanças foram só de documentação, o que é esperado.
+
 ## Regras que continuam valendo (nada disto é automático)
 - **Migration com `DROP`, `TRUNCATE` ou `DELETE`** não é aplicada sem confirmação explícita do responsável.
 - **DNS, preços e dados reais** (apagar/alterar cadastros, vendas, pagamentos): sempre confirmação explícita.
