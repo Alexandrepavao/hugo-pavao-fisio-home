@@ -26,6 +26,11 @@
   VITE_APP_ENV = "preview"
   VITE_RELEASE_PROFILE = "full"
 
+# PREVIEW fixo (site hp-group-hub, banco DEV): mesmo perfil da produção (v1) para testar exatamente o que vai ao ar. Publicado por `npm run preview:publicar`.
+[context.preview.environment]
+  VITE_APP_ENV = "preview"
+  VITE_RELEASE_PROFILE = "v1"
+
 [context."release/v1".environment]
   VITE_APP_ENV = "preview"
   VITE_RELEASE_PROFILE = "v1"

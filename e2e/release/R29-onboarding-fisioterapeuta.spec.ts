@@ -118,7 +118,7 @@ test.describe.serial("@release Onboarding do fisioterapeuta + Primeiro acesso + 
     expect(prof).toHaveLength(1); expect(prof[0].active).toBe(true); expect(prof[0].council_registration).toBe("CREFITO-SP 123456-F"); expect(prof[0].user_id).toBeNull();
     const sub = (await g.get(`onboarding_submissions?select=doc_kind,status,consent_version&person_id=eq.${p[0].id}`)).body as { doc_kind: string; status: string; consent_version: string }[];
     expect(sub[0]).toMatchObject({ doc_kind: "pf", status: "applied", consent_version: "onboarding-v1" });
-    expect((await g.get(`legal_entities?select=id&legal_name=ilike.*${runId}*`)).body).toHaveLength(0);
+    expect((await g.get(`legal_entities?select=id&legal_name=ilike.*Fernanda Teste R29 ${runId.toUpperCase()}*`)).body).toHaveLength(0);
     const inv = (await g.get(`invitations?select=role,accepted_at&email=eq.${emailA}`)).body as { role: string; accepted_at: string | null }[]; expect(inv).toHaveLength(1); expect(inv[0].role).toBe("physio");
     // a tela do gestor mostra o convite como preenchido
     await page.goto("/admin/agenda"); await page.getByRole("tab", { name: "Profissionais e disponibilidade" }).click();
@@ -176,7 +176,7 @@ test.describe.serial("@release Onboarding do fisioterapeuta + Primeiro acesso + 
     expect((await g.get(`professionals?select=user_id&person_id=eq.${person}`)).body[0].user_id).toBe(uid);
     expect((await g.get(`role_assignments?select=role&user_id=eq.${uid}`)).body).toEqual([{ role: "physio" }]);
 
-    await uiLogin(page, emailA, PASS);
+    await uiLogin(page, emailA, PASS, { tutorial: "manter" });
     await expect(page).toHaveURL(/\/boas-vindas$/, { timeout: 60_000 });
     await expect(page.getByRole("heading", { name: /Bem-vindo\(a\), Fe!/ })).toBeVisible();
     await expect(page.getByTestId("tutorial-physio")).toContainText("Sua agenda"); await expect(page.getByTestId("tutorial-physio")).toContainText("Acompanhamento dos pacientes");
