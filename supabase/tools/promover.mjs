@@ -1,5 +1,5 @@
 // Promove uma mudança do PREVIEW para a PRODUÇÃO, só se TODAS as verificações passarem (para na primeira falha).
-//   npm run promover -- --pr=<número> [--ate-preview] [--e2e=arquivo1,arquivo2] [--e2e-completo] [--aceito-destrutivo]
+//   node supabase/tools/promover.mjs --pr=<número> [--ate-preview] [--e2e=arquivo1,arquivo2] [--e2e-completo] [--aceito-destrutivo]
 //
 //   1. confere o Git e o PR (branch enviada, PR aberto contra a main, sem conflito)
 //   2. typecheck · lint dos arquivos alterados · build
@@ -16,7 +16,7 @@ import { existsSync } from "node:fs";
 const SITE_PROD = "324307d8-7697-4f3a-907f-95e572b5b77d"; const PROD_REF = "wfqkjrpqkaarpavjheoj"; const DOMINIO = "https://hpfisioterapia.com.br";
 const arg = (n) => process.argv.find((a) => a === `--${n}` || a.startsWith(`--${n}=`)); const val = (n) => arg(n)?.split("=").slice(1).join("=");
 const prNum = val("pr"); const ateVer = !!arg("ate-preview"); const completo = !!arg("e2e-completo"); const destrutivo = !!arg("aceito-destrutivo");
-if (!prNum || !/^\d+$/.test(prNum)) { console.error("Informe o PR: npm run promover -- --pr=<número>"); process.exit(1); }
+if (!prNum || !/^\d+$/.test(prNum)) { console.error("Informe o PR: node supabase/tools/promover.mjs --pr=<número>"); process.exit(1); }
 for (const v of ["SUPABASE_ACCESS_TOKEN", "NETLIFY_AUTH_TOKEN", "HP_QA_PASSWORD"]) if (!process.env[v]) { console.error(`Falta a variável ${v}.`); process.exit(1); }
 
 const sh = (cmd, capture = false) => spawnSync(cmd, { shell: true, encoding: "utf8", stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit", env: process.env });
@@ -66,7 +66,7 @@ await passo("Testes E2E", () => {
 });
 await passo("Preview (site hp-group-hub, banco Dev)", () => { exigir(sh("node supabase/tools/preview.mjs"), "o preview não foi publicado"); });
 
-if (ateVer) { console.log(`\nRESULTADO: PASSOU no preview. Pronto para produção (${feitos.length} verificações). Para publicar: npm run promover -- --pr=${prNum}`); process.exit(0); }
+if (ateVer) { console.log(`\nRESULTADO: PASSOU no preview. Pronto para produção (${feitos.length} verificações). Para publicar: node supabase/tools/promover.mjs --pr=${prNum}`); process.exit(0); }
 
 const anterior = (await (await fetch(`https://api.netlify.com/api/v1/sites/${SITE_PROD}`, { headers: { authorization: `Bearer ${process.env.NETLIFY_AUTH_TOKEN}` } })).json()).published_deploy?.id;
 await passo("Produção: backup e migrations", () => {

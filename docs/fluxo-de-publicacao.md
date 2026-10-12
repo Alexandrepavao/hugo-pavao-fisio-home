@@ -16,10 +16,10 @@ O preview usa o **mesmo perfil da produção (`v1`)**, só trocando o banco: é 
 ## Comandos
 ```powershell
 npm run preview:publicar                      # publica o que está na pasta no preview (rascunho, nunca no domínio)
-npm run promover -- --pr=<n> --ate-preview    # roda TODAS as verificações + preview; para aqui ("passou, pronto para produção")
-npm run promover -- --pr=<n>                  # idem e, se tudo passar, publica em produção
+node supabase/tools/promover.mjs --pr=<n> --ate-preview    # roda TODAS as verificações + preview; para aqui ("passou, pronto para produção")
+node supabase/tools/promover.mjs --pr=<n>                  # idem e, se tudo passar, publica em produção
 npm run migrar:producao                       # lista migrations pendentes na produção (não grava)
-npm run migrar:producao -- --aplicar          # backup + aplica as pendentes
+node supabase/tools/migrar-producao.mjs --aplicar          # backup + aplica as pendentes
 npm run backup:producao                       # exporta os dados da produção (docs/backup-e-restauracao.md)
 ```
 Opções do `promover`: `--e2e=arquivo1,arquivo2` (E2E específicos), `--e2e-completo` (toda a suíte `@release`), `--aceito-destrutivo` (confirma migration com DROP/TRUNCATE/DELETE).

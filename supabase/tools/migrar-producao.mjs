@@ -1,6 +1,6 @@
 // Aplica na PRODUÇÃO (HP Group Core) as migrations que ainda não estão lá, uma a uma, na ordem, parando na primeira falha.
 //   npm run migrar:producao                  → só LISTA o que está pendente (não grava nada)
-//   npm run migrar:producao -- --aplicar     → faz backup (backup-projeto.mjs) e aplica
+//   node supabase/tools/migrar-producao.mjs --aplicar     → faz backup (backup-projeto.mjs) e aplica
 // Proteções: (1) backup obrigatório antes de aplicar; (2) migration com DROP/TRUNCATE/DELETE exige confirmação explícita (--aceito-destrutivo);
 // (3) as migrations 048–051 (módulo Contábil, só na branch feature/lead-quizzes) nunca são aplicadas por aqui.
 // Requer SUPABASE_ACCESS_TOKEN (variável do usuário do Windows).
