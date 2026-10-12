@@ -22,7 +22,8 @@
     "preview:publicar": "node supabase/tools/preview.mjs",
     "migrar:producao": "node supabase/tools/migrar-producao.mjs",
     "promover": "node supabase/tools/promover.mjs",
-    "backup:producao": "node supabase/tools/backup-projeto.mjs"
+    "backup:producao": "node supabase/tools/backup-projeto.mjs",
+    "seed:dev": "node supabase/tools/seed-dev.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

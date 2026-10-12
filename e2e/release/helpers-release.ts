@@ -56,11 +56,16 @@ export async function createConfirmedUser(email: string, password: string): Prom
 }
 export const deleteAuthUser = (id: string) => devSql(`delete from auth.users where id = '${id.replace(/[^0-9a-f-]/gi, "")}'`);
 
-/** Login pela TELA (como o usuário faz): e-mail + senha → “Entrar”. */
-export async function uiLogin(page: Page, email: string, password: string) {
+/** Login pela TELA (como o usuário faz): e-mail + senha → “Entrar”.
+ *  No primeiro login de quem não é da gestão o sistema abre o tutorial (/boas-vindas). Por padrão o teste o dispensa ("Começar a usar o sistema") e segue para o destino normal;
+ *  use `{ tutorial: "manter" }` nos testes que verificam o próprio tutorial. */
+export async function uiLogin(page: Page, email: string, password: string, opts: { tutorial?: "pular" | "manter" } = {}) {
   await page.goto("/login");
   await page.getByLabel("E-mail").fill(email); await page.getByLabel("Senha").fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
+  if (opts.tutorial === "manter") return;
+  await page.waitForURL((u) => !/^\/(login|app)\/?$/.test(u.pathname), { timeout: 20_000 }).catch(() => undefined);
+  if (/\/boas-vindas/.test(page.url())) await page.getByTestId("tutorial-comecar").first().click();
 }
 
 /** Token de uma conta criada pelo teste (senha própria, diferente da das contas de QA). */

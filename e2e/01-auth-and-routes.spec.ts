@@ -18,6 +18,8 @@ test.describe("autenticação e proteção de rotas", () => {
     await p2.goto("/login");
     await p2.getByLabel("E-mail").fill(STUDENT); await p2.getByLabel("Senha").fill(PASSWORD);
     await p2.getByRole("button", { name: "Entrar" }).click();
+    // primeiro login de quem não é da gestão: tutorial do sistema; ao começar, cai na área do aluno
+    await expect(p2).toHaveURL(/\/boas-vindas$/); await expect(p2.getByTestId("tutorial-member")).toBeVisible(); await p2.getByTestId("tutorial-comecar").first().click();
     await expect(p2).toHaveURL(/\/paciente$/);                                   // regressão: antes caía em "Sem permissão"
     await expect(p2.getByText("Sem permissão")).toHaveCount(0);
     await ctx.close();
@@ -32,7 +34,7 @@ test.describe("autenticação e proteção de rotas", () => {
   test("aluna não acessa áreas de gestão pela interface", async ({ page }) => {
     await page.goto("/login");
     await page.getByLabel("E-mail").fill(STUDENT); await page.getByLabel("Senha").fill(PASSWORD);
-    await page.getByRole("button", { name: "Entrar" }).click(); await expect(page).toHaveURL(/\/paciente$/);
+    await page.getByRole("button", { name: "Entrar" }).click(); await expect(page).toHaveURL(/\/boas-vindas$/); await page.getByTestId("tutorial-comecar").first().click(); await expect(page).toHaveURL(/\/paciente$/);
     await page.goto("/admin/financeiro");
     await expect(page.getByText("Sem permissão")).toBeVisible();
   });

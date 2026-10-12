@@ -114,7 +114,7 @@ test.describe.serial("@release Onboarding do paciente + tutorial", () => {
     const person = (await g.get(`people?select=id&document_number=eq.${cpf}`)).body[0].id as string;
     expect((await g.get(`user_accounts?select=person_id,display_name&user_id=eq.${uid}`)).body).toEqual([{ person_id: person, display_name: "Paulo" }]);
     expect((await g.get(`role_assignments?select=role&user_id=eq.${uid}`)).body).toEqual([{ role: "member" }]);
-    await uiLogin(page, email, PASS);
+    await uiLogin(page, email, PASS, { tutorial: "manter" });
     await expect(page).toHaveURL(/\/boas-vindas$/, { timeout: 60_000 });
     await expect(page.getByRole("heading", { name: /Bem-vindo\(a\), Paulo!/ })).toBeVisible();
     const t = page.getByTestId("tutorial-member"); await expect(t).toContainText("Suas sessões"); await expect(t).toContainText("quantas você já fez e quantas ainda faltam"); await expect(t).toContainText("Sua evolução");

@@ -46,6 +46,7 @@ Backup → migrations pendentes (uma a uma) → merge do PR → deploy a partir 
 - **Banco:** as migrations são aditivas por regra; a correção é uma nova migration. Em último caso, restaurar dos dados exportados em `D:\Claude\backups-hp-group` (ver `docs/backup-e-restauracao.md`: restaura dados, não o schema).
 
 ## Limites conhecidos
-- O preview usa o **banco Dev**, que está sem dados de exemplo (foi limpo em 07/10): para testar fluxos que dependem de serviços, profissionais e agenda é preciso cadastrá-los ali ou usar os testes E2E, que criam o que precisam. Dados do Dev nunca vão para produção.
-- A suíte E2E completa depende de dados de base no Dev (serviços, produtos, profissionais, agenda); sem eles parte dela falha por falta de fixture, não por defeito do código. Por isso a verificação padrão usa os testes da própria mudança + login/rotas.
+- O preview usa o **banco Dev**, que foi limpo em 07/10. Para ter o que testar à mão (profissional com agenda, serviço, pacote, 8 pacientes, uma venda paga, uma conta a pagar e uma oportunidade), rode **`npm run seed:dev`**: tudo marcado "(exemplo)", só cria o que falta (pode rodar de novo) e **só funciona contra o Dev** (recusa outro banco). Dados do Dev nunca vão para produção.
+- A suíte E2E completa (`@release`) mede o estado real: em 12/10 passou inteira depois dos ajustes (os testes criam o que precisam; só o `R02` compara com dados existentes e é por isso que o `seed:dev` existe). No PowerShell, `--grep "@release"` precisa de aspas (o `@` é um operador do PowerShell).
+- O primeiro login de quem não é da gestão abre o tutorial (`/boas-vindas`); os testes de jornada dispensam o tutorial pelo helper `uiLogin` (opção `{ tutorial: "manter" }` para testá-lo).
 - O preview não envia e-mails reais de confirmação em nenhum teste automatizado (os testes interceptam a criação da senha).
