@@ -21,8 +21,12 @@ for (const v of ["SUPABASE_ACCESS_TOKEN", "NETLIFY_AUTH_TOKEN", "HP_QA_PASSWORD"
 
 const sh = (cmd, capture = false) => spawnSync(cmd, { shell: true, encoding: "utf8", stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit", env: process.env });
 const out = (cmd) => (sh(cmd, true).stdout ?? "").trim();
-const feitos = [];
-const falhar = (nome, msg) => { console.error(`\n[FALHA] ${nome}: ${msg}`); console.error(`\nRESULTADO: NÃO PROMOVIDO. Passos concluídos antes: ${feitos.join(" › ") || "nenhum"}.`); process.exit(1); };
+const feitos = []; let mesclado = false;
+const falhar = (nome, msg) => {
+  console.error(`\n[FALHA] ${nome}: ${msg}`); console.error(`\nRESULTADO: NÃO PROMOVIDO. Passos concluídos antes: ${feitos.join(" › ") || "nenhum"}.`);
+  if (mesclado) console.error(`\nATENÇÃO: o PR #${prNum} JÁ FOI MESCLADO na main; a produção ainda NÃO recebeu esta versão. Para concluir: git checkout main && git pull --ff-only origin main && netlify deploy --prod --site ${SITE_PROD}`);
+  process.exit(1);
+};
 const passo = async (nome, fn) => { console.log(`\n▶ ${nome}`); let nota; try { nota = await fn(); } catch (e) { falhar(nome, e.message); } feitos.push(nome); console.log(`  [OK] ${nome}${nota ? " — " + nota : ""}`); };
 const exigir = (r, msg) => { if (r.status !== 0) throw new Error(msg); };
 
@@ -57,11 +61,12 @@ await passo("Testes SQL de release (Dev)", () => {
   return `${m[1]} verificações OK`;
 });
 await passo("Testes E2E", () => {
-  if (completo) { exigir(sh('npx playwright test --grep "@release" --workers=1'), "há teste E2E falhando"); return "suíte @release completa"; }
+  if (completo) { exigir(sh('npx playwright test --grep "@release" --workers=1'), "há teste E2E falhando"); sh("git checkout -- docs/screenshots", true); return "suíte @release completa"; }
   const explicitos = (val("e2e") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   const mudados = alterados.filter((f) => /^e2e\/.*\.spec\.ts$/.test(f) && existsSync(f));
   const lista = [...new Set([...(explicitos.length ? explicitos : mudados), "e2e/01-auth-and-routes.spec.ts"])];
   exigir(sh(`npx playwright test ${lista.map((f) => `"${f}"`).join(" ")} --workers=1`), "há teste E2E falhando");
+  sh("git checkout -- docs/screenshots", true);   // os testes regeneram as capturas de tela (resultado de teste, não código); volta ao que está commitado
   return `${lista.length} arquivo(s): ${lista.map((f) => f.split("/").pop()).join(", ")}`;
 });
 await passo("Preview (site hp-group-hub, banco Dev)", () => { exigir(sh("node supabase/tools/preview.mjs"), "o preview não foi publicado"); });
@@ -74,9 +79,10 @@ await passo("Produção: backup e migrations", () => {
   if (r.status === 2) throw new Error("há migration com DROP/TRUNCATE/DELETE: precisa de confirmação explícita (--aceito-destrutivo)");
   exigir(r, "a aplicação das migrations falhou");
 });
-await passo("Merge do PR", () => { sh(`gh pr ready ${prNum}`, true); exigir(sh(`gh pr merge ${prNum} --merge`), "o merge falhou"); });
+await passo("Merge do PR", () => { sh(`gh pr ready ${prNum}`, true); exigir(sh(`gh pr merge ${prNum} --merge`), "o merge falhou"); mesclado = true; });
 await passo("Deploy da main em produção", () => {
-  exigir(sh("git checkout main"), "não consegui voltar para a main"); exigir(sh("git pull --ff-only origin main"), "não consegui atualizar a main");
+  sh("git checkout -- docs/screenshots", true); sh("git fetch origin", true);
+  exigir(sh("git checkout main"), "não consegui voltar para a main (há alterações locais que conflitam; veja acima)"); exigir(sh("git pull --ff-only origin main"), "não consegui atualizar a main");
   exigir(sh(`netlify deploy --prod --site ${SITE_PROD} --message "promover PR ${prNum}: ${out("git rev-parse --short HEAD")}"`), "o deploy falhou");
 });
 await passo("Conferência no domínio", async () => {
