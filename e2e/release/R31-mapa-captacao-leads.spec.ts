@@ -4,11 +4,19 @@
 //  · cidade e estado são obrigatórios: o servidor recusa concluir o quiz sem eles e recusa UF inventada
 // Dados próprios (runId); os leads de teste ficam no Dev (a captação não tem exclusão pela tela).
 import { expect, test } from "@playwright/test";
-import { api, collectErrors, expectNoFatal, loginAs, QA, runId } from "./helpers-release";
+import { ANON, SUPABASE_URL } from "../helpers";
+import { collectErrors, expectNoFatal, loginAs, QA, runId } from "./helpers-release";
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
 
-const anon = () => api(null);
+// O limite do quiz é por IP (8 inícios a cada 10 min por jornada); o teste usa um IP de origem próprio (primeiro valor de x-forwarded-for) para não gastar o limite dos outros testes.
+const ip = `10.31.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`;
+const anon = () => ({
+  rpc: async (fn: string, body: unknown) => {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: ANON, authorization: `Bearer ${ANON}`, "content-type": "application/json", "x-forwarded-for": ip }, body: JSON.stringify(body) });
+    return { status: r.status, body: await r.json().catch(() => null) };
+  },
+});
 const tag = runId.toLowerCase();
 const nomes = { pac: `Paciente R31 ${runId}`, par: `Parceiro R31 ${runId}`, aca: `Academy R31 ${runId}`, sem: `Sem Cidade R31 ${runId}` };
 const phone = () => `(11) 9${Math.floor(1000 + Math.random() * 8999)}-${Math.floor(1000 + Math.random() * 8999)}`;
