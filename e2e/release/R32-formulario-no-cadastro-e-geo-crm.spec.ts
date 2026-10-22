@@ -20,10 +20,10 @@ const phone = () => `(19) 9${Math.floor(1000 + Math.random() * 8999)}-${Math.flo
 
 test.describe.serial("@release Formulário preenchido no cadastro e no CRM + Distribuição geográfica do CRM", () => {
   test.setTimeout(180_000);
-  let personId = "";
+  let personId = ""; const fone = phone(); const email = `vanessa.r32.${tag}@example.com`;
 
   test("fixture: parceira preenche o quiz (registro ativo, geriátrica, sem interesse na clínica; Campinas/SP) e o local chega ao cadastro", async () => {
-    const s = await anon("quiz_start", { p_journey: "parceria", p_name: nome, p_email: `vanessa.r32.${tag}@example.com`, p_phone: phone(), p_contact_consent_version: "contact-v1", p_origin_path: "/trabalhe-conosco", p_page_slug: "trabalhe-conosco", p_referrer: null, p_utm: {}, p_honeypot: null });
+    const s = await anon("quiz_start", { p_journey: "parceria", p_name: nome, p_email: email, p_phone: fone, p_contact_consent_version: "contact-v1", p_origin_path: "/trabalhe-conosco", p_page_slug: "trabalhe-conosco", p_referrer: null, p_utm: {}, p_honeypot: null });
     expect(s.status, JSON.stringify(s.body)).toBe(200); const id = (s.body as { id: string }).id;
     expect((await anon("quiz_save_progress", { p_id: id, p_step: 4, p_answers: {}, p_city: "Campinas", p_uf: "SP" })).status).toBe(200);
     expect((await anon("quiz_save_progress", { p_id: id, p_step: 5, p_answers: { momento_profissional: ans("em_atuacao", "Fisioterapeuta em atuação"), situacao_registro: ans("ativo", "Ativo"), area_atuacao: ans("geriatrica", "Geriátrica"), modelo_atendimento: ans("domiciliar", "Atendimento domiciliar"), objetivos_parceria: ans(["equipe"], "Atuar na equipe"), interesses_desenvolvimento: ans(["nenhuma"], "Nenhuma no momento") } })).status).toBe(200);
@@ -83,6 +83,14 @@ test.describe.serial("@release Formulário preenchido no cadastro e no CRM + Dis
     await geo.getByRole("tab", { name: "Equipe" }).click();
     expect(Number(await geo.locator('path[data-uf="SP"]').getAttribute("data-class"))).toBeGreaterThan(0);
     await expect(geo.getByRole("row").filter({ hasText: "Campinas" })).toHaveCount(1);
+    // clicar na cidade lista os contatos dela, com nome, telefone e e-mail
+    await geo.getByRole("button", { name: "Campinas", exact: true }).click();
+    const lista = geo.getByTestId("geo-cidade-contatos"); await expect(lista).toContainText("Contatos em Campinas/SP");
+    const linha = lista.getByRole("row").filter({ hasText: nome }); await expect(linha).toHaveCount(1);
+    await expect(linha).toContainText(fone); await expect(linha).toContainText(email);
+    await linha.getByRole("button", { name: new RegExp(`Ver formulário e dados de ${nome}`) }).click();
+    const det = page.getByTestId("geo-contato-detalhe"); await expect(det.getByTestId("form-answers-city")).toHaveText("Campinas"); await expect(det.getByText("Geriátrica", { exact: true })).toBeVisible();
+    await page.keyboard.press("Escape"); await expect(det).toHaveCount(0);
     await page.screenshot({ path: `${process.env.TEMP}\\r32-geo.png` });
     await expectNoFatal(page); expect(errors, errors.join("\n")).toEqual([]);
   });

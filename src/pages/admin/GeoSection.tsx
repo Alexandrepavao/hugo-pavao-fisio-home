@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -6,16 +6,18 @@ import BrazilMap from "@/components/hp/BrazilMap";
 import { supabase } from "@/lib/supabase";
 import { EmptyState, LevelSection, State, Table, Tabs, Td } from "@/lib/ui";
 
-export interface Geo { total: number; sem_localizacao: number; by_state: { uf: string; count: number; pct: number }[]; by_city: { city: string; uf: string; count: number }[]; by_country_other: { country: string; count: number }[] }
+export interface Geo { total: number; sem_localizacao: number; by_state: { uf: string; count: number; pct: number }[]; by_city: { city: string; uf: string; count: number; key?: string }[]; by_country_other: { country: string; count: number }[] }
 
 const SEG_LABEL: Record<string, string> = { patient: "Pacientes", partner: "Parceiros/fisioterapeutas", student: "Alunos do Academy" };
 const SEG: [string, string][] = [["patient", SEG_LABEL.patient], ["partner", SEG_LABEL.partner], ["student", SEG_LABEL.student]];
 const SEG_ROUTE: Record<string, string> = { patient: "/admin/pessoas?tipo=patient", partner: "/admin/parceiros", student: "/admin/academy" };
 
 /** Mapa + estados + cidades de uma distribuição (usado aqui, no Hub, e no CRM). `route` = para onde mandar quem quer completar o cadastro/ver a lista. */
-export const GeoView = ({ geo, loading, error, selectedUf, onSelectUf, emptyTitle, route, routeLabel, noun = "pessoa(s)", countLabel = "Pessoas", missing, completeRoute }: {
+export const GeoView = ({ geo, loading, error, selectedUf, onSelectUf, emptyTitle, route, routeLabel, noun = "pessoa(s)", countLabel = "Pessoas", missing, completeRoute, onCity, selectedCityKey, cityPanel }: {
   geo: Geo | undefined; loading: boolean; error: unknown; selectedUf: string | null; onSelectUf: (uf: string | null) => void;
   emptyTitle: string; route: string; routeLabel: string; noun?: string; countLabel?: string; missing?: string; completeRoute?: string;
+  /** se informado, cada cidade vira um botão (ex.: abrir os contatos dela); `cityPanel` aparece logo abaixo da tabela de cidades */
+  onCity?: (c: { city: string; uf: string; key?: string }) => void; selectedCityKey?: string | null; cityPanel?: ReactNode;
 }) => {
   const chart = (geo?.by_state ?? []).slice(0, 10).map((s) => ({ uf: s.uf, [countLabel]: s.count }));
   const cityRows = useMemo(() => selectedUf ? (geo?.by_city ?? []).filter((c) => c.uf === selectedUf) : (geo?.by_city ?? []), [geo, selectedUf]);
@@ -38,8 +40,12 @@ export const GeoView = ({ geo, loading, error, selectedUf, onSelectUf, emptyTitl
             )}
             <h3 className="text-sm font-medium mb-2">{selectedUf ? `Cidades em ${selectedUf}` : "Cidades (todas as UFs)"}</h3>
             {cityRows.length > 0 ? <Table head={["Cidade", "UF", countLabel]} right={[2]}>
-              {cityRows.map((c) => <tr key={c.city + c.uf}><Td>{c.city}</Td><Td>{c.uf}</Td><Td num>{c.count}</Td></tr>)}</Table>
+              {cityRows.map((c) => (
+                <tr key={c.city + c.uf} data-testid="geo-cidade" className={onCity && selectedCityKey && c.key === selectedCityKey ? "bg-primary/5" : undefined}>
+                  <Td>{onCity ? <button type="button" className="text-accent hover:underline font-medium text-left" aria-pressed={!!c.key && c.key === selectedCityKey} onClick={() => onCity(c)}>{c.city}</button> : c.city}</Td>
+                  <Td>{c.uf}</Td><Td num>{c.count}</Td></tr>))}</Table>
               : <p className="text-sm text-muted-foreground hp-card p-3">{selectedUf ? "Nenhuma cidade cadastrada para este estado." : "Nenhuma cidade cadastrada ainda."}</p>}
+            {cityPanel}
           </div>
           <div className="hp-card p-4 self-start">
             <p className="text-sm"><strong className="tabular">{geo.total}</strong> no total</p>
