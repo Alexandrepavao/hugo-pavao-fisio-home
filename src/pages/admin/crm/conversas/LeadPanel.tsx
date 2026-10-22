@@ -5,6 +5,7 @@ import { CalendarCheck, ExternalLink, Phone, ShoppingCart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, fmtDateTime } from "@/lib/format";
 import { Badge, errText } from "@/lib/ui";
+import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
 import { initials, isStale, type Stage, type Task } from "../types";
 import { nicheOf } from "../niches";
 import { fmtPhone, refreshConversations, useStaff } from "./api";
@@ -125,6 +126,8 @@ const LeadPanel = ({ personId, opportunityId, name, phone, conversationId, myId,
             <p className="text-xs text-muted-foreground pt-1">Atendimentos realizados: {attended}. Dados clínicos não aparecem aqui.</p>
           </Block>
         )}
+
+        <Block title="Formulário preenchido" testid="lead-form"><PersonFormAnswers personId={personId} empty="Não preencheu formulário (quiz ou página)." /></Block>
 
         <Block title="Vendas confirmadas" testid="lead-sales">
           {(sales.data ?? []).length === 0

@@ -5,6 +5,7 @@ import { errText, Msg, useMsg, btnGhost, btnPrimary } from "@/lib/ui";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useUnits } from "../finance/shared";
 import OnboardingData from "./OnboardingData";
+import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
 import type { StaffUser } from "../crm/types";
 
 interface PersonDetail {
@@ -122,6 +123,10 @@ const PersonAdmSheet = ({ personId, onClose, onChanged }: { personId: string | n
                       <p className="text-[11px] text-muted-foreground mt-1">Unidade principal é definida em Pessoas.</p></div>
                     <div className="sm:col-span-3"><label htmlFor="pf-notes" className="block text-xs mb-1">Observações administrativas</label><textarea id="pf-notes" rows={3} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} /></div>
                   </div>
+                </section>
+                <section data-testid="adm-formularios">
+                  <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Formulários preenchidos</h3>
+                  <PersonFormAnswers personId={personId} empty="Esta pessoa não preencheu nenhum formulário (quiz ou página)." />
                 </section>
                 <OnboardingData personId={personId} />
               </div>

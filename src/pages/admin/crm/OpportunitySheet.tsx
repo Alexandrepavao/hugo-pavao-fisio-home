@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { brl, fmtDateTime } from "@/lib/format";
 import { Badge, errText, Msg, Tabs, promptText, useMsg } from "@/lib/ui";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
 import LeadTypeBadge from "./LeadTypeBadge";
 import { LEAD_TYPE, isLeadKind, pipeLabel } from "./leadTypes";
 import { cardName, isStale, type Opp, type PipelineInfo, type Stage, type StaffUser, type Task } from "./types";
@@ -36,6 +37,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
     const { data, error } = await supabase.from("opportunities").select("id, title, status, stage_id, pipeline_id, created_at, legal_entity:legal_entities(legal_name, trade_name)").eq("person_id", opp!.person_id).order("created_at");
     if (error) throw error; return data as unknown as SiblingOpp[];
   } });
+  const where = useQuery({ queryKey: ["person-where", opp?.person_id], enabled: !!opp, queryFn: async () => (await supabase.from("people").select("city, state_uf").eq("id", opp!.person_id).maybeSingle()).data });
   const [addPipe, setAddPipe] = useState("");
   const stageName = (sid: string | null) => (allStages.data ?? stages).find((s) => s.id === sid)?.name ?? "—";
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["opp-hist", id] }); void qc.invalidateQueries({ queryKey: ["opp-tasks", id] }); void qc.invalidateQueries({ queryKey: ["person-opps"] }); void qc.invalidateQueries({ queryKey: ["crm-overview"] }); onChanged(); };
@@ -93,7 +95,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
               {opp.source && <Badge>{opp.source}</Badge>}{opp.campaign && <Badge tone="gold">{opp.campaign}</Badge>}
             </div>
           </SheetHeader>
-          <div className="px-5 pt-3"><Tabs tabs={[["resumo", "Resumo"], ["historico", "Histórico"], ["tarefas", `Tarefas${tasks.data?.length ? ` (${tasks.data.length})` : ""}`]]} value={tab} onChange={setTab} /></div>
+          <div className="px-5 pt-3"><Tabs tabs={[["resumo", "Resumo"], ["formulario", "Formulário"], ["historico", "Histórico"], ["tarefas", `Tarefas${tasks.data?.length ? ` (${tasks.data.length})` : ""}`]]} value={tab} onChange={setTab} /></div>
           <div className="flex-1 overflow-y-auto px-5 pb-6">
             <Msg m={msg} />
             {tab === "resumo" && (
@@ -103,6 +105,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
                 <div><label htmlFor="nc" className="block mb-1">Próximo contato</label>
                   <input id="nc" type="datetime-local" defaultValue={opp.next_contact_at ? opp.next_contact_at.slice(0, 16) : ""} onBlur={(e) => e.target.value && patch({ next_contact_at: new Date(e.target.value).toISOString() }, "Próximo contato agendado.")} /></div>
                 <dl className="grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs text-muted-foreground">Valor</dt><dd className="tabular">{opp.value_cents > 0 ? brl(opp.value_cents) : "—"}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Cidade/UF</dt><dd data-testid="opp-local">{where.data?.city || where.data?.state_uf ? `${where.data?.city ?? "—"}/${where.data?.state_uf ?? "—"}` : "não informado"}</dd></div>
                   <div><dt className="text-xs text-muted-foreground">Criada em</dt><dd>{fmtDateTime(opp.created_at)}</dd></div><div><dt className="text-xs text-muted-foreground">Último contato</dt><dd>{fmtDateTime(opp.last_contact_at)}</dd></div></dl>
                 <section aria-label="Oportunidades desta pessoa" data-testid="opps-da-pessoa" className="grid gap-2 rounded-lg border border-border p-3">
                   <h4 className="text-sm font-semibold">{opp.person?.full_name?.split(" ")[0] ?? "Pessoa"} em todos os funis</h4>
@@ -129,6 +132,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
                 {opp.status === "open" && <Link className="hp-btn hp-btn-primary" to={`/admin/financeiro/vendas?venda=${opp.id}&pessoa=${opp.person_id}&unidade=${opp.unit_id}`}>Converter em venda</Link>}
               </div>
             )}
+            {tab === "formulario" && (<div className="grid gap-3 pt-1" data-testid="opp-formulario"><PersonFormAnswers personId={opp.person_id} empty="Esta pessoa não preencheu formulário (quiz ou página): o contato veio por outro caminho." /></div>)}
             {tab === "historico" && (<div className="grid gap-4">
               <form onSubmit={addNote} className="grid gap-2">
                 <label htmlFor="ch" className="sr-only">Canal</label>

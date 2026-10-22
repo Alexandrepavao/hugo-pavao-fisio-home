@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import CrmGeoSection from "./CrmGeoSection";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CalendarClock, CheckCircle2, Coins, FolderOpen, Layers, Percent, Trophy, UserPlus, Wallet, type LucideIcon } from "lucide-react";
@@ -231,6 +232,8 @@ const CrmDashboard = () => {
           </section>
         </div>
       </LevelSection>
+
+      <CrmGeoSection unit={unit} />
 
       <CardDetailSheet trigger={detail} onClose={() => setDetail(null)} />
     </div>
