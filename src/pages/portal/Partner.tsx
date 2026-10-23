@@ -24,7 +24,7 @@ const Partner = () => {
         <section className="mb-8 grid gap-6 lg:grid-cols-2">
           <form onSubmit={save} className="hp-card p-5 grid gap-3" noValidate><h2 className="text-xl">Perfil profissional <span className="text-sm text-muted-foreground">({p.status === "active" ? "ativo" : p.status === "onboarding" ? "em integração" : "inativo"})</span></h2>
             <div><label htmlFor="sp" className="block text-xs mb-1">Especialidade</label><input id="sp"   value={spec ?? p.specialty ?? ""} onChange={(e) => setSpec(e.target.value)} /></div>
-            <div><label htmlFor="rg" className="block text-xs mb-1">Registro no conselho</label><input id="rg"   value={reg ?? p.council_registration ?? ""} onChange={(e) => setReg(e.target.value)} /></div>
+            <div><label htmlFor="rg" className="block text-xs mb-1">CREFITO</label><input id="rg"   value={reg ?? p.council_registration ?? ""} onChange={(e) => setReg(e.target.value)} /></div>
             <div><label htmlFor="bi" className="block text-xs mb-1">Apresentação</label><textarea id="bi" rows={3}   value={bio ?? p.bio ?? ""} onChange={(e) => setBio(e.target.value)} /></div><button className={btnGhost + " w-fit"}>Salvar perfil</button></form>
           <div className="hp-card p-5"><h2 className="text-xl mb-3">Integração</h2><ul className="space-y-1">{Object.entries(p.onboarding as Record<string, boolean>).map(([k, v]) => <li key={k}>{v ? "✓" : "○"} {OB[k] ?? k}</li>)}</ul><p className="text-xs text-muted-foreground mt-3">A equipe atualiza estas etapas conforme a integração avança.</p></div>
         </section>

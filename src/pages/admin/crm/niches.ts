@@ -19,7 +19,7 @@ export const NICHES: Record<string, Niche> = {
     fields: [
       { key: "course_interest", label: "Curso ou mentoria de interesse" },
       { key: "professional_profile", label: "Perfil", options: [["fisioterapeuta", "Fisioterapeuta"], ["estudante", "Estudante"], ["outro_profissional_saude", "Outro profissional da saúde"], ["outro", "Outro"]] },
-      { key: "council_registry", label: "Registro no conselho", placeholder: "Ex.: CREFITO-3/000000-F" },
+      { key: "council_registry", label: "CREFITO", placeholder: "Ex.: CREFITO-3/000000-F" },
       { key: "format_pref", label: "Formato preferido", options: [["online", "Online"], ["presencial", "Presencial"], ["indiferente", "Indiferente"]] },
     ],
   },
@@ -29,7 +29,7 @@ export const NICHES: Record<string, Niche> = {
       { key: "partnership_type", label: "Tipo de parceria" },
       { key: "organization", label: "Organização" },
       { key: "city_uf", label: "Cidade/UF" },
-      { key: "council_registry", label: "Registro no conselho" },
+      { key: "council_registry", label: "CREFITO", placeholder: "Ex.: CREFITO-3/000000-F" },
     ],
   },
   companies: {
