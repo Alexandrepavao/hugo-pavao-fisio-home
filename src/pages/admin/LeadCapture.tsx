@@ -8,6 +8,7 @@ import { fmtDateTime } from "@/lib/format";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { presetRange, toExclusive, type RangePreset } from "@/lib/period";
 import { Badge, PageHead, State, StatCard, Table, Td, Tabs, btnGhost, type Tone } from "@/lib/ui";
+import { JOURNEY_QUESTIONS, type Journey } from "@/lib/quiz";
 import CaptureAnalytics from "./CaptureAnalytics";
 
 interface LeadRow {
@@ -281,7 +282,7 @@ const DetailPanel = ({ detail, loading }: { detail: LeadDetail | undefined; load
           <ul className="text-sm grid gap-1.5">
             {Object.entries(detail.answers).map(([k, v]) => (
               <li key={k} className="flex justify-between gap-4 border-b border-border/60 py-1.5">
-                <span className="text-muted-foreground">{k}</span>
+                <span className="text-muted-foreground">{JOURNEY_QUESTIONS[detail.journey as Journey]?.find((x) => x.key === k)?.question ?? k}</span>
                 <span className="text-right">{v.label}{v.detalhe ? ` — ${v.detalhe}` : ""}</span>
               </li>
             ))}

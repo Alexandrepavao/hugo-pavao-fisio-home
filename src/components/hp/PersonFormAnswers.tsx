@@ -42,9 +42,10 @@ const PersonFormAnswers = ({ personId, empty }: { personId: string; empty?: stri
               <h4 className="text-sm font-semibold">{TITLE[z.journey] ?? z.journey}</h4><Badge tone={stTone}>{stLabel}</Badge>
               <span className="text-xs text-muted-foreground ml-auto">{fmtDateTime(z.completed_at ?? z.last_activity_at)}</span>
             </div>
-            <dl className="grid grid-cols-2 gap-3 mt-2 rounded-md bg-muted/50 px-3 py-2" data-testid="form-answers-local">
+            <dl className={`grid ${z.journey === "parceria" ? "grid-cols-3" : "grid-cols-2"} gap-3 mt-2 rounded-md bg-muted/50 px-3 py-2`} data-testid="form-answers-local">
               <div><dt className="text-xs text-muted-foreground">Cidade informada</dt><dd className="font-semibold" data-testid="form-answers-city">{z.city ?? <span className="font-normal text-muted-foreground">não informada</span>}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Estado (UF)</dt><dd className="font-semibold" data-testid="form-answers-uf">{z.state_uf ?? <span className="font-normal text-muted-foreground">não informado</span>}</dd></div>
+              {z.journey === "parceria" && <div><dt className="text-xs text-muted-foreground">CREFITO</dt><dd className="font-semibold break-words" data-testid="form-answers-crefito">{typeof z.answers.crefito?.value === "string" ? z.answers.crefito.value : <span className="font-normal text-muted-foreground">{z.answers.situacao_registro?.value === "ativo" ? "não informado" : "—"}</span>}</dd></div>}
             </dl>
             {ordered.length === 0
               ? <p className="text-sm text-muted-foreground mt-2">Ainda não respondeu às perguntas.</p>

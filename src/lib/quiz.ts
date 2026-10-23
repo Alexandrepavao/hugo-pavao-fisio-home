@@ -22,10 +22,11 @@ export type AnswerMap = Record<string, { value: string | string[]; label: string
 export interface Question {
   key: string;
   question: string;
-  kind: "options" | "scale" | "options-other" | "multi";
+  kind: "options" | "scale" | "options-other" | "multi" | "text";
   options?: QuestionOption[];
   exclusiveValue?: string; // multi: essa opção é exclusiva das demais (ex.: "Nenhuma")
   healthSensitive?: boolean;
+  placeholder?: string; // text: exemplo mostrado no campo
   intro?: string; bullets?: string[]; note?: string; // texto explicativo mostrado acima das opções
   showIf?: (answers: AnswerMap) => boolean; // pergunta condicional: some quando a resposta anterior a torna desnecessária
 }
@@ -72,6 +73,11 @@ export const PARCERIA_QUESTIONS: Question[] = [
   {
     key: "situacao_registro", question: "Qual é sua situação de registro profissional?", kind: "options",
     options: [{ value: "ativo", label: "Ativo" }, { value: "em_regularizacao", label: "Em regularização" }, { value: "nao_possuo", label: "Ainda não possuo" }],
+  },
+  {
+    key: "crefito", question: "Qual é o número do seu CREFITO?", kind: "text", placeholder: "Ex.: CREFITO-3/123456-F",
+    note: "Informe como consta na sua carteira, com a região se souber. Nossa equipe confere o registro antes de qualquer parceria.",
+    showIf: (a) => a.situacao_registro?.value === "ativo",
   },
   {
     key: "area_atuacao", question: "Qual é sua principal área de atuação ou interesse?", kind: "options-other",
@@ -178,13 +184,14 @@ export const buildAtendimentoMessage = (
 
 export const buildParceriaMessage = (
   f: WhatsAppTemplateFields, momento: string | null, registro: string | null, area: string | null, modelo: string | null, objetivos: string | null, interesses: string | null,
-  programa: string | null = null, prazoPrograma: string | null = null,
+  programa: string | null = null, prazoPrograma: string | null = null, crefito: string | null = null,
 ): string => {
   const fields = [
     line("Nome", f.fullName), line("E-mail", f.email), line("WhatsApp", f.phone),
     line("Cidade/UF", f.city && f.uf ? `${f.city}/${f.uf}` : f.city || f.uf),
     momento ? line("Momento profissional", momento) : null,
     registro ? line("Situação do registro", registro) : null,
+    crefito ? line("CREFITO", crefito) : null,
     area ? line("Área de atuação", area) : null,
     modelo ? line("Modelo de atendimento", modelo) : null,
     objetivos ? line("Objetivos da parceria", objetivos) : null,

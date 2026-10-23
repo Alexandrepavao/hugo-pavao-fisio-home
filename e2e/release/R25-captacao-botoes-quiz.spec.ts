@@ -61,6 +61,11 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     await p.getByLabel("Cidade").fill("Campinas"); await p.getByLabel("UF").selectOption("SP"); await next(p);
     await p.getByRole("radio", { name: "Fisioterapeuta em atuação" }).click(); await next(p);
     await p.getByRole("radio", { name: "Ativo" }).click(); await next(p);
+    // registro ativo: pergunta o CREFITO (obrigatório: em branco ou sem número não avança)
+    await expect(p.getByRole("heading", { name: "Qual é o número do seu CREFITO?" })).toBeVisible(); await expect(p.getByText(/Etapa 5 de 12/)).toBeVisible();
+    await expect(p.getByRole("button", { name: "Continuar" })).toBeDisabled();
+    await p.getByLabel("Número do CREFITO").fill("sem numero"); await next(p); await expect(p.getByRole("alert")).toContainText("número do seu CREFITO");
+    await p.getByLabel("Número do CREFITO").fill("CREFITO-3/123456-F"); await next(p);
     await p.getByRole("radio", { name: "Ortopedia" }).click(); await next(p);
     await p.getByRole("radio", { name: "Atendimento domiciliar" }).click(); await next(p);
     await expect(p.getByText("O que você busca na parceria")).toBeVisible(); await p.getByRole("checkbox").nth(3).click(); await next(p);        // desenvolver meu negócio
@@ -76,7 +81,7 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
 
     // pergunta de prazo só aparece quando há interesse
     await expect(p.getByRole("heading", { name: /quando você gostaria de começar/ })).toBeVisible();
-    await expect(p.getByText(/Etapa 10 de 11/)).toBeVisible();
+    await expect(p.getByText(/Etapa 11 de 12/)).toBeVisible();
     await p.getByRole("button", { name: "Voltar" }).click();                            // Voltar mantém a resposta anterior
     await expect(p.getByRole("radio", { name: "Quero entender melhor como funcionaria" })).toHaveAttribute("aria-checked", "true");
     await next(p);
@@ -84,7 +89,7 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
 
     await p.getByRole("button", { name: "Concluir" }).click(); await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible({ timeout: 30_000 });
     const preview = p.getByLabel("Prévia da mensagem (você pode editar)");
-    await expect(preview).toHaveValue(/Interesse em programa para ter a própria clínica: Quero entender melhor como funcionaria/); await expect(preview).toHaveValue(/Quando gostaria de começar: Entre 3 e 6 meses/);
+    await expect(preview).toHaveValue(/Interesse em programa para ter a própria clínica: Quero entender melhor como funcionaria/); await expect(preview).toHaveValue(/Quando gostaria de começar: Entre 3 e 6 meses/); await expect(preview).toHaveValue(/CREFITO: CREFITO-3\/123456-F/);
     await p.waitForTimeout(500); await p.screenshot({ path: "docs/screenshots/quiz/parceria-concluido-desktop.png", fullPage: true });
     expect(errors, errors.join("\n")).toEqual([]); await ctx.close();
 
@@ -93,6 +98,7 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     const full = await g.rpc("get_quiz_lead_detail", { p_id: list.body[0].id }); const a = full.body.answers;
     expect(a.interesse_programa_clinica).toMatchObject({ value: "quero_entender", label: "Quero entender melhor como funcionaria" });
     expect(a.prazo_programa_clinica).toMatchObject({ value: "tres_seis_meses", label: "Entre 3 e 6 meses" });
+    expect(a.crefito).toMatchObject({ value: "CREFITO-3/123456-F" });
     // o mesmo lead ganha DUAS oportunidades: parceria (equipe) e HP Academy (interesse no programa), cada uma no seu funil
     const opps = (await g.get(`opportunities?select=source,pipeline:pipelines(kind)&person_id=eq.${list.body[0].person_id}&status=eq.open`)).body as { source: string; pipeline: { kind: string } }[];
     expect(opps.map((o) => `${o.pipeline.kind}|${o.source}`).sort()).toEqual(["education|quiz:academy", "partners|quiz:parceria"]);

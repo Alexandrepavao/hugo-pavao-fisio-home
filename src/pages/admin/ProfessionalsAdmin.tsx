@@ -108,7 +108,7 @@ const ProfessionalsAdmin = () => {
                 {found.data?.map((p) => <button type="button" key={p.id} className="block w-full text-left p-2 border border-border bg-card hover:bg-muted" onClick={() => setPerson(p)}>{p.full_name}</button>)}
                 {search.trim().length >= 2 && !person && found.data?.length === 0 && <p className="text-xs text-muted-foreground mt-1">Ninguém encontrado: use “Nova pessoa”.</p>}</div>
             : <div><label htmlFor="pa-name" className="block text-xs mb-1">Nome completo</label><input id="pa-name" value={newName} onChange={(e) => setNewName(e.target.value)} /><p className="text-[11px] text-muted-foreground mt-1">A pessoa é criada no cadastro central (Pessoas) e ligada ao profissional.</p></div>}
-          <div><label htmlFor="pa-reg" className="block text-xs mb-1">Registro no conselho (ex.: CREFITO-3 123456-F)</label><input id="pa-reg" value={reg} onChange={(e) => setReg(e.target.value)} maxLength={40} /></div>
+          <div><label htmlFor="pa-reg" className="block text-xs mb-1">CREFITO (ex.: CREFITO-3 123456-F)</label><input id="pa-reg" value={reg} onChange={(e) => setReg(e.target.value)} maxLength={40} /></div>
         </div>
         <fieldset><legend className="text-xs mb-1">Unidades de atendimento *</legend><div className="flex flex-wrap gap-3">{units.data?.map((u) => <label key={u.id} className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={selUnits.includes(u.id)} onChange={() => toggleUnit(u.id)} />{u.name}</label>)}</div></fieldset>
         <button className={btnPrimary + " w-fit"}>Cadastrar profissional</button>
@@ -154,9 +154,9 @@ const ProfessionalsAdmin = () => {
     </section>
 
     <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
-      <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Editar {edit?.display_name}</DialogTitle><DialogDescription>Registro no conselho, unidades e situação. Para retirar uma unidade não pode haver atendimento futuro nela.</DialogDescription></DialogHeader>
+      <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Editar {edit?.display_name}</DialogTitle><DialogDescription>CREFITO, unidades e situação. Para retirar uma unidade não pode haver atendimento futuro nela.</DialogDescription></DialogHeader>
         <form onSubmit={saveEdit} className="grid gap-3" noValidate>
-          <div><label htmlFor="pe-reg" className="block text-xs mb-1">Registro no conselho</label><input id="pe-reg" value={eReg} onChange={(e) => setEReg(e.target.value)} maxLength={40} /></div>
+          <div><label htmlFor="pe-reg" className="block text-xs mb-1">CREFITO</label><input id="pe-reg" value={eReg} onChange={(e) => setEReg(e.target.value)} maxLength={40} /></div>
           <fieldset><legend className="text-xs mb-1">Unidades de atendimento</legend><div className="flex flex-wrap gap-3">{units.data?.map((u) => <label key={u.id} className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={eUnits.includes(u.id)} onChange={() => setEUnits((c) => (c.includes(u.id) ? c.filter((x) => x !== u.id) : [...c, u.id]))} />{u.name}</label>)}</div></fieldset>
           <label className="flex items-center gap-2 text-sm !font-normal"><input type="checkbox" checked={eActive} onChange={(e) => setEActive(e.target.checked)} />Profissional ativo (aparece na agenda)</label>
           <DialogFooter><button type="button" className={btnGhost} onClick={() => setEdit(null)}>Cancelar</button><button className={btnPrimary}>Salvar</button></DialogFooter>

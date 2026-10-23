@@ -176,7 +176,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     const interesses = answers.interesses_desenvolvimento?.label ?? null;
     return buildParceriaMessage(f, answers.momento_profissional?.label ?? null, answers.situacao_registro?.label ?? null,
       answers.area_atuacao?.label ?? null, answers.modelo_atendimento?.label ?? null, objetivos, interesses,
-      answers.interesse_programa_clinica?.label ?? null, answers.prazo_programa_clinica?.label ?? null);
+      answers.interesse_programa_clinica?.label ?? null, answers.prazo_programa_clinica?.label ?? null, typeof answers.crefito?.value === "string" ? answers.crefito.value : null);
   }, [protocol, firstName, name, email, phone, city, uf, journey, answers, includeHealth, includeBudget]);
 
   const progressPct = Math.round((stepNumber / total) * 100);
@@ -338,6 +338,7 @@ const Choice = ({ selected, label, onClick }: { selected: boolean; label: string
 const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; initial?: AnswerValue; busy: boolean; error: string | null; onAnswer: (key: string, v: AnswerValue) => void }) => {
   const [value, setValue] = useState<string | null>(typeof initial?.value === "string" ? initial.value : null);
   const [detalhe, setDetalhe] = useState(initial?.detalhe ?? "");
+  const [localError, setLocalError] = useState<string | null>(null);
   const [multi, setMulti] = useState<string[]>(Array.isArray(initial?.value) ? initial.value : []);
 
   const submit = (e: FormEvent) => {
@@ -347,6 +348,11 @@ const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; init
       const label = multi.map((v) => q.options?.find((o) => o.value === v)?.label ?? v).join(", ");
       onAnswer(q.key, { value: multi, label });
       return;
+    }
+    if (q.kind === "text") {
+      const t = (value ?? "").trim();
+      if (t.length < 3 || !/\d/.test(t)) return setLocalError("Informe o número do seu CREFITO (ex.: 123456-F).");
+      setLocalError(null); onAnswer(q.key, { value: t, label: t }); return;
     }
     if (value === null) return;
     const label = q.kind === "scale" ? value : q.options?.find((o) => o.value === value)?.label ?? value;
@@ -399,6 +405,13 @@ const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; init
         </div>
       )}
 
+      {q.kind === "text" && (
+        <div className="mt-8">
+          <label htmlFor="q-text" className="block text-sm text-navy-700 mb-1.5">Número do CREFITO</label>
+          <input id="q-text" value={value ?? ""} onChange={(e) => { setValue(e.target.value); setLocalError(null); }} maxLength={30} placeholder={q.placeholder} className="hp-input" autoFocus autoComplete="off" required />
+        </div>
+      )}
+
       {(q.kind === "options" || q.kind === "options-other") && (
         <div className="mt-8 grid gap-2.5" role="radiogroup" aria-label={q.question}>
           {q.options?.map((o) => <Choice key={o.value} selected={value === o.value} label={o.label} onClick={() => setValue(o.value)} />)}
@@ -420,8 +433,8 @@ const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; init
         </div>
       )}
 
-      {error && <p role="alert" className="text-sm text-red-600 mt-4">{error}</p>}
-      <ContinueButton busy={busy} disabled={q.kind === "multi" ? multi.length === 0 : value === null} />
+      {(localError ?? error) && <p role="alert" className="text-sm text-red-600 mt-4">{localError ?? error}</p>}
+      <ContinueButton busy={busy} disabled={q.kind === "multi" ? multi.length === 0 : q.kind === "text" ? !(value ?? "").trim() : value === null} />
     </form>
   );
 };

@@ -26,10 +26,12 @@ test.describe.serial("@release Formulário preenchido no cadastro e no CRM + Dis
     const s = await anon("quiz_start", { p_journey: "parceria", p_name: nome, p_email: email, p_phone: fone, p_contact_consent_version: "contact-v1", p_origin_path: "/trabalhe-conosco", p_page_slug: "trabalhe-conosco", p_referrer: null, p_utm: {}, p_honeypot: null });
     expect(s.status, JSON.stringify(s.body)).toBe(200); const id = (s.body as { id: string }).id;
     expect((await anon("quiz_save_progress", { p_id: id, p_step: 4, p_answers: {}, p_city: "Campinas", p_uf: "SP" })).status).toBe(200);
-    expect((await anon("quiz_save_progress", { p_id: id, p_step: 5, p_answers: { momento_profissional: ans("em_atuacao", "Fisioterapeuta em atuação"), situacao_registro: ans("ativo", "Ativo"), area_atuacao: ans("geriatrica", "Geriátrica"), modelo_atendimento: ans("domiciliar", "Atendimento domiciliar"), objetivos_parceria: ans(["equipe"], "Atuar na equipe"), interesses_desenvolvimento: ans(["nenhuma"], "Nenhuma no momento") } })).status).toBe(200);
+    expect((await anon("quiz_save_progress", { p_id: id, p_step: 5, p_answers: { momento_profissional: ans("em_atuacao", "Fisioterapeuta em atuação"), situacao_registro: ans("ativo", "Ativo"), crefito: ans("CREFITO-3/123456-F", "CREFITO-3/123456-F"), area_atuacao: ans("geriatrica", "Geriátrica"), modelo_atendimento: ans("domiciliar", "Atendimento domiciliar"), objetivos_parceria: ans(["equipe"], "Atuar na equipe"), interesses_desenvolvimento: ans(["nenhuma"], "Nenhuma no momento") } })).status).toBe(200);
     expect((await anon("quiz_save_progress", { p_id: id, p_step: 11, p_answers: { interesse_programa_clinica: ans("nao_momento", "Não neste momento") } })).status).toBe(200);
     expect((await anon("quiz_complete", { p_id: id, p_marketing_consent: false, p_marketing_consent_version: null })).status).toBe(200);
     const g = api(await signIn(QA.manager)); const p = (await g.get(`people?select=id,city,state_uf&full_name=eq.${encodeURIComponent(nome)}`)).body as { id: string; city: string | null; state_uf: string | null }[];
+    const ficha = (await g.get(`opportunities?select=profile,pipeline:pipelines(kind)&person_id=eq.${p[0].id}`)).body as { profile: { council_registry?: string }; pipeline: { kind: string } }[];
+    expect(ficha.find((o) => o.pipeline.kind === "partners")?.profile.council_registry, "CREFITO na ficha da oportunidade de parceiro").toBe("CREFITO-3/123456-F");
     expect(p).toHaveLength(1); personId = p[0].id; expect(p[0]).toMatchObject({ city: "Campinas", state_uf: "SP" });          // o quiz preencheu o cadastro
   });
 
@@ -38,6 +40,7 @@ test.describe.serial("@release Formulário preenchido no cadastro e no CRM + Dis
     await page.goto(`/admin/adm/diretorio?q=${encodeURIComponent(nome)}`); await page.getByRole("button", { name: nome }).click();
     const f = page.getByTestId("adm-formularios"); await expect(f).toBeVisible({ timeout: 30_000 });
     await expect(f.getByTestId("form-answers-city")).toHaveText("Campinas"); await expect(f.getByTestId("form-answers-uf")).toHaveText("SP");
+    await expect(f.getByTestId("form-answers-crefito")).toHaveText("CREFITO-3/123456-F"); await expect(f).toContainText("Qual é o número do seu CREFITO?");
     await expect(f).toContainText("Qual é sua situação de registro profissional?"); await expect(f.getByText("Ativo", { exact: true })).toBeVisible();
     await expect(f).toContainText("Qual é sua principal área de atuação ou interesse?"); await expect(f.getByText("Geriátrica", { exact: true })).toBeVisible();
     await expect(f).toContainText("programa de ensino para você ter a sua própria clínica"); await expect(f.getByText("Não neste momento", { exact: true })).toBeVisible();
