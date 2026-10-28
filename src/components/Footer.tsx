@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import Divider from "./Divider";
 import QuizCta from "./QuizCta";
-import { WHATSAPP_PACIENTES_DISPLAY, WHATSAPP_PROFISSIONAIS_DISPLAY } from "@/lib/contact";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL, WHATSAPP_PACIENTES_DISPLAY, WHATSAPP_PROFISSIONAIS_DISPLAY } from "@/lib/contact";
 import { buildJourneyHref, type Journey } from "@/lib/quiz";
 import { utmFromLocation } from "@/features/pages/PageRenderer";
 
@@ -40,13 +40,13 @@ const Footer = ({ highlightJourney = "atendimento", showCta = true }: { highligh
           Atuação nacional · Base em São Paulo (capital) e Grande ABC
         </p>
         <a
-          href="https://instagram.com"
+          href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-[14px] text-navy-400 hover:text-accent transition-colors mt-4"
         >
           <Instagram className="w-4 h-4" strokeWidth={1.5} />
-          Instagram @hpfisioterapia
+          Instagram {INSTAGRAM_HANDLE}
         </a>
       </div>
 
