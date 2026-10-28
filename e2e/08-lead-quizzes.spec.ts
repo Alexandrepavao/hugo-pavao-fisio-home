@@ -64,7 +64,7 @@ test.describe("quizzes de captação", () => {
     const popupPromise = anon.waitForEvent("page");
     await p.getByRole("button", { name: "Continuar pelo WhatsApp" }).click();
     const popup = await popupPromise;
-    await expect.poll(() => popup.url()).toContain("wa.me/5511959075351");
+    await expect.poll(() => popup.url()).toContain("wa.me/5511913634424");
     expect(decodeURIComponent(popup.url())).toContain("Dor/desconforto hoje: 5/10");
     await expect(p.getByText("Conversa aberta no WhatsApp")).toBeVisible();
     await popup.close(); await anon.close();

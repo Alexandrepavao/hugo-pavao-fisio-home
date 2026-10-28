@@ -12,7 +12,7 @@
 | “Quero fazer parte” (página Trabalhe Conosco e bloco WorkWithUs), botão flutuante em Trabalhe Conosco, rodapé “Fisioterapeutas / Trabalhe Conosco” | fisioterapeuta (`parceria`) | `/seja-parceiro?from=<página>` |
 
 - A decisão de paciente × fisioterapeuta vem do **botão** (cada botão já tem público definido); não há pergunta “quem é você?”. Se algum dia houver um botão neutro, ele precisará de uma escolha antes do quiz (o servidor exige a jornada em `quiz_start`).
-- Dado pessoal **nunca** vai na URL: só `from` (rota) e os parâmetros de campanha permitidos. Os números `(11) 95907-5351` e `(11) 91363-4424` continuam no rodapé como informação de contato, mas o clique leva ao quiz.
+- Dado pessoal **nunca** vai na URL: só `from` (rota) e os parâmetros de campanha permitidos. O número `(11) 91363-4424` (único para pacientes e profissionais desde 27/10/2026) continua no rodapé como informação de contato, mas o clique leva ao quiz.
 - `src/lib/useStartJourney.ts` é o ponto único dos botões; `openPaciente`/`linkPaciente` e equivalentes foram removidos.
 - **Nome completo** (nome e sobrenome) é exigido na tela (`isFullName`); e-mail válido, WhatsApp com DDD e autorização de contato continuam obrigatórios. Observação: a exigência de sobrenome é só da interface (a API pública `quiz_start` segue aceitando qualquer nome com 2+ caracteres).
 
