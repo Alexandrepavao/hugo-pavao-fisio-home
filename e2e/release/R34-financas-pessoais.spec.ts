@@ -4,7 +4,7 @@
 // Dados próprios (runId); o usuário-dono de teste é criado e apagado pelo próprio spec (as tabelas pessoais caem em cascata).
 import { expect, test, type Page } from "@playwright/test";
 import { api, collectErrors, createConfirmedUser, deleteAuthUser, devSql, expectNoFatal, loginAs, QA, runId, signIn, signInWith } from "./helpers-release";
-import { useSession } from "../helpers";
+import { useSession as injectSession } from "../helpers";
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
 const PW = process.env.HP_QA_PASSWORD ?? "";
@@ -15,7 +15,7 @@ const shot = (name: string) => `${process.env.TEMP}\\pf-${name}.png`;
 
 let uid = ""; let tok: Awaited<ReturnType<typeof signInWith>>;
 const own = () => api(tok);
-const login = async (page: Page) => { await useSession(page.context(), tok); };
+const login = async (page: Page) => { await injectSession(page.context(), tok); };
 
 test.describe.serial("@release Finanças pessoais", () => {
   test.setTimeout(240_000);
