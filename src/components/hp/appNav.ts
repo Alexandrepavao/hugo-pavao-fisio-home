@@ -1,4 +1,4 @@
-import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Landmark, LayoutDashboard, ListChecks, MessageCircleQuestion, Package, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, TrendingUp, Users } from "lucide-react";
+import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Landmark, LayoutDashboard, ListChecks, Lock, MessageCircleQuestion, Package, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, Users, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
 import { APPS, type AppId } from "./apps";
@@ -50,6 +50,16 @@ export const FIN_NAV: FrameNavSection[] = [
     { to: "/admin/financeiro/recorrencia", label: "Recorrência", icon: Repeat, keywords: "mrr arr projeções mensalidades" },
     { to: "/admin/financeiro/dre", label: "DRE", icon: FileBarChart2, keywords: "resultado competência" },
     { to: "/admin/financeiro/comissoes", label: "Comissões e repasses", icon: Percent, keywords: "comissões repasses" },
+  ] },
+  { label: "Finanças pessoais", items: [
+    { to: "/admin/financeiro/pessoal", label: "Finanças pessoais", icon: Lock, end: true, pfOnly: true, keywords: "pessoal privado orçamento custo de vida reserva metas cartões contas pessoais" },
+    { to: "/admin/financeiro/pessoal/lancamentos", label: "Receitas e despesas pessoais", icon: Receipt, pfOnly: true, keywords: "pessoal despesas receitas recorrências parcelas" },
+    { to: "/admin/financeiro/pessoal/contas", label: "Contas e cartões pessoais", icon: CreditCard, pfOnly: true, keywords: "pessoal contas cartões faturas limite" },
+    { to: "/admin/financeiro/pessoal/calendario", label: "Calendário financeiro", icon: CalendarDays, pfOnly: true, keywords: "pessoal vencimentos agenda financeira" },
+    { to: "/admin/financeiro/pessoal/orcamento", label: "Orçamento e custo de vida", icon: Wallet, pfOnly: true, keywords: "pessoal orçamento custo de vida projeção" },
+    { to: "/admin/financeiro/pessoal/reserva", label: "Reserva e metas", icon: Target, pfOnly: true, keywords: "pessoal reserva emergência metas objetivos" },
+    { to: "/admin/financeiro/pessoal/importacao", label: "Importação e conciliação", icon: Landmark, pfOnly: true, keywords: "pessoal extrato importar conciliar retirada" },
+    { to: "/admin/financeiro/pessoal/configuracoes", label: "Configurações pessoais", icon: Settings, pfOnly: true, keywords: "pessoal categorias lembretes" },
   ] },
   { label: "Administração", items: [
     { to: "/admin/contas-corporativas", label: "Contas corporativas", icon: Building2, roles: ["manager", "ops_admin", "unit_manager", "finance"], keywords: "empresas convênio corporativo" },

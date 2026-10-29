@@ -51,6 +51,15 @@ const FinanceReconciliation = lazy(() => import("./pages/admin/finance/Reconcili
 const FinanceReports = lazy(() => import("./pages/admin/finance/Reports"));
 const FinanceCards = lazy(() => import("./pages/admin/finance/Cards"));
 const FinanceSettings = lazy(() => import("./pages/admin/finance/Settings"));
+const PersonalLayout = lazy(() => import("./pages/admin/finance/personal/PersonalLayout"));
+const PfOverview = lazy(() => import("./pages/admin/finance/personal/PfOverview"));
+const PfEntries = lazy(() => import("./pages/admin/finance/personal/PfEntries"));
+const PfAccounts = lazy(() => import("./pages/admin/finance/personal/PfAccounts"));
+const PfCalendar = lazy(() => import("./pages/admin/finance/personal/PfCalendar"));
+const PfBudget = lazy(() => import("./pages/admin/finance/personal/PfBudget"));
+const PfGoals = lazy(() => import("./pages/admin/finance/personal/PfGoals"));
+const PfImport = lazy(() => import("./pages/admin/finance/personal/PfImport"));
+const PfSettings = lazy(() => import("./pages/admin/finance/personal/PfSettings"));
 const AcademyAdmin = lazy(() => import("./pages/admin/AcademyAdmin"));
 const Care = lazy(() => import("./pages/admin/Care"));
 const Partners = lazy(() => import("./pages/admin/Partners"));
@@ -167,6 +176,17 @@ const App = () => (
                   <Route path="pendencias" element={<AdmPendencias />} />
                 </Route>
                 <Route path="agenda" element={g(R.agenda, <Agenda />)} />
+                {/* Finanças pessoais: acesso individual do proprietário (não depende de papel de gestor); a autoridade é do banco e a porta é o PfGate */}
+                <Route path="financeiro/pessoal" element={<PersonalLayout />}>
+                  <Route index element={<PfOverview />} />
+                  <Route path="lancamentos" element={<PfEntries />} />
+                  <Route path="contas" element={<PfAccounts />} />
+                  <Route path="calendario" element={<PfCalendar />} />
+                  <Route path="orcamento" element={<PfBudget />} />
+                  <Route path="reserva" element={<PfGoals />} />
+                  <Route path="importacao" element={<PfImport />} />
+                  <Route path="configuracoes" element={<PfSettings />} />
+                </Route>
                 <Route path="financeiro" element={g(R.finance, <Outlet />)}>
                   <Route index element={<FinanceOverview />} />
                   <Route path="vendas" element={<FinanceSales />} />
