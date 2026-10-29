@@ -9,8 +9,9 @@ import CommandMenu from "./CommandMenu";
 import HeaderBar, { AppTile } from "./HeaderBar";
 import { APPS, appById, type AppId } from "./apps";
 import { useAppTheme } from "./theme";
+import { usePfAccess } from "@/pages/admin/finance/personal/pf";
 
-export interface FrameNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; roles?: AppRole[]; feature?: FeatureKey; keywords?: string }
+export interface FrameNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; roles?: AppRole[]; feature?: FeatureKey; keywords?: string; /** só para quem tem acesso individual às finanças pessoais (não depende de papel) */ pfOnly?: boolean }
 export interface FrameNavSection { label?: string; items: FrameNavItem[] }
 
 /** Moldura única dos aplicativos: cabeçalho em largura total (marca HP, aplicativo ▸ seção, busca, notificações, tema, perfil) e, abaixo, a sidebar CONTEXTUAL do
@@ -28,6 +29,7 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
   const [drawer, setDrawer] = useState(false);
   const [cmd, setCmd] = useState(false);
   const isManagerLike = hasRole(...managerRoles);
+  const pfAccess = usePfAccess().data === true;
 
   useEffect(() => { try { localStorage.setItem(storageKey, collapsed ? "1" : "0"); } catch { /* sem storage */ } }, [collapsed, storageKey]);
   useEffect(() => { setDrawer(false); }, [location.pathname]);
@@ -36,8 +38,8 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const visible = (i: FrameNavItem) => (!i.managerOnly || isManagerLike) && (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature));
-  const sections = useMemo(() => nav.map((s) => ({ ...s, items: s.items.filter(visible) })).filter((s) => s.items.length), [nav, isManagerLike, hasRole]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visible = (i: FrameNavItem) => (!i.managerOnly || isManagerLike) && (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature)) && (!i.pfOnly || pfAccess);
+  const sections = useMemo(() => nav.map((s) => ({ ...s, items: s.items.filter(visible) })).filter((s) => s.items.length), [nav, isManagerLike, hasRole, pfAccess]); // eslint-disable-line react-hooks/exhaustive-deps
   const flatItems = useMemo(() => nav.flatMap((s) => s.items), [nav]);
   // Item ativo = o que melhor casa com a URL (caminho e, quando o item tem parâmetros, os parâmetros: ex. Unidades × Configurações em /admin/configuracoes).
   const onAccount = location.pathname === "/admin/conta" || location.pathname.startsWith("/admin/conta/");
