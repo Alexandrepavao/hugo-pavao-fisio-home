@@ -235,7 +235,7 @@ test.describe.serial("@release Finanças pessoais", () => {
     await login(page); const errors = collectErrors(page);
     await page.goto("/admin/financeiro/pessoal/configuracoes"); await expect(page.getByTestId("pf-config-form")).toBeVisible({ timeout: 30_000 });
     await page.getByLabel(/Lembrar vencimentos/).fill("7"); await page.getByRole("button", { name: "Salvar preferências" }).click(); await expect(page.getByText("Configurações salvas.")).toBeVisible({ timeout: 20_000 });
-    expect(((await own().get("pf_settings?select=reminder_days_before")).body as { reminder_days_before: number }[])[0].reminder_days_before).toBe(7);
+    const cfg = await own().get("pf_settings?select=reminder_days_before"); expect(cfg.status, JSON.stringify(cfg.body)).toBe(200); expect((cfg.body as { reminder_days_before: number }[])[0]?.reminder_days_before, JSON.stringify(cfg.body)).toBe(7);
     await page.getByRole("button", { name: "Despesa", exact: true }).click(); const c = page.getByTestId("pf-categoria-dialog"); await c.getByLabel("Nome").fill("Pets QA"); await c.getByRole("button", { name: "Salvar" }).click(); await expect(page.getByText("Pets QA")).toBeVisible({ timeout: 20_000 });
     await page.setViewportSize({ width: 390, height: 844 });
     for (const rota of ["", "/lancamentos", "/contas", "/calendario", "/orcamento", "/reserva", "/importacao", "/configuracoes"]) {
