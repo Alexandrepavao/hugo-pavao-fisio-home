@@ -124,11 +124,11 @@ test.describe.serial("@release Finanças pessoais", () => {
     await login(page); const errors = collectErrors(page);
     await page.goto("/admin/financeiro/pessoal"); const card = page.getByRole("button", { name: /^Despesas realizadas/ }); await expect(card).toContainText("R$ 2.910,00", { timeout: 30_000 });
     await card.click(); const ks = page.getByTestId("pf-kpi-sheet"); await expect(ks.getByTestId("pf-kpi-total")).toHaveText("R$ 2.910,00"); await expect(ks).toContainText("Aluguel QA"); await expect(ks).toContainText("Energia QA"); await expect(ks).toContainText("TV QA");
-    await ks.getByRole("button", { name: "Abrir lançamento" }).first().click(); await expect(page.getByTestId("pf-item-sheet")).toBeVisible(); await page.keyboard.press("Escape"); await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: /^Despesas previstas/ }).click(); await expect(page.getByTestId("pf-kpi-total")).toHaveText("R$ 500,00"); await expect(page.getByTestId("pf-kpi-sheet")).toContainText("Dentista QA"); await page.keyboard.press("Escape");
+    await ks.getByRole("button", { name: "Abrir lançamento" }).first().click(); await expect(page.getByTestId("pf-item-sheet")).toBeVisible(); await page.keyboard.press("Escape"); await expect(page.getByTestId("pf-item-sheet")).toHaveCount(0); await page.keyboard.press("Escape"); await expect(page.getByTestId("pf-kpi-sheet")).toHaveCount(0);
+    await page.getByRole("button", { name: /^Despesas previstas/ }).click(); await expect(page.getByTestId("pf-kpi-total")).toHaveText("R$ 500,00"); await expect(page.getByTestId("pf-kpi-sheet")).toContainText("Dentista QA"); await page.keyboard.press("Escape"); await expect(page.getByTestId("pf-kpi-sheet")).toHaveCount(0);
     // calendário
     await page.goto("/admin/financeiro/pessoal/calendario"); await expect(page.getByTestId("pf-cal-grade")).toBeVisible({ timeout: 30_000 });
-    expect(await page.getByTestId("pf-cal-item").count()).toBeGreaterThanOrEqual(5);
+    expect(await page.getByTestId("pf-cal-item").count()).toBeGreaterThanOrEqual(4);   // cada dia mostra até 3 itens e “+n mais”
     await expect(page.getByTestId("pf-cal-mes")).toContainText("Previsto no mês"); await expect(page.getByRole("list", { name: "Legenda" })).toContainText("Fatura");
     const ent = page.locator('[data-testid="pf-cal-item"][data-kind="income"]').first(); await expect(ent).toHaveAttribute("aria-label", /Entrada/);   // entrada identificada por texto, não só por cor
     await page.screenshot({ path: shot("calendario") });
@@ -168,7 +168,7 @@ test.describe.serial("@release Finanças pessoais", () => {
 
   test("orçamento por categoria e custo de vida: as perguntas, 12 meses e fonte dos números", async ({ page }) => {
     await login(page); const errors = collectErrors(page);
-    await page.goto("/admin/financeiro/pessoal/orcamento"); await expect(page.getByRole("heading", { name: "Orçamento e custo de vida" })).toBeVisible({ timeout: 30_000 });
+    await page.goto("/admin/financeiro/pessoal/orcamento"); await expect(page.getByRole("heading", { name: "Orçamento e custo de vida", level: 2 })).toBeVisible({ timeout: 30_000 });
     for (const q of ["Quanto custa manter meu padrão de vida por mês?", "Quanto está comprometido nos próximos meses?", "Quanto já gastei e quanto ainda está previsto?", "Quanto preciso receber por mês para cobrir meu orçamento?"]) await expect(page.getByText(q)).toBeVisible();
     await expect(page.getByTestId("pf-custo-mes")).toHaveCount(12); await expect(page.getByText("De onde vêm os números")).toBeVisible();
     await page.screenshot({ path: shot("custo-de-vida") });
@@ -199,7 +199,7 @@ test.describe.serial("@release Finanças pessoais", () => {
   test("importação: prévia, decisões, confirmação e reimportação sem duplicar", async ({ page }) => {
     await login(page); const errors = collectErrors(page); const br = (iso: string) => `${iso.slice(8)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
     const csv = `Data;Descrição;Valor\n${br(today)};PIX DENTISTA;-500,00\n${br(today)};MERCADO QA;-87,45\n${br(today)};CAFE QA;-10,00\n${br(today)};LINHA RUIM;abc`;
-    await page.goto("/admin/financeiro/pessoal/importacao"); await expect(page.getByRole("heading", { name: "Importação e conciliação" })).toBeVisible({ timeout: 30_000 });
+    await page.goto("/admin/financeiro/pessoal/importacao"); await expect(page.getByRole("heading", { name: "Importação e conciliação", level: 2 })).toBeVisible({ timeout: 30_000 });
     await page.getByLabel("Conta pessoal do extrato").selectOption({ label: "Conta QA" }); await page.getByLabel(/cole o conteúdo do CSV/).fill(csv); await expect(page.getByTestId("pf-import-mapeamento")).toBeVisible();
     await page.getByRole("button", { name: /Gerar prévia/ }).click(); await expect(page.getByTestId("pf-import-contagem")).toContainText("nova(s)", { timeout: 20_000 });
     const linhas = page.getByTestId("pf-import-linha"); await expect(linhas).toHaveCount(4);

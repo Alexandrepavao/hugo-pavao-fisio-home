@@ -34,7 +34,7 @@ const PfEntries = () => {
   return (
     <div>
       <PageHead eyebrow="Finanças pessoais" title="Receitas e despesas" hint="Lançamentos do mês. Compras no cartão aparecem na data da compra (sem saída de caixa: a saída é a fatura). Ocorrências futuras de recorrências são calculadas, não gravadas de uma vez."
-        actions={<div className="flex items-center gap-2">{tab === "lancamentos" && <PeriodFilter month={ym} onMonth={(v) => v && setYm(v)} onClear={() => setYm(monthOf(todayYmd()))} />}<button type="button" className={btnPrimary} onClick={() => setNewOpen(true)}><Plus size={16} aria-hidden />Novo lançamento</button></div>} />
+        actions={<div className="flex flex-wrap items-center gap-2">{tab === "lancamentos" && <PeriodFilter month={ym} onMonth={(v) => v && setYm(v)} onClear={() => setYm(monthOf(todayYmd()))} />}<button type="button" className={btnPrimary} onClick={() => setNewOpen(true)}><Plus size={16} aria-hidden />Novo lançamento</button></div>} />
       <Tabs tabs={[["lancamentos", "Lançamentos"], ["recorrencias", "Recorrências"]]} value={tab} onChange={setTab} />
       <Msg m={msg} />
 

@@ -32,9 +32,9 @@ const PfCalendar = () => {
     const label = `${i.kind === "income" ? "Entrada" : "Saída"}${settled ? " liquidada" : i.overdue ? " vencida" : ""}: ${i.description}`;
     const tone = settled ? "text-muted-foreground line-through" : i.overdue ? "text-destructive" : i.kind === "income" ? "text-success" : "text-foreground";
     return <button type="button" onClick={(e) => { e.stopPropagation(); open(i); }} title={`${label} · ${brl(i.amount_cents)}`} aria-label={`${label}, ${brl(i.amount_cents)}`} data-testid="pf-cal-item" data-kind={i.kind} data-source={i.source}
-      className={`flex w-full items-center gap-1 text-left text-[11px] leading-4 rounded px-1 py-0.5 hover:bg-muted ${tone}`}><Icon size={11} aria-hidden className="shrink-0" /><span className="truncate">{i.description}</span><span className="tabular ml-auto shrink-0">{brl(i.amount_cents).replace("R$ ", "")}</span></button>;
+      className={`flex w-full min-w-0 items-center gap-1 text-left text-[11px] leading-4 rounded px-1 py-0.5 hover:bg-muted overflow-hidden ${tone}`}><Icon size={11} aria-hidden className="shrink-0" /><span className="truncate">{i.description}</span><span className="tabular ml-auto shrink-0 hidden sm:inline">{brl(i.amount_cents).replace("R$ ", "")}</span></button>;
   };
-  const Totals = ({ d }: { d: string }) => { const c = cashByDay.get(d); if (!c) return null; return <p className="text-[10px] tabular text-muted-foreground mt-0.5" data-testid="pf-cal-totais">{c.in > 0 && <span className="text-success">+{brl(c.in).replace("R$ ", "")} </span>}{c.out > 0 && <span>−{brl(c.out).replace("R$ ", "")}</span>}</p>; };
+  const Totals = ({ d }: { d: string }) => { const c = cashByDay.get(d); if (!c) return null; return <p className="text-[10px] tabular text-muted-foreground mt-0.5 truncate hidden sm:block" data-testid="pf-cal-totais">{c.in > 0 && <span className="text-success">+{brl(c.in).replace("R$ ", "")} </span>}{c.out > 0 && <span>−{brl(c.out).replace("R$ ", "")}</span>}</p>; };
 
   const days: string[] = []; if (view === "mes") for (let d = gridFrom; d <= gridTo; d = addDaysYmd(d, 1)) days.push(d);
   const week: string[] = view === "semana" ? Array.from({ length: 7 }, (_, k) => addDaysYmd(weekStart, k)) : [];
@@ -44,8 +44,8 @@ const PfCalendar = () => {
   return (
     <div>
       <PageHead eyebrow="Finanças pessoais" title="Calendário financeiro" hint="Vencimentos, faturas, parcelas, receitas previstas e recorrências futuras. Os totais do dia e do mês são de caixa: a compra no cartão aparece, mas a saída é a fatura. Fica dentro do app, sem misturar com a agenda clínica."
-        actions={<div className="flex items-center gap-2"><button type="button" className={btnGhost} onClick={() => view === "semana" ? setWeekStart(addDaysYmd(weekStart, -7)) : setYm(addMonthsYm(ym, -1))} aria-label="Anterior"><ChevronLeft size={16} aria-hidden /></button>
-          <strong className="text-sm min-w-[9rem] text-center capitalize" data-testid="pf-cal-titulo">{view === "semana" ? `${fmtYmd(weekStart)} – ${fmtYmd(addDaysYmd(weekStart, 6))}` : monthLabel(ym)}</strong>
+        actions={<div className="flex flex-wrap items-center gap-2"><button type="button" className={btnGhost} onClick={() => view === "semana" ? setWeekStart(addDaysYmd(weekStart, -7)) : setYm(addMonthsYm(ym, -1))} aria-label="Anterior"><ChevronLeft size={16} aria-hidden /></button>
+          <strong className="text-sm min-w-[9rem] text-center first-letter:uppercase" data-testid="pf-cal-titulo">{view === "semana" ? `${fmtYmd(weekStart)} – ${fmtYmd(addDaysYmd(weekStart, 6))}` : monthLabel(ym)}</strong>
           <button type="button" className={btnGhost} onClick={() => view === "semana" ? setWeekStart(addDaysYmd(weekStart, 7)) : setYm(addMonthsYm(ym, 1))} aria-label="Próximo"><ChevronRight size={16} aria-hidden /></button>
           <button type="button" className={btnGhost} onClick={() => { setYm(monthOf(today)); setWeekStart(addDaysYmd(today, -weekdayOf(today))); setSel(today); }}>Hoje</button>
           <button type="button" className={btnPrimary} onClick={() => setNewDate(sel)}><Plus size={16} aria-hidden />Lançamento</button></div>} />
@@ -61,7 +61,7 @@ const PfCalendar = () => {
             {days.map((d) => { const its = byDay.get(d) ?? []; const out = d < month.from || d > month.to;
               return (
                 <div key={d} role="gridcell" tabIndex={0} aria-label={`${fmtYmd(d)}, ${its.length} item(ns)`} aria-selected={sel === d} onClick={() => setSel(d)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSel(d); } }} data-day={d}
-                  className={`min-h-[5.5rem] border-t border-l border-border p-1 cursor-pointer text-left ${out ? "bg-muted/30" : ""} ${sel === d ? "ring-2 ring-inset ring-primary" : ""}`}>
+                  className={`min-h-[5.5rem] min-w-0 overflow-hidden border-t border-l border-border p-1 cursor-pointer text-left ${out ? "bg-muted/30" : ""} ${sel === d ? "ring-2 ring-inset ring-primary" : ""}`}>
                   <p className={`text-xs ${d === today ? "font-bold text-primary" : "text-muted-foreground"}`}>{Number(d.slice(8))}</p>
                   <div className="grid gap-0.5">{its.slice(0, 3).map((i) => <Chip key={i.key} i={i} />)}{its.length > 3 && <span className="text-[10px] text-muted-foreground px-1">+{its.length - 3} mais</span>}</div>
                   <Totals d={d} />

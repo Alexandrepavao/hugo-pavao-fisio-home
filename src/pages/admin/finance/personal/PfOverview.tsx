@@ -40,7 +40,7 @@ const PfOverview = () => {
   return (
     <div>
       <PageHead eyebrow="Finanças pessoais" title="Visão geral" hint="Privado: só você vê estes dados. Nada daqui entra na DRE, no caixa ou nos relatórios da HP. Cada cartão mostra a fórmula e abre os registros que o compõem."
-        actions={<div className="flex items-center gap-2"><PeriodFilter month={ym} onMonth={(v) => v && setYm(v)} onClear={() => setYm(monthOf(todayYmd()))} /><button type="button" className={btnPrimary} onClick={() => setNewOpen(true)}><Plus size={16} aria-hidden />Novo lançamento</button></div>} />
+        actions={<div className="flex flex-wrap items-center gap-2"><PeriodFilter month={ym} onMonth={(v) => v && setYm(v)} onClear={() => setYm(monthOf(todayYmd()))} /><button type="button" className={btnPrimary} onClick={() => setNewOpen(true)}><Plus size={16} aria-hidden />Novo lançamento</button></div>} />
 
       {empty && (
         <section className="hp-card p-5 mb-6" data-testid="pf-comece">
