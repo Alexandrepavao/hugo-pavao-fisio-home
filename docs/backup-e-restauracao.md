@@ -40,3 +40,6 @@ Em 08/10/2026, no Dev: exportação → esvaziar as 20 tabelas com dados → `re
 - É cópia **lógica** dos dados de um instante, não um backup físico: o que mudar depois da exportação se perde numa restauração. Sem PITR, a janela de perda é o intervalo entre exportações.
 - Não protege contra erro de schema (use as migrations) nem restaura senhas, sessões, configuração do Auth, segredos das Edge Functions, variáveis do Netlify ou arquivos do Storage.
 - Se o Supabase tiver uma falha própria, o backup físico do plano Pro seria a defesa; no Free não existe.
+
+## Finanças pessoais (nota de 02/11/2026)
+As tabelas `pf_*` (finanças pessoais do proprietário) entram no backup como qualquer outra tabela pública, por decisão do responsável. Por isso a pasta de backup tem dado financeiro pessoal: guarde-a só com quem é proprietário, não a compartilhe e não a coloque no repositório. Os comprovantes (arquivos do bucket `pf-private`) não são copiados, apenas listados. Detalhes em [`financas-pessoais.md`](financas-pessoais.md).
