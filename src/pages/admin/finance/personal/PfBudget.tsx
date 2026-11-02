@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { brl } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { EmptyState, KpiGrid, LevelSection, Msg, PageHead, State, StatCard, Table, Tabs, Td, btnGhost, btnPrimary, errText, useMsg } from "@/lib/ui";
-import { PeriodFilter } from "@/lib/PeriodFilter";
+import MonthPicker from "@/lib/MonthPicker";
 import { BarBlock } from "@/lib/IndicatorCharts";
 import { addMonthsYm, monthLabel, monthOf, monthShort, pfRpc, reais, todayYmd } from "./pf";
 import { MoneyInput, centsFrom, centsToInput, useInvalidatePf } from "./PfShared";
@@ -31,7 +31,7 @@ const PfBudget = () => {
   return (
     <div>
       <PageHead eyebrow="Finanças pessoais" title="Orçamento e custo de vida" hint="Custo de vida = o que já foi gasto + compromissos em aberto + projeção de gastos variáveis. Transferências, investimentos e aportes em metas ficam de fora (aparecem só na necessidade de caixa)."
-        actions={tab !== "custo" ? <PeriodFilter month={ym} onMonth={(v) => v && setYm(v)} onClear={() => setYm(monthOf(todayYmd()))} /> : undefined} />
+        actions={tab !== "custo" ? <MonthPicker value={ym} onChange={setYm} /> : undefined} />
       <Tabs tabs={[["custo", "Custo de vida"], ["orcamento", "Orçamento por categoria"], ["planejar", "Planejar o mês"]]} value={tab} onChange={setTab} />
 
       {tab === "custo" && (<>
