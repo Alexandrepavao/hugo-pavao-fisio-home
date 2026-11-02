@@ -199,6 +199,9 @@ test.describe.serial("@release Finanças pessoais", () => {
   test("importação: prévia, decisões, confirmação e reimportação sem duplicar", async ({ page }) => {
     await login(page); const errors = collectErrors(page); const br = (iso: string) => `${iso.slice(8)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
     const csv = `Data;Descrição;Valor\n${br(today)};PIX DENTISTA;-500,00\n${br(today)};MERCADO QA;-87,45\n${br(today)};CAFE QA;-10,00\n${br(today)};LINHA RUIM;abc`;
+    // a sugestão exige vencimento até 10 dias da data da linha: aproxima o dentista da data do extrato (reagendar preserva a original), para o teste valer em qualquer dia do mês
+    const dentId = ((await own().get("pf_entries?select=id&description=eq.Dentista%20QA")).body as { id: string }[])[0].id;
+    expect((await own().rpc("pf_entry_update", { p_ref: { entry_id: dentId }, p_scope: "this", p_patch: { due_date: today } })).status).toBe(200);
     await page.goto("/admin/financeiro/pessoal/importacao"); await expect(page.getByRole("heading", { name: "Importação e conciliação", level: 2 })).toBeVisible({ timeout: 30_000 });
     await page.getByLabel("Conta pessoal do extrato").selectOption({ label: "Conta QA" }); await page.getByLabel(/cole o conteúdo do CSV/).fill(csv); await expect(page.getByTestId("pf-import-mapeamento")).toBeVisible();
     await page.getByRole("button", { name: /Gerar prévia/ }).click(); await expect(page.getByTestId("pf-import-contagem")).toContainText("nova(s)", { timeout: 20_000 });
