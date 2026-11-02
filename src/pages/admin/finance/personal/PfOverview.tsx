@@ -17,9 +17,10 @@ interface Charts {
 }
 interface Reminders { days_before: number; reminders: { key: string; description: string; kind: string; due_date: string; amount_cents: number; days_left: number; entry_id: string | null; series_id: string | null; occurrence_date: string | null; invoice_id: string | null }[] }
 
-const money = (k: Kpi | undefined) => (k && k.available && k.value != null ? brl(k.value) : "Sem base para cálculo");
-const pct = (k: Kpi | undefined) => (k && k.available && k.value != null ? `${String(k.value).replace(".", ",")}%` : "Sem base para cálculo");
-const months = (k: Kpi | undefined) => (k && k.available && k.value != null ? `${String(k.value).replace(".", ",")} meses` : "Sem base para cálculo");
+const NB = <span className="text-[0.95rem] font-medium leading-6 text-muted-foreground">Sem base para cálculo</span>;
+const money = (k: Kpi | undefined) => (k && k.available && k.value != null ? brl(k.value) : NB);
+const pct = (k: Kpi | undefined) => (k && k.available && k.value != null ? `${String(k.value).replace(".", ",")}%` : NB);
+const months = (k: Kpi | undefined) => (k && k.available && k.value != null ? `${String(k.value).replace(".", ",")} meses` : NB);
 
 /** Visão geral das finanças pessoais: indicadores com fórmula e detalhamento (os registros somam o mesmo valor do cartão), gráficos e lembretes. Privado ao proprietário. */
 const PfOverview = () => {
@@ -75,6 +76,7 @@ const PfOverview = () => {
             <StatCard level="hero" icon={Scale} label="Resultado realizado" value={money(k("result_realized"))} basis={k("result_realized")?.formula} />
             <StatCard level="hero" icon={Wallet} label="Saldo das contas" value={money(k("account_balance"))} unavailable={!k("account_balance")?.available} basis={k("account_balance")?.available ? k("account_balance")?.formula : k("account_balance")?.basis} onClick={() => nav("/admin/financeiro/pessoal/contas")} />
           </KpiGrid>
+          <div className="h-4" aria-hidden />
           <KpiGrid>
             <StatCard icon={ArrowDownToLine} label="Receitas previstas" value={money(k("income_expected"))} basis={k("income_expected")?.formula} onClick={() => open("income_expected", "Receitas previstas", k("income_expected")?.formula)} />
             <StatCard icon={ArrowUpFromLine} label="Despesas previstas" value={money(k("expense_expected"))} basis={k("expense_expected")?.formula} onClick={() => open("expense_expected", "Despesas previstas", k("expense_expected")?.formula)} />
