@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { brl } from "@/lib/format";
 import { Badge, EmptyState, PageHead, State, Table, Tabs, Td, btnGhost, btnPrimary, confirmDialog, errText, Msg, useMsg } from "@/lib/ui";
-import { PeriodFilter } from "@/lib/PeriodFilter";
+import MonthPicker from "@/lib/MonthPicker";
 import { FREQ_LABEL, fmtYmd, monthBounds, monthLabel, monthOf, pfRpc, refOf, todayYmd, type PfItem } from "./pf";
 import { EntryFormDialog, ItemSheet, SettleDialog, StatusBadge, useInvalidatePf, usePfRefs, type ItemTarget } from "./PfShared";
 
@@ -34,7 +34,7 @@ const PfEntries = () => {
   return (
     <div>
       <PageHead eyebrow="Finanças pessoais" title="Receitas e despesas" hint="Lançamentos do mês. Compras no cartão aparecem na data da compra (sem saída de caixa: a saída é a fatura). Ocorrências futuras de recorrências são calculadas, não gravadas de uma vez."
-        actions={<div className="flex flex-wrap items-center gap-2">{tab === "lancamentos" && <PeriodFilter month={ym} onMonth={(v) => v && setYm(v)} onClear={() => setYm(monthOf(todayYmd()))} />}<button type="button" className={btnPrimary} onClick={() => setNewOpen(true)}><Plus size={16} aria-hidden />Novo lançamento</button></div>} />
+        actions={<div className="flex flex-wrap items-center gap-2">{tab === "lancamentos" && <MonthPicker value={ym} onChange={setYm} />}<button type="button" className={btnPrimary} onClick={() => setNewOpen(true)}><Plus size={16} aria-hidden />Novo lançamento</button></div>} />
       <Tabs tabs={[["lancamentos", "Lançamentos"], ["recorrencias", "Recorrências"]]} value={tab} onChange={setTab} />
       <Msg m={msg} />
 

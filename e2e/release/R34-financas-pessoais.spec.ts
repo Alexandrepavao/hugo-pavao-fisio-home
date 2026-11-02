@@ -234,6 +234,21 @@ test.describe.serial("@release Finanças pessoais", () => {
     await expectNoFatal(page); expect(errors, errors.join("\n")).toEqual([]);
   });
 
+  test("seletor de mês próprio (cantos arredondados): escolhe o mês e o resumo acompanha", async ({ page }) => {
+    await login(page); const errors = collectErrors(page);
+    await page.goto("/admin/financeiro/pessoal"); await expect(page.getByTestId("month-picker")).toBeVisible({ timeout: 30_000 });
+    await page.getByTestId("month-picker").click(); const painel = page.getByTestId("month-picker-painel"); await expect(painel.getByRole("gridcell")).toHaveCount(12);
+    expect(await painel.evaluate((el) => parseFloat(getComputedStyle(el).borderTopLeftRadius)), "painel com cantos arredondados").toBeGreaterThanOrEqual(12);
+    await page.screenshot({ path: shot("seletor-de-mes") });
+    await painel.getByRole("gridcell", { name: /dezembro de/ }).click(); await expect(page.getByTestId("month-picker-painel")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /Resumo de dezembro de/ })).toBeVisible({ timeout: 20_000 });
+    await page.getByTestId("month-picker").click(); await page.getByTestId("month-picker-painel").getByRole("button", { name: "Próximo ano" }).click(); await page.getByTestId("month-picker-painel").getByRole("gridcell", { name: /janeiro de/ }).click();
+    await expect(page.getByRole("heading", { name: /Resumo de janeiro de/ })).toBeVisible({ timeout: 20_000 });
+    await page.getByTestId("month-picker").click(); await page.getByTestId("month-picker-painel").getByRole("button", { name: "Este mês" }).click(); await expect(page.getByRole("heading", { name: new RegExp(`Resumo de .* de ${today.slice(0, 4)}`) })).toBeVisible();
+    await page.goto("/admin/financeiro/pessoal/lancamentos"); await expect(page.getByTestId("month-picker")).toBeVisible({ timeout: 20_000 }); await page.goto("/admin/financeiro/pessoal/orcamento?aba=orcamento"); await expect(page.getByTestId("month-picker")).toBeVisible({ timeout: 20_000 });
+    await expectNoFatal(page); expect(errors, errors.join("\n")).toEqual([]);
+  });
+
   test("configurações pessoais e visual no celular (sem rolagem lateral)", async ({ page }) => {
     await login(page); const errors = collectErrors(page);
     await page.goto("/admin/financeiro/pessoal/configuracoes"); await expect(page.getByTestId("pf-config-form")).toBeVisible({ timeout: 30_000 });
