@@ -20,6 +20,8 @@ interface BudgetRow { category_id: string; name: string; budget_cents: number | 
 interface Plan { month: string; plan_with_previous_month_income: boolean; reference_income_cents: number; reference_basis: string; existing_commitments_cents: number; variable_estimates_cents: number; planned_contributions_cents: number; budget_total_cents: number; available_to_allocate_cents: number; liquid_balance_now_cents: number; note: string }
 
 /** Orçamento e custo de vida: quanto custa manter o padrão de vida (realizado + compromissos + variáveis), por mês e no ano; orçamento por categoria; e o planejamento do mês seguinte. */
+const NB = <span className="text-[0.95rem] font-medium leading-6 text-muted-foreground">Sem base para cálculo</span>;
+
 const PfBudget = () => {
   const [sp, setSp] = useSearchParams(); const tab = ["custo", "orcamento", "planejar"].includes(sp.get("aba") ?? "") ? sp.get("aba")! : "custo";
   const setTab = (v: string) => { const n = new URLSearchParams(sp); n.set("aba", v); setSp(n, { replace: true }); };
@@ -41,15 +43,14 @@ const PfBudget = () => {
         {d && (<>
           {d.incomplete && <div className="mb-4 rounded-md border border-warning/40 bg-warning/10 px-3 py-2.5 text-sm" role="status" data-testid="pf-projecao-incompleta"><p className="font-medium flex items-center gap-2"><AlertTriangle size={15} aria-hidden />Projeção incompleta</p><ul className="list-disc pl-5 mt-1">{d.incomplete_reasons.map((r) => <li key={r}>{r}</li>)}</ul></div>}
           <LevelSection level="summary" title="As cinco perguntas" label="Custo de vida" hint="Cada resposta usa as datas efetivas: respeita início, término, pausas, periodicidade e parcelas restantes (não é “gasto mensal × 12”).">
-            <KpiGrid kind="hero">
-              <StatCard level="hero" label="Quanto custa manter meu padrão de vida por mês?" value={d.projected_total_cents > 0 ? brl(d.monthly_average_cents) : "Sem base para cálculo"} unavailable={d.projected_total_cents <= 0} basis={`média mensal equivalente: ${brl(d.projected_total_cents)} ÷ ${d.months_count} meses`} />
-              <StatCard level="hero" label="Quanto está comprometido nos próximos meses?" value={brl(d.committed_cents)} basis="saldo a pagar de lançamentos, parcelas futuras e recorrências fixas calculadas" />
-              <StatCard level="hero" label={mode === "calendar" ? `Qual é meu custo previsto em ${ym.slice(0, 4)}?` : "Qual é meu custo previsto nos próximos 12 meses?"} value={d.projected_total_cents > 0 ? brl(d.projected_total_cents) : "Sem base para cálculo"} unavailable={d.projected_total_cents <= 0} basis="realizado + compromissos + variáveis projetados" />
-              <StatCard level="hero" label="Quanto já gastei e quanto ainda está previsto?" value={`${brl(d.realized_cents)} / ${brl(d.committed_cents + d.variable_cents)}`} basis="gasto até hoje / ainda previsto (compromissos + variáveis)" />
-            </KpiGrid>
             <KpiGrid>
-              <StatCard label="Quanto preciso receber por mês para cobrir meu orçamento?" value={d.projected_total_cents > 0 ? brl(d.monthly_average_cents) : "Sem base para cálculo"} unavailable={d.projected_total_cents <= 0} basis={`custo médio mensal · renda média prevista/recebida no período: ${brl(d.income_monthly_average_cents)}`} />
-              <StatCard label="Necessidade de caixa por mês (com aportes)" value={d.projected_total_cents > 0 ? brl(d.monthly_cash_need_cents) : "Sem base para cálculo"} unavailable={d.projected_total_cents <= 0} basis={`custo médio + aportes mensais em metas (${brl(d.destinations_monthly_cents)})`} />
+              <StatCard label="Quanto custa manter meu padrão de vida por mês?" value={d.projected_total_cents > 0 ? brl(d.monthly_average_cents) : NB} unavailable={d.projected_total_cents <= 0} basis={`média mensal equivalente: ${brl(d.projected_total_cents)} ÷ ${d.months_count} meses`} />
+              <StatCard label="Quanto está comprometido nos próximos meses?" value={brl(d.committed_cents)} basis="saldo a pagar de lançamentos, parcelas futuras e recorrências fixas calculadas" />
+              <StatCard label={mode === "calendar" ? `Qual é meu custo previsto em ${ym.slice(0, 4)}?` : "Qual é meu custo previsto nos próximos 12 meses?"} value={d.projected_total_cents > 0 ? brl(d.projected_total_cents) : NB} unavailable={d.projected_total_cents <= 0} basis="realizado + compromissos + variáveis projetados" />
+              <StatCard label="Quanto já gastei e quanto ainda está previsto?" value={brl(d.realized_cents)} basis={`gasto até hoje · ainda previsto: ${brl(d.committed_cents + d.variable_cents)} (compromissos + variáveis)`} />
+            
+              <StatCard label="Quanto preciso receber por mês para cobrir meu orçamento?" value={d.projected_total_cents > 0 ? brl(d.monthly_average_cents) : NB} unavailable={d.projected_total_cents <= 0} basis={`custo médio mensal · renda média prevista/recebida no período: ${brl(d.income_monthly_average_cents)}`} />
+              <StatCard label="Necessidade de caixa por mês (com aportes)" value={d.projected_total_cents > 0 ? brl(d.monthly_cash_need_cents) : NB} unavailable={d.projected_total_cents <= 0} basis={`custo médio + aportes mensais em metas (${brl(d.destinations_monthly_cents)})`} />
               <StatCard label="Parte essencial do custo" value={brl(d.essential_cents)} basis="soma dos lançamentos marcados como essenciais" />
               <StatCard label="Sobra do orçamento incluída" value={brl(d.budget_topup_cents)} basis="orçado − (realizado + compromissos + estimativas já projetados), por categoria" />
             </KpiGrid>
