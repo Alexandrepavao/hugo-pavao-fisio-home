@@ -68,6 +68,7 @@ const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
 const Representations = lazy(() => import("./pages/admin/Representations"));
 const PhysioPricing = lazy(() => import("./pages/admin/finance/PhysioPricing"));
+const ExerciseLibraryPage = lazy(() => import("./portal/Training").then((m) => ({ default: m.ExerciseLibraryPage })));
 const PhysioPerformance = lazy(() => import("./portal/Performance"));
 const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
 const PatientTicketsPage = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTicketsPage })));
@@ -245,6 +246,7 @@ const App = () => (
                 <Route path="agenda" element={<Agenda />} />
                 <Route path="dia" element={<Productivity />} />
                 <Route path="desempenho" element={<PhysioPerformance />} />
+                <Route path="treinos" element={<ExerciseLibraryPage />} />
                 <Route path="chamados" element={<SupportAdmin />} />
               </Route>
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />

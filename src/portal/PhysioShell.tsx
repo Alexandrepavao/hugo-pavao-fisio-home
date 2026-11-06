@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarCheck, Home, LifeBuoy, TrendingUp, Users } from "lucide-react";
+import { CalendarDays, CalendarCheck, Dumbbell, Home, LifeBuoy, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import AppShell, { type ShellItem, type ShellLink } from "./AppShell";
 
@@ -8,6 +8,7 @@ const ITEMS: ShellItem[] = [
   { to: "/fisio/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/fisio/dia", label: "Meu dia", icon: CalendarCheck },
   { to: "/fisio/desempenho", label: "Desempenho", icon: TrendingUp },
+  { to: "/fisio/treinos", label: "Biblioteca de exercícios", icon: Dumbbell, mobile: false },
   { to: "/fisio/chamados", label: "Chamados", icon: LifeBuoy, mobile: false },
 ];
 

@@ -6,6 +6,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { fmtDateTime } from "@/lib/format";
 import JourneyPanel from "./JourneyPanel";
 import { PhysioEvolution } from "@/portal/Evolution";
+import { PrescriptionManager } from "@/portal/Training";
 import RenewalQueue from "./RenewalQueue";
 import { btnDanger, btnGhost, confirmDialog, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
@@ -40,6 +41,7 @@ const Patients = () => {
       {sel && detail.data && <div className="space-y-8">
         <JourneyPanel person={sel} />
         <PhysioEvolution person={sel} />
+        <PrescriptionManager person={sel} />
         <form onSubmit={assign} className="hp-card p-4 grid gap-3 sm:grid-cols-3 items-end"><div><label htmlFor="cc" className="block text-xs mb-1">Conteúdo</label><select id="cc"   value={content} onChange={(e) => setContent(e.target.value)}><option value="">…</option>{contents.data?.map((c) => <option key={c.id} value={c.id}>{c.title} ({KIND[c.kind]})</option>)}</select></div>
           <div><label htmlFor="cp" className="block text-xs mb-1">Momento</label><select id="cp"   value={phase} onChange={(e) => setPhase(e.target.value)}><option value="before">Antes do atendimento</option><option value="after">Depois do atendimento</option><option value="program">Programa</option></select></div>
           <div><label htmlFor="cn" className="block text-xs mb-1">Nota ao paciente</label><input id="cn"   value={note} onChange={(e) => setNote(e.target.value)} /></div><button className={btnGhost + " sm:w-fit"}>Liberar</button></form>
