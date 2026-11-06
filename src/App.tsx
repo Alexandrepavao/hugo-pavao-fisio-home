@@ -67,6 +67,8 @@ const Research = lazy(() => import("./pages/admin/Research"));
 const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
 const Representations = lazy(() => import("./pages/admin/Representations"));
+const PhysioPricing = lazy(() => import("./pages/admin/finance/PhysioPricing"));
+const PhysioPerformance = lazy(() => import("./portal/Performance"));
 const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
 const PatientTicketsPage = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTicketsPage })));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
@@ -205,6 +207,7 @@ const App = () => (
                   <Route path="recorrencia" element={<FinanceRecurrence />} />
                   <Route path="dre" element={<FinanceDre />} />
                   <Route path="comissoes" element={<FinanceCommissions />} />
+                  <Route path="precos-repasses" element={g(["manager", "ops_admin", "finance"], <PhysioPricing />)} />
                   <Route path="conciliacao" element={<FinanceReconciliation />} />
                   <Route path="relatorios" element={<FinanceReports />} />
                   <Route path="cartoes" element={<FinanceCards />} />
@@ -241,7 +244,7 @@ const App = () => (
                 <Route path="pacientes" element={<Care />} />
                 <Route path="agenda" element={<Agenda />} />
                 <Route path="dia" element={<Productivity />} />
-                <Route path="desempenho" element={<MySummary />} />
+                <Route path="desempenho" element={<PhysioPerformance />} />
                 <Route path="chamados" element={<SupportAdmin />} />
               </Route>
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />

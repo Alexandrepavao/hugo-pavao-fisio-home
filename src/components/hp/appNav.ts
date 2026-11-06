@@ -52,6 +52,7 @@ export const FIN_NAV: FrameNavSection[] = [
     { to: "/admin/financeiro/recorrencia", label: "Recorrência", icon: Repeat, keywords: "mrr arr projeções mensalidades" },
     { to: "/admin/financeiro/dre", label: "DRE", icon: FileBarChart2, keywords: "resultado competência" },
     { to: "/admin/financeiro/comissoes", label: "Comissões e repasses", icon: Percent, keywords: "comissões repasses" },
+    { to: "/admin/financeiro/precos-repasses", label: "Preços e repasses", icon: Wallet, roles: ["manager", "ops_admin", "finance"], keywords: "preço valor sessão pacote repasse fisioterapeuta regra comissão por sessão" },
   ] },
   { label: "Finanças pessoais", items: [
     { to: "/admin/financeiro/pessoal", label: "Finanças pessoais", icon: Lock, end: true, pfOnly: true, keywords: "pessoal privado orçamento custo de vida reserva metas cartões contas pessoais" },
