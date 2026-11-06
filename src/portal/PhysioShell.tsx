@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarCheck, Home, TrendingUp, Users } from "lucide-react";
+import { CalendarDays, CalendarCheck, Home, LifeBuoy, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import AppShell, { type ShellItem, type ShellLink } from "./AppShell";
 
@@ -8,6 +8,7 @@ const ITEMS: ShellItem[] = [
   { to: "/fisio/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/fisio/dia", label: "Meu dia", icon: CalendarCheck },
   { to: "/fisio/desempenho", label: "Desempenho", icon: TrendingUp },
+  { to: "/fisio/chamados", label: "Chamados", icon: LifeBuoy, mobile: false },
 ];
 
 /** Portal do fisioterapeuta: carteira de pacientes (só os com vínculo), agenda, desempenho e repasses. */

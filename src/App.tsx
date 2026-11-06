@@ -67,6 +67,8 @@ const Research = lazy(() => import("./pages/admin/Research"));
 const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
 const Representations = lazy(() => import("./pages/admin/Representations"));
+const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
+const PatientTicketsPage = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTicketsPage })));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
 const MySummary = lazy(() => import("./pages/admin/MySummary"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
@@ -215,6 +217,7 @@ const App = () => (
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
+                <Route path="chamados" element={g(["manager", "ops_admin", "unit_manager"], <SupportAdmin />)} />
                 <Route path="responsaveis" element={g(["manager", "ops_admin", "unit_manager"], <Representations />)} />
                 <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="conta" element={<Account />} />
@@ -230,6 +233,7 @@ const App = () => (
                 <Route path="treinos" element={<PatientTraining />} />
                 <Route path="agenda" element={<PatientAgenda />} />
                 <Route path="mais" element={<PatientMore />} />
+                <Route path="chamados" element={<PatientTicketsPage />} />
               </Route>
               {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
               <Route path="/fisio" element={g(["physio"], <PhysioShell />)}>
@@ -238,6 +242,7 @@ const App = () => (
                 <Route path="agenda" element={<Agenda />} />
                 <Route path="dia" element={<Productivity />} />
                 <Route path="desempenho" element={<MySummary />} />
+                <Route path="chamados" element={<SupportAdmin />} />
               </Route>
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />
               <Route path="/pesquisas" element={g(R.portal, <PortalResearch />)} />

@@ -25,7 +25,7 @@ export const appById = (id: AppId): HpApp => APPS.find((a) => a.id === id) ?? AP
 
 // A URL decide o aplicativo ativo (links diretos, recarregar e voltar/avançar sempre caem no app certo).
 const PREFIXES: Record<Exclude<AppId, "hub">, string[]> = {
-  gestao: ["/admin/adm", "/admin/pessoas", "/admin/responsaveis", "/admin/equipe", "/admin/configuracoes", "/admin/auditoria", "/admin/status"],
+  gestao: ["/admin/adm", "/admin/pessoas", "/admin/responsaveis", "/admin/chamados", "/admin/equipe", "/admin/configuracoes", "/admin/auditoria", "/admin/status"],
   fin: ["/admin/financeiro", "/admin/contas-corporativas"],
   crm: ["/admin/crm"],
   pages: ["/admin/paginas", "/admin/captacao-leads", "/admin/pesquisas"],
