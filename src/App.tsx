@@ -70,7 +70,14 @@ const Productivity = lazy(() => import("./pages/admin/Productivity"));
 const MySummary = lazy(() => import("./pages/admin/MySummary"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
 const Landing = lazy(() => import("./pages/portal/Landing"));
-const Patient = lazy(() => import("./pages/portal/Patient"));
+const PatientShell = lazy(() => import("./portal/PatientShell"));
+const PatientHome = lazy(() => import("./portal/PatientHome"));
+const PatientAgenda = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientAgenda })));
+const PatientEvolution = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientEvolution })));
+const PatientTraining = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTraining })));
+const PatientMore = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientMore })));
+const PhysioShell = lazy(() => import("./portal/PhysioShell"));
+const PhysioHome = lazy(() => import("./portal/PhysioHome"));
 const Partner = lazy(() => import("./pages/portal/Partner"));
 const AcademyHome = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.AcademyHome })));
 const CourseView = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.CourseView })));
@@ -214,7 +221,22 @@ const App = () => (
               <Route path="/boas-vindas" element={g(R.portal, <Welcome />)} />
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />
               <Route path="/academy/:slug" element={g(R.portal, <CourseView />)} />
-              <Route path="/paciente" element={g(["member"], <Patient />)} />
+              {/* Portal do paciente (celular: barra inferior; computador: barra lateral). A autorização real é do banco. */}
+              <Route path="/paciente" element={g(["member"], <PatientShell />)}>
+                <Route index element={<PatientHome />} />
+                <Route path="evolucao" element={<PatientEvolution />} />
+                <Route path="treinos" element={<PatientTraining />} />
+                <Route path="agenda" element={<PatientAgenda />} />
+                <Route path="mais" element={<PatientMore />} />
+              </Route>
+              {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
+              <Route path="/fisio" element={g(["physio"], <PhysioShell />)}>
+                <Route index element={<PhysioHome />} />
+                <Route path="pacientes" element={<Care />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="dia" element={<Productivity />} />
+                <Route path="desempenho" element={<MySummary />} />
+              </Route>
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />
               <Route path="/pesquisas" element={g(R.portal, <PortalResearch />)} />
               {/* Páginas do HP Pages: /:slug (slugs reservados são impedidos no editor e no banco). Manter APÓS as rotas fixas. */}

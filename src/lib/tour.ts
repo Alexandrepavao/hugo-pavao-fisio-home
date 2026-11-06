@@ -10,6 +10,8 @@ export const shouldAutoTour = (hasRole: (...r: AppRole[]) => boolean) => !hasRol
 
 /** Destino padrão de cada perfil (o mesmo da tela /app). */
 export const homeFor = (hasRole: (...r: AppRole[]) => boolean): string => {
+  // fisioterapeuta SEM papel de gestão cai direto no portal dele; quem também gere a clínica segue para o painel
+  if (hasRole("physio") && !hasRole("manager", "ops_admin", "unit_manager", "sales", "finance", "teacher")) return "/fisio";
   if (hasRole(...STAFF)) return "/admin";
   if (hasRole("partner")) return "/parceiro";
   return "/paciente";

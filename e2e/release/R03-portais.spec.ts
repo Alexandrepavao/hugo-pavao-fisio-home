@@ -29,11 +29,12 @@ test.describe.serial("@release Portais (paciente e parceiro)", () => {
     expect(mine.status, JSON.stringify(mine.body)).toBe(200);
     const theirs = await g.rpc("book_appointment", { p_person: other.body.id, p_unit: unit, p_professional: prof, p_service: svc, p_start: slots[4].slot_start, p_package: null, p_opportunity: null }); expect(theirs.status).toBe(200);
 
-    await page.goto("/paciente");
+    await page.goto("/paciente/agenda");   // portal em abas (F1): atendimentos na Agenda; pacotes e dados pessoais em “Mais”
     await expect(page.getByRole("heading", { name: "Meus atendimentos" })).toBeVisible();
     // só a seção “Meus atendimentos” (a jornada também lista as próximas consultas, então o mesmo texto pode aparecer lá conforme o dia sorteado)
     await expect(page.locator("section").filter({ has: page.getByRole("heading", { name: "Meus atendimentos" }) }).getByText(`Consulta Portal E2E ${runId}`)).toHaveCount(1);                       // só o dele, não o do outro paciente
     await expect(page.getByText(`Outro Paciente E2E ${runId}`)).toHaveCount(0);
+    await page.goto("/paciente/mais");
     await expect(page.getByRole("heading", { name: "Meus pacotes" })).toBeVisible();
     // dados pessoais: edita telefone e cidade; nome completo e unidade não são editáveis pelo paciente
     await page.getByRole("button", { name: "Editar meus dados" }).click();

@@ -184,14 +184,14 @@ test.describe.serial("@release Onboarding do fisioterapeuta + Primeiro acesso + 
     await expect(page.getByTestId("tutorial-privacidade")).toContainText("NÃO vê dados sensíveis");
     await page.screenshot({ path: "docs/screenshots/onboarding/tutorial-fisio.png", fullPage: true });
     await page.getByTestId("tutorial-comecar").click();
-    await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/fisio$/, { timeout: 30_000 });
     // sem dado sensível: não abre Financeiro nem configurações do sistema, e não lê dados de pagamento/ficha alheios
     await page.goto("/admin/financeiro"); await expect(page.getByText(/Sem permissão|não tem permissão|Acesso/i).first()).toBeVisible({ timeout: 30_000 });
     const mine = api({ access_token: (await page.evaluate(() => { const k = Object.keys(localStorage).find((x) => x.endsWith("-auth-token")); return k ? JSON.parse(localStorage.getItem(k)!).access_token : ""; })), user: { id: uid } } as never);
     const bank = (await mine.get("person_bank_info?select=person_id")).body as { person_id: string }[]; expect(bank.map((b) => b.person_id)).toEqual([person]);
     expect((await mine.get("people?select=id")).body).toHaveLength(1);
     // próximo login não repete o tutorial
-    await page.goto("/app"); await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
+    await page.goto("/app"); await expect(page).toHaveURL(/\/fisio$/, { timeout: 30_000 });
     await page.getByRole("button", { name: "Menu do usuário" }).click(); await expect(page.getByTestId("menu-tutorial")).toBeVisible();
     expect(errors.filter((e) => !/403|permission|42501|Failed to load resource/i.test(e)), errors.join(" | ")).toEqual([]);
   });
