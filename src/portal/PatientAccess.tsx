@@ -115,3 +115,35 @@ export const OffersSection = () => {
     </section>
   );
 };
+
+interface PrefRow { channel: "email" | "push"; kind: "appointment" | "training" | "checkin"; enabled: boolean }
+const KIND_PREF: Record<PrefRow["kind"], string> = { appointment: "Lembrete de consulta", training: "Lembrete de treino em casa", checkin: "Check-in da semana" };
+const b64 = (v: string) => { const p = "=".repeat((4 - (v.length % 4)) % 4); const r = atob((v + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from([...r].map((c) => c.charCodeAt(0))); };
+/** Lembretes por e-mail e push. WhatsApp está reservado (nada é enviado). O push só funciona no app publicado e depois que o servidor tiver as chaves; sem elas a tela avisa. */
+export const NotificationsSection = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg();
+  const q = useQuery({ queryKey: ["notif-prefs"], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_notification_prefs"); if (error) throw error; return data as { prefs: PrefRow[]; devices: number }; } });
+  const set = async (r: PrefRow, enabled: boolean) => { const { error } = await supabase.rpc("my_notification_pref_set", { p_channel: r.channel, p_kind: r.kind, p_enabled: enabled }); if (error) return m.err(error.message); void qc.invalidateQueries({ queryKey: ["notif-prefs"] }); };
+  const enablePush = async () => {
+    const key = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return m.err("Este aparelho ou navegador não aceita notificações push. No iPhone, instale o app na Tela de Início primeiro.");
+    if (!key) return m.err("Push indisponível: a chave do servidor de notificações ainda não foi configurada. Os lembretes por e-mail continuam valendo.");
+    const reg = await navigator.serviceWorker.getRegistration(); if (!reg) return m.err("As notificações funcionam no app publicado (instalado ou no navegador), não no ambiente de desenvolvimento.");
+    if ((await Notification.requestPermission()) !== "granted") return m.err("Permissão negada. Você pode liberar nas configurações do navegador.");
+    try { const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(key) }); const j = sub.toJSON();
+      const { error } = await supabase.rpc("push_subscribe", { p_endpoint: j.endpoint, p_p256dh: j.keys?.p256dh, p_auth: j.keys?.auth, p_ua: navigator.userAgent }); if (error) return m.err(error.message); m.ok("Aparelho ativado para receber lembretes."); void qc.invalidateQueries({ queryKey: ["notif-prefs"] });
+    } catch { m.err("Não foi possível ativar as notificações neste aparelho."); }
+  };
+  return (
+    <section className="mb-10" aria-label="Notificações">
+      <h2 className="mb-1 text-xl">Lembretes e notificações</h2>
+      <p className="mb-3 text-sm text-muted-foreground">Escolha como quer ser lembrado. Para menores de idade, os lembretes vão ao responsável. Não enviamos propostas comerciais por aqui, e o WhatsApp ainda não está disponível.</p>
+      <Msg m={msg} /><State loading={q.isLoading} error={q.error} />
+      {q.data && (<div className="grid gap-3">
+        {(["email", "push"] as const).map((ch) => (
+          <div key={ch} className="hp-card p-3 text-sm"><div className="mb-2 flex flex-wrap items-center justify-between gap-2"><b>{ch === "email" ? "E-mail" : "Notificações no celular/computador (push)"}</b>{ch === "push" && <span className="flex items-center gap-2 text-xs text-muted-foreground">{q.data!.devices} aparelho(s) ativado(s)<button className={btnGhost + " hp-btn-sm"} onClick={() => void enablePush()}>Ativar neste aparelho</button></span>}</div>
+            <ul className="grid gap-1">{q.data!.prefs.filter((r) => r.channel === ch).map((r) => <li key={r.kind}><label className="flex items-center gap-2"><input type="checkbox" checked={r.enabled} onChange={(e) => void set(r, e.target.checked)} />{KIND_PREF[r.kind]}</label></li>)}</ul></div>))}
+      </div>)}
+    </section>
+  );
+};

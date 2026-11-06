@@ -1,6 +1,6 @@
 # Plano — Portal do Paciente e Portal do Fisio (web hoje, app amanhã)
 
-> Status: **PLANO para aprovação (v2, com as respostas do proprietário incorporadas).** Nada foi construído, nenhuma migration foi criada, nada foi para o Dev nem para produção.
+> Status: **IMPLEMENTADO NO DEV (F1–F8) em 05–06/11** — ver [`portais-paciente-e-fisio.md`](portais-paciente-e-fisio.md) (estado real, limites e roteiro de produção). **Nada foi para produção.** Este arquivo continua sendo o plano e o registro das decisões do proprietário.
 > Data: 2026-11-05 · Autor: Claude (a pedido do proprietário).
 > Legenda de estado: ✅ já existe · 🟡 existe em parte · 🆕 novo · 🔒 depende de terceiro (Bunny, Resend, push, conteúdo).
 

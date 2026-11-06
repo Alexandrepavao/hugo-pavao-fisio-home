@@ -5,7 +5,7 @@ import { PatientEvolutionPanel } from "./Evolution";
 import { PatientTickets } from "./Tickets";
 import { PatientTrainingPanel } from "./Training";
 import { Link } from "react-router-dom";
-import { AccessLogSection, ConsentsSection, OffersSection, RepresentativesSection, RepresentedSection } from "./PatientAccess";
+import { AccessLogSection, ConsentsSection, NotificationsSection, OffersSection, RepresentativesSection, RepresentedSection } from "./PatientAccess";
 
 /** Abas do portal do paciente que reaproveitam as telas já provadas (agenda, jornada, orientações, pacote). Os blocos novos entram por fase (docs/plano-portais-paciente-e-fisio.md). */
 export const PatientAgenda = () => <PortalPage title="Agenda"><PatientPart part="agenda" /></PortalPage>;
@@ -21,6 +21,7 @@ export const PatientMore = () => (
     <Chat />
     <RepresentedSection />
     <RepresentativesSection />
+    <NotificationsSection />
     <ConsentsSection />
     <AccessLogSection />
   </PortalPage>
