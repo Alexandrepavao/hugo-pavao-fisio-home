@@ -13,7 +13,7 @@ export interface ShellLink { to: string; label: string }
 
 /** Casca única dos portais: barra INFERIOR no celular (como um app) e barra LATERAL no computador. O conteúdo vem das rotas filhas (Outlet).
  *  A autorização real continua nas rotas (RequireAuth), no RLS e nas funções do banco; a casca só organiza a navegação. */
-const AppShell = ({ brand, items, links = [], children }: { brand: string; items: ShellItem[]; links?: ShellLink[]; children?: ReactNode }) => {
+const AppShell = ({ brand, items, links = [], menuExtra, banner, children }: { brand: string; items: ShellItem[]; links?: ShellLink[]; menuExtra?: ReactNode; banner?: ReactNode; children?: ReactNode }) => {
   useAppTheme();
   const { user, roles, signOut } = useAuth(); const pwa = usePwaInstall();
   const mobileItems = items.filter((i) => i.mobile !== false);
@@ -27,6 +27,7 @@ const AppShell = ({ brand, items, links = [], children }: { brand: string; items
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link to="/boas-vindas" data-testid="menu-tutorial">Tutorial</Link></DropdownMenuItem>
         {links.map((l) => <DropdownMenuItem asChild key={l.to}><Link to={l.to}>{l.label}</Link></DropdownMenuItem>)}
+        {menuExtra}
         {pwa.canInstall && <DropdownMenuItem onSelect={() => void pwa.install()}><Download size={14} aria-hidden className="mr-2" />Instalar o app</DropdownMenuItem>}
         {pwa.ios && <p className="px-2 py-1.5 text-xs text-muted-foreground">No iPhone: toque em Compartilhar e em “Adicionar à Tela de Início”.</p>}
         <DropdownMenuSeparator />
@@ -47,7 +48,7 @@ const AppShell = ({ brand, items, links = [], children }: { brand: string; items
           <Link to="/" aria-label="Site HP Fisioterapia"><img src={logo} alt="HP Fisioterapia" style={{ height: "1.5rem", width: "auto" }} /></Link>
           <span className="text-sm font-semibold">{brand}</span><span className="ml-auto"><Account /></span>
         </header>
-        <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 pb-28 md:px-8 md:pb-10">{children ?? <Outlet />}</main>
+        <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 pb-28 md:px-8 md:pb-10">{banner}{children ?? <Outlet />}</main>
       </div>
       <nav aria-label="Seções" className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card md:hidden" style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom)" }}>
         {mobileItems.map((i) => <NavLink key={i.to} to={i.to} end={i.end} className={tab}><i.icon size={22} aria-hidden />{i.label}</NavLink>)}

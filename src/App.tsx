@@ -66,6 +66,7 @@ const Partners = lazy(() => import("./pages/admin/Partners"));
 const Research = lazy(() => import("./pages/admin/Research"));
 const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
+const Representations = lazy(() => import("./pages/admin/Representations"));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
 const MySummary = lazy(() => import("./pages/admin/MySummary"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
@@ -214,6 +215,7 @@ const App = () => (
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
+                <Route path="responsaveis" element={g(["manager", "ops_admin", "unit_manager"], <Representations />)} />
                 <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="conta" element={<Account />} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />

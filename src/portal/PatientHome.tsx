@@ -1,13 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, type FormEvent } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { CalendarDays, ChevronRight, Dumbbell, LineChart, Package, Target } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
-import { State } from "@/lib/ui";
+import { btnPrimary, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
+import { useActing } from "./acting";
 import { PortalPage } from "./AppShell";
 
 export interface PatientHomeData {
-  person: { id: string; name: string; birth_date: string | null };
+  person: { id: string; name: string; birth_date: string | null; age?: number | null };
+  acting?: { kind: string; representative: string } | null;
+  needs_birth_date?: boolean;
   next_appointment: { id: string; starts_at: string; status: string; service: string; professional: string } | null;
   plan: { planned_sessions: number; attended: number; status: string; maintenance: boolean } | null;
   package_balance: number | null;
@@ -33,7 +37,20 @@ const Card = ({ to, icon: Icon, title, children, tone }: { to?: string; icon: ty
 };
 
 /** Início do paciente: tudo vem de UMA chamada (my_home) — números derivados de registros reais; sem dado, o cartão diz que não há. */
+const BirthDate = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const [v, setV] = useState("");
+  const save = async (e: FormEvent) => { e.preventDefault(); const { error } = await supabase.rpc("my_birth_date_set", { p_date: v }); if (error) return m.err(errText(error)); void qc.invalidateQueries({ queryKey: ["my-home"] }); };
+  return (
+    <form onSubmit={save} className="hp-card mb-3 grid gap-2 border-primary/60 p-4 text-sm sm:max-w-md" data-testid="birth-card">
+      <p className="font-medium">Falta a data de nascimento</p><p className="text-xs text-muted-foreground">Ela define quais regras de acesso valem para este cadastro (por exemplo, menores de idade usam o aplicativo com um responsável). Só pode ser informada uma vez.</p>
+      <Msg m={msg} /><label htmlFor="bd" className="text-xs">Data de nascimento</label><input id="bd" type="date" className={inputCls} value={v} onChange={(e) => setV(e.target.value)} required />
+      <button className={btnPrimary + " justify-self-start"}>Salvar</button>
+    </form>
+  );
+};
+
 const PatientHome = () => {
+  const { acting, switchTo } = useActing();
   const q = useQuery({ queryKey: ["my-home"], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_home"); if (error) throw error; return data as PatientHomeData; } });
   const d = q.data; const p = d?.plan;
   const pct = p ? Math.min(100, Math.round((100 * p.attended) / Math.max(1, p.planned_sessions))) : 0;
@@ -41,6 +58,8 @@ const PatientHome = () => {
   return (
     <PortalPage title={d ? `Olá, ${d.person.name.split(" ")[0]}` : "Meu acompanhamento"} subtitle="Seu acompanhamento em um só lugar. Os números abaixo vêm dos registros do seu tratamento — a interpretação é do seu fisioterapeuta.">
       <State loading={q.isLoading} error={q.error} />
+      {q.error && acting && <p className="mt-3 text-sm" role="alert">Este vínculo não está mais ativo. <button className="text-accent underline" onClick={() => switchTo(null)}>Voltar para o meu perfil</button></p>}
+      {d?.needs_birth_date && !d.acting && <BirthDate />}
       {d && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="patient-home">
           <Card to="/paciente/agenda" icon={CalendarDays} title="Próxima consulta">
