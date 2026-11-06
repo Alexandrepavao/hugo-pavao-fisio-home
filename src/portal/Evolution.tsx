@@ -75,6 +75,28 @@ export const EvolutionView = ({ d, clinical }: { d: EvolutionData; clinical?: bo
   );
 };
 
+
+/** Check-in semanal (20 segundos): três notas de 0 a 10. A dor entra na mesma série da evolução; dor alta ou bem-estar baixo avisa o fisio. */
+const CheckinCard = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const { acting } = useActing(); const [v, setV] = useState({ pain: "3", fn: "6", well: "6", note: "" });
+  const q = useQuery({ queryKey: ["my-checkins", acting], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_checkins"); if (error) throw error; return data as { due: boolean; history: { week_start: string; pain: number; function: number; wellbeing: number }[] }; } });
+  const send = async (e: FormEvent) => { e.preventDefault(); const { error } = await supabase.rpc("my_checkin_submit", { p_pain: Number(v.pain), p_function: Number(v.fn), p_wellbeing: Number(v.well), p_note: v.note || null, p_key: newKey("ck") });
+    if (error) return m.err(errText(error)); m.ok("Check-in enviado. Obrigado!"); void qc.invalidateQueries({ queryKey: ["my-checkins"] }); void qc.invalidateQueries({ queryKey: ["my-evolution"] }); void qc.invalidateQueries({ queryKey: ["my-home"] }); };
+  if (q.error || !q.data) return null;
+  return q.data.due ? (
+    <form onSubmit={send} className="hp-card mb-6 grid gap-3 border-primary/60 p-4 text-sm" aria-label="Check-in da semana" data-testid="checkin-form">
+      <h3 className="text-base font-semibold">Check-in da semana</h3><p className="text-xs text-muted-foreground">Leva 20 segundos e ajuda seu fisioterapeuta a ajustar o tratamento. Notas de 0 a 10.</p><Msg m={msg} />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div><label htmlFor="ck-p" className="mb-1 block text-xs">Dor nesta semana (0 = nenhuma · 10 = pior)</label><input id="ck-p" className={inputCls} inputMode="numeric" value={v.pain} onChange={(e) => setV({ ...v, pain: e.target.value })} /></div>
+        <div><label htmlFor="ck-f" className="mb-1 block text-xs">O quanto consegui fazer (0 a 10)</label><input id="ck-f" className={inputCls} inputMode="numeric" value={v.fn} onChange={(e) => setV({ ...v, fn: e.target.value })} /></div>
+        <div><label htmlFor="ck-w" className="mb-1 block text-xs">Como me senti (0 a 10)</label><input id="ck-w" className={inputCls} inputMode="numeric" value={v.well} onChange={(e) => setV({ ...v, well: e.target.value })} /></div>
+      </div>
+      <div><label htmlFor="ck-n" className="mb-1 block text-xs">Quer contar algo? (opcional)</label><input id="ck-n" className={inputCls} value={v.note} onChange={(e) => setV({ ...v, note: e.target.value })} maxLength={500} /></div>
+      <button className={btnPrimary + " justify-self-start"}>Enviar check-in</button>
+    </form>
+  ) : <p className="mb-6 text-xs text-muted-foreground" data-testid="checkin-done">Check-in da semana em dia{q.data.history[0] ? ` (último: dor ${q.data.history[0].pain}, bem-estar ${q.data.history[0].wellbeing})` : ""}.</p>;
+};
+
 /** Paciente: evolução (my_evolution) + registrar como está hoje e a meta de atividade. */
 export const PatientEvolutionPanel = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const { acting } = useActing();
@@ -90,6 +112,7 @@ export const PatientEvolutionPanel = () => {
     <section className="mb-10" aria-label="Minha evolução">
       <h2 className="mb-1 text-xl">Minha evolução</h2>
       <p className="mb-4 text-sm text-muted-foreground">Cada ponto é um registro real, com data e autoria. Os números descrevem o que mudou desde o início — quem interpreta é o seu fisioterapeuta.</p>
+      <CheckinCard />
       <Msg m={msg} /><State loading={q.isLoading} error={undefined} />
       {q.data && <EvolutionView d={q.data} />}
       <div className="mt-6 grid gap-3 sm:grid-cols-2">

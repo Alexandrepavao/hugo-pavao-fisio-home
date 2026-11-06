@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { fmtDate, fmtDateTime } from "@/lib/format";
-import { Badge, btnGhost, confirmDialog, Msg, State, useMsg } from "@/lib/ui";
+import { brl, fmtDate, fmtDateTime } from "@/lib/format";
+import { Badge, btnGhost, btnPrimary, confirmDialog, Msg, State, useMsg } from "@/lib/ui";
 import { rpcReauth } from "./reauth";
 import { KIND_LABEL, useActing } from "./acting";
 
@@ -92,6 +92,26 @@ export const RepresentedSection = () => {
         <li key={r.id} className="hp-card flex flex-wrap items-center justify-between gap-2 p-3 text-sm"><span><b>{r.patient_name}</b> <span className="text-muted-foreground">· {KIND_LABEL[r.kind] ?? r.kind}</span></span>
           <span className="flex items-center gap-2">{r.suspended ? <Badge tone="danger">Suspenso pela clínica</Badge> : r.active ? <Badge tone="success">Ativo</Badge> : <Badge tone="warning">{r.status === "pending" ? "Aguardando verificação da clínica" : "Inativo"}</Badge>}
             {r.active && acting !== r.patient_person_id && <button className={btnGhost + " hp-btn-sm"} onClick={() => switchTo(r.patient_person_id)}>Usar em nome dele(a)</button>}</span></li>))}</ul>
+    </section>
+  );
+};
+
+interface Offer { id: string; title: string; summary: string | null; details: string | null; status: "offered" | "interested"; price_cents: number | null; expires_at: string | null }
+/** “Próximo passo para você”: programas que a administração liberou para este paciente (só com consentimento de comunicação comercial). Responder apenas avisa a equipe. */
+export const OffersSection = () => {
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const { acting } = useActing();
+  const q = useQuery({ queryKey: ["my-offers", acting], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_offers"); if (error) throw error; return (data ?? []) as Offer[]; } });
+  const respond = async (id: string, yes: boolean) => { const { error } = await supabase.rpc("my_offer_respond", { p_id: id, p_interested: yes }); if (error) return m.err(error.message); m.ok(yes ? "Pronto! A equipe vai entrar em contato — nenhuma cobrança é feita automaticamente." : "Tudo bem. Não vamos oferecer este programa de novo por um tempo."); void qc.invalidateQueries({ queryKey: ["my-offers"] }); void qc.invalidateQueries({ queryKey: ["my-home"] }); };
+  if (q.error || !q.data || q.data.length === 0) return null;
+  return (
+    <section className="mb-10" aria-label="Próximo passo para você" id="ofertas">
+      <h2 className="mb-1 text-xl">Próximo passo para você</h2>
+      <p className="mb-3 text-sm text-muted-foreground">Programas liberados pela administração da clínica. Responder “tenho interesse” só avisa a equipe — nenhuma compra ou cobrança acontece sozinha.</p>
+      <Msg m={msg} />
+      <ul className="grid gap-3">{q.data.map((o) => (
+        <li key={o.id} className="hp-card p-4 text-sm" data-testid="offer-card"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-base">{o.title}</b>{o.price_cents != null && <span className="tabular">{brl(o.price_cents)}</span>}</div>
+          {o.summary && <p className="mt-1">{o.summary}</p>}{o.details && <p className="mt-1 whitespace-pre-line text-muted-foreground">{o.details}</p>}{o.expires_at && <p className="mt-1 text-xs text-muted-foreground">Válida até {fmtDate(o.expires_at)}</p>}
+          <div className="mt-3 flex flex-wrap items-center gap-2">{o.status === "interested" ? <Badge tone="warning">Você demonstrou interesse — a equipe vai falar com você</Badge> : <><button className={btnPrimary} onClick={() => void respond(o.id, true)}>Tenho interesse</button><button className={btnGhost} onClick={() => void respond(o.id, false)}>Agora não</button></>}</div></li>))}</ul>
     </section>
   );
 };

@@ -70,6 +70,7 @@ const Representations = lazy(() => import("./pages/admin/Representations"));
 const PhysioPricing = lazy(() => import("./pages/admin/finance/PhysioPricing"));
 const ExerciseLibraryPage = lazy(() => import("./portal/Training").then((m) => ({ default: m.ExerciseLibraryPage })));
 const PhysioPerformance = lazy(() => import("./portal/Performance"));
+const Programs = lazy(() => import("./pages/admin/Programs"));
 const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
 const PatientTicketsPage = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTicketsPage })));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
@@ -222,6 +223,7 @@ const App = () => (
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
                 <Route path="chamados" element={g(["manager", "ops_admin", "unit_manager"], <SupportAdmin />)} />
+                <Route path="programas" element={g(["manager", "ops_admin"], <Programs />)} />
                 <Route path="responsaveis" element={g(["manager", "ops_admin", "unit_manager"], <Representations />)} />
                 <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="conta" element={<Account />} />

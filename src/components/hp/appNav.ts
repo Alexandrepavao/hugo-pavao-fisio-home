@@ -20,6 +20,7 @@ export const GESTAO_NAV: FrameNavSection[] = [
     { to: "/admin/adm/diretorio", label: "Planilha administrativa", icon: Table2, keywords: "pessoa física jurídica empresas planilha" },
     { to: "/admin/adm/diretorio?tipo=pj", label: "Empresas", icon: Building2, keywords: "empresas pessoa jurídica pj b2b cnpj estabelecimentos parcerias" },
     { to: "/admin/pessoas", label: "Pessoas", icon: Users, roles: PEOPLE, keywords: "pacientes leads contatos" },
+    { to: "/admin/programas", label: "Programas e ofertas", icon: Handshake, roles: ["manager", "ops_admin"], keywords: "programa oferta manutenção retenção renovação upsell check-up" },
     { to: "/admin/chamados", label: "Chamados de pacientes", icon: LifeBuoy, roles: ["manager", "ops_admin", "unit_manager"], keywords: "suporte chamados atendimento prazo humanizado" },
     { to: "/admin/responsaveis", label: "Responsáveis e cuidadores", icon: UsersRound, roles: ["manager", "ops_admin", "unit_manager"], keywords: "responsável legal cuidador menor idoso curador procurador vínculo representante acesso" },
   ] },
