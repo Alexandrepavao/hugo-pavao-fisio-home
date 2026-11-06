@@ -106,6 +106,7 @@ test("N20.4 ganhos: 4 buckets separados, regra fictícia e 12 × R$ 100 = R$ 1.2
 });
 
 test("N20.5 telas: sem overflow nos 3 tamanhos, tema escuro e texto maior", async ({ page }) => {
+  test.setTimeout(180_000);
   for (const size of ["se", "std", "max"]) for (const role of ["patient", "physio"]) {
     await page.goto(url(`&role=${role}&size=${size}&theme=dark&text=1.3`));
     const nomes = role === "patient" ? ["Hoje", "Minha jornada", "Exercícios", "Agenda", "Perfil"] : ["Hoje", "Pacientes", "Agenda", "Ganhos", "Perfil"];

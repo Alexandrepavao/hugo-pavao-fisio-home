@@ -7,13 +7,15 @@ import type { Appointment, Demo, ExerciseLog, LogResult, Measure, Patient, Routi
 const KEY = "hp-ios-preview-demo-v1";
 let state: Demo; const subs = new Set<() => void>();
 const load = (): Demo => {
-  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw) as Demo; if (d.version === 1 && d.anchor === todayISO()) return d; } } catch { /* sem storage: a demonstração vale só nesta aba */ }
+  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw) as Demo; if (d.version === 2 && d.anchor === todayISO()) return d; } } catch { /* sem storage: a demonstração vale só nesta aba */ }
   return buildSeed();
 };
 const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* ignorar */ } };
 const emit = () => { persist(); subs.forEach((f) => f()); };
 state = load();
 const set = (fn: (d: Demo) => Demo) => { state = fn(state); emit(); };
+/** Escrita genérica no estado (usada pelas ações da gestão em admin-logic.ts). */
+export const mutate = set;
 export const getState = () => state;
 export const useDemo = (): Demo => useSyncExternalStore((cb) => { subs.add(cb); return () => { subs.delete(cb); }; }, getState, getState);
 export const resetDemo = () => { state = buildSeed(); emit(); };
@@ -26,6 +28,8 @@ const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 8)}`;
 export const fmtTime = (at: string) => at.slice(11, 16);
 export const parseAt = (at: string) => { const [d, t] = at.split("T"); const [y, m, dd] = d.split("-").map(Number); const [h, mi] = t.split(":").map(Number); return new Date(y, m - 1, dd, h, mi); };
 export const brl = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100).replace(/\u00a0/g, " ");
+/** Valor em reais sem centavos (cartões de indicador estreitos). */
+export const brl0 = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(cents / 100).replace(/\u00a0/g, " ");
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]; const DIAS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 export const fmtDay = (iso: string) => { const [, m, d] = iso.slice(0, 10).split("-").map(Number); return `${String(d).padStart(2, "0")} ${MESES[m - 1]}`; };
 export const fmtDayLong = (iso: string) => { const dd = iso.slice(0, 10); return `${DIAS[weekdayOf(dd)]}, ${fmtDay(dd)}`; };
@@ -77,11 +81,13 @@ export const timelineOf = (d: Demo, pid: string): TimelineEvent[] => {
   ];
 };
 // ganhos (regra FICTÍCIA do preview)
+/** Repasse por sessão do PRODUTO do paciente (regra definida pela administração; igual para todos os fisios). */
+export const shareOf = (d: Demo, patientId: string) => d.admin.rules.find((r) => r.protocolId === patientById(d, patientId).protocolId)?.shareCents ?? d.ratePerSessionCents;
 export const earningsOf = (d: Demo) => {
   const sum = (f: (x: Demo["payouts"][number]) => boolean) => d.payouts.filter(f).reduce((s, x) => s + x.cents, 0);
   const future = d.appts.filter((a) => ACTIVE.includes(a.status) && a.at.slice(0, 10) >= d.anchor);
   const eligibleDone = d.payouts.filter((x) => x.kind === "sessao");
-  return { rate: d.ratePerSessionCents, eligible: eligibleDone.length, eligibleCents: eligibleDone.reduce((s, x) => s + x.cents, 0), estimateCount: future.length, estimateCents: future.length * d.ratePerSessionCents, future,
+  return { rate: d.admin.rules[0]?.shareCents ?? d.ratePerSessionCents, eligible: eligibleDone.length, eligibleCents: eligibleDone.reduce((s, x) => s + x.cents, 0), estimateCount: future.length, estimateCents: future.reduce((s, a) => s + shareOf(d, a.patientId), 0), future, uniform: new Set(d.admin.rules.map((r) => r.shareCents)).size === 1,
     apurado: sum((x) => x.state === "apurado"), liberado: sum((x) => x.state === "liberado"), pago: sum((x) => x.state === "pago"), total: sum(() => true) };
 };
 
@@ -92,13 +98,17 @@ export const act = {
   cancelAppt: (id: string) => set((d) => ({ ...d, appts: d.appts.map((a) => (a.id === id ? { ...a, status: cancelConsequence(a).late ? "cancelled_late" as const : "cancelled" as const } : a)) })),
   logExercise: (l: Omit<ExerciseLog, "id" | "date"> & { date?: string }) => set((d) => ({ ...d, logs: [...d.logs.filter((x) => !(x.patientId === l.patientId && x.routineId === l.routineId && x.exerciseId === l.exerciseId && x.date === d.anchor)), { ...l, id: uid("lg"), date: l.date ?? d.anchor }] })),
   addCheckin: (pid: string, mood: 1 | 2 | 3 | 4 | 5, note: string) => set((d) => ({ ...d, checkins: [...d.checkins.filter((c) => !(c.patientId === pid && c.date === d.anchor)), { id: uid("ck"), patientId: pid, date: d.anchor, mood, note }] })),
-  sendMessage: (pid: string, text: string) => set((d) => ({ ...d, messages: [...d.messages, { id: uid("ms"), patientId: pid, from: "paciente" as const, text, at: `${d.anchor}T${demoNow().toTimeString().slice(0, 5)}` }] })),
+  sendMessage: (pid: string, text: string) => set((d) => {
+    const at = `${d.anchor}T${demoNow().toTimeString().slice(0, 5)}`; const p = patientById(d, pid);
+    return { ...d, messages: [...d.messages, { id: uid("ms"), patientId: pid, from: "paciente" as const, text, at }],
+      admin: { ...d.admin, tickets: [{ id: uid("tk"), patientId: pid, patientName: p.name, patientCode: p.code, kind: "administrativo" as const, subject: text.length > 60 ? `${text.slice(0, 57)}…` : text, openedAt: at, status: "aberto" as const, thread: [{ from: "paciente" as const, text, at }] }, ...d.admin.tickets] } };
+  }),
   setPref: (k: keyof Demo["prefs"], v: boolean) => set((d) => ({ ...d, prefs: { ...d.prefs, [k]: v } })),
   interestedIn: (id: string) => set((d) => ({ ...d, recommendations: d.recommendations.map((r) => (r.id === id ? { ...r, interested: true } : r)) })),
   // fisioterapeuta
   confirmAttendance: (id: string) => set((d) => {
     const a = d.appts.find((x) => x.id === id); if (!a || !ACTIVE.includes(a.status)) return d; const next = d.appts.filter((x) => x.patientId === a.patientId && x.status === "done").length + 1;
-    return { ...d, appts: d.appts.map((x) => (x.id === id ? { ...x, status: "done" as const, sessionNo: next } : x)), payouts: [...d.payouts, { id: uid("po"), apptId: id, kind: "sessao" as const, cents: d.ratePerSessionCents, state: "apurado" as const, date: a.at.slice(0, 10), label: "Sessão elegível" }] };
+    return { ...d, appts: d.appts.map((x) => (x.id === id ? { ...x, status: "done" as const, sessionNo: next } : x)), payouts: [...d.payouts, { id: uid("po"), apptId: id, kind: "sessao" as const, cents: shareOf(d, a.patientId), state: "apurado" as const, date: a.at.slice(0, 10), label: "Sessão elegível" }] };
   }),
   markNoShow: (id: string) => set((d) => ({ ...d, appts: d.appts.map((a) => (a.id === id && ACTIVE.includes(a.status) ? { ...a, status: "no_show" as const } : a)) })),
   saveEvolution: (e: { patientId: string; apptId?: string; shared: string; internal: string; values: Record<string, number> }) => set((d) => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Home, Link2Off, Plus, Search, TrendingUp, User, Users, Wallet } from "lucide-react";
 import { act, addDays, adherenceOf, apptsOf, balanceOf, brl, earningsOf, evolutionPending, feedbackPending, flagsOf, fmtDay, fmtDayLong, fmtTime, logsOf, measuresOf, patientById, protocolOf, resultLabel, upcomingOf, useDemo, weekdayName } from "./store";
 import type { Appointment, Demo, Patient, Phase, RoutineItem } from "./types";
@@ -6,11 +6,11 @@ import { ApptBadge } from "./patient";
 import { AlertBox, Avatar, Badge, Btn, Empty, ExerciseArt, Field, Group, Indicator, MeasureChart, MonthCalendar, NavHost, Page, Progress, Row, Segmented, Sheet, Switch, TabBar, useNav, type Screen } from "./ui";
 import { useShell } from "./shell-context";
 
-const KIND = { avaliacao: "Avaliação", atendimento: "Atendimento", reavaliacao: "Reavaliação" };
-const PHASE: Record<Phase, [string, "info" | "ok" | "warn" | "gray"]> = { avaliacao: ["Avaliação inicial", "info"], tratamento: ["Em tratamento", "ok"], reavaliacao: ["Reavaliação pendente", "warn"], concluido: ["Concluído", "gray"] };
+export const KIND = { avaliacao: "Avaliação", atendimento: "Atendimento", reavaliacao: "Reavaliação" };
+export const PHASE: Record<Phase, [string, "info" | "ok" | "warn" | "gray"]> = { avaliacao: ["Avaliação inicial", "info"], tratamento: ["Em tratamento", "ok"], reavaliacao: ["Reavaliação pendente", "warn"], concluido: ["Concluído", "gray"] };
 const inWindow = (d: Demo, day: string, days = 30) => day >= addDays(d.anchor, -(days - 1)) && day <= d.anchor;
 const PERIOD = "Últimos 30 dias (demonstração)";
-const Flags = ({ d, p }: { d: Demo; p: Patient }) => { const f = flagsOf(d, p.id); return <>{f.evolution > 0 && <Badge tone="warn">Evolução pendente</Badge>} {f.reassessment > 0 && <Badge tone="bad">Reavaliação</Badge>} {f.feedback > 0 && <Badge tone="info">Feedback sem resposta</Badge>}</>; };
+export const Flags = ({ d, p }: { d: Demo; p: Patient }) => { const f = flagsOf(d, p.id); return <>{f.evolution > 0 && <Badge tone="warn">Evolução pendente</Badge>} {f.reassessment > 0 && <Badge tone="bad">Reavaliação</Badge>} {f.feedback > 0 && <Badge tone="info">Feedback sem resposta</Badge>}</>; };
 
 // ---------------------------------------------------------------- formulários (sheets)
 const EvolutionForm = ({ d, pid, apptId, onClose }: { d: Demo; pid: string; apptId?: string; onClose: () => void }) => {
@@ -109,13 +109,13 @@ const Pacientes = () => {
     </Page>
   );
 };
-const PatientFile = ({ id, tab: t0, evo }: { id: string; tab?: string; evo?: string }) => {
+export const PatientFile = ({ id, tab: t0, evo, readOnly, banner }: { id: string; tab?: string; evo?: string; readOnly?: boolean; banner?: ReactNode }) => {
   const d = useDemo(); const nav = useNav(); const p = patientById(d, id); const pr = protocolOf(d, p); const b = balanceOf(d, id); const [tab, setTab] = useState<"resumo" | "rotina" | "evolucao" | "feedbacks">((t0 as "resumo") ?? "resumo");
   const [sheet, setSheet] = useState<null | "evo" | "reav" | "rotina">(evo ? "evo" : null); const [editRoutine, setEditRoutine] = useState<string | undefined>(); const [reply, setReply] = useState<{ id: string; text: string } | null>(null);
   const meas = measuresOf(d, id); const routines = d.routines.filter((r) => r.patientId === id && r.active); const logs = logsOf(d, id); const notes = d.notes.filter((n) => n.patientId === id).sort((x, y) => y.date.localeCompare(x.date)); const adh = adherenceOf(d, id, 14);
   return (
     <Page title={p.name} large={false}>
-      <div className="ios-gap" data-testid="patient-file">
+      <div className="ios-gap" data-testid="patient-file">{banner}
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}><Avatar name={p.name} hue={p.hue} size={58} /><div><h1 className="ios-display" style={{ fontSize: 22, fontWeight: 800 }}>{p.name}</h1><p className="ios-dim ios-small">{p.age} anos · paciente {p.code} · {pr.name}</p><div style={{ marginTop: 4 }}><Badge tone={PHASE[p.phase][1]}>{PHASE[p.phase][0]}</Badge> <Flags d={d} p={p} /></div></div></div>
         <Segmented label="Seções da ficha" value={tab} onChange={(v) => setTab(v as never)} options={[{ id: "resumo", label: "Resumo" }, { id: "rotina", label: "Rotina" }, { id: "evolucao", label: "Evolução" }, { id: "feedbacks", label: "Feedbacks" }]} />
         {tab === "resumo" && <>
@@ -126,16 +126,16 @@ const PatientFile = ({ id, tab: t0, evo }: { id: string; tab?: string; evo?: str
           <Group title="Metas">{d.goals.filter((g) => g.patientId === id).map((g) => <Row key={g.id} title={g.title} sub={g.note} right={<Badge tone={g.status === "atingida" ? "ok" : "info"}>{g.status === "atingida" ? "Atingida" : "Em andamento"}</Badge>} />)}</Group>
         </>}
         {tab === "rotina" && <>
-          <Group title="Rotinas prescritas" foot="A rotina publicada aparece imediatamente no app do paciente.">{routines.length === 0 ? <Row title="Nenhuma rotina" /> : routines.map((r) => <Row key={r.id} title={r.name} sub={`${r.days.map((w) => weekdayName(w).slice(0, 3)).join(", ")} · ${r.items.length} exercícios · versão ${r.version}`} onClick={() => { setEditRoutine(r.id); setSheet("rotina"); }} />)}</Group>
-          <Btn onClick={() => { setEditRoutine(undefined); setSheet("rotina"); }}><Plus size={18} aria-hidden />Criar nova rotina</Btn>
+          <Group title="Rotinas prescritas" foot="A rotina publicada aparece imediatamente no app do paciente.">{routines.length === 0 ? <Row title="Nenhuma rotina" /> : routines.map((r) => <Row key={r.id} title={r.name} sub={`${r.days.map((w) => weekdayName(w).slice(0, 3)).join(", ")} · ${r.items.length} exercícios · versão ${r.version}`} onClick={readOnly ? undefined : () => { setEditRoutine(r.id); setSheet("rotina"); }} />)}</Group>
+          {!readOnly && <Btn onClick={() => { setEditRoutine(undefined); setSheet("rotina"); }}><Plus size={18} aria-hidden />Criar nova rotina</Btn>}
           <Indicator label="Adesão declarada" value={`${adh.pct}%`} sub={`${adh.declared} de ${adh.days} dias`} period="Últimos 14 dias" definition="Dias com ao menos um exercício declarado pelo paciente (concluído ou parcial). Autodeclaração; não comprova execução nem resultado." rows={logs.slice(0, 12).map((l) => ({ title: `${fmtDay(l.date)} · ${d.library.find((e) => e.id === l.exerciseId)?.name}`, sub: `${resultLabel[l.result]} (autodeclarado) · demonstração ${l.demoViewed ? "aberta" : "não aberta"}` }))} />
         </>}
         {tab === "evolucao" && <>
-          <div className="ios-grid2"><Btn onClick={() => setSheet("evo")}>Registrar evolução</Btn><Btn variant="secondary" onClick={() => setSheet("reav")}>Reavaliação</Btn></div>
+          {!readOnly && <div className="ios-grid2"><Btn onClick={() => setSheet("evo")}>Registrar evolução</Btn><Btn variant="secondary" onClick={() => setSheet("reav")}>Reavaliação</Btn></div>}
           <Group title="Notas e evoluções" foot="“Compartilhada” aparece para o paciente; “Interna” fica só com a equipe clínica.">{notes.length === 0 ? <Row title="Nenhum registro" /> : notes.map((n) => <Row key={n.id} title={n.text} sub={`${fmtDay(n.date)} · ${n.author}`} right={<Badge tone={n.shared ? "info" : "gray"}>{n.shared ? "Compartilhada" : "Interna"}</Badge>} />)}</Group>
           <Group title="Reavaliações">{d.reassessments.filter((r) => r.patientId === id).length === 0 ? <Row title="Nenhuma registrada" /> : d.reassessments.filter((r) => r.patientId === id).map((r) => <Row key={r.id} title={r.decision === "concluir" ? "Concluir acompanhamento" : r.decision === "manter" ? "Manter acompanhamento" : `Recomendar: ${r.recommendedProtocol}`} sub={`${fmtDay(r.date)} · ${r.reason}`} />)}</Group>
         </>}
-        {tab === "feedbacks" && <Group title="Registros e feedbacks do paciente" foot="Resultados são autodeclarados. “Demonstração aberta” é um registro separado de “declarou que fez”.">{logs.length === 0 ? <Row title="Sem registros" /> : logs.slice(0, 14).map((l) => <Row key={l.id} data-testid="feedback-row" title={`${d.library.find((e) => e.id === l.exerciseId)?.name} · ${fmtDay(l.date)}`} sub={<>{resultLabel[l.result]} (autodeclarado) · demonstração {l.demoViewed ? "aberta" : "não aberta"}{l.difficulty && <><br />Dificuldade: {l.difficulty}</>}{l.doubt && <><br />Dúvida: {l.doubt}</>}{l.reply && <><br />Sua resposta: {l.reply}</>}</>} right={l.reviewedAt ? <Badge tone="ok">Revisado</Badge> : <Btn small variant="secondary" onClick={() => setReply({ id: l.id, text: "" })}>Responder</Btn>} />)}</Group>}
+        {tab === "feedbacks" && <Group title="Registros e feedbacks do paciente" foot="Resultados são autodeclarados. “Demonstração aberta” é um registro separado de “declarou que fez”.">{logs.length === 0 ? <Row title="Sem registros" /> : logs.slice(0, 14).map((l) => <Row key={l.id} data-testid="feedback-row" title={`${d.library.find((e) => e.id === l.exerciseId)?.name} · ${fmtDay(l.date)}`} sub={<>{resultLabel[l.result]} (autodeclarado) · demonstração {l.demoViewed ? "aberta" : "não aberta"}{l.difficulty && <><br />Dificuldade: {l.difficulty}</>}{l.doubt && <><br />Dúvida: {l.doubt}</>}{l.reply && <><br />Sua resposta: {l.reply}</>}</>} right={l.reviewedAt ? <Badge tone="ok">Revisado</Badge> : readOnly ? <Badge tone="warn">Sem resposta</Badge> : <Btn small variant="secondary" onClick={() => setReply({ id: l.id, text: "" })}>Responder</Btn>} />)}</Group>}
       </div>
       <Sheet open={sheet === "evo"} onClose={() => setSheet(null)} title="Registrar evolução"><EvolutionForm d={d} pid={id} apptId={evo} onClose={() => setSheet(null)} /></Sheet>
       <Sheet open={sheet === "reav"} onClose={() => setSheet(null)} title="Reavaliação"><ReassessForm d={d} pid={id} onClose={() => setSheet(null)} /></Sheet>
@@ -194,19 +194,19 @@ const Ganhos = () => {
     <Page title="Ganhos">
       <div className="ios-gap">
         <div className="ios-hero"><p style={{ fontSize: 12, fontWeight: 700, opacity: .8, textTransform: "uppercase", letterSpacing: ".05em" }}>Repasses do período · {PERIOD}</p><p className="ios-display" style={{ fontSize: 32, fontWeight: 800, marginTop: 2 }} data-testid="earn-total">{brl(e.total)}</p>
-          <p style={{ opacity: .85, fontSize: 13 }}>{e.eligible} sessões elegíveis × {brl(e.rate)} = {brl(e.eligibleCents)}{adj.length ? ` ${adj.reduce((s, x) => s + x.cents, 0) >= 0 ? "+" : "−"} ajustes/estornos ${brl(Math.abs(adj.reduce((s, x) => s + x.cents, 0)))}` : ""}</p></div>
+          <p style={{ opacity: .85, fontSize: 13 }}>{e.eligible} sessões elegíveis{e.uniform ? ` × ${brl(e.rate)}` : ""} = {brl(e.eligibleCents)}{adj.length ? ` ${adj.reduce((s, x) => s + x.cents, 0) >= 0 ? "+" : "−"} ajustes/estornos ${brl(Math.abs(adj.reduce((s, x) => s + x.cents, 0)))}` : ""}</p></div>
         <p className="ios-dim ios-small">Cada valor abaixo abre os atendimentos que o compõem. <b>Atendimento agendado não é dinheiro recebido.</b></p>
         <div className="ios-grid2" data-testid="earn-buckets">
-          <Indicator label="Estimativa (futuro)" value={brl(e.estimateCents)} sub={`${e.estimateCount} atendimentos agendados`} period="Atendimentos agendados a partir de hoje" definition={`Estimativa: atendimentos futuros × ${brl(e.rate)}. Só vira repasse depois de realizado e apurado. Não é valor recebido.`} rows={e.future.map((a) => ({ title: `${fmtDay(a.at)} ${fmtTime(a.at)} · Paciente ${patientById(d, a.patientId).code}`, sub: KIND[a.kind], right: brl(e.rate) }))} />
+          <Indicator label="Estimativa (futuro)" value={brl(e.estimateCents)} sub={`${e.estimateCount} atendimentos agendados`} period="Atendimentos agendados a partir de hoje" definition={`Estimativa: atendimentos futuros × ${e.uniform ? brl(e.rate) : "o repasse do produto de cada paciente"}. Só vira repasse depois de realizado e apurado. Não é valor recebido.`} rows={e.future.map((a) => ({ title: `${fmtDay(a.at)} ${fmtTime(a.at)} · Paciente ${patientById(d, a.patientId).code}`, sub: KIND[a.kind], right: brl(e.rate) }))} />
           <Indicator label="Apurados" value={brl(e.apurado)} sub="realizados, aguardando liberação" period={PERIOD} definition="Sessões realizadas e elegíveis (pacote pago) que a administração ainda não liberou. Inclui estornos e ajustes nesta situação." rows={rowsFor("apurado")} />
           <Indicator label="Liberados" value={brl(e.liberado)} sub="autorizados, a pagar" period={PERIOD} definition="Valores autorizados pela administração e ainda não pagos." rows={rowsFor("liberado")} />
           <Indicator label="Pagos" value={brl(e.pago)} sub="já recebidos" period={PERIOD} definition="Valores já pagos a você." rows={rowsFor("pago")} tone="ok" />
         </div>
         <Group title="Ajustes e estornos" foot="Aparecem com o motivo registrado pela administração.">{adj.map((x) => <Row key={x.id} title={x.label} sub={`${fmtDay(x.date)} · ${x.state}`} right={<b style={{ color: x.cents < 0 ? "var(--danger)" : "var(--success)" }}>{brl(x.cents)}</b>} />)}</Group>
-        <Group title="Como é calculado"><Row onClick={() => setSheet("rule")} left={<ClipboardList size={18} aria-hidden />} title={`${brl(e.rate)} por sessão elegível`} sub="Regra fictícia deste preview" /></Group>
+        <Group title="Como é calculado"><Row onClick={() => setSheet("rule")} left={<ClipboardList size={18} aria-hidden />} title={e.uniform ? `${brl(e.rate)} por sessão elegível` : "Repasse por sessão, definido por produto"} sub="Regra fictícia deste preview" /></Group>
         <p className="ios-dim ios-small">Você vê apenas os seus repasses. O faturamento da clínica e os ganhos de outros profissionais não aparecem aqui.</p>
       </div>
-      <Sheet open={sheet === "rule"} onClose={() => setSheet(null)} title="Regra de repasse (fictícia)"><div className="ios-gap"><p><b>{brl(e.rate)}</b> por sessão elegível. Elegível = atendimento <b>realizado</b>, de um pacote com pagamento confirmado.</p><p>Exemplo com os dados desta demonstração: <b>{e.eligible} sessões × {brl(e.rate)} = {brl(e.eligibleCents)}</b>.</p><p className="ios-dim ios-small">Valor e regras reais serão definidos pela administração no Hub. Faltas e cancelamentos não geram repasse; sessão devolvida gera estorno.</p></div></Sheet>
+      <Sheet open={sheet === "rule"} onClose={() => setSheet(null)} title="Regra de repasse (fictícia)"><div className="ios-gap"><p><b>{e.uniform ? brl(e.rate) : "O valor do produto"}</b> por sessão elegível. Elegível = atendimento <b>realizado</b>, de um pacote com pagamento confirmado.</p><p>Exemplo com os dados desta demonstração: <b>{e.eligible} sessões{e.uniform ? ` × ${brl(e.rate)}` : ""} = {brl(e.eligibleCents)}</b>.</p><p className="ios-dim ios-small">Valor e regras reais serão definidos pela administração no Hub. Faltas e cancelamentos não geram repasse; sessão devolvida gera estorno.</p></div></Sheet>
     </Page>
   );
 };

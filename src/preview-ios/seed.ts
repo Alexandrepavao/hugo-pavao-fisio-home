@@ -1,3 +1,4 @@
+import { buildAdmin } from "./seed-admin";
 import type { Appointment, Demo, Exercise, ExerciseLog, LogResult, Measure, Note, Patient, Payout, Routine } from "./types";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -126,12 +127,13 @@ export const buildSeed = (anchor = todayISO()): Demo => {
 
   A.forEach((a) => { if (evolved.has(a.id)) a.evolutionNoteId = notes.find((x) => x.apptId === a.id)?.id; });
   return {
-    version: 1, anchor, physio, patients, protocols, appts: A, library: EX, routines, logs, measures, goals, achievements, notes, reassessments: [
+    version: 2, anchor, physio, patients, protocols, appts: A, library: EX, routines, logs, measures, goals, achievements, notes, reassessments: [
       { id: "re-1", patientId: "pa-4", date: D(-20), decision: "concluir", reason: "Metas atingidas e autonomia recuperada.", sharedMessage: "Parabéns! Você atingiu suas metas. Mantenha os exercícios de manutenção." },
     ],
     recommendations: [], messages: [{ id: "ms-1", patientId: "pa-1", from: "equipe", text: "Olá, Marina! Qualquer dúvida sobre agenda ou pagamentos, escreva por aqui. Respondemos em até 24 horas.", at: `${D(-48)}T10:00` }],
     checkins: [{ id: "ck-1", patientId: "pa-1", date: D(-1), mood: 4, note: "Dia bom, joelho tranquilo." }], payments, payouts,
     availability: [0, 1, 2, 3, 4, 5, 6].map((w) => ({ weekday: w, enabled: w >= 1 && w <= 5, from: "08:00", to: "17:00" })),
     prefs: { reminderAppt: true, reminderRoutine: true, reminderCheckin: false, shareReported: true }, meId: "pa-1", ratePerSessionCents: 10000,
+    admin: buildAdmin(anchor, D, weekdayOf, mk, protocols),
   };
 };
