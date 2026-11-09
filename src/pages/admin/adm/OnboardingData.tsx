@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { SP_ZONE_LABEL } from "@/lib/spZones";
 
 const PIX: Record<string, string> = { cpf: "CPF", cnpj: "CNPJ", email: "E-mail", phone: "Celular", random: "Chave aleatória" };
 const WORK: Record<string, string> = { pf: "Pessoa física", pj: "Pessoa jurídica" };
 
 interface Data {
-  rg: string | null; birth_date: string | null;
-  profile: { work_as: string; council_uf: string | null; specialties: string[]; education: string | null; bio: string | null; service_regions: string | null } | null;
+  rg: string | null; birth_date: string | null; zone: string | null;
+  profile: { work_as: string; council_uf: string | null; specialties: string[]; education: string | null; bio: string | null; service_regions: string | null; service_zones: string[] } | null;
   bank: { pix_key_type: string | null; pix_key: string | null; bank_name: string | null; bank_agency: string | null; bank_account: string | null } | null;
   intake: { emergency_name: string | null; emergency_phone: string | null; emergency_relation: string | null; address_reference: string | null; main_complaint: string | null; how_found: string | null; health_consent_at: string | null } | null;
 }
@@ -19,12 +20,12 @@ const OnboardingData = ({ personId }: { personId: string }) => {
     queryKey: ["adm-onboarding-data", personId],
     queryFn: async (): Promise<Data> => {
       const [p, pr, b, i] = await Promise.all([
-        supabase.from("people").select("rg, birth_date").eq("id", personId).maybeSingle(),
-        supabase.from("professional_profiles").select("work_as, council_uf, specialties, education, bio, service_regions").eq("person_id", personId).maybeSingle(),
+        supabase.from("people").select("rg, birth_date, zone").eq("id", personId).maybeSingle(),
+        supabase.from("professional_profiles").select("work_as, council_uf, specialties, education, bio, service_regions, service_zones").eq("person_id", personId).maybeSingle(),
         supabase.from("person_bank_info").select("pix_key_type, pix_key, bank_name, bank_agency, bank_account").eq("person_id", personId).maybeSingle(),
         supabase.from("person_intake").select("emergency_name, emergency_phone, emergency_relation, address_reference, main_complaint, how_found, health_consent_at").eq("person_id", personId).maybeSingle(),
       ]);
-      return { rg: p.data?.rg ?? null, birth_date: p.data?.birth_date ?? null, profile: pr.data as Data["profile"], bank: b.data as Data["bank"], intake: i.data as Data["intake"] };
+      return { rg: p.data?.rg ?? null, birth_date: p.data?.birth_date ?? null, zone: p.data?.zone ?? null, profile: pr.data as Data["profile"], bank: b.data as Data["bank"], intake: i.data as Data["intake"] };
     },
   });
   const d = q.data; if (!d) return null;
@@ -34,10 +35,10 @@ const OnboardingData = ({ personId }: { personId: string }) => {
     <section data-testid="adm-onboarding-dados">
       <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Dados do onboarding (somente leitura)</h3>
       <div className="rounded-md border border-border p-3 grid gap-4">
-        <dl className="grid gap-3 sm:grid-cols-2"><Row label="Data de nascimento" value={d.birth_date ? fmt(d.birth_date) : null} /><Row label="RG" value={d.rg} /></dl>
+        <dl className="grid gap-3 sm:grid-cols-2"><Row label="Data de nascimento" value={d.birth_date ? fmt(d.birth_date) : null} /><Row label="RG" value={d.rg} /><Row label="Zona de São Paulo" value={d.zone ? SP_ZONE_LABEL[d.zone] : null} /></dl>
         {d.profile && (<div><p className="text-xs font-medium mb-1.5">Perfil profissional</p><dl className="grid gap-3 sm:grid-cols-2">
           <Row label="Atua como" value={WORK[d.profile.work_as]} /><Row label="UF do CREFITO" value={d.profile.council_uf} />
-          <Row label="Especialidades" value={d.profile.specialties.join(", ")} /><Row label="Regiões de atendimento" value={d.profile.service_regions} />
+          <Row label="Especialidades" value={d.profile.specialties.join(", ")} /><Row label="Zonas de SP que atende" value={d.profile.service_zones?.length ? d.profile.service_zones.map((z) => SP_ZONE_LABEL[z] ?? z).join(", ") : null} /><Row label="Outras regiões de atendimento" value={d.profile.service_regions} />
           <Row label="Formação" value={d.profile.education} /><Row label="Apresentação" value={d.profile.bio} /></dl></div>)}
         {d.bank && (<div><p className="text-xs font-medium mb-1.5">Pagamento dos repasses</p><dl className="grid gap-3 sm:grid-cols-2">
           <Row label="Chave PIX" value={d.bank.pix_key ? `${PIX[d.bank.pix_key_type ?? ""] ?? ""}: ${d.bank.pix_key}` : null} /><Row label="Banco" value={d.bank.bank_name} />

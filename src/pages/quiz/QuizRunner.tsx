@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { pickTracking } from "@/lib/tracking";
+import { SP_ZONES, isSpCapital } from "@/lib/spZones";
 import {
   CONTACT_CONSENT_TEXT, CONTACT_CONSENT_VERSION, HEALTH_CONSENT_TEXT, HEALTH_CONSENT_VERSION,
   JOURNEY_LABEL, JOURNEY_QUESTIONS, MARKETING_CONSENT_TEXT, MARKETING_CONSENT_VERSION, UF_LIST, buildAtendimentoMessage,
@@ -50,7 +51,8 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
   const honeypotRef = useRef<HTMLInputElement>(null);
 
   // etapa 2
-  const [city, setCity] = useState(""); const [uf, setUf] = useState("");
+  const [city, setCity] = useState(""); const [uf, setUf] = useState(""); const [neighborhood, setNeighborhood] = useState(""); const [zone, setZone] = useState("");
+  const inSp = isSpCapital(city, uf);
 
   // respostas guardadas só em memória (nunca em localStorage — algumas são dado de saúde)
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -107,9 +109,11 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     e.preventDefault(); setError(null);
     if (!leadId) return setError("Sessão expirada — recarregue a página.");
     if (!city.trim() || !uf) return setError("Informe a cidade e o estado.");
+    if (inSp && !neighborhood.trim()) return setError("Informe o seu bairro.");
+    if (inSp && !zone) return setError("Escolha a zona de São Paulo.");
     setBusy(true);
     try {
-      const { error: rpcError } = await supabase.rpc("quiz_save_progress", { p_id: leadId, p_step: 4, p_answers: {}, p_city: city.trim(), p_uf: uf });
+      const { error: rpcError } = await supabase.rpc("quiz_save_progress", { p_id: leadId, p_step: 4, p_answers: {}, p_city: city.trim(), p_uf: uf, p_neighborhood: inSp ? neighborhood.trim() : null, p_zone: inSp ? zone : null });
       if (rpcError) throw rpcError;
       setQKey(visible[0].key);
       setPhase(journey === "atendimento" ? "health-consent" : "question");
@@ -262,6 +266,15 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
                             <option value="">…</option>{UF_LIST.map((u) => <option key={u} value={u}>{u}</option>)}
                           </select></div>
                       </div>
+                      {inSp && (
+                        <div className="mt-4 grid sm:grid-cols-2 gap-4" data-testid="quiz-sp-zona">
+                          <div><label htmlFor="q-neigh" className="block text-sm text-navy-700 mb-1.5">Bairro</label>
+                            <input id="q-neigh" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} maxLength={100} className="hp-input" required /></div>
+                          <div><label htmlFor="q-zone" className="block text-sm text-navy-700 mb-1.5">Zona de São Paulo</label>
+                            <select id="q-zone" value={zone} onChange={(e) => setZone(e.target.value)} className="hp-input" required>
+                              <option value="">Escolha…</option>{SP_ZONES.map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}
+                            </select></div>
+                        </div>)}
                       {error && <p role="alert" className="text-sm text-red-600 mt-4">{error}</p>}
                       <button type="submit" disabled={busy} className={`${PRIMARY_BTN} mt-8`}>
                         {busy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : null}Continuar{!busy && <ArrowRight className="w-4 h-4" aria-hidden="true" />}

@@ -132,7 +132,7 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     await p.goto("/avaliacao?from=%2F"); await expect(p.getByText(/Etapa 1 de 9/)).toBeVisible(); expect(await noOverflow(p), "contato sem rolagem lateral").toBe(true);
     await p.waitForTimeout(500); await p.screenshot({ path: "docs/screenshots/quiz/paciente-1-contato-celular.png" });
     await contact(p, `Paciente Quiz E2E ${runId}`, `paciente.quiz.${runId.toLowerCase()}@example.com`);
-    await p.getByLabel("Cidade").fill("São Paulo"); await p.getByLabel("UF").selectOption("SP"); await next(p);
+    await p.getByLabel("Cidade").fill("São Paulo"); await p.getByLabel("UF").selectOption("SP"); await p.getByLabel("Bairro").fill("Pinheiros"); await p.getByLabel("Zona de São Paulo").selectOption("oeste"); await next(p);
     await p.getByRole("button", { name: "Concordo, continuar" }).click();
     await expect(p.getByRole("progressbar")).toHaveAttribute("aria-valuenow", /\d+/);
     await p.getByRole("radio", { name: "7", exact: true }).click(); expect(await noOverflow(p), "escala sem rolagem lateral").toBe(true);

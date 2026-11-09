@@ -4,6 +4,7 @@ import { CalendarCheck, Loader2, ShieldCheck, Stethoscope, UserCheck } from "luc
 import { supabase } from "@/lib/supabase";
 import { fmtCnpj, isValidCnpj, isValidCpf, isValidEmail, isValidPhone, MIN_PASSWORD, onlyDigits } from "@/lib/doc";
 import { isFullName, UF_LIST } from "@/lib/quiz";
+import { SP_ZONES, isSpCapital } from "@/lib/spZones";
 import {AccessFields, ContactAddressFields, DoneScreen, Field, FormError, IdentityFields, NextButton, OnboardingFrame, StepTitle } from "./parts";
 import { ONBOARDING_CONSENT_VERSION, usePageMeta, type Errors, type FormState } from "./shared";
 
@@ -31,7 +32,7 @@ const OnboardingFisio = () => {
   usePageMeta("Cadastro de fisioterapeuta | HP Fisioterapia");
   const [params] = useSearchParams(); const token = params.get("convite") ?? "";
   const [info, setInfo] = useState<LinkInfo | "loading">("loading");
-  const [step, setStep] = useState(0); const [v, setV] = useState<FormState>(EMPTY); const [specs, setSpecs] = useState<string[]>([]);
+  const [step, setStep] = useState(0); const [v, setV] = useState<FormState>(EMPTY); const [specs, setSpecs] = useState<string[]>([]); const [zones, setZones] = useState<string[]>([]);
   const [errors, setErrors] = useState<Errors>({}); const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ email: string; account: boolean } | null>(null);
@@ -64,6 +65,7 @@ const OnboardingFisio = () => {
       if (!v.street.trim()) e.street = "Informe a rua.";
       if (!v.street_number.trim()) e.street_number = "Informe o número (ou S/N).";
       if (!v.neighborhood.trim()) e.neighborhood = "Informe o bairro.";
+      if (isSpCapital(v.city, v.state_uf) && !v.zone) e.zone = "Escolha a zona de São Paulo.";
       if (!v.city.trim()) e.city = "Informe a cidade.";
       if (!v.state_uf) e.state_uf = "Escolha a UF.";
     } else if (step === 2) {
@@ -90,7 +92,7 @@ const OnboardingFisio = () => {
     if (Object.keys(e).length) return;
     if (step < STEPS.length - 1) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     setBusy(true);
-    const data = { ...v, cpf: onlyDigits(v.cpf), cnpj: v.work_as === "pj" ? onlyDigits(v.cnpj) : "", specialties: specs, password: undefined, password2: undefined };
+    const data = { ...v, cpf: onlyDigits(v.cpf), cnpj: v.work_as === "pj" ? onlyDigits(v.cnpj) : "", specialties: specs, service_zones: zones, password: undefined, password2: undefined };
     const { data: res, error: rpcError } = await supabase.rpc("onboarding_submit_physio", { p_token: token, p_data: data, p_consent_version: ONBOARDING_CONSENT_VERSION, p_honeypot: honeypot.current?.value ?? "" });
     if (rpcError) {
       setBusy(false); const msg = rpcError.message;
@@ -129,6 +131,12 @@ const OnboardingFisio = () => {
             </fieldset>
             <Field id="ob-edu" label="Formação (opcional)" className="sm:col-span-6" hint="Graduação, pós, cursos e instituições."><textarea id="ob-edu" className="hp-input" rows={2} maxLength={400} value={v.education} onChange={(e) => set("education", e.target.value)} /></Field>
             <Field id="ob-bio" label="Apresentação curta (opcional)" className="sm:col-span-6"><textarea id="ob-bio" className="hp-input" rows={3} maxLength={600} value={v.bio} onChange={(e) => set("bio", e.target.value)} /></Field>
+            <fieldset className="sm:col-span-6" data-testid="ob-zonas-atendimento">
+              <legend className="block text-sm text-navy-700 mb-1.5">Zonas de São Paulo que você pode atender (opcional)</legend>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">{SP_ZONES.map((z) => (
+                <label key={z.id} className="flex items-center gap-2.5 text-[14px] text-navy-700 cursor-pointer"><input type="checkbox" checked={zones.includes(z.id)} onChange={() => setZones((cur) => (cur.includes(z.id) ? cur.filter((x) => x !== z.id) : [...cur, z.id]))} className="accent-accent" />{z.label}</label>))}</div>
+              <p className="text-[12px] text-navy-400 mt-1">Marque quantas quiser. Usamos para encaminhar pacientes perto de você.</p>
+            </fieldset>
             <Field id="ob-regions" label="Cidades/regiões em que atende (opcional)" className="sm:col-span-6"><input id="ob-regions" className="hp-input" maxLength={300} value={v.service_regions} onChange={(e) => set("service_regions", e.target.value)} placeholder="Ex.: Santo André, São Bernardo, São Caetano" /></Field>
             <fieldset className="sm:col-span-6">
               <legend className="block text-sm text-navy-700 mb-1.5">Você atende como</legend>

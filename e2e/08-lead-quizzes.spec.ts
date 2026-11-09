@@ -25,6 +25,7 @@ test.describe("quizzes de captação", () => {
     await expect(p.getByText("Em qual cidade e estado")).toBeVisible();
     await p.getByLabel("Cidade").fill("São Paulo");
     await p.getByLabel("UF").selectOption("SP");
+    await p.getByLabel("Bairro").fill("Pinheiros"); await p.getByLabel("Zona de São Paulo").selectOption("oeste");
     await p.getByRole("button", { name: "Continuar" }).click();
 
     // gate de consentimento de saúde antes das perguntas 5–7
