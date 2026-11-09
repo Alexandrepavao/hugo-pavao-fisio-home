@@ -43,7 +43,7 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
 
   test("paciente cancela pelo portal: avisado antes; dentro do prazo não consome, dentro das 24 h consome", async ({ page, context }) => {
     const pac = await loginAs(context, QA.paciente); const errors = collectErrors(page); void pac;
-    await page.goto("/paciente");
+    await page.goto("/paciente/agenda");
     const rowE = mine(page).filter({ hasText: svcName("E") }); await expect(rowE).toHaveCount(1);
     await expect(rowE.getByText(/Sem custo até 24 h antes/)).toBeVisible();
     await rowE.getByRole("button", { name: "Cancelar atendimento" }).click();

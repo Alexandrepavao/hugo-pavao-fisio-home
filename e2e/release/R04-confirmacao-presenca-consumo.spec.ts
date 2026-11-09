@@ -46,7 +46,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     expect(await bal()).toBe(4);
 
     // portal do paciente: confirma pela interface
-    await page.goto("/paciente");
+    await page.goto("/paciente/agenda");
     const rowA = mineOf(page).filter({ hasText: svcName("A") });
     await expect(rowA).toHaveCount(1); await expect(rowA.getByText("Aguardando confirmação do profissional.")).toBeVisible();
     await rowA.getByRole("button", { name: "Confirmar minha presença" }).click();
@@ -87,7 +87,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
   test("paciente vê a confirmação do profissional; gestor vê as duas confirmações e registra a do paciente por telefone (via equipe)", async ({ page, context, browser }) => {
     // paciente (contexto próprio)
     const ctxP = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const pageP = await ctxP.newPage(); await loginAs(ctxP, QA.paciente);
-    await pageP.goto("/paciente");
+    await pageP.goto("/paciente/agenda");
     const rowA = mineOf(pageP).filter({ hasText: svcName("A") });
     await expect(rowA.getByText("O profissional confirmou o atendimento.")).toBeVisible();
     const rowB = mineOf(pageP).filter({ hasText: svcName("B") }); await expect(rowB.getByRole("button", { name: "Confirmar minha presença" })).toBeVisible();
@@ -131,7 +131,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     const att = await devSql(`select count(*)::int as n from public.session_ledger where appointment_id in ('${S.B}','${S.C}') and note ilike 'Atendimento realizado%'`) as { n: number }[]; expect(att[0].n).toBe(0);
     // o paciente vê a verdade no portal
     const ctxP = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const pageP = await ctxP.newPage(); await loginAs(ctxP, QA.paciente);
-    await pageP.goto("/paciente");
+    await pageP.goto("/paciente/agenda");
     const pB = mineOf(pageP).filter({ hasText: svcName("B") }); await expect(pB.getByText("Você faltou")).toBeVisible(); await expect(pB.getByText(/foi descontada do seu pacote/)).toBeVisible();
     const pC = mineOf(pageP).filter({ hasText: svcName("C") }); await expect(pC.getByText("O profissional não compareceu")).toBeVisible(); await expect(pC.getByText(/Sua sessão não foi descontada/)).toBeVisible();
     await ctxP.close();

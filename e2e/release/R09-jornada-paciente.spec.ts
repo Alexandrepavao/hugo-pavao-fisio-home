@@ -32,7 +32,7 @@ test.describe.serial("@release Jornada do paciente (objetivos, evolução, víde
   test("paciente: vê a própria jornada, o vídeo não abre sem a chave do Bunny (e nunca fica público) e pedir contato não cobra nada", async ({ page, context }) => {
     const pac = await loginAs(context, QA.paciente); const errors = collectErrors(page);
     const salesBefore = ((await api(await signIn(QA.manager)).get(`sales?select=id&person_id=eq.${S.person}`)).body as unknown[]).length;
-    await page.goto("/paciente");
+    await page.goto("/paciente/evolucao");
     const box = page.getByRole("region", { name: "Minha jornada" });
     await expect(box.getByRole("heading", { name: "Minha jornada" })).toBeVisible({ timeout: 30_000 });
     await expect(box.getByText(goalTitle)).toBeVisible();

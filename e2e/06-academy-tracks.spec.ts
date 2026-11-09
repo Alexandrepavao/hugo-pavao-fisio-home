@@ -97,10 +97,10 @@ test.describe("Academy — trilhas", () => {
 
   test("separação Área do paciente / Academy: dados de um portal nunca aparecem inventados no outro", async ({ page }) => {
     const s = await signIn(STUDENT); await useSession(page.context(), s);
-    await page.goto("/paciente");
+    await page.goto("/paciente/agenda");
     // a mesma conta (role "member") usada nos testes de Academy não tem atendimentos/pacotes — a página não deve inventar nenhum
     await expect(page.getByText("Você ainda não tem atendimentos agendados.")).toBeVisible();
-    await expect(page.getByText("Nenhum pacote.")).toBeVisible();
+    await page.goto("/paciente/mais"); await expect(page.getByText("Nenhum pacote.")).toBeVisible();
     const gs = api(s);
     for (const t of ["care_assignments", "care_messages"]) {
       const r = await gs.get(`${t}?select=*&limit=3`); expect(r.status, t).toBe(200); expect(r.body, `${t} deve vir vazio para quem não tem acompanhamento clínico`).toHaveLength(0);

@@ -66,11 +66,26 @@ const Partners = lazy(() => import("./pages/admin/Partners"));
 const Research = lazy(() => import("./pages/admin/Research"));
 const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
+const PreviewIos = lazy(() => import("./preview-ios/PreviewIos"));
+const Representations = lazy(() => import("./pages/admin/Representations"));
+const PhysioPricing = lazy(() => import("./pages/admin/finance/PhysioPricing"));
+const ExerciseLibraryPage = lazy(() => import("./portal/Training").then((m) => ({ default: m.ExerciseLibraryPage })));
+const PhysioPerformance = lazy(() => import("./portal/Performance"));
+const Programs = lazy(() => import("./pages/admin/Programs"));
+const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
+const PatientTicketsPage = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTicketsPage })));
 const Productivity = lazy(() => import("./pages/admin/Productivity"));
 const MySummary = lazy(() => import("./pages/admin/MySummary"));
 const PublicPage = lazy(() => import("./pages/PublicPage"));
 const Landing = lazy(() => import("./pages/portal/Landing"));
-const Patient = lazy(() => import("./pages/portal/Patient"));
+const PatientShell = lazy(() => import("./portal/PatientShell"));
+const PatientHome = lazy(() => import("./portal/PatientHome"));
+const PatientAgenda = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientAgenda })));
+const PatientEvolution = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientEvolution })));
+const PatientTraining = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientTraining })));
+const PatientMore = lazy(() => import("./portal/PatientPages").then((m) => ({ default: m.PatientMore })));
+const PhysioShell = lazy(() => import("./portal/PhysioShell"));
+const PhysioHome = lazy(() => import("./portal/PhysioHome"));
 const Partner = lazy(() => import("./pages/portal/Partner"));
 const AcademyHome = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.AcademyHome })));
 const CourseView = lazy(() => import("./pages/portal/Academy").then((m) => ({ default: m.CourseView })));
@@ -83,6 +98,14 @@ const Account = lazy(() => import("./pages/admin/Account"));
 const OnboardingFisio = lazy(() => import("./pages/onboarding/OnboardingFisio"));
 const OnboardingPaciente = lazy(() => import("./pages/onboarding/OnboardingPaciente"));
 const Welcome = lazy(() => import("./pages/portal/Welcome"));
+const MarketingOverview = lazy(() => import("./pages/admin/marketing/MarketingOverview"));
+const MarketingCampaigns = lazy(() => import("./pages/admin/marketing/MarketingCampaigns"));
+const MarketingAds = lazy(() => import("./pages/admin/marketing/MarketingAds"));
+const MarketingLeads = lazy(() => import("./pages/admin/marketing/MarketingLeads"));
+const MarketingDashboards = lazy(() => import("./pages/admin/marketing/MarketingDashboards"));
+const MarketingFunnel = lazy(() => import("./pages/admin/marketing/MarketingFunnel"));
+const MarketingIntegrations = lazy(() => import("./pages/admin/marketing/MarketingIntegrations"));
+const MarketingSettings = lazy(() => import("./pages/admin/marketing/MarketingSettings"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -140,6 +163,8 @@ const App = () => (
               <Route path="/redefinir-senha" element={<ResetPassword />} />
               <Route path="/confirmar" element={<Confirmar />} />
               <Route path="/app" element={<Landing />} />
+              {/* Preview do app iOS (dados FICTÍCIOS, área isolada; não existe em produção). */}
+              <Route path="/preview-ios" element={import.meta.env.VITE_APP_ENV === "production" ? <NotFound /> : <PreviewIos />} />
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
                 <Route path="administrativo/*" element={<AppAlias app="administrativo" />} />
@@ -195,6 +220,7 @@ const App = () => (
                   <Route path="recorrencia" element={<FinanceRecurrence />} />
                   <Route path="dre" element={<FinanceDre />} />
                   <Route path="comissoes" element={<FinanceCommissions />} />
+                  <Route path="precos-repasses" element={g(["manager", "ops_admin", "finance"], <PhysioPricing />)} />
                   <Route path="conciliacao" element={<FinanceReconciliation />} />
                   <Route path="relatorios" element={<FinanceReports />} />
                   <Route path="cartoes" element={<FinanceCards />} />
@@ -206,7 +232,18 @@ const App = () => (
                 <Route path="pesquisas" element={g(R.research, <Research />)} />
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
+                <Route path="marketing" element={g(R.leads, <FeatureGate feature="marketing"><MarketingOverview /></FeatureGate>)} />
+                <Route path="marketing/campanhas" element={g(R.leads, <FeatureGate feature="marketing"><MarketingCampaigns /></FeatureGate>)} />
+                <Route path="marketing/anuncios" element={g(R.leads, <FeatureGate feature="marketing"><MarketingAds /></FeatureGate>)} />
+                <Route path="marketing/funil" element={g(R.leads, <FeatureGate feature="marketing"><MarketingFunnel /></FeatureGate>)} />
+                <Route path="marketing/leads" element={g(R.leads, <FeatureGate feature="marketing"><MarketingLeads /></FeatureGate>)} />
+                <Route path="marketing/paineis" element={g(R.leads, <FeatureGate feature="marketing"><MarketingDashboards /></FeatureGate>)} />
+                <Route path="marketing/integracoes" element={g(R.leads, <FeatureGate feature="marketing"><MarketingIntegrations /></FeatureGate>)} />
+                <Route path="marketing/configuracoes" element={g(R.team, <FeatureGate feature="marketing"><MarketingSettings /></FeatureGate>)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
+                <Route path="chamados" element={g(["manager", "ops_admin", "unit_manager"], <SupportAdmin />)} />
+                <Route path="programas" element={g(["manager", "ops_admin"], <Programs />)} />
+                <Route path="responsaveis" element={g(["manager", "ops_admin", "unit_manager"], <Representations />)} />
                 <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="conta" element={<Account />} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
@@ -214,7 +251,25 @@ const App = () => (
               <Route path="/boas-vindas" element={g(R.portal, <Welcome />)} />
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />
               <Route path="/academy/:slug" element={g(R.portal, <CourseView />)} />
-              <Route path="/paciente" element={g(["member"], <Patient />)} />
+              {/* Portal do paciente (celular: barra inferior; computador: barra lateral). A autorização real é do banco. */}
+              <Route path="/paciente" element={g(["member"], <PatientShell />)}>
+                <Route index element={<PatientHome />} />
+                <Route path="evolucao" element={<PatientEvolution />} />
+                <Route path="treinos" element={<PatientTraining />} />
+                <Route path="agenda" element={<PatientAgenda />} />
+                <Route path="mais" element={<PatientMore />} />
+                <Route path="chamados" element={<PatientTicketsPage />} />
+              </Route>
+              {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
+              <Route path="/fisio" element={g(["physio"], <PhysioShell />)}>
+                <Route index element={<PhysioHome />} />
+                <Route path="pacientes" element={<Care />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="dia" element={<Productivity />} />
+                <Route path="desempenho" element={<PhysioPerformance />} />
+                <Route path="treinos" element={<ExerciseLibraryPage />} />
+                <Route path="chamados" element={<SupportAdmin />} />
+              </Route>
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />
               <Route path="/pesquisas" element={g(R.portal, <PortalResearch />)} />
               {/* Páginas do HP Pages: /:slug (slugs reservados são impedidos no editor e no banco). Manter APÓS as rotas fixas. */}

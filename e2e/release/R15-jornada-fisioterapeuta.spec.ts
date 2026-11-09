@@ -108,7 +108,7 @@ test.describe.serial("@release Jornada do fisioterapeuta", () => {
     await devSql(`insert into public.appointments (unit_id, professional_id, person_id, service_id, period, status, org_id) select v.u::uuid, v.p::uuid, v.pe::uuid, v.s::uuid, v.per, v.st, (select org_id from public.units where id = '${unitId}') from (values
       ${[mk(-1, "09:00", "attended"), mk(-2, "09:00", "attended"), mk(-3, "09:00", "no_show"), mk(-4, "09:00", "professional_no_show"), mk(-5, "09:00", "cancelled_by_patient"), mk(-6, "09:00", "cancelled_by_clinic"), mk(2, "09:00", "scheduled")].join(",\n")}) v(u, p, pe, s, per, st)`);
     await uiLogin(page, email, pass1);
-    await expect(page).toHaveURL(/\/admin/, { timeout: 40_000 });
+    await expect(page).toHaveURL(/\/(admin|fisio)/, { timeout: 40_000 });
     await expect(page.getByText("Sem permissão")).toHaveCount(0);
     await page.goto("/admin/meu-resumo?periodo=7dias");
     await expect(page.getByRole("heading", { name: "Meu resumo" }).first()).toBeVisible({ timeout: 40_000 });
@@ -136,7 +136,7 @@ test.describe.serial("@release Jornada do fisioterapeuta", () => {
     const goal = await a.rpc("patient_goal_save", { p_person: patientId, p_id: null, p_title: "Sem vínculo não pode", p_details: null, p_target_date: null, p_status: "active" }); expect(goal.status).not.toBe(200);
     expect(((await a.get("payables?select=id&limit=1")).body as unknown[]).length).toBe(0); expect(((await a.get("sales?select=id&limit=1")).body as unknown[]).length).toBe(0);
     const mine = (await a.rpc("my_agenda_professionals")).body as { id: string; is_self: boolean }[]; expect(mine.filter((p) => p.is_self).map((p) => p.id)).toEqual([profId]); expect(mine.length).toBe(1);   // só a própria agenda
-    await uiLogin(page, email, pass1); await expect(page).toHaveURL(/\/admin/, { timeout: 40_000 });
+    await uiLogin(page, email, pass1); await expect(page).toHaveURL(/\/(admin|fisio)/, { timeout: 40_000 });
     for (const path of ["/admin/financeiro/pagar", "/admin/adm/diretorio", "/admin/crm", "/admin/equipe"]) { await page.goto(path); await expect(page.getByText(/Sem permissão/).first(), path).toBeVisible({ timeout: 30_000 }); }
     // Meu dia: Google Calendar individual (a autorização real no Google é externa e não é exercitada)
     await page.goto("/admin/meu-dia"); await expect(page.getByRole("button", { name: /Conectar Google Calendar/ })).toBeVisible({ timeout: 40_000 });
@@ -155,12 +155,12 @@ test.describe.serial("@release Jornada do fisioterapeuta", () => {
     await expect(page.getByRole("heading", { name: "Senha atualizada" })).toBeVisible({ timeout: 20_000 });
     await expect(signInWith(email, pass1)).rejects.toThrow(); await expect(signInWith(email, pass2)).resolves.toBeTruthy();
     // login pela tela com a senha nova
-    const ctx2 = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const p2 = await ctx2.newPage(); await uiLogin(p2, email, pass2); await expect(p2).toHaveURL(/\/admin/, { timeout: 40_000 }); await ctx2.close();
+    const ctx2 = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const p2 = await ctx2.newPage(); await uiLogin(p2, email, pass2); await expect(p2).toHaveURL(/\/(admin|fisio)/, { timeout: 40_000 }); await ctx2.close();
   });
 
   test("celular: “Meu resumo” e o cadastro de profissionais cabem na tela", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await uiLogin(page, email, pass2); await expect(page).toHaveURL(/\/admin/, { timeout: 40_000 });
+    await uiLogin(page, email, pass2); await expect(page).toHaveURL(/\/(admin|fisio)/, { timeout: 40_000 });
     await page.goto("/admin/meu-resumo?periodo=7dias"); await expect(page.getByRole("heading", { name: "Meu resumo" }).first()).toBeVisible({ timeout: 40_000 }); await page.waitForTimeout(600);
     const w = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth })); expect(w.sw).toBeLessThanOrEqual(w.iw + 1);
   });

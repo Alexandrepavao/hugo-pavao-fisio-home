@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { featureOn, type FeatureKey } from "@/lib/release";
 import CommandMenu from "./CommandMenu";
 import HeaderBar, { AppTile } from "./HeaderBar";
-import { APPS, appById, type AppId } from "./apps";
+import { APPS, appById, appVisible, type AppId } from "./apps";
 import { useAppTheme } from "./theme";
 import { usePfAccess } from "@/pages/admin/finance/personal/pf";
 
@@ -59,7 +59,7 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
     pool.sort((a, b) => b.len - a.len || b.keys - a.keys);
     return pool[0]?.i ?? flatItems[0];
   }, [flatItems, location.pathname, location.search, onAccount]);
-  const apps = useMemo(() => APPS.filter((a) => a.id === "hub" || !a.roles || hasRole(...a.roles)), [hasRole]);
+  const apps = useMemo(() => APPS.filter((a) => appVisible(a) && (a.id === "hub" || !a.roles || hasRole(...a.roles))), [hasRole]);
   const isHub = appId === "hub";
 
   const Switcher = ({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) => (

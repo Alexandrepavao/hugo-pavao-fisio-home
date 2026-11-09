@@ -3,8 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { btnDanger, btnGhost, btnPrimary, confirmDialog, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
-import PortalShell from "./PortalShell";
-import Journey from "./Journey";
 
 interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean; can_cancel: boolean; cancel_consumes: boolean; late_cancel_hours: number | null }
 interface Assign { id: string; phase: string; note: string | null; released_at: string; content: { id: string; title: string; kind: string; body: string | null; storage_path: string | null; questions: unknown } | null }
@@ -14,7 +12,8 @@ const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "
 const ST: Record<string, string> = { scheduled: "Agendado", confirmed: "Confirmado", attended: "Realizado", no_show: "Você faltou", professional_no_show: "O profissional não compareceu", cancelled_by_patient: "Cancelado", cancelled_by_clinic: "Cancelado pela clínica", rescheduled: "Remarcado" };
 const PHASE: Record<string, string> = { before: "Antes do atendimento", after: "Depois do atendimento", program: "Programa de acompanhamento" };
 
-const Patient = () => {
+/** Partes do antigo “Meu acompanhamento”, agora distribuídas nas abas do portal (Agenda, Treinos, Mais). */
+export const PatientPart = ({ part }: { part: "agenda" | "pacote" | "orientacoes" }) => {
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const appts = useQuery({ queryKey: ["my-appts"], queryFn: async () => ((await supabase.rpc("my_appointments")).data ?? []) as Appt[] });
   const pkgs = useQuery({ queryKey: ["my-pkgs"], queryFn: async () => ((await supabase.rpc("my_packages")).data ?? []) as { id: string; product_name: string; balance: number; total_sessions: number; valid_until: string | null; status: string }[] });
@@ -40,8 +39,9 @@ const Patient = () => {
     if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
 
   return (
-    <PortalShell title="Meu acompanhamento">
+    <>
       <Msg m={msg} />
+      {part === "agenda" && (<>
       <section className="mb-10"><h2 className="text-xl mb-3">Meus atendimentos</h2>
         <State loading={appts.isLoading} error={appts.error} empty={appts.data?.length === 0} emptyText="Você ainda não tem atendimentos agendados." />
         <ul className="space-y-2">{appts.data?.map((a) => <li key={a.id} className="hp-card p-3 flex flex-wrap justify-between gap-2"><span>{fmtDateTime(a.starts_at, a.timezone)} — {a.service_name} com {a.professional_name} <span className="text-muted-foreground">({a.unit_name})</span></span><span className="text-sm">{ST[a.status]}</span>
@@ -54,8 +54,8 @@ const Patient = () => {
           {a.status === "professional_no_show" && <span className="basis-full text-sm text-muted-foreground">Sua sessão não foi descontada. A equipe entrará em contato para reagendar sem custo.</span>}
           {a.status === "attended" && !a.survey_answered && survey.data && <span className="basis-full text-sm">Como foi? {[...Array(11).keys()].map((n) => <button key={n} className="w-7 h-7 border border-border mx-0.5 text-xs hover:bg-primary hover:text-primary-foreground" onClick={() => rate(a, n)} aria-label={`Nota ${n}`}>{n}</button>)}</span>}</li>)}</ul></section>
 
-      <Journey />
-
+      </>)}
+      {part === "pacote" && (<>
       <section className="mb-10"><h2 className="text-xl mb-3">Meus pacotes</h2>
         {pkgs.data && pkgs.data.length > 0 ? <ul className="space-y-3">{pkgs.data.map((p) => { const b = bks.data?.find((x) => x.id === p.id); return (
           <li key={p.id} className="hp-card p-3" aria-label={`Pacote ${p.product_name}`}>
@@ -68,16 +68,17 @@ const Patient = () => {
             {b && b.consumed_other > 0 && <p className="text-xs text-muted-foreground mt-2">Há também {b.consumed_other} sessão(ões) descontada(s) por outro motivo, registrada(s) pela equipe.</p>}
           </li>); })}</ul> : <p className="text-muted-foreground">Nenhum pacote.</p>}</section>
 
+      </>)}
+      {part === "orientacoes" && (<>
       <section className="mb-10"><h2 className="text-xl mb-1">Orientações liberadas pela sua equipe</h2><p className="text-sm text-muted-foreground mb-3">Conteúdos definidos por profissionais autorizados. Em caso de dor intensa ou piora, procure atendimento — este espaço não substitui uma avaliação.</p>
         <State loading={assigns.isLoading} error={assigns.error} empty={assigns.data?.length === 0} emptyText="Nenhum conteúdo liberado no momento." />
         <ul className="space-y-4">{assigns.data?.map((a) => a.content && <Item key={a.id} a={a} onLogged={() => m.ok("Registro enviado.")} onError={(t) => m.err(t)} />)}</ul></section>
-      <PersonalData />
-      <Chat />
-    </PortalShell>
+      </>)}
+    </>
   );
 };
 
-const PersonalData = () => {
+export const PersonalData = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [editing, setEditing] = useState(false); const [saving, setSaving] = useState(false);
   const [preferredName, setPreferredName] = useState(""); const [phone, setPhone] = useState(""); const [city, setCity] = useState(""); const [uf, setUf] = useState("");
   // RLS (can_read_person) só deixa a pessoa ler o próprio cadastro — sem filtro adicional, o único registro que volta é o dela mesma.
@@ -141,7 +142,7 @@ const Item = ({ a, onLogged, onError }: { a: Assign; onLogged: () => void; onErr
         <label className="flex gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={need} onChange={(e) => setNeed(e.target.checked)} /> Preciso de atendimento / contato da equipe</label><button className={btnGhost}>Registrar atividade</button></form></div>}</li>);
 };
 
-const Chat = () => {
+export const Chat = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [body, setBody] = useState("");
   const list = useQuery({ queryKey: ["my-msgs"], queryFn: async () => (await supabase.from("care_messages").select("id, sender, body, created_at").order("created_at")).data ?? [], refetchInterval: 30_000 });
   const send = async (e: FormEvent) => { e.preventDefault(); if (!body.trim()) return; const { error } = await supabase.rpc("care_send_message", { p_body: body });
@@ -151,4 +152,3 @@ const Chat = () => {
     <form onSubmit={send} className="flex gap-2"><label htmlFor="cm" className="sr-only">Mensagem</label><textarea id="cm" rows={2}   value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} /><button className={btnGhost}>Enviar</button></form></section>);
 };
 
-export default Patient;

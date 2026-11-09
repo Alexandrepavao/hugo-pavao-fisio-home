@@ -1,6 +1,8 @@
 // Definições dos dois quizzes de captação — texto e ordem das perguntas seguem exatamente o que foi
 // especificado (não invente, não reordene). Cada resposta é salva como {value, label[, detalhe]} — o
 // rótulo é o texto exibido no momento da resposta, preservado mesmo que uma versão futura mude o texto.
+import { CAMPAIGN_KEYS, CLICK_KEYS } from "@/lib/tracking";
+
 export type Journey = "atendimento" | "parceria";
 
 export const CONTACT_CONSENT_VERSION = "contact-v1";
@@ -142,7 +144,7 @@ export const JOURNEY_CTA_LABEL: Record<Journey, string> = { atendimento: "Quero 
 
 // Parâmetros de campanha permitidos a atravessar de uma landing page para o quiz — nunca dado pessoal,
 // nunca um parâmetro arbitrário. `from` registra a página de origem (rota, não título/conteúdo).
-export const ALLOWED_UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+export const ALLOWED_UTM_KEYS = [...CAMPAIGN_KEYS, ...CLICK_KEYS, "hp_consent"] as const;   // ids de clique e hp_consent só existem quando há consentimento (lib/tracking)
 
 export const buildJourneyHref = (journey: Journey, opts: { from?: string; utm?: Record<string, string> } = {}): string => {
   const params = new URLSearchParams();

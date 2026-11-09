@@ -1,7 +1,7 @@
-import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Landmark, LayoutDashboard, ListChecks, Lock, MessageCircleQuestion, Package, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, Users, Wallet } from "lucide-react";
+import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
-import { APPS, type AppId } from "./apps";
+import { APPS, appVisible, type AppId } from "./apps";
 import { CRM_NAV } from "@/pages/admin/crm/crmNav";
 
 // Cada aplicativo mostra SÓ a própria navegação. Só entram rotas e telas que existem de verdade (sem link para o que ainda não foi feito).
@@ -20,6 +20,9 @@ export const GESTAO_NAV: FrameNavSection[] = [
     { to: "/admin/adm/diretorio", label: "Planilha administrativa", icon: Table2, keywords: "pessoa física jurídica empresas planilha" },
     { to: "/admin/adm/diretorio?tipo=pj", label: "Empresas", icon: Building2, keywords: "empresas pessoa jurídica pj b2b cnpj estabelecimentos parcerias" },
     { to: "/admin/pessoas", label: "Pessoas", icon: Users, roles: PEOPLE, keywords: "pacientes leads contatos" },
+    { to: "/admin/programas", label: "Programas e ofertas", icon: Handshake, roles: ["manager", "ops_admin"], keywords: "programa oferta manutenção retenção renovação upsell check-up" },
+    { to: "/admin/chamados", label: "Chamados de pacientes", icon: LifeBuoy, roles: ["manager", "ops_admin", "unit_manager"], keywords: "suporte chamados atendimento prazo humanizado" },
+    { to: "/admin/responsaveis", label: "Responsáveis e cuidadores", icon: UsersRound, roles: ["manager", "ops_admin", "unit_manager"], keywords: "responsável legal cuidador menor idoso curador procurador vínculo representante acesso" },
   ] },
   { label: "Organização", items: [
     { to: "/admin/configuracoes?secao=org", label: "Unidades", icon: Building, roles: ADMINS, keywords: "unidades filiais cidade" },
@@ -50,6 +53,7 @@ export const FIN_NAV: FrameNavSection[] = [
     { to: "/admin/financeiro/recorrencia", label: "Recorrência", icon: Repeat, keywords: "mrr arr projeções mensalidades" },
     { to: "/admin/financeiro/dre", label: "DRE", icon: FileBarChart2, keywords: "resultado competência" },
     { to: "/admin/financeiro/comissoes", label: "Comissões e repasses", icon: Percent, keywords: "comissões repasses" },
+    { to: "/admin/financeiro/precos-repasses", label: "Preços e repasses", icon: Wallet, roles: ["manager", "ops_admin", "finance"], keywords: "preço valor sessão pacote repasse fisioterapeuta regra comissão por sessão" },
   ] },
   { label: "Finanças pessoais", items: [
     { to: "/admin/financeiro/pessoal", label: "Finanças pessoais", icon: Lock, end: true, pfOnly: true, keywords: "pessoal privado orçamento custo de vida reserva metas cartões contas pessoais" },
@@ -74,6 +78,21 @@ export const PAGES_NAV: FrameNavSection[] = [
   { label: "Captação", items: [
     { to: "/admin/captacao-leads", label: "Captação de leads", icon: MessageCircleQuestion, roles: PEOPLE, keywords: "quiz avaliação parceria whatsapp resultados indicadores" },
     { to: "/admin/pesquisas", label: "Pesquisas", icon: ClipboardCheck, roles: ADMINS, keywords: "perguntas respostas satisfação nps" },
+  ] },
+];
+
+export const MARKETING_NAV: FrameNavSection[] = [
+  { label: "Marketing", items: [
+    { to: "/admin/marketing", label: "Visão geral", icon: LayoutDashboard, end: true, keywords: "marketing campanhas investimento leads funil retorno dashboard" },
+    { to: "/admin/marketing/campanhas", label: "Campanhas", icon: Megaphone, keywords: "campanhas meta google classificação frente finalidade" },
+    { to: "/admin/marketing/anuncios", label: "Anúncios e criativos", icon: Image, keywords: "anúncios criativos conjuntos grupos facebook instagram posicionamento" },
+    { to: "/admin/marketing/funil", label: "Funil e atribuição", icon: Filter, keywords: "funil atribuição conversão indicadores coorte qualidade dados" },
+    { to: "/admin/marketing/leads", label: "Leads e pontuação", icon: Gauge, keywords: "leads pontuação nota score quente morno frio priorizar" },
+    { to: "/admin/marketing/paineis", label: "Painéis", icon: LayoutGrid, keywords: "painéis dashboards personalizar indicadores widgets" },
+  ] },
+  { label: "Administração", items: [
+    { to: "/admin/marketing/integracoes", label: "Integrações", icon: Plug, keywords: "meta ads google ads conexão contas gastos manual sincronização" },
+    { to: "/admin/marketing/configuracoes", label: "Configurações", icon: Settings, roles: ADMINS, keywords: "janela atribuição frentes finalidades regras utm" },
   ] },
 ];
 
@@ -104,13 +123,13 @@ export const PRODUTIVIDADE_NAV: FrameNavSection[] = [
 ];
 
 const STATIC_NAV: Record<Exclude<AppId, "hub">, FrameNavSection[]> = {
-  gestao: GESTAO_NAV, fin: FIN_NAV, crm: CRM_NAV, pages: PAGES_NAV, operacao: OPERACAO_NAV, academy: ACADEMY_NAV, parceiros: PARCEIROS_NAV, produtividade: PRODUTIVIDADE_NAV,
+  gestao: GESTAO_NAV, fin: FIN_NAV, crm: CRM_NAV, pages: PAGES_NAV, marketing: MARKETING_NAV, operacao: OPERACAO_NAV, academy: ACADEMY_NAV, parceiros: PARCEIROS_NAV, produtividade: PRODUTIVIDADE_NAV,
 };
 
 /** Navegação do Hub: o início e os aplicativos (o menu de cada app só aparece depois de entrar nele). */
 export const HUB_NAV: FrameNavSection[] = [
   { items: [{ to: "/admin", label: "Início", icon: LayoutDashboard, end: true, keywords: "dashboard indicadores painel hub" }] },
-  { label: "Aplicativos", items: APPS.filter((a) => a.id !== "hub").map((a) => ({ to: a.to, label: a.label, icon: a.icon, roles: a.roles, keywords: a.description })) },
+  { label: "Aplicativos", items: APPS.filter((a) => a.id !== "hub" && appVisible(a)).map((a) => ({ to: a.to, label: a.label, icon: a.icon, roles: a.roles, keywords: a.description })) },
 ];
 
 export const navForApp = (id: AppId): FrameNavSection[] => (id === "hub" ? HUB_NAV : STATIC_NAV[id]);

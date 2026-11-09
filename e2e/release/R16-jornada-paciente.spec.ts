@@ -77,9 +77,10 @@ test.describe.serial("@release Jornada do paciente", () => {
 
   test("login pela tela cai no portal; próximos atendimentos, histórico e sessões SEPARADAS (contratadas, realizadas, falta, cancelamento tardio, devolvidas, saldo)", async ({ page }) => {
     const errors = collectErrors(page);
-    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await expect(page.getByText("Sem permissão")).toHaveCount(0);
+    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/agenda"); await expect(page.getByText("Sem permissão")).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Meus atendimentos" })).toBeVisible({ timeout: 30_000 });
     await expect(myAppts(page).getByRole("listitem").filter({ hasText: svcName })).toHaveCount(5);                      // 3 passados + 2 futuros: só os dele
+    await page.goto("/paciente/mais");   // pacote e saldo ficam na aba “Mais”
     const pk = page.getByRole("listitem", { name: `Pacote ${prodName}` });
     for (const [label, v] of [["Contratadas", 8], ["Realizadas", 1], ["Consumidas por falta", 1], ["Consumidas por cancelamento tardio", 1], ["Devolvidas", 0], ["Saldo", 5]] as const) await expect(pk.getByLabel(`${label}: ${v}`)).toBeVisible();
     await expect(pk).toContainText("5 de 8 sessões");
@@ -90,7 +91,7 @@ test.describe.serial("@release Jornada do paciente", () => {
   });
 
   test("confirmação e cancelamento pela política: confirma a própria presença; cancelar com antecedência não desconta sessão", async ({ page }) => {
-    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 });
+    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/agenda");
     const rows = myAppts(page).getByRole("listitem").filter({ hasText: svcName }).filter({ has: page.getByRole("button", { name: "Cancelar atendimento" }) });
     await expect(rows).toHaveCount(2, { timeout: 30_000 });
     await rows.last().getByRole("button", { name: "Confirmar minha presença" }).click();     // a lista é do mais recente para o mais antigo: o último é o atendimento mais próximo await expect(page.getByText("Presença confirmada. Obrigado!")).toBeVisible({ timeout: 20_000 });
@@ -101,12 +102,12 @@ test.describe.serial("@release Jornada do paciente", () => {
     await expect(page.getByText(/Atendimento cancelado\. Nenhuma sessão foi descontada\./)).toBeVisible({ timeout: 20_000 });
     expect(((await devSql(`select status from public.appointments where id = '${apptFuture2}'`)) as { status: string }[])[0].status).toBe("cancelled_by_patient");
     const bal = (await devSql(`select sum(delta)::int s from public.session_ledger where client_package_id = '${pkgId}'`)) as { s: number }[]; expect(bal[0].s).toBe(5);       // saldo intacto
-    await expect(page.getByRole("listitem", { name: `Pacote ${prodName}` }).getByLabel("Saldo: 5")).toBeVisible();
+    await page.goto("/paciente/mais"); await expect(page.getByRole("listitem", { name: `Pacote ${prodName}` }).getByLabel("Saldo: 5")).toBeVisible();
   });
 
   test("plano de sessões: só o profissional vinculado define; sem número padrão; o paciente vê o que o profissional registrou", async ({ page }) => {
     const f = api(await signIn(QA.fisio)); const aClient = api(await signInWith(emailA, pass));
-    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 });
+    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/evolucao");
     await expect(page.getByText(/ainda não definiu o plano de sessões/)).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/não existe um número padrão/)).toBeVisible();
     const noQty = await f.rpc("patient_plan_save", { p_person: pA, p_planned_sessions: null, p_client_package: null, p_notes: null }); expect(noQty.status).not.toBe(200); expect(JSON.stringify(noQty.body)).toMatch(/não há quantidade padrão/);
@@ -119,7 +120,7 @@ test.describe.serial("@release Jornada do paciente", () => {
 
   test("renovação só com a orientação do fisioterapeuta; o pedido avisa a equipe sem cobrar nem descontar sessão", async ({ page }) => {
     const f = api(await signIn(QA.fisio)); const aClient = api(await signInWith(emailA, pass));
-    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 });
+    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/evolucao");
     await expect(page.getByRole("button", { name: "Quero renovar meu acompanhamento" })).toHaveCount(0); await expect(page.getByRole("button", { name: "Quero falar com a equipe" })).toBeVisible({ timeout: 30_000 });
     const early = await aClient.rpc("my_renewal_request", { p_kind: "renovacao", p_message: null }); expect(early.status).not.toBe(200); expect(JSON.stringify(early.body)).toMatch(/orientação do seu fisioterapeuta/);
     const re = await f.rpc("patient_reassess", { p_person: pA, p_decision: "continuidade", p_extra_sessions: 4, p_patient_message: "Vamos continuar com foco em força", p_clinical_note: "nota clínica restrita R16" }); expect(re.status, JSON.stringify(re.body)).toBe(200);
@@ -134,7 +135,7 @@ test.describe.serial("@release Jornada do paciente", () => {
   test("vídeo privado: só aparece para o paciente atribuído; reprodução depende do backend (Bunny não configurado → mensagem honesta)", async ({ page }) => {
     const f = api(await signIn(QA.fisio));
     const as = await f.rpc("patient_video_assign", { p_person: pA, p_title: `Vídeo R16 ${runId}`, p_description: "exercício", p_library_id: "123456", p_video_id: "0a1b2c3d-1111-2222-3333-444455556666", p_expires_at: null }); expect(as.status, JSON.stringify(as.body)).toBe(200);
-    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 });
+    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/evolucao");
     const v = page.getByRole("listitem").filter({ hasText: `Vídeo R16 ${runId}` }); await expect(v).toBeVisible({ timeout: 30_000 });
     expect(await page.content()).not.toContain("0a1b2c3d-1111-2222-3333-444455556666");                      // o identificador do Bunny não vai para o navegador
     await v.getByRole("button", { name: "Assistir" }).click();
@@ -151,14 +152,14 @@ test.describe.serial("@release Jornada do paciente", () => {
     expect((await b.rpc("my_appointment_cancel", { p_id: apptFuture1, p_reason: null })).status).not.toBe(200); expect((await b.rpc("my_appointment_confirm", { p_id: apptFuture1 })).status).not.toBe(200);
     expect((await b.rpc("professional_journey", { p_person: pA })).status).not.toBe(200); expect((await b.rpc("patient_goal_save", { p_person: pA, p_id: null, p_title: "Intruso", p_details: null, p_target_date: null, p_status: "active" })).status).not.toBe(200);
     expect((await b.rpc("video_playback_authorize", { p_video: "00000000-0000-0000-0000-000000000000" })).status).not.toBe(200);
-    await uiLogin(page, emailB, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 });
+    await uiLogin(page, emailB, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/mais");
     await expect(page.getByText("Nenhum pacote.")).toBeVisible({ timeout: 30_000 }); await expect(page.getByText(nameA)).toHaveCount(0); await expect(page.getByText(svcName)).toHaveCount(0);
     for (const path of ["/admin", "/admin/financeiro", "/admin/agenda"]) { await page.goto(path); await expect(page.getByText(/Sem permissão/).first(), path).toBeVisible({ timeout: 30_000 }); }
   });
 
   test("celular: o portal do paciente cabe na tela (sessões, plano, vídeo)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 });
+    await uiLogin(page, emailA, pass); await expect(page).toHaveURL(/\/paciente$/, { timeout: 40_000 }); await page.goto("/paciente/mais");
     await expect(page.getByRole("listitem", { name: `Pacote ${prodName}` })).toBeVisible({ timeout: 30_000 }); await page.waitForTimeout(600);
     const w = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth })); expect(w.sw, `rolagem lateral (${w.sw} > ${w.iw})`).toBeLessThanOrEqual(w.iw + 1);
   });

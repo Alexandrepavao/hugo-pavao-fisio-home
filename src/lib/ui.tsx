@@ -186,7 +186,7 @@ export const useMsg = () => {
 export interface AskOptions {
   title: string; description?: string; label?: string; confirmLabel?: string; danger?: boolean;
   /** "text" (padrão), "number", "select" ou "none" (apenas confirmar) */
-  kind?: "text" | "number" | "select" | "none"; options?: { value: string; label: string }[]; defaultValue?: string; required?: boolean; multiline?: boolean;
+  kind?: "text" | "number" | "select" | "password" | "none"; options?: { value: string; label: string }[]; defaultValue?: string; required?: boolean; multiline?: boolean;
 }
 type AskFn = (o: AskOptions) => Promise<string | null>;
 const AskContext = createContext<AskFn | null>(null);
@@ -206,7 +206,7 @@ export const AskProvider = ({ children }: { children: ReactNode }) => {
   const submit = () => {
     if (opt && opt.kind !== "none" && (opt.required ?? true) && !val.trim()) return setErr("Preencha este campo.");
     if (opt?.kind === "number" && Number.isNaN(Number(val.replace(",", ".")))) return setErr("Informe um número válido.");
-    close(opt?.kind === "none" ? "ok" : val.trim());
+    close(opt?.kind === "none" ? "ok" : opt?.kind === "password" ? val : val.trim());
   };
   return (
     <AskContext.Provider value={ask}>
@@ -222,7 +222,7 @@ export const AskProvider = ({ children }: { children: ReactNode }) => {
               ) : opt.multiline ? (
                 <textarea id="ask-input" autoFocus rows={3} className="hp-input" value={val} onChange={(e) => setVal(e.target.value)} />
               ) : (
-                <input id="ask-input" autoFocus inputMode={opt.kind === "number" ? "decimal" : undefined} className="hp-input" value={val} onChange={(e) => setVal(e.target.value)} />
+                <input id="ask-input" autoFocus type={opt.kind === "password" ? "password" : undefined} autoComplete={opt.kind === "password" ? "current-password" : undefined} inputMode={opt.kind === "number" ? "decimal" : undefined} className="hp-input" value={val} onChange={(e) => setVal(e.target.value)} />
               )}
               {err && <p role="alert" className="text-sm text-destructive mt-1">{err}</p>}
             </form>

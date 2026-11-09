@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { fmtDateTime } from "@/lib/format";
 import JourneyPanel from "./JourneyPanel";
+import { PhysioEvolution } from "@/portal/Evolution";
+import { PrescriptionManager } from "@/portal/Training";
 import RenewalQueue from "./RenewalQueue";
 import { btnDanger, btnGhost, confirmDialog, errText, inputCls, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
@@ -20,7 +23,7 @@ const Care = () => {
 };
 
 const Patients = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg(); const [sel, setSel] = useState<string | null>(null); const [content, setContent] = useState(""); const [phase, setPhase] = useState("program"); const [note, setNote] = useState(""); const [reply, setReply] = useState("");
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const [sp] = useSearchParams(); const [sel, setSel] = useState<string | null>(sp.get("pessoa")); const [content, setContent] = useState(""); const [phase, setPhase] = useState("program"); const [note, setNote] = useState(""); const [reply, setReply] = useState("");
   const rels = useQuery({ queryKey: ["my-rels"], queryFn: async () => (await supabase.from("care_relationships").select("id, person_id, unit_id").is("revoked_at", null)).data ?? [] });
   const names = useQuery({ queryKey: ["care-names", rels.data?.map((r) => r.person_id).join()], enabled: !!rels.data?.length, queryFn: async () => Object.fromEntries(((await supabase.rpc("care_patient_names")).data ?? []).map((r: { person_id: string; name: string }) => [r.person_id, r.name])) as Record<string, string> });
   const contents = useQuery({ queryKey: ["care-contents"], queryFn: async () => (await supabase.from("care_contents").select("id, title, kind").is("archived_at", null)).data ?? [] });
@@ -37,6 +40,8 @@ const Patients = () => {
       <ul className="border border-border bg-card divide-y divide-border">{rels.data.map((r) => <li key={r.id}><button className={`w-full text-left p-3 ${sel === r.person_id ? "bg-muted" : ""}`} onClick={() => setSel(r.person_id)}>{names.data?.[r.person_id] ?? "Paciente"}</button></li>)}</ul>
       {sel && detail.data && <div className="space-y-8">
         <JourneyPanel person={sel} />
+        <PhysioEvolution person={sel} />
+        <PrescriptionManager person={sel} />
         <form onSubmit={assign} className="hp-card p-4 grid gap-3 sm:grid-cols-3 items-end"><div><label htmlFor="cc" className="block text-xs mb-1">Conteúdo</label><select id="cc"   value={content} onChange={(e) => setContent(e.target.value)}><option value="">…</option>{contents.data?.map((c) => <option key={c.id} value={c.id}>{c.title} ({KIND[c.kind]})</option>)}</select></div>
           <div><label htmlFor="cp" className="block text-xs mb-1">Momento</label><select id="cp"   value={phase} onChange={(e) => setPhase(e.target.value)}><option value="before">Antes do atendimento</option><option value="after">Depois do atendimento</option><option value="program">Programa</option></select></div>
           <div><label htmlFor="cn" className="block text-xs mb-1">Nota ao paciente</label><input id="cn"   value={note} onChange={(e) => setNote(e.target.value)} /></div><button className={btnGhost + " sm:w-fit"}>Liberar</button></form>
