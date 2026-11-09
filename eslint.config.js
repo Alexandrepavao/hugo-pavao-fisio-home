@@ -32,5 +32,10 @@ export default tseslint.config(
         { allowShortCircuit: true, allowTernary: true, allowTaggedTemplates: true },
       ],
     },
+  },
+  {
+    // Edge Functions (Deno) e seus testes: leem JSON dinâmico de APIs externas (Meta/Google/IA) e importam módulos jsr: resolvidos só no runtime do Supabase.
+    files: ["supabase/functions/**/*.ts", "supabase/tests/functions/**/*.ts"],
+    rules: { "@typescript-eslint/no-explicit-any": "off", "@typescript-eslint/ban-ts-comment": "off" },
   }
 );

@@ -1,6 +1,7 @@
 // Contexto enviado ao provedor de IA (puro, testável). REGRA: só números AGREGADOS e nomes de campanhas/anúncios. Nunca nome, e-mail, telefone ou qualquer dado de pessoa/paciente,
 // nunca respostas de questionário nem dado de saúde. Textos vindos de plataformas (nomes de campanha) são tratados como DADO e truncados.
 export const MAX_QUESTION = 600;
+// eslint-disable-next-line no-control-regex
 const clean = (v: unknown, n = 80) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v * 100) / 100 : null);
 

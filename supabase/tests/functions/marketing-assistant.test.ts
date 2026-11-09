@@ -11,6 +11,7 @@ describe("marketing-assistant · contexto enviado à IA", () => {
     const c = buildContext({ kpis, campaigns });
     expect(c.indicadores[0].valor).toBe(1234.57);
     expect(c.indicadores[1]).toMatchObject({ valor: null, disponivel: false });
+    // eslint-disable-next-line no-control-regex
     expect(c.indicadores[1].motivo).not.toMatch(/[\u0000-\u001f]/);
     expect(c.periodo_anterior).toEqual({ spend: 1000 });
   });
