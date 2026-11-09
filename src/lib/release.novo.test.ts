@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { featureOn, RELEASE_PROFILE, type FeatureKey } from "./release";
 
-const HIDDEN: FeatureKey[] = ["crm_scheduled_messages", "crm_broadcast", "system_status", "settings_pending_cards"];
+const HIDDEN: FeatureKey[] = ["crm_broadcast", "system_status", "settings_pending_cards"];
 
 describe("perfil de entrega", () => {
   it("padrão é v1 e desliga exatamente os recursos incompletos", () => {
