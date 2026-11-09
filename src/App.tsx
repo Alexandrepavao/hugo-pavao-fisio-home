@@ -66,6 +66,7 @@ const Partners = lazy(() => import("./pages/admin/Partners"));
 const Research = lazy(() => import("./pages/admin/Research"));
 const CorporateAccounts = lazy(() => import("./pages/admin/CorporateAccounts"));
 const Team = lazy(() => import("./pages/admin/Team"));
+const PreviewIos = lazy(() => import("./preview-ios/PreviewIos"));
 const Representations = lazy(() => import("./pages/admin/Representations"));
 const PhysioPricing = lazy(() => import("./pages/admin/finance/PhysioPricing"));
 const ExerciseLibraryPage = lazy(() => import("./portal/Training").then((m) => ({ default: m.ExerciseLibraryPage })));
@@ -160,6 +161,8 @@ const App = () => (
               <Route path="/redefinir-senha" element={<ResetPassword />} />
               <Route path="/confirmar" element={<Confirmar />} />
               <Route path="/app" element={<Landing />} />
+              {/* Preview do app iOS (dados FICTÍCIOS, área isolada; não existe em produção). */}
+              <Route path="/preview-ios" element={import.meta.env.VITE_APP_ENV === "production" ? <NotFound /> : <PreviewIos />} />
               <Route path="/admin" element={<RequireAuth roles={STAFF_ROLES}><AdminLayout /></RequireAuth>}>
                 <Route index element={<AdminHome />} />
                 <Route path="administrativo/*" element={<AppAlias app="administrativo" />} />
