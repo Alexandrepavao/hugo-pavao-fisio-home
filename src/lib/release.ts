@@ -7,12 +7,13 @@ export type FeatureKey =
   | "crm_scheduled_messages"   // (ligado na v1 desde a 077: agenda lembrete + registro manual; não há envio automático)
   | "crm_broadcast"            // disparo em massa: exige provedor de envio automático (não existe)
   | "system_status"            // "Estado dos módulos": painel técnico interno
-  | "settings_pending_cards";  // cartões de Configurações ainda sem tela ("Pendente")
+  | "settings_pending_cards"   // cartões de Configurações ainda sem tela ("Pendente")
+  | "marketing";               // app Marketing: visível em Dev/preview; escondido no build de PRODUÇÃO até a promoção ser decidida
 
 const OFF_IN_V1: ReadonlySet<FeatureKey> = new Set<FeatureKey>(["crm_broadcast", "system_status", "settings_pending_cards"]);
 
 export const RELEASE_PROFILE: "v1" | "full" = (import.meta.env.VITE_RELEASE_PROFILE as string | undefined) === "full" ? "full" : "v1";
-export const featureOn = (key: FeatureKey): boolean => RELEASE_PROFILE === "full" || !OFF_IN_V1.has(key);
+export const featureOn = (key: FeatureKey): boolean => (key === "marketing" ? !IS_PRODUCTION : RELEASE_PROFILE === "full" || !OFF_IN_V1.has(key));
 
 declare const __BUILD_INFO__: { commit: string; builtAt: string; environment: string; backend: string };
 export const BUILD_INFO: { commit: string; builtAt: string; environment: string; backend: string } = typeof __BUILD_INFO__ !== "undefined" ? __BUILD_INFO__ : { commit: "dev", builtAt: "", environment: "development", backend: "Dev" };

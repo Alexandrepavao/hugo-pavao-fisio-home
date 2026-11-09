@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Copy, Info, Loader2,
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { pickTracking } from "@/lib/tracking";
 import {
   CONTACT_CONSENT_TEXT, CONTACT_CONSENT_VERSION, HEALTH_CONSENT_TEXT, HEALTH_CONSENT_VERSION,
   JOURNEY_LABEL, JOURNEY_QUESTIONS, MARKETING_CONSENT_TEXT, MARKETING_CONSENT_VERSION, UF_LIST, buildAtendimentoMessage,
@@ -74,7 +75,8 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
 
   const utm = useMemo(() => {
     const o: Record<string, string> = {};
-    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "ref"].forEach((k) => { const v = params.get(k); if (v) o[k] = v; });
+    Object.assign(o, pickTracking((k) => params.get(k)));
+    const ref = params.get("ref"); if (ref) o.ref = ref;
     return o;
   }, [params]);
   // `from` = a landing page de origem (registrada pelo CTA que trouxe o visitante até aqui); sem ela,

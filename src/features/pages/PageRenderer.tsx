@@ -7,6 +7,7 @@ export interface PublicForm {
   fields: { key: string; label: string; type: "text" | "email" | "phone" | "textarea" | "select"; required?: boolean; options?: string[] }[];
 }
 type Obj = Record<string, unknown>;
+import { pickTracking, stripClickIds } from "@/lib/tracking";
 const s = (v: unknown) => (typeof v === "string" ? v : "");
 const arr = (v: unknown): Obj[] => (Array.isArray(v) ? (v as Obj[]) : []);
 const input = "w-full border border-input bg-card px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-ring";
@@ -17,9 +18,10 @@ export const utmFromLocation = (): Record<string, string> => {
     const stored = sessionStorage.getItem("hp_utm");
     if (stored) Object.assign(out, JSON.parse(stored));
     const q = new URLSearchParams(window.location.search);
-    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach((k) => { const v = q.get(k); if (v) out[k] = v.slice(0, 150); });
+    Object.assign(out, pickTracking((k) => q.get(k)));          // utm_*, ids de campanha/conjunto/anúncio e (só com consentimento) ids de clique
     // código de indicação de parceiro (?ref=): guardado com a sessão para a indicação ser ligada ao enviar o formulário (o servidor ignora código inexistente)
     const ref = q.get("ref"); if (ref && /^[a-z0-9]{4,32}$/i.test(ref)) out.ref = ref.toLowerCase();
+    const safe = stripClickIds(out); Object.keys(out).forEach((k) => { if (!(k in safe)) delete out[k]; });
     sessionStorage.setItem("hp_utm", JSON.stringify(out));
   } catch { /* storage indisponível */ }
   return out;

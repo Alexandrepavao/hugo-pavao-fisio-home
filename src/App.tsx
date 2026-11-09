@@ -97,6 +97,12 @@ const Account = lazy(() => import("./pages/admin/Account"));
 const OnboardingFisio = lazy(() => import("./pages/onboarding/OnboardingFisio"));
 const OnboardingPaciente = lazy(() => import("./pages/onboarding/OnboardingPaciente"));
 const Welcome = lazy(() => import("./pages/portal/Welcome"));
+const MarketingOverview = lazy(() => import("./pages/admin/marketing/MarketingOverview"));
+const MarketingCampaigns = lazy(() => import("./pages/admin/marketing/MarketingCampaigns"));
+const MarketingAds = lazy(() => import("./pages/admin/marketing/MarketingAds"));
+const MarketingFunnel = lazy(() => import("./pages/admin/marketing/MarketingFunnel"));
+const MarketingIntegrations = lazy(() => import("./pages/admin/marketing/MarketingIntegrations"));
+const MarketingSettings = lazy(() => import("./pages/admin/marketing/MarketingSettings"));
 
 const R = {
   people: ["manager", "ops_admin", "unit_manager", "sales"] as AppRole[],
@@ -221,6 +227,12 @@ const App = () => (
                 <Route path="pesquisas" element={g(R.research, <Research />)} />
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
+                <Route path="marketing" element={g(R.leads, <FeatureGate feature="marketing"><MarketingOverview /></FeatureGate>)} />
+                <Route path="marketing/campanhas" element={g(R.leads, <FeatureGate feature="marketing"><MarketingCampaigns /></FeatureGate>)} />
+                <Route path="marketing/anuncios" element={g(R.leads, <FeatureGate feature="marketing"><MarketingAds /></FeatureGate>)} />
+                <Route path="marketing/funil" element={g(R.leads, <FeatureGate feature="marketing"><MarketingFunnel /></FeatureGate>)} />
+                <Route path="marketing/integracoes" element={g(R.leads, <FeatureGate feature="marketing"><MarketingIntegrations /></FeatureGate>)} />
+                <Route path="marketing/configuracoes" element={g(R.team, <FeatureGate feature="marketing"><MarketingSettings /></FeatureGate>)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />
                 <Route path="chamados" element={g(["manager", "ops_admin", "unit_manager"], <SupportAdmin />)} />
                 <Route path="programas" element={g(["manager", "ops_admin"], <Programs />)} />

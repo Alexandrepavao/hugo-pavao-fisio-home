@@ -1,7 +1,7 @@
-import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Landmark, LayoutDashboard, ListChecks, Lock, MessageCircleQuestion, Package, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
+import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
-import { APPS, type AppId } from "./apps";
+import { APPS, appVisible, type AppId } from "./apps";
 import { CRM_NAV } from "@/pages/admin/crm/crmNav";
 
 // Cada aplicativo mostra SÓ a própria navegação. Só entram rotas e telas que existem de verdade (sem link para o que ainda não foi feito).
@@ -81,6 +81,19 @@ export const PAGES_NAV: FrameNavSection[] = [
   ] },
 ];
 
+export const MARKETING_NAV: FrameNavSection[] = [
+  { label: "Marketing", items: [
+    { to: "/admin/marketing", label: "Visão geral", icon: LayoutDashboard, end: true, keywords: "marketing campanhas investimento leads funil retorno dashboard" },
+    { to: "/admin/marketing/campanhas", label: "Campanhas", icon: Megaphone, keywords: "campanhas meta google classificação frente finalidade" },
+    { to: "/admin/marketing/anuncios", label: "Anúncios e criativos", icon: Image, keywords: "anúncios criativos conjuntos grupos facebook instagram posicionamento" },
+    { to: "/admin/marketing/funil", label: "Funil e atribuição", icon: Filter, keywords: "funil atribuição conversão indicadores coorte qualidade dados" },
+  ] },
+  { label: "Administração", items: [
+    { to: "/admin/marketing/integracoes", label: "Integrações", icon: Plug, keywords: "meta ads google ads conexão contas gastos manual sincronização" },
+    { to: "/admin/marketing/configuracoes", label: "Configurações", icon: Settings, roles: ADMINS, keywords: "janela atribuição frentes finalidades regras utm" },
+  ] },
+];
+
 export const OPERACAO_NAV: FrameNavSection[] = [
   { label: "Atendimento", items: [
     { to: "/admin/agenda", label: "Agenda", icon: CalendarDays, keywords: "atendimentos horários pacotes sessões lista de espera" },
@@ -108,13 +121,13 @@ export const PRODUTIVIDADE_NAV: FrameNavSection[] = [
 ];
 
 const STATIC_NAV: Record<Exclude<AppId, "hub">, FrameNavSection[]> = {
-  gestao: GESTAO_NAV, fin: FIN_NAV, crm: CRM_NAV, pages: PAGES_NAV, operacao: OPERACAO_NAV, academy: ACADEMY_NAV, parceiros: PARCEIROS_NAV, produtividade: PRODUTIVIDADE_NAV,
+  gestao: GESTAO_NAV, fin: FIN_NAV, crm: CRM_NAV, pages: PAGES_NAV, marketing: MARKETING_NAV, operacao: OPERACAO_NAV, academy: ACADEMY_NAV, parceiros: PARCEIROS_NAV, produtividade: PRODUTIVIDADE_NAV,
 };
 
 /** Navegação do Hub: o início e os aplicativos (o menu de cada app só aparece depois de entrar nele). */
 export const HUB_NAV: FrameNavSection[] = [
   { items: [{ to: "/admin", label: "Início", icon: LayoutDashboard, end: true, keywords: "dashboard indicadores painel hub" }] },
-  { label: "Aplicativos", items: APPS.filter((a) => a.id !== "hub").map((a) => ({ to: a.to, label: a.label, icon: a.icon, roles: a.roles, keywords: a.description })) },
+  { label: "Aplicativos", items: APPS.filter((a) => a.id !== "hub" && appVisible(a)).map((a) => ({ to: a.to, label: a.label, icon: a.icon, roles: a.roles, keywords: a.description })) },
 ];
 
 export const navForApp = (id: AppId): FrameNavSection[] => (id === "hub" ? HUB_NAV : STATIC_NAV[id]);

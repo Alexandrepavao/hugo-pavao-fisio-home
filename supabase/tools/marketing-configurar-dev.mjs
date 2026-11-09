@@ -19,6 +19,8 @@ const existing = new Set(((await (await api("/secrets")).json()) ?? []).map((s) 
 const set = [];
 if (!existing.has("MKT_TOKEN_ENC_KEY")) set.push({ name: "MKT_TOKEN_ENC_KEY", value: randomBytes(32).toString("base64") });
 if (!existing.has("MKT_RETURN_URL")) set.push({ name: "MKT_RETURN_URL", value: returnUrl });
+// origens locais do app de desenvolvimento/testes (CORS da função): só no Dev
+if (!existing.has("MKT_ALLOWED_ORIGINS")) set.push({ name: "MKT_ALLOWED_ORIGINS", value: "http://127.0.0.1:5180,http://localhost:5180,http://127.0.0.1:5182,http://localhost:5173,http://localhost:8080" });
 const vault = await sql("select name from vault.secrets where name in ('marketing_sync_url','marketing_sync_secret')");
 const needSync = !existing.has("MKT_SYNC_SECRET") || vault.length < 2;
 let syncSecret = null; if (needSync) { syncSecret = randomBytes(32).toString("hex"); set.push({ name: "MKT_SYNC_SECRET", value: syncSecret }); }
@@ -30,6 +32,6 @@ if (needSync) {
   }
 }
 const have = (await (await api("/secrets")).json()).map((s) => s.name);
-console.log(`[OK] segredos internos do Marketing no Dev: ${["MKT_TOKEN_ENC_KEY", "MKT_SYNC_SECRET", "MKT_RETURN_URL"].map((n) => `${n}=${have.includes(n) ? "definido" : "FALTA"}`).join(" · ")}`);
+console.log(`[OK] segredos internos do Marketing no Dev: ${["MKT_TOKEN_ENC_KEY", "MKT_SYNC_SECRET", "MKT_RETURN_URL", "MKT_ALLOWED_ORIGINS"].map((n) => `${n}=${have.includes(n) ? "definido" : "FALTA"}`).join(" · ")}`);
 console.log(`     criados agora: ${set.map((s) => s.name).join(", ") || "nenhum (já existiam)"} · Vault: sincronização ${needSync ? "configurada agora" : "já configurada"}`);
 console.log(`     AINDA FALTAM (vêm da Meta/Google): ${["META_APP_ID", "META_APP_SECRET", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET"].filter((n) => !have.includes(n)).join(", ") || "nada"}`);
