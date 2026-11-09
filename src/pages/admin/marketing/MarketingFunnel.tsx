@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Badge, KpiGrid, LevelSection, Msg, PageHead, State, Table, Td, btnGhost, confirmDialog, errText } from "@/lib/ui";
+import { FunnelSection } from "./MktFunnelVisual";
 import { CoverageBanner, MktFilterBar, MktKpi, SevBadge, useDetail } from "./MktParts";
 import { fmtKpi, money, num, rpcArgs, useMktFilters, useMktInvalidate, useMktOptions, useMktRpc, type FunnelResp, type Kpi, type KpisResp, type QualityItem, useNote } from "./mktApi";
 
@@ -29,6 +30,7 @@ const MarketingFunnel = () => {
       <MktFilterBar f={f} />
       <State loading={kp.isLoading} error={kp.error} />
       <CoverageBanner c={k?.coverage} model={k?.model} view={f.view} />
+      <FunnelSection f={f} isAdmin={isAdmin} />
       {fn.data && k && (<>
         <section className="hp-card p-5 mb-6" aria-label="Modelo de atribuição" data-testid="mkt-model">
           <h3 className="text-[0.9375rem] font-bold">Modelo de atribuição</h3>

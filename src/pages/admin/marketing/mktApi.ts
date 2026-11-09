@@ -81,5 +81,34 @@ export async function callMarketingFn<T = Record<string, unknown>>(route: string
   return { ok: r.ok, status: r.status, data };
 }
 
+/** Chamada ao assistente de IA (Edge Function `marketing-assistant`, exige login). Devolve o texto ou o motivo de indisponibilidade — nunca simula resposta. */
+export interface AssistantReply { answer?: string; model?: string; basis?: string; error?: string; message?: string }
+export async function askAssistant(body: { question: string; from: string; to: string; view: string; filters: Record<string, string>; funnel_id?: string }): Promise<{ ok: boolean; status: number; data: AssistantReply }> {
+  const { data: s } = await supabase.auth.getSession();
+  let r: Response;
+  try { r = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marketing-assistant`, { method: "POST", headers: { Authorization: `Bearer ${s.session?.access_token ?? ""}`, apikey: String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""), "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
+  catch { return { ok: false, status: 0, data: { error: "network", message: "Não foi possível falar com o assistente (função indisponível ou sem conexão)." } }; }
+  let data: AssistantReply = {}; try { data = (await r.json()) as AssistantReply; } catch { /* sem corpo */ }
+  return { ok: r.ok, status: r.status, data };
+}
+
 /** Mensagem de resultado de uma ação (ok/erro) para o componente Msg. */
 export function useNote() { const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null); return { msg, setMsg }; }
+
+// ---------------------------------------------------------------- gerenciador, funis, leads (scoring) e painéis (migrations 114–116)
+export interface WindowM { spend: number | null; leads: number; mql: number; sales: number; sold: number; roas: number | null; cpl: number | null; cpmql: number | null }
+export interface ManagerRow { level: "campaign" | "adset" | "ad" | "unidentified"; campaign_id: string; adset_id: string | null; ad_id: string | null; name: string; platform: string; status: string | null; objective: string | null; creative: string | null; tags: string[] | null;
+  class_state: string; front: string | null; purpose: string | null; spend: number | null; impressions: number | null; clicks: number | null; reported_results: number | null; leads: number; mql: number; sal: number; attended: number; sales: number; sold: number; received: number; new_buyers: number;
+  ctr: number | null; cpc: number | null; cpl: number | null; cpmql: number | null; cpsal: number | null; cpa: number | null; roas: number | null; w: { d7: WindowM; d3: WindowM; d1: WindowM } }
+export interface ManagerResp { currency: string; view: string; period: { from: string; to: string }; windows: Record<string, string[]>; rows: ManagerRow[]; notes: string[] }
+export interface StepType { key: string; label: string; source: "media" | "hub"; description: string }
+export interface FunnelDef { id: string; name: string; steps: { kind: string; label?: string }[]; position: number }
+export interface FunnelStepRun { index: number; kind: string; label: string; source: string; count: number | null; available: boolean; reason: string | null; rate_from_previous: number | null; rate_from_first: number | null; cost_per_step: number | null }
+export interface FunnelRun { funnel: { id: string; name: string }; view: string; steps: FunnelStepRun[]; bottleneck_index: number | null; currency: string; spend: number | null; basis: string; notes: string[]; coverage: Coverage }
+export interface ScoreFactor { factor: string; label: string; kind: "positive" | "negative"; param_label: string | null; description: string; enabled: boolean; points: number; param: number | null; default_points: number; default_param: number | null }
+export interface ScoreCfg { settings: { base: number; hot_min: number; warm_min: number }; rules: ScoreFactor[] }
+export interface ScoredLead { opp_id: string; person_id: string; name: string; score: number; band: "hot" | "warm" | "cold"; factors: { factor: string; label: string; points: number }[]; campaign: string | null; created_at: string; status: string; sold: boolean }
+export interface ScoreResp { total: number; avg_score: number | null; bands: Record<string, { n: number; sold: number; conversion_pct: number | null }>; distribution: { from: number; to: number; n: number }[]; factor_hits: { factor: string; label: string; points: number; count: number }[]; leads: ScoredLead[]; settings: ScoreCfg["settings"]; notes: string[] }
+export type Widget = { id: string; type: "kpi" | "series" | "funnel" | "campaigns" | "quality" | "reconciliation" | "note"; span?: "1" | "2"; key?: string; metric?: string; funnel_id?: string; top?: string; sort?: string; text?: string };
+export interface Dashboard { id: string; name: string; widgets: Widget[]; shared: boolean; mine: boolean; can_edit: boolean; owner: string | null; updated_at: string }
+export const BAND_LABEL = { hot: "Quente", warm: "Morna", cold: "Fria" } as const;

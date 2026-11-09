@@ -1,13 +1,13 @@
 # Marketing — campanhas, funil e atribuição
 
-> Módulo **Marketing** do HP Group Hub (app contextual em `/admin/marketing`). Branch `feat/marketing-campanhas` (parte da `feat/portais-paciente-fisio`), **só no Dev** (`fsvtzowcwhvwtluwrhnb`): migrations 104–113, Edge Function `marketing-ads`, testes SQL/unitários/E2E.
+> Módulo **Marketing** do HP Group Hub (app contextual em `/admin/marketing`). Branch `feat/marketing-campanhas` (parte da `feat/portais-paciente-fisio`), **só no Dev** (`fsvtzowcwhvwtluwrhnb`): migrations 104–117, Edge Functions `marketing-ads` e `marketing-assistant`, testes SQL/unitários/E2E.
 > Guia de conexão com Meta e Google: [`marketing-conexao-meta-google.md`](marketing-conexao-meta-google.md). Status geral: [`project-status.md`](project-status.md).
 
 ## 1. O que o módulo faz
 
 Acompanha a jornada **anúncio → lead → qualificação → agendamento → comparecimento → venda → recebimento** cruzando, **sem criar CRM ou financeiro paralelo**: mídia das plataformas (ou lançamento manual) + captação (formulários/quizzes) + CRM (oportunidades) + Agenda + Vendas/Recebimentos + Repasses.
 
-Páginas: **Visão geral · Campanhas · Anúncios e criativos · Funil e atribuição · Integrações · Configurações** (sidebar própria; item no seletor de apps, respeitando papel; escondido no build de **produção** por `featureOn("marketing")` até a promoção ser decidida).
+Páginas: **Visão geral · Campanhas · Anúncios e criativos (gerenciador) · Funil e atribuição (funil visual) · Leads e pontuação · Painéis · Integrações · Configurações** (sidebar própria; item no seletor de apps, respeitando papel; escondido no build de **produção** por `featureOn("marketing")` até a promoção ser decidida).
 
 Somente **leitura** das plataformas. Nenhuma criação, pausa ou alteração de anúncio existe no código (lista de operações permitidas aplicada no servidor, com teste). **Nada é enviado às plataformas** (sem conversões, listas ou pixel).
 
@@ -103,12 +103,24 @@ Todos em `mkt_kpis`; o catálogo completo (com fórmula, fonte, granularidade, d
 
 Esta fase **importa relatórios e cruza dados internamente**. **Não envia** eventos, listas de pacientes ou conversões, e **não instala pixel**. Uma etapa futura de conversões externas dependerá de: política vigente de cada plataforma, consentimento, elegibilidade dos dados e jamais incluir diagnósticos, sintomas, evolução clínica, respostas de questionários, vídeos prescritos ou nomes de protocolos que revelem condições de saúde; sem pixels em portais autenticados ou páginas clínicas.
 
+Projeto (não implementado) do envio de conversões a Meta/Google: [`marketing-conversoes-externas.md`](marketing-conversoes-externas.md).
+
+## 8b. Gerenciador, funil visual, painéis, pontuação e assistente (migrations 114–117)
+
+* **Gerenciador** (`mkt_manager`, página Anúncios e criativos): tabela **campanha → conjunto → anúncio** com mídia (da plataforma) ao lado do confirmado no Hub: leads, **MQL** (etapa de qualificação), **SAL** (oportunidade com agendamento), compareceram, vendas, vendido, recebido, **CPL/CPMQL/CPSAL/CPA/ROAS**; presets de colunas (Captação, Resultado, Mídia, **Janelas 7-3-1**). Os toques guardam conjunto/anúncio pelos ids do link, ligados dentro da mesma campanha; o que não traz id vai para **“Sem anúncio identificado”**, de modo que conjuntos + “sem anúncio” **fecham com a campanha** (a tela avisa se não fechar). Gasto de conjunto/anúncio é detalhamento da plataforma e **nunca soma** ao total. **Janelas 7-3-1**: últimos 7, 3 e 1 dia **por data do evento, terminando no fim do período**. Aba **Criativos** em cards (ordenar por ROAS/Leads/MQL/Vendas/Investimento/menor CPMQL, etiquetas editáveis pelo administrador). Não há análise de transcrição/copy.
+* **Funil visual** (`mkt_funnels_list/save/delete/run`): funis montados a partir de um **catálogo de etapas** (impressões, cliques, lead, oportunidade, MQL, SAL, avaliação, compareceu, venda, novo comprador, recebimento, recompra, expansão, matrícula, parceiro aprovado/ativo, ganha, perdida), de 2 a 12 etapas, até 12 funis por organização; 3 funis padrão semeados. Mostra barras, conversão da etapa anterior e do início, custo por etapa e **gargalo só quando a etapa anterior tem ≥ 10** (sem volume, não se aponta). Etapa sem fonte aparece “Não disponível” com o motivo, nunca zero. Só administrador cria/edita/exclui.
+* **Painéis** (`mkt_dashboards_*`): cada pessoa monta os seus (indicadores, evolução no tempo, funil, ranking de campanhas, qualidade, conferência do gasto, anotação), até 20 por pessoa e 24 blocos; o **administrador compartilha** painéis com a equipe. O JSON dos blocos é validado no banco (só tipos/parâmetros conhecidos). Os números vêm das **mesmas funções** das outras páginas, com o mesmo período e filtros.
+* **Leads e pontuação** (`mkt_lead_scores`, `mkt_score_get/set`): nota de 0 a 100 **explicável fator a fator**, somando **só fatos operacionais** (anúncio identificado, rapidez do primeiro contato, e-mail+telefone, quiz concluído — só o status —, mais de um toque, qualificado, agendado, compareceu, ganha etc.). **Nunca** usa respostas de questionário, queixa ou dado de saúde. Faixas Quente/Morna/Fria por notas mínimas; mostra a **taxa de venda observada por faixa** (associação, não previsão). Pesos, parâmetros e liga/desliga só pelo administrador. Quem vê leads segue o escopo de unidade/papel do banco.
+* **Assistente de IA** (`marketing-assistant`, botão “Perguntar à IA”): responde perguntas sobre o período/filtros atuais. A função autentica o usuário, monta o contexto **com as mesmas funções do painel usando o JWT da pessoa** (escopo do banco) e envia ao provedor (Anthropic Messages API, modelo `MKT_AI_MODEL`, padrão `claude-sonnet-5-5`) **somente agregados e nomes de campanhas/anúncios** — nenhum nome, e-mail, telefone ou dado de saúde (teste unitário garante). É **somente leitura**: só sugere, não altera campanhas. Limite de 6 perguntas/min e 120/dia por pessoa (`mkt_ai_log` guarda só quem/quando/tamanho, **não** o texto). **Sem `ANTHROPIC_API_KEY` no servidor, responde “Indisponível” — nada é simulado.** Segredo cadastrado só por Supabase Secrets, nunca no chat ou no repositório.
+
 ## 9. Limitações conhecidas
 
 * **APIs reais não verificadas**: nenhuma chamada real à Meta/Google foi feita (faltam credenciais do app). A lógica foi testada com respostas simuladas; a **verificação real** é a primeira tarefa depois de configurar (guia).
 * Resultados reportados da Meta: soma de ações de lead (`lead`, `onsite_conversion.lead_grouped`, `offsite_conversion.fb_pixel_lead`) — aproximação declarada, **não** igual ao “Resultados” do Gerenciador.
 * **Lead Ads / formulários nativos**: não implementado (exige fluxo, permissões e aprovação separados). Mostrado como “Não conectado”.
-* Atribuição ao **anúncio**: só ao nível da **campanha**; o anúncio/conjunto constam do toque (ids do link) mas o comparativo de criativos mostra apenas mídia (sem leads/vendas por anúncio).
+* Atribuição ao **anúncio/conjunto**: depende de o link do anúncio trazer `hp_adset_id`/`hp_ad_id` e de o anúncio ter sido importado pela API; sem isso o resultado fica em “Sem anúncio identificado” (a campanha continua correta). Não validado com contas reais.
+* **Assistente de IA**: precisa de `ANTHROPIC_API_KEY` (não configurada no Dev); a qualidade das respostas não foi avaliada com dados reais; resposta é apoio à decisão, não verdade.
+* **Lead scoring**: pesos iniciais são **hipóteses de priorização**, não aprendidas do histórico; a taxa por faixa só é confiável com volume.
 * Cliques no WhatsApp não são conversas: `quiz_leads.whatsapp_clicked_at` segue separado; conversa “comprovada” não é medida aqui.
 * Moeda: sem conversão cambial; só uma moeda de relatório.
 * Desempenho: `mkt_events` recalcula tudo por consulta (adequado ao volume atual); materialização é evolução futura.
@@ -118,13 +130,16 @@ Esta fase **importa relatórios e cruza dados internamente**. **Não envia** eve
 
 | Item | Implementado | Testado | Configurado (Dev) | Pendente |
 |---|---|---|---|---|
-| Banco (104–113), RLS, funções | ✅ | ✅ SQL `N03` (158) + regressão SQL `release` (1.702 OK) | ✅ aplicado no Dev | produção (não promovido) |
+| Banco (104–117), RLS, funções | ✅ | ✅ SQL `N03` (170) e `N04` (46) + regressão SQL `release` (1.702 OK) | ✅ aplicado no Dev | produção (não promovido) |
 | Rastreamento/atribuição/vendas | ✅ | ✅ N03 + E2E N22 | ✅ | UI de consentimento (ids de clique) |
 | Indicadores/funil/qualidade/reconciliação | ✅ | ✅ N03 + N22 (cartão = RPC = detalhe) | ✅ | MRR atribuído; alcance único |
-| App Marketing (6 páginas, filtros) | ✅ | ✅ N22 (desktop 1280 e celular 390) | ✅ | — |
+| App Marketing (8 páginas, filtros) | ✅ | ✅ N22 (desktop 1280 e celular 390) | ✅ | — |
+| Gerenciador campanha→conjunto→anúncio, MQL/SAL/CPMQL, 7-3-1, criativos | ✅ (114) | ✅ SQL N03 (170) + E2E N22 | ✅ | validar ids de conjunto/anúncio com conta real |
+| Funil visual personalizado, painéis, lead scoring | ✅ (115–116) | ✅ SQL N04 (46) + E2E N22 | ✅ | pesos do score a calibrar com histórico |
+| Assistente de IA | ✅ função publicada no Dev (117) | ✅ vitest (contexto sem dado de pessoa) + E2E (sem chave → “Indisponível”) | 🟡 falta `ANTHROPIC_API_KEY` | cadastrar a chave e avaliar respostas |
 | Lançamento manual + sobreposição | ✅ | ✅ N03 + N22 | ✅ | — |
 | Conector Meta/Google (Edge Function) | ✅ publicado no Dev | ✅ 32 testes **simulados**; chamadas reais só em rotas sem credencial (401, state forjado, segredo errado) | 🟡 segredos internos ok; **faltam** `META_APP_ID/SECRET`, `GOOGLE_ADS_CLIENT_ID/SECRET` | **teste real** com contas; revisão de app (Meta) e nível de acesso (Google) |
 | Sincronização horária | ✅ `pg_cron` + Vault | ✅ planejador/execução (simulado) | ✅ Vault e segredo | só roda com conexão ativa |
 | Lead Ads | ❌ | — | — | fluxo e permissões próprios |
-| Envio de conversões | ❌ (desativado por decisão) | — | — | etapa futura com política/consentimento |
+| Envio de conversões | ❌ só **projeto** ([documento](marketing-conversoes-externas.md)); desativado por decisão | — | — | decisão da direção + parecer jurídico + consentimento |
 | Produção | ❌ | — | — | promoção decidida à parte |

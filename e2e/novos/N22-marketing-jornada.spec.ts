@@ -41,6 +41,8 @@ test.describe.serial("@novos Marketing: do anúncio ao recebimento", () => {
       delete from public.mkt_day_status where account_id in (select id from public.mkt_ad_accounts where name like 'N22 conta %');
       delete from public.mkt_campaign_class_history where campaign_id in (select id from public.mkt_campaigns where name like 'n22-%');
       delete from public.mkt_campaign_class where campaign_id in (select id from public.mkt_campaigns where name like 'n22-%');
+      delete from public.mkt_funnels where name like 'n23-%';
+      delete from public.mkt_dashboards where name like 'n23-%';
       delete from public.mkt_campaigns where name like 'n22-%';
       delete from public.mkt_ad_accounts where name like 'N22 conta %';
       delete from public.mkt_attributions where opportunity_id not in (select id from public.opportunities);
@@ -162,9 +164,44 @@ test.describe.serial("@novos Marketing: do anúncio ao recebimento", () => {
     expect((await api(null).rpc("mkt_filters")).status).toBeGreaterThanOrEqual(400); await ctx.close();
   });
 
+  test("gerenciador, funil visual, painéis, leads com nota e assistente: tudo com os dados da jornada; assistente sem chave diz INDISPONÍVEL (nada simulado)", async ({ page, context }) => {
+    await loginAs(context, QA.manager); const errors = collectErrors(page); const fname = `n23-funil-${runId}`; const dname = `n23-painel-${runId}`;
+    // 1) gerenciador campanha → conjunto → anúncio, colunas MQL/SAL/CPMQL, total e janelas 7-3-1
+    await page.goto(`/admin/marketing/anuncios?periodo=7dias&campanha=${S.camp}`); await expect(page.getByTestId("mkt-manager")).toBeVisible({ timeout: 30_000 });
+    const crow = page.getByTestId("mgr-campaign"); await expect(crow).toContainText(camp); await expect(crow).toContainText("R$ 500");
+    for (const h of ["MQL", "SAL", "CPMQL", "CPL"]) await expect(page.getByRole("columnheader", { name: h, exact: true })).toBeVisible();
+    await expect(page.getByTestId("mgr-total")).toContainText("R$ 500");
+    await crow.getByRole("button").first().click(); await expect(page.getByTestId("mgr-unidentified")).toBeVisible();
+    await page.getByRole("button", { name: "Janelas 7-3-1" }).click(); await expect(page.getByRole("columnheader", { name: "ROAS 7d" })).toBeVisible(); await shot(page, "gerenciador");
+    await page.getByRole("tab", { name: "Criativos" }).click(); await expect(page.getByTestId("mkt-creatives")).toBeVisible();
+    // 2) funil visual: padrão + funil novo criado pelo administrador
+    await page.goto(`/admin/marketing/funil?periodo=7dias&campanha=${S.camp}&visao=evento`); await expect(page.getByTestId("mkt-funnel-section")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("mkt-funnel-visual")).toBeVisible({ timeout: 20_000 }); await expect(page.getByTestId("mkt-funnel-step-lead")).toContainText("1");
+    await page.getByTestId("mkt-funnel-new").click(); await page.getByTestId("mkt-funnel-name").fill(fname); await page.getByTestId("mkt-funnel-save").click();
+    await expect(page.getByText("Funil salvo.")).toBeVisible({ timeout: 15_000 }); await expect(page.getByRole("tab", { name: fname })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByTestId("mkt-funnel-step-sold")).toContainText("1", { timeout: 15_000 }); await shot(page, "funil-visual");
+    await page.getByRole("button", { name: "Excluir", exact: true }).click(); await page.getByRole("dialog").getByRole("button", { name: "Excluir" }).click(); await expect(page.getByRole("tab", { name: fname })).toHaveCount(0, { timeout: 15_000 });
+    // 3) painéis: criar o próprio, ver os mesmos números do Hub, excluir
+    await page.goto(`/admin/marketing/paineis?periodo=7dias&campanha=${S.camp}`); await expect(page.getByTestId("mkt-dashboards-page")).toBeVisible({ timeout: 30_000 }); await expect(page.getByTestId("mkt-dash-grid")).toBeVisible({ timeout: 20_000 });
+    await page.getByTestId("mkt-dash-new").click(); await page.getByTestId("mkt-dash-name").fill(dname); await page.getByTestId("mkt-dash-add-campaigns").click(); await page.getByTestId("mkt-dash-add-series").click(); await page.getByTestId("mkt-dash-save").click();
+    await expect(page.getByText("Painel criado.")).toBeVisible({ timeout: 15_000 }); await expect(page.getByTestId("mkt-dash-widget-kpi").first()).toContainText("R$ 500", { timeout: 20_000 });
+    await expect(page.getByTestId("mkt-dash-widget-campaigns")).toContainText(camp, { timeout: 20_000 }); await shot(page, "painel-personalizado");
+    await page.getByRole("button", { name: "Excluir", exact: true }).click(); await page.getByRole("dialog").getByRole("button", { name: "Excluir" }).click(); await expect(page.getByRole("tab", { name: new RegExp(dname) })).toHaveCount(0, { timeout: 15_000 });
+    // 4) leads com nota explicável; pesos só para o administrador
+    await page.goto(`/admin/marketing/leads?periodo=7dias&campanha=${S.camp}`); await expect(page.getByTestId("mkt-leads-page")).toBeVisible({ timeout: 30_000 });
+    const lrow = page.getByTestId("mkt-lead-row").filter({ hasText: personName }); await expect(lrow).toBeVisible({ timeout: 20_000 }); await expect(lrow).toContainText(/\+\d+ /); await shot(page, "leads-pontuacao");
+    await page.getByRole("tab", { name: "Pesos da nota" }).click(); await expect(page.getByTestId("mkt-score-settings")).toContainText("nunca"); await expect(page.getByTestId("mkt-score-rule-quick_response")).toBeVisible();
+    // 5) assistente de IA: sem a chave do provedor responde INDISPONÍVEL; nunca inventa resposta
+    await page.getByRole("tab", { name: "Leads" }).click(); await page.getByTestId("mkt-assistant-open").click(); const as = page.getByTestId("mkt-assistant"); await expect(as).toContainText("nunca dados de pessoas");
+    await as.getByRole("button", { name: /O que mudou/ }).click();
+    await expect(as.locator('[data-testid="mkt-assistant-unavailable"], [data-testid="mkt-assistant-answer"]').first()).toBeVisible({ timeout: 40_000 });
+    if (!process.env.ANTHROPIC_KEY_CONFIGURED) await expect(as.getByTestId("mkt-assistant-unavailable")).toContainText("ANTHROPIC_API_KEY");
+    expect(errors.filter((e) => !/marketing-assistant|503|Failed to load resource/i.test(e)), errors.join("\n")).toEqual([]);
+  });
+
   test("configurações do administrador e responsividade: 390 px sem rolagem horizontal em todas as páginas", async ({ browser }) => {
     const ctx = await browser.newContext({ timezoneId: "America/Sao_Paulo", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); await loginAs(ctx, QA.manager); const p = await ctx.newPage(); const errors = collectErrors(p);
-    for (const path of ["/admin/marketing", "/admin/marketing/campanhas", "/admin/marketing/anuncios", "/admin/marketing/funil", "/admin/marketing/integracoes", "/admin/marketing/configuracoes"]) {
+    for (const path of ["/admin/marketing", "/admin/marketing/campanhas", "/admin/marketing/anuncios", "/admin/marketing/funil", "/admin/marketing/leads", "/admin/marketing/paineis", "/admin/marketing/integracoes", "/admin/marketing/configuracoes"]) {
       await p.goto(`${path}?periodo=7dias`); await p.waitForLoadState("networkidle"); await expect(p.locator("main, [role=main], body").first()).toBeVisible(); expect(await noOverflow(p), `${path} sem rolagem horizontal`).toBe(true);
     }
     await p.goto("/admin/marketing?periodo=7dias"); await p.waitForTimeout(2500); await shot(p, "mobile-visao-geral");

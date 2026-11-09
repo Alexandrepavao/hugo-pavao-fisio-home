@@ -101,6 +101,8 @@ const Welcome = lazy(() => import("./pages/portal/Welcome"));
 const MarketingOverview = lazy(() => import("./pages/admin/marketing/MarketingOverview"));
 const MarketingCampaigns = lazy(() => import("./pages/admin/marketing/MarketingCampaigns"));
 const MarketingAds = lazy(() => import("./pages/admin/marketing/MarketingAds"));
+const MarketingLeads = lazy(() => import("./pages/admin/marketing/MarketingLeads"));
+const MarketingDashboards = lazy(() => import("./pages/admin/marketing/MarketingDashboards"));
 const MarketingFunnel = lazy(() => import("./pages/admin/marketing/MarketingFunnel"));
 const MarketingIntegrations = lazy(() => import("./pages/admin/marketing/MarketingIntegrations"));
 const MarketingSettings = lazy(() => import("./pages/admin/marketing/MarketingSettings"));
@@ -234,6 +236,8 @@ const App = () => (
                 <Route path="marketing/campanhas" element={g(R.leads, <FeatureGate feature="marketing"><MarketingCampaigns /></FeatureGate>)} />
                 <Route path="marketing/anuncios" element={g(R.leads, <FeatureGate feature="marketing"><MarketingAds /></FeatureGate>)} />
                 <Route path="marketing/funil" element={g(R.leads, <FeatureGate feature="marketing"><MarketingFunnel /></FeatureGate>)} />
+                <Route path="marketing/leads" element={g(R.leads, <FeatureGate feature="marketing"><MarketingLeads /></FeatureGate>)} />
+                <Route path="marketing/paineis" element={g(R.leads, <FeatureGate feature="marketing"><MarketingDashboards /></FeatureGate>)} />
                 <Route path="marketing/integracoes" element={g(R.leads, <FeatureGate feature="marketing"><MarketingIntegrations /></FeatureGate>)} />
                 <Route path="marketing/configuracoes" element={g(R.team, <FeatureGate feature="marketing"><MarketingSettings /></FeatureGate>)} />
                 <Route path="equipe" element={g(R.team, <Team />)} />

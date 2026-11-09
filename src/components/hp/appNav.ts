@@ -1,4 +1,4 @@
-import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
+import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
 import { APPS, appVisible, type AppId } from "./apps";
@@ -87,6 +87,8 @@ export const MARKETING_NAV: FrameNavSection[] = [
     { to: "/admin/marketing/campanhas", label: "Campanhas", icon: Megaphone, keywords: "campanhas meta google classificação frente finalidade" },
     { to: "/admin/marketing/anuncios", label: "Anúncios e criativos", icon: Image, keywords: "anúncios criativos conjuntos grupos facebook instagram posicionamento" },
     { to: "/admin/marketing/funil", label: "Funil e atribuição", icon: Filter, keywords: "funil atribuição conversão indicadores coorte qualidade dados" },
+    { to: "/admin/marketing/leads", label: "Leads e pontuação", icon: Gauge, keywords: "leads pontuação nota score quente morno frio priorizar" },
+    { to: "/admin/marketing/paineis", label: "Painéis", icon: LayoutGrid, keywords: "painéis dashboards personalizar indicadores widgets" },
   ] },
   { label: "Administração", items: [
     { to: "/admin/marketing/integracoes", label: "Integrações", icon: Plug, keywords: "meta ads google ads conexão contas gastos manual sincronização" },

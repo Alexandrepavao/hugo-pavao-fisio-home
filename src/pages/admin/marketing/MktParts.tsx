@@ -1,10 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info, Sparkles } from "lucide-react";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { RANGE_LABEL } from "@/lib/period";
-import { Badge, StatCard } from "@/lib/ui";
-import { FILTER_KEYS, PLATFORM_LABEL, delta, fmtKpi, fmtDay, kpiOf, prevOf, useMktOptions, when, type Kpi, type KpisResp, type MktFilters, type Coverage } from "./mktApi";
+import { Badge, StatCard, btnGhost, btnPrimary } from "@/lib/ui";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { FILTER_KEYS, askAssistant, PLATFORM_LABEL, delta, fmtKpi, fmtDay, kpiOf, prevOf, useMktOptions, when, type Kpi, type KpisResp, type MktFilters, type Coverage } from "./mktApi";
 
 const sel = "hp-input w-full";
 const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="grid gap-1 text-xs font-medium text-muted-foreground">{label}{children}</label>;
@@ -71,3 +72,39 @@ export const CoverageBanner = ({ c, model, view }: { c?: Coverage; model?: KpisR
 };
 export const SevBadge = ({ s }: { s: string }) => <Badge tone={s === "bad" ? "danger" : s === "warn" ? "warning" : s === "info" ? "info" : "neutral"}>{s === "bad" ? "Atenção" : s === "warn" ? "Revisar" : s === "info" ? "Informativo" : "Em dia"}</Badge>;
 export const range = (f: MktFilters) => `${fmtDay(f.range.from)} a ${fmtDay(f.range.to)}`;
+
+const SUGGESTIONS = ["Qual campanha está com melhor retorno e qual está pior neste período?", "Onde está o maior gargalo do funil?", "O que mudou em relação ao período anterior?", "Quais anúncios mereciam ser revisados?"];
+/** Assistente de IA: responde perguntas sobre os números do período e filtros atuais. Só lê agregados (sem dado de pessoa) e só sugere — não altera campanhas. */
+export const MktAssistantButton = ({ f, funnelId }: { f: MktFilters; funnelId?: string }) => {
+  const [open, setOpen] = useState(false); const [q, setQ] = useState(""); const [busy, setBusy] = useState(false);
+  const [turns, setTurns] = useState<{ q: string; a?: string; err?: string; basis?: string }[]>([]);
+  const ask = async (text: string) => {
+    const question = text.trim(); if (question.length < 3 || busy) return; setBusy(true); setQ("");
+    const r = await askAssistant({ question, from: f.range.from, to: f.range.to, view: f.view, filters: f.filters, funnel_id: funnelId });
+    setTurns((t) => [...t, r.ok && r.data.answer ? { q: question, a: r.data.answer, basis: r.data.basis } : { q: question, err: r.data.message ?? "Não foi possível obter a resposta agora." }]); setBusy(false);
+  };
+  return (<>
+    <button type="button" className={btnGhost} onClick={() => setOpen(true)} data-testid="mkt-assistant-open"><Sparkles size={15} aria-hidden /> Perguntar à IA</button>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col gap-0" data-testid="mkt-assistant">
+        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border text-left space-y-1.5">
+          <SheetTitle className="text-[1.0625rem]">Assistente de Marketing</SheetTitle>
+          <SheetDescription>Responde com base nos números de {range(f)} e nos filtros selecionados. Só enxerga totais e nomes de campanhas e anúncios — nunca dados de pessoas ou de saúde — e apenas sugere: não altera nenhuma campanha.</SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-5 py-4 grid content-start gap-3" aria-live="polite">
+          {turns.length === 0 && <div className="grid gap-2"><p className="text-xs font-medium text-muted-foreground">Sugestões</p>{SUGGESTIONS.map((s) => <button key={s} type="button" className="hp-card p-3 text-left text-sm hover:border-primary" onClick={() => ask(s)}>{s}</button>)}</div>}
+          {turns.map((t, i) => (<div key={i} className="grid gap-2">
+            <p className="text-sm font-medium bg-muted rounded-lg px-3 py-2 justify-self-end max-w-[90%]">{t.q}</p>
+            {t.a ? <div className="hp-card p-3 text-sm whitespace-pre-wrap" data-testid="mkt-assistant-answer">{t.a}<p className="text-[11px] text-muted-foreground mt-2">{t.basis}</p></div>
+              : <div className="hp-card p-3 text-sm" role="alert" data-testid="mkt-assistant-unavailable"><Badge tone="warning">Indisponível</Badge> <span className="ml-1">{t.err}</span></div>}
+          </div>))}
+          {busy && <p className="text-sm text-muted-foreground">Analisando os números…</p>}
+        </div>
+        <form className="px-5 py-4 border-t border-border flex gap-2" onSubmit={(e) => { e.preventDefault(); void ask(q); }}>
+          <input className="hp-input flex-1" value={q} maxLength={600} onChange={(e) => setQ(e.target.value)} placeholder="Pergunte sobre campanhas, funil, retorno…" aria-label="Pergunta ao assistente" />
+          <button type="submit" className={btnPrimary} disabled={busy || q.trim().length < 3}>Enviar</button>
+        </form>
+      </SheetContent>
+    </Sheet>
+  </>);
+};
