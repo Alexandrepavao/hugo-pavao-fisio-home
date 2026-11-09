@@ -19,7 +19,7 @@ declare
   pipe uuid; st_new uuid; st_q uuid; st_won uuid; st_lost uuid; svc_eval uuid; svc_sess uuid; prod_a uuid; prod_b uuid; prod_course uuid; prof uuid;
   conn_m uuid; conn_g uuid; acc_m uuid; acc_g uuid; acc_manual uuid; acc_other uuid; conn_other uuid; run1 uuid; run2 uuid; run3 uuid; camp_a uuid; camp_b uuid; camp_g uuid; camp_man uuid; camp_name uuid;
   front_f uuid; purp_p uuid; p1 uuid; p2 uuid; p3 uuid; p4 uuid; p5 uuid; o1 uuid; o2 uuid; o3 uuid; o4 uuid; o5 uuid; o_old uuid; s1 uuid; s2 uuid; s3 uuid; s4 uuid; s_old uuid; sale_c uuid; rec uuid; pay1 uuid; l1 uuid; l2 uuid;
-  front_other uuid; v_today date := current_date; t1 uuid; t2 uuid; i int; jr jsonb;
+  front_other uuid; v_today date := current_date; t1 uuid; t2 uuid; i int; jr jsonb; r2 jsonb; v_ver0 int;
 begin
   select id into v_org from public.organizations where slug = 'hp-group';
   insert into public.units (org_id, name, slug) values (v_org, 'Unidade A (N03)', 'n03-a') returning id into ua;
@@ -102,7 +102,7 @@ begin
   run2 := public.mkt_run_start(v_org, conn_m, acc_m, 'scheduled', v_today - 10, v_today, null, 'v26.0');
   rep := rep || pg_temp.chk(run2 is not null and (select status from public.mkt_sync_runs where id = run1) = 'error' and (select error_code from public.mkt_sync_runs where id = run1) = 'stale_lock', 'trava vencida é liberada e a nova execução assume');
   perform public.mkt_ingest_entities(run2, '[{"external_id":"1234567","name":"Camp Meta A","objective":"OUTCOME_LEADS","status":"ACTIVE","created_at":"2026-10-01T10:00:00Z"},{"external_id":"7654321","name":"Camp Meta B","objective":"OUTCOME_TRAFFIC","status":"PAUSED"}]'::jsonb,
-    '[{"external_id":"as1","campaign_external_id":"1234567","name":"Conjunto 1","status":"ACTIVE"}]'::jsonb, '[{"external_id":"ad1","campaign_external_id":"1234567","adset_external_id":"as1","name":"Anúncio 1","status":"ACTIVE","creative_ref":"c1","creative_name":"Criativo vídeo"}]'::jsonb);
+    '[{"external_id":"11111","campaign_external_id":"1234567","name":"Conjunto 1","status":"ACTIVE"}]'::jsonb, '[{"external_id":"22222","campaign_external_id":"1234567","adset_external_id":"11111","name":"Anúncio 1","status":"ACTIVE","creative_ref":"c1","creative_name":"Criativo vídeo"}]'::jsonb);
   select id into camp_a from public.mkt_campaigns where account_id = acc_m and external_id = '1234567'; select id into camp_b from public.mkt_campaigns where account_id = acc_m and external_id = '7654321';
   rep := rep || pg_temp.chk((select state from public.mkt_campaign_class where campaign_id = camp_a) = 'pending', 'campanha nova nasce “Aguardando classificação” (nada inferido pelo nome)');
   rep := rep || pg_temp.chk((select platform_objective from public.mkt_campaigns where id = camp_a) = 'OUTCOME_LEADS' and (select platform_status from public.mkt_campaigns where id = camp_b) = 'PAUSED', 'objetivo e status ORIGINAIS da plataforma ficam guardados à parte');
@@ -112,8 +112,8 @@ begin
       jsonb_build_object('campaign_external_id','1234567','day', v_today - i,'spend',100,'impressions',10000,'link_clicks',200,'clicks_all',260,'reported_results',4,'reported_actions','{"lead":4}'::jsonb),
       jsonb_build_object('campaign_external_id','7654321','day', v_today - i,'spend',50,'impressions',4000,'link_clicks',40,'clicks_all',50,'reported_results',1)), 'BRL', 'America/Sao_Paulo', '{"fields":"spend,impressions,inline_link_clicks"}'::jsonb);
   end loop;
-  perform public.mkt_ingest_metrics(run2, 'adset', jsonb_build_array(jsonb_build_object('entity_external_id','as1','day', v_today - 1,'spend',100,'impressions',10000,'link_clicks',200)), 'BRL', 'America/Sao_Paulo', '{}'::jsonb);
-  perform public.mkt_ingest_metrics(run2, 'ad', jsonb_build_array(jsonb_build_object('entity_external_id','ad1','day', v_today - 1,'spend',100,'impressions',10000,'link_clicks',200)), 'BRL', 'America/Sao_Paulo', '{}'::jsonb);
+  perform public.mkt_ingest_metrics(run2, 'adset', jsonb_build_array(jsonb_build_object('entity_external_id','11111','day', v_today - 1,'spend',100,'impressions',10000,'link_clicks',200)), 'BRL', 'America/Sao_Paulo', '{}'::jsonb);
+  perform public.mkt_ingest_metrics(run2, 'ad', jsonb_build_array(jsonb_build_object('entity_external_id','22222','day', v_today - 1,'spend',100,'impressions',10000,'link_clicks',200)), 'BRL', 'America/Sao_Paulo', '{}'::jsonb);
   perform public.mkt_ingest_metrics(run2, 'breakdown', jsonb_build_array(jsonb_build_object('campaign_external_id','1234567','day', v_today - 1,'kind','publisher_platform','value','instagram','spend',60,'impressions',6000,'link_clicks',120),
     jsonb_build_object('campaign_external_id','1234567','day', v_today - 1,'kind','publisher_platform','value','facebook','spend',40,'impressions',4000,'link_clicks',80)), 'BRL', 'America/Sao_Paulo', '{}'::jsonb);
   -- idempotência: repetir a mesma ingestão não duplica nem muda o total
@@ -202,6 +202,7 @@ begin
   perform private.mkt_touch_upsert(v_org, ua, p3, null, now() - interval '45 days', 'form', 'form:n03', gen_random_uuid(), '{"utm_source":"facebook","utm_medium":"cpc","hp_campaign_id":"1234567"}'::jsonb, null, '/lp');
   -- p4: toque não pago (newsletter) → organic;  p5: nenhum toque → no_touch
   perform private.mkt_touch_upsert(v_org, ua, p4, null, now() - interval '2 days', 'form', 'form:n03', gen_random_uuid(), '{"utm_source":"newsletter","utm_medium":"email"}'::jsonb, null, '/lp');
+  select config_version into v_ver0 from public.mkt_settings where org_id = v_org;   -- a versão atual depende do histórico da organização
   set local role authenticated; perform pg_temp.as_user(u_sa);
   o2 := public.crm_create_opportunity(p2, pipe, ua, 'Opp P2', null, 0, u_sa, 'teste', null); o3 := public.crm_create_opportunity(p3, pipe, ua, 'Opp P3', null, 0, u_sa, 'teste', null);
   o4 := public.crm_create_opportunity(p4, pipe, ua, 'Opp P4', null, 0, u_sa, 'teste', null); o5 := public.crm_create_opportunity(p5, pipe, ua, 'Opp P5', null, 0, u_sa, 'teste', null);
@@ -210,9 +211,9 @@ begin
   rep := rep || pg_temp.chk((select outcome from public.mkt_attributions where opportunity_id = o3) = 'organic', 'toque pago ANTES da janela (45 dias > 30) não atribui: origem não paga');
   rep := rep || pg_temp.chk((select outcome from public.mkt_attributions where opportunity_id = o4) = 'organic', 'só toque não pago (newsletter): organic');
   rep := rep || pg_temp.chk((select outcome from public.mkt_attributions where opportunity_id = o5) = 'no_touch', 'sem nenhum toque rastreado: “sem origem” (não inventa)');
-  rep := rep || pg_temp.chk((select window_days from public.mkt_attributions where opportunity_id = o2) = 30 and (select config_version from public.mkt_attributions where opportunity_id = o2) = 1, 'a atribuição guarda a janela e a versão de configuração usadas');
+  rep := rep || pg_temp.chk((select window_days from public.mkt_attributions where opportunity_id = o2) = 30 and (select config_version from public.mkt_attributions where opportunity_id = o2) = v_ver0, 'a atribuição guarda a janela e a versão de configuração usadas');
   set local role authenticated; perform pg_temp.as_user(u_mgr);
-  d := public.mkt_settings_set('{"attribution_window_days": 60}'::jsonb); rep := rep || pg_temp.chk((d ->> 'rules_changed')::boolean and (d ->> 'config_version')::int = 2, 'mudar a janela sobe a versão da configuração e avisa que nada muda sozinho');
+  d := public.mkt_settings_set('{"attribution_window_days": 60}'::jsonb); rep := rep || pg_temp.chk((d ->> 'rules_changed')::boolean and (d ->> 'config_version')::int = v_ver0 + 1, 'mudar a janela sobe a versão da configuração e avisa que nada muda sozinho');
   reset role;
   rep := rep || pg_temp.chk((select outcome from public.mkt_attributions where opportunity_id = o3) = 'organic', 'alterar a configuração NÃO recalcula o histórico sozinho');
   set local role authenticated; perform pg_temp.as_user(u_mgr); d := public.mkt_attribution_recompute(v_today - 1, v_today); reset role;
@@ -363,6 +364,22 @@ begin
   rep := rep || pg_temp.chk(pg_temp.kv(res, 'first_response_min') = 30, 'tempo até o primeiro contato humano registrado = 30 min (só quem tem registro)');
   rep := rep || pg_temp.chk(pg_temp.kv(res, 'leads') = 2 and pg_temp.kv(res, 'opportunities') = 3, 'leads únicos (2 pessoas) e oportunidades (3: a pessoa do 1º lead voltou por outro formulário e a nova oportunidade herda o último toque pago da janela) são contados à parte');
   rep := rep || pg_temp.chk(pg_temp.kv(res, 'media_cost_per_new_customer') = 250 and pg_temp.kv(res, 'roas_sales') = 5.6 and pg_temp.kv(res, 'return_on_receipts') = 1.8, 'custo de mídia por novo cliente 250 (500 ÷ 2 novos: s1 e a matrícula antiga); ROAS sobre vendas 5,6x (2.800 ÷ 500); retorno por recebimentos 1,8x (900 ÷ 500)');
+  -- ---- gerenciador hierárquico (campanha → conjunto → anúncio), MQL/SAL/Venda, CPMQL e 7-3-1
+  d := public.mkt_manager(v_today - 29, v_today, '{"scope":"all"}'::jsonb, 'event');
+  rep := rep || pg_temp.chk((select adset_id is not null and ad_id is not null from public.mkt_touches where record_id = l1), 'o toque do link com ids foi ligado ao conjunto e ao anúncio IMPORTADOS da mesma campanha');
+  r := (select x from jsonb_array_elements(d -> 'rows') x where x ->> 'level' = 'campaign' and x ->> 'name' = 'Camp Meta A');
+  rep := rep || pg_temp.chk((r ->> 'leads')::int = 2 and (r ->> 'mql')::int = 1 and (r ->> 'sal')::int = 1 and (r ->> 'sales')::int = 3 and (r ->> 'sold')::numeric = 2800, 'campanha: leads 2, MQL 1, SAL 1, vendas 3 e R$ 2.800 (as mesmas do funil)');
+  rep := rep || pg_temp.chk((r ->> 'cpl')::numeric = 250 and (r ->> 'cpmql')::numeric = 500 and (r ->> 'cpsal')::numeric = 500 and (r ->> 'roas')::numeric = 5.6, 'custos por etapa: CPL 250, CPMQL 500, CPSAL 500, ROAS 5,6 (consolidados pelos totais)');
+  r2 := (select x from jsonb_array_elements(d -> 'rows') x where x ->> 'level' = 'adset' and x ->> 'name' = 'Conjunto 1'); res2 := (select x from jsonb_array_elements(d -> 'rows') x where x ->> 'level' = 'unidentified' and x ->> 'campaign_id' = camp_a::text);
+  rep := rep || pg_temp.chk((r2 ->> 'leads')::int = 1 and (r2 ->> 'spend')::numeric = 100, 'conjunto: 1 lead (o do link com id) e gasto de 100 vindo do detalhamento da plataforma');
+  rep := rep || pg_temp.chk((r2 ->> 'leads')::int + (res2 ->> 'leads')::int = (r ->> 'leads')::int and (r2 ->> 'sales')::int + (res2 ->> 'sales')::int = (r ->> 'sales')::int, 'conjunto + “Sem anúncio identificado” FECHAM com a campanha (leads e vendas)');
+  rep := rep || pg_temp.chk((res2 ->> 'name') = 'Sem anúncio identificado' and (res2 ->> 'mql')::int = 1, 'quem não trouxe id fica em “Sem anúncio identificado” (inclusive o MQL)');
+  rep := rep || pg_temp.chk((select (x ->> 'leads')::int = 1 and x ->> 'creative' = 'Criativo vídeo' from jsonb_array_elements(d -> 'rows') x where x ->> 'level' = 'ad'), 'anúncio: o lead chega ao criativo pelo id do anúncio no link');
+  rep := rep || pg_temp.chk((r -> 'w' -> 'd7' ->> 'spend')::numeric = 500 and (r -> 'w' -> 'd3' ->> 'spend')::numeric = 200 and (r -> 'w' -> 'd7' ->> 'roas')::numeric = 5.6 and (r -> 'w' -> 'd3' ->> 'roas')::numeric = 14, 'janelas 7-3-1: gasto 500 / 200 e ROAS 5,6 / 14 (vendido na janela ÷ gasto na janela)');
+  rep := rep || pg_temp.chk(r -> 'w' -> 'd1' -> 'roas' = 'null'::jsonb and (r -> 'w' -> 'd1' ->> 'sold')::numeric = 1800, 'janela do dia: sem gasto no dia → ROAS indisponível (não zero), mas o vendido do dia aparece');
+  rep := rep || pg_temp.chk(cardinality(public.mkt_ad_tags_set((select id from public.mkt_ads where account_id = acc_m and external_id = '22222'), array['Vídeo', 'dor lombar', 'vídeo'])) = 2, 'etiquetas do criativo (administrador)');
+  rep := rep || pg_temp.chk((select tags from public.mkt_ads where account_id = acc_m and external_id = '22222') = array['dor lombar', 'vídeo'], 'etiquetas normalizadas (minúsculas, sem repetição)');
+  d := public.mkt_touches_relink(); rep := rep || pg_temp.chk((d ->> 'with_ad')::int >= 1, 'religar toques devolve quantos têm anúncio identificado');
   d := public.mkt_kpis(v_today - 29, v_today, '{}'::jsonb);
   rep := rep || pg_temp.chk(jsonb_array_length(d -> 'previous_kpis') = jsonb_array_length(d -> 'kpis') and d -> 'previous_period' ->> 'to' = (v_today - 30)::text, 'comparação com o período anterior equivalente (mesma duração, termina na véspera)');
   d := public.mkt_series(v_today - 29, v_today, '{"scope":"all"}'::jsonb);
