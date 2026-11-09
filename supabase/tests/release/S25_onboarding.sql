@@ -37,7 +37,7 @@ begin
   r := public.onboarding_link_create('fisio.s25@s25.local', 'Fernanda', ua, 14); tk1 := r ->> 'token';
   rep := rep || pg_temp.chk(length(tk1) = 48 and (r ->> 'path') = '/onboarding-fisio?convite=' || tk1, 'gestor cria link: token de 48 caracteres e caminho /onboarding-fisio?convite=…');
   t := pg_temp.err(format('select token_hash from public.onboarding_links limit 1')); rep := rep || pg_temp.chk(t like '42501%', 'ninguém lê a coluna token_hash (nem o gestor, pela API)');
-  select count(*) into n from public.onboarding_links; rep := rep || pg_temp.chk(n = 1, 'gestor lista os links (sem o token)');
+  select count(*) into n from public.onboarding_links where email = 'fisio.s25@s25.local'; rep := rep || pg_temp.chk(n = 1, 'gestor lista os links (sem o token)');   -- só o link deste teste: o Dev pode ter links antigos de outras sessões
   t := pg_temp.err(format('select public.onboarding_link_create(%L, null, %L, 0)', 'x@s25.local', ua)); rep := rep || pg_temp.chk(t like '%1 a 60 dias%', 'validade fora de 1–60 dias é recusada');
   t := pg_temp.err(format('select public.onboarding_link_create(%L, null, %L)', 'sem-arroba', ua)); rep := rep || pg_temp.chk(t like '%e-mail inválido%', 'e-mail inválido no link é recusado');
   perform pg_temp.as_user(u_sales); select count(*) into n from public.onboarding_links; rep := rep || pg_temp.chk(n = 0, 'comercial não vê links');
