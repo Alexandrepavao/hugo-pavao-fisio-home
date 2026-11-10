@@ -5,7 +5,7 @@ import { AreaTrend } from "@/lib/IndicatorCharts";
 import { Badge, Msg, PageHead, State, Table, Td, btnGhost, btnPrimary, confirmDialog, errText } from "@/lib/ui";
 import { CoverageBanner, MktAssistantButton, MktFilterBar, MktKpi, SevBadge, useDetail } from "./MktParts";
 import { FunnelView, useFunnels } from "./MktFunnelVisual";
-import { MKT_COLORS, PLATFORM_LABEL, fmtDay, kpiOf, money, num, prevOf, rpcArgs, useMktFilters, useMktInvalidate, useMktOptions, useMktRpc, useNote, type CampaignRow, type Dashboard, type FunnelRun, type KpisResp, type MktFilters, type QualityItem, type Reconciliation, type SeriesResp, type Widget } from "./mktApi";
+import { MKT_COLORS, PLATFORM_LABEL, fmtDay, funnelName, kpiOf, money, num, prevOf, rpcArgs, useMktFilters, useMktInvalidate, useMktOptions, useMktRpc, useNote, type CampaignRow, type Dashboard, type FunnelRun, type KpisResp, type MktFilters, type QualityItem, type Reconciliation, type SeriesResp, type Widget } from "./mktApi";
 
 const WIDGET_LABEL: Record<Widget["type"], string> = { kpi: "Indicador", series: "Evolução no tempo", funnel: "Funil", campaigns: "Ranking de campanhas", quality: "Qualidade dos dados", reconciliation: "Conferência do gasto", note: "Anotação" };
 const SERIES_LABEL: Record<string, string> = { spend: "Investimento", leads: "Leads", qualified: "Qualificados (MQL)", sales: "Vendas", received: "Recebido" };
@@ -18,7 +18,7 @@ const FunnelWidget = ({ f, id }: { f: MktFilters; id: string }) => {
   const r = useMktRpc<FunnelRun>("mkt_funnel_run", rpcArgs(f, { p_funnel: id, p_view: f.view }));
   if (r.isLoading) return <p className="text-sm text-muted-foreground">Carregando funil…</p>;
   if (r.error || !r.data) return <p className="text-sm text-muted-foreground">Funil não encontrado (pode ter sido excluído). Edite o painel para escolher outro.</p>;
-  return <><p className="text-sm font-semibold mb-2">{r.data.funnel.name}</p><FunnelView run={r.data} /></>;
+  return <><p className="text-sm font-semibold mb-2">{funnelName(r.data.funnel.name)}</p><FunnelView run={r.data} /></>;
 };
 
 /** Renderiza um widget do painel com os MESMOS números das demais páginas (mesmas funções do banco, mesmos filtros). */

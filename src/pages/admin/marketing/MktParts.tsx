@@ -51,7 +51,7 @@ export const MktFilterBar = ({ f, showView = true, showPlatform = true }: { f: M
         <div className="flex flex-wrap items-center gap-2">
           {showView ? (
             <div role="group" aria-label="Visão dos resultados" className={seg}>
-              {([["event", "Por data do evento"], ["cohort", "Por coorte de captação"]] as const).map(([v, l]) => (
+              {([["event", "Por data do evento"], ["cohort", "Por data de captação do lead"]] as const).map(([v, l]) => (
                 <button key={v} type="button" aria-pressed={f.view === v} onClick={() => f.setView(v)} className={segBtn(f.view === v)}>{l}</button>))}
             </div>) : null}
           {showPlatform && (
@@ -80,7 +80,7 @@ export const MktFilterBar = ({ f, showView = true, showPlatform = true }: { f: M
 /** Cartão de indicador do Marketing: valor, comparação com o período anterior (sem “bom/ruim” em cor), fórmula e detalhamento clicável com os MESMOS filtros. */
 export const useDetail = (f: MktFilters) => {
   const [t, setT] = useState<IndicatorTrigger | null>(null);
-  const open = (kind: string, title?: string, view?: "event" | "cohort") => { const v = view ?? f.view; setT({ rpc: "mkt_indicator_detail", title, scope: `${f.range.from} a ${f.range.to} · ${v === "cohort" ? "coorte" : "por evento"}`, params: { p_kind: kind, p_from: f.range.from, p_to: f.range.to, p_filters: f.filters, p_view: v } }); };
+  const open = (kind: string, title?: string, view?: "event" | "cohort") => { const v = view ?? f.view; setT({ rpc: "mkt_indicator_detail", title, scope: `${f.range.from} a ${f.range.to} · ${v === "cohort" ? "leads captados no período" : "por data do evento"}`, params: { p_kind: kind, p_from: f.range.from, p_to: f.range.to, p_filters: f.filters, p_view: v } }); };
   return { open, sheet: <IndicatorSheet trigger={t} onClose={() => setT(null)} /> };
 };
 export const MktKpi = ({ k, prev, currency, onOpen, short }: { k: Kpi | undefined; prev?: Kpi; currency: string; onOpen?: (kind: string, title: string) => void; short?: boolean }) => {
@@ -103,7 +103,7 @@ export const CoverageBanner = ({ c, model, view }: { c?: Coverage; model?: KpisR
       {bad ? <AlertTriangle size={15} aria-hidden style={{ color: "hsl(var(--warning, 38 80% 40%))" }} /> : <Info size={15} aria-hidden className="text-muted-foreground" />}
       <span>{c.accounts === 0 ? "Nenhuma conta de anúncios acompanhada neste escopo — o investimento aparece como “Não disponível”, não como zero."
         : <>Cobertura do gasto: <b>{c.ok_days}</b> de <b>{c.expected_days}</b> dias/conta{c.failed_days ? <> · <b>{c.failed_days}</b> com falha</> : null}{c.missing_days ? <> · <b>{c.missing_days}</b> sem coleta</> : null}. {c.last_ok_at ? <>Última coleta pela API: {when(c.last_ok_at)}.</> : " Sem coleta pela API (só lançamento manual)."}{c.stale_accounts ? ` ${c.stale_accounts} conta(s) desatualizada(s).` : ""}</>}</span>
-      {model && <span className="text-muted-foreground">Atribuição: {model.name} (janela de {model.window_days} dias) · visão {view === "cohort" ? "por coorte" : "por data do evento"}</span>}
+      {model && <span className="text-muted-foreground">Atribuição: {model.name} (janela de {model.window_days} dias) · visão {view === "cohort" ? "por data de captação do lead" : "por data do evento"}</span>}
     </div>
   );
 };

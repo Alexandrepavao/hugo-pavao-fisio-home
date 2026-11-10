@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Banknote, Coins, MousePointer2, MousePointerClick, Percent, Radio, Receipt, Search, ShoppingCart, Target, TrendingUp, Users, Wallet, type LucideIcon } from "lucide-react";
 import { Badge } from "@/lib/ui";
 import { InfoTip, MetricCard, Panel, Sparkline, StateLine } from "./MktDashParts";
-import { PLATFORM_LABEL, rpcArgs, useMktRpc, type CampaignRow, type FunnelDef, type FunnelRun, type KpisResp, type MktFilters, type SeriesResp } from "./mktApi";
+import { PLATFORM_LABEL, funnelName, rpcArgs, useMktRpc, type CampaignRow, type FunnelDef, type FunnelRun, type KpisResp, type MktFilters, type SeriesResp } from "./mktApi";
 import { METRICS, campaignResult, fmtValue, hasRealSeries, metricValue, pctChange, seriesOf, type MetricKey, type OverviewResp } from "./mktMetrics";
 
 const ICONS: Record<MetricKey, LucideIcon> = { spend: Wallet, leads: Users, cpl: Target, sales: ShoppingCart, revenue: Banknote, roas: TrendingUp, impressions: Radio, cpm: Coins, clicks: MousePointerClick, ctr: Percent, cpc: MousePointer2, cps: Receipt };
@@ -31,14 +31,14 @@ export const KpiGrid = ({ metrics, kp, ov, ovPrev, compare, points, selected, on
   </div>
 );
 
-// ---------------------------------------------------------------- funil por coorte
+// ---------------------------------------------------------------- funil dos leads do período
 const pct = (v: number | null) => (v == null ? "Sem base" : `${v.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`);
 export const pickFunnel = (funnels: FunnelDef[], frontLabel: string | null): FunnelDef | undefined => {
   const l = (frontLabel ?? "").toLowerCase();
   const want = l.includes("academy") ? "academy" : l.includes("fisio") || !l ? "pacientes" : "geral";
   return funnels.find((f) => f.name.toLowerCase().startsWith(want) && f.name.includes("(coorte)")) ?? funnels.find((f) => f.name.includes("(coorte)")) ?? funnels[0];
 };
-/** Funil por COORTE: leads captados no período e o que aconteceu com eles até hoje. Conversão = etapa ÷ etapa anterior dentro da coorte (nunca eventos independentes divididos). */
+/** Funil dos LEADS DO PERÍODO (coorte): leads captados no período e o que aconteceu com eles até hoje. Conversão = etapa ÷ etapa anterior dentro do mesmo grupo (nunca eventos independentes divididos). */
 export const FunnelBlock = ({ f, funnels, frontLabel, onOpen, range }: { f: MktFilters; funnels: FunnelDef[]; frontLabel: string | null; onOpen: (kind: string, title: string, view?: "event" | "cohort") => void; range: string }) => {
   const [sel, setSel] = useState<string>(""); const auto = useMemo(() => pickFunnel(funnels, frontLabel), [funnels, frontLabel]);
   useEffect(() => { setSel(""); }, [frontLabel]);
@@ -46,8 +46,8 @@ export const FunnelBlock = ({ f, funnels, frontLabel, onOpen, range }: { f: MktF
   const run = useMktRpc<FunnelRun>("mkt_funnel_run", rpcArgs(f, { p_funnel: cur?.id, p_view: "cohort" }), !!cur);
   const d = run.data; const first = Math.max(1, ...(d?.steps ?? []).filter((s) => s.available && s.count != null).map((s) => s.count as number));
   return (
-    <Panel title="Funil por coorte" testId="mkt-funnel-card" hint={<span className="inline-flex items-center gap-1">Leads captados em {range} e o que aconteceu com eles até hoje. <InfoTip title="Como ler o funil por coorte">Cada etapa conta quem a atingiu, dentro da coorte (leads captados no período). Conversão = etapa ÷ etapa anterior da mesma coorte — nunca eventos independentes divididos. O acompanhamento vai até hoje, sem corte; leads recentes ainda podem avançar. Clique numa etapa para ver os registros autorizados.</InfoTip></span>}
-      right={funnels.length > 1 ? <select className="hp-input h-8 text-xs" style={{ width: "15rem", maxWidth: "100%" }} aria-label="Funil" value={cur?.id ?? ""} onChange={(e) => setSel(e.target.value)} data-testid="mkt-funnel-select">{funnels.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select> : undefined}>
+    <Panel title="Funil dos leads do período" testId="mkt-funnel-card" hint={<span className="inline-flex items-center gap-1">Leads captados em {range} e o que aconteceu com eles até hoje. <InfoTip title="Como ler este funil">Cada etapa conta quem a atingiu, entre os leads captados no período. Conversão = etapa ÷ etapa anterior do mesmo grupo de leads — nunca eventos independentes divididos. O acompanhamento vai até hoje, sem corte; leads recentes ainda podem avançar. Clique numa etapa para ver os registros autorizados.</InfoTip></span>}
+      right={funnels.length > 1 ? <select className="hp-input h-8 text-xs" style={{ width: "15rem", maxWidth: "100%" }} aria-label="Funil" value={cur?.id ?? ""} onChange={(e) => setSel(e.target.value)} data-testid="mkt-funnel-select">{funnels.map((x) => <option key={x.id} value={x.id}>{funnelName(x.name)}</option>)}</select> : undefined}>
       {!cur ? <StateLine>Nenhum funil configurado. O administrador cria funis em Funil e atribuição.</StateLine>
         : run.isError ? <StateLine tone="danger" role="alert" action={<button type="button" className="text-primary font-medium hover:underline" onClick={() => void run.refetch()}>Tentar de novo</button>}>Falha ao carregar o funil.</StateLine>
         : !d ? <div className="h-40 rounded-lg bg-muted/40 animate-pulse" aria-hidden />
@@ -57,7 +57,7 @@ export const FunnelBlock = ({ f, funnels, frontLabel, onOpen, range }: { f: MktF
             {d.steps.map((s, i) => (
               <li key={`${s.index}-${s.kind}`}>
                 <button type="button" disabled={!s.available} onClick={() => onOpen(s.kind, s.label, "cohort")} data-testid={`mkt-funnel-step-${s.kind}`} aria-label={`${s.label}: ${s.available ? s.count : "sem base"}. Ver registros`}
-                  title={s.available && s.rate_from_first != null && i > 0 ? `${pct(s.rate_from_first)} da coorte inicial${s.cost_per_step != null ? ` · custo por etapa ${fmtValue("spend", s.cost_per_step, d.currency)}` : ""}` : undefined}
+                  title={s.available && s.rate_from_first != null && i > 0 ? `${pct(s.rate_from_first)} dos leads captados${s.cost_per_step != null ? ` · custo por etapa ${fmtValue("spend", s.cost_per_step, d.currency)}` : ""}` : undefined}
                   className="w-full grid grid-cols-[1fr_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left hover:bg-muted/50 disabled:opacity-100 disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <span className="min-w-0"><span className="block text-[12.5px] font-medium truncate">{s.label}</span>
                     {s.available ? <span className="block mt-1 h-2 rounded-full bg-muted overflow-hidden"><span className="block h-full rounded-full bg-primary" style={{ width: `${Math.max(2, ((s.count ?? 0) / first) * 100)}%` }} /></span>
@@ -67,7 +67,7 @@ export const FunnelBlock = ({ f, funnels, frontLabel, onOpen, range }: { f: MktF
                 </button>
               </li>))}
           </ol>)}
-      {d && <p className="text-[11.5px] text-muted-foreground mt-2">Coorte: leads do período · janela: até hoje. Clique numa etapa para ver os registros.</p>}
+      {d && <p className="text-[11.5px] text-muted-foreground mt-2">Leads captados no período, acompanhados até hoje. Clique numa etapa para ver os registros.</p>}
     </Panel>
   );
 };

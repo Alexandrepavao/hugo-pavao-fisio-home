@@ -23,6 +23,8 @@ export interface Option { id: string; name?: string; label?: string; platform?: 
 export interface FilterOptions { units: Option[]; fronts: Option[]; purposes: Option[]; platforms: Option[]; accounts: Option[]; campaigns: Option[]; products: Option[]; pipelines: Option[]; owners: Option[]; is_admin: boolean }
 
 export const MKT_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-4))", "hsl(var(--chart-2))", "hsl(var(--chart-6))"];   // azul-marinho, azul, âmbar e neutro — sem o verde nem o roxo do tema
+/** Nome do funil sem o jargão “(coorte)” do cadastro: o funil já é sempre dos leads captados no período. */
+export const funnelName = (n: string) => n.replace(/\s*\(coorte\)\s*$/i, "");
 export const PLATFORM_LABEL: Record<string, string> = { meta: "Meta Ads", google: "Google Ads" };
 
 // ---------------------------------------------------------------- formatação

@@ -74,7 +74,7 @@ const MarketingCampaigns = () => {
             <Td>{isAdmin && <button type="button" className={btnGhost} disabled={!admin.data || !cfg.data} data-testid={`classify-${c.campaign_id}`} onClick={() => { const a = (admin.data ?? []).find((x) => x.id === c.campaign_id); if (a) setEdit(a); }}>Classificar</button>}</Td>
           </tr>))}
       </Table>
-      <p className="text-xs text-muted-foreground mt-2 mb-6">Investimento, leads e vendas do período selecionado ({f.view === "cohort" ? "coorte" : "por data do evento"}). Reclassificar vale para todo o histórico da campanha, porque a classificação é aplicada na leitura dos relatórios.</p>
+      <p className="text-xs text-muted-foreground mt-2 mb-6">Investimento, leads e vendas do período selecionado ({f.view === "cohort" ? "leads captados no período" : "por data do evento"}). Reclassificar vale para todo o histórico da campanha, porque a classificação é aplicada na leitura dos relatórios.</p>
       {rc.data && (
         <section className="hp-card p-5 max-w-xl" aria-label="Reconciliação">
           <h3 className="text-[0.9375rem] font-bold mb-2">Reconciliação do investimento (todas as campanhas)</h3>

@@ -31,11 +31,11 @@ export const Sparkline = ({ values, width = 84, height = 30 }: { values: (number
 
 export interface MetricCardProps {
   testId: string; label: string; shortLabel?: string; icon: LucideIcon; value: string; noBase?: boolean; reason?: string | null; info: ReactNode;
-  delta?: { text: string; dir: "up" | "down" | "flat" } | null; spark?: (number | null)[] | null; selected?: boolean; onSelect?: () => void; onOpen?: () => void; period?: string | null; warning?: string | null;
+  delta?: { text: string; dir: "up" | "down" | "flat" } | null; spark?: (number | null)[] | null; selected?: boolean; onSelect?: () => void; onOpen?: () => void; period?: string | null; warning?: string | null; note?: string | null;
 }
 /** Cartão de indicador compacto (≈ 110–125 px): ícone discreto, título curto, valor em destaque, variação contra o período anterior (sem “bom/ruim” em cor) e minigráfico real.
  *  Clicar escolhe a métrica do gráfico; “Registros” abre os registros por trás do número. Fórmula e fonte ficam na dica (ícone de informação). */
-export const MetricCard = ({ testId, label, shortLabel, icon: Icon, value, noBase, reason, info, delta, spark, selected, onSelect, onOpen, period, warning }: MetricCardProps) => (
+export const MetricCard = ({ testId, label, shortLabel, icon: Icon, value, noBase, reason, info, delta, spark, selected, onSelect, onOpen, period, warning, note }: MetricCardProps) => (
   <div className={`relative rounded-xl border bg-card p-4 min-h-[110px] transition-colors ${selected ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"}`} data-testid={testId} data-selected={selected ? "true" : "false"}>
     {onSelect && <button type="button" onClick={onSelect} aria-pressed={!!selected} aria-label={`Mostrar ${label} no gráfico`} className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />}
     <div className="relative pointer-events-none flex flex-col gap-1">
@@ -49,7 +49,7 @@ export const MetricCard = ({ testId, label, shortLabel, icon: Icon, value, noBas
         {!noBase && spark ? <span className="hidden sm:block"><Sparkline values={spark} /></span> : null}
       </div>
       <div className="flex items-center justify-between gap-2 min-h-[18px] text-[11.5px] text-muted-foreground">
-        <span className="truncate" title={noBase ? (reason ?? undefined) : undefined}>{noBase ? (reason ?? "Sem dado no período") : delta ? `${delta.dir === "up" ? "▲" : delta.dir === "down" ? "▼" : "■"} ${delta.text}` : ""}</span>
+        <span className="truncate" title={noBase ? (reason ?? undefined) : undefined}>{noBase ? (reason ?? "Sem dado no período") : delta ? `${delta.dir === "up" ? "▲" : delta.dir === "down" ? "▼" : "■"} ${delta.text}` : (note ?? "")}</span>
         {onOpen && <button type="button" onClick={onOpen} className="pointer-events-auto inline-flex items-center gap-1 text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded shrink-0" aria-label={`Ver registros: ${label}`}><Eye size={12} aria-hidden />Registros</button>}
       </div>
     </div>
@@ -92,7 +92,7 @@ export const SyncStrip = ({ c, model, view, to }: { c?: Coverage; model?: KpisRe
       {partial && <span className="rounded bg-muted px-1.5 py-0.5" title="O período inclui hoje: valores do dia ainda podem mudar.">Período em andamento · dados parciais</span>}
       {(failed || stale) && <span className="inline-flex items-center gap-1.5 rounded px-1.5 py-0.5" style={{ background: "hsl(var(--warning-soft))", color: "hsl(var(--warning))" }}><AlertTriangle size={12} aria-hidden />
         {failed ? `Falha na atualização em ${c.failed_days} dia(s)` : `${c.stale_accounts} conta(s) desatualizada(s)`} · <Link to="/admin/marketing/integracoes" className="underline font-medium">ver integrações</Link></span>}
-      {model && <span>Atribuição: {model.name} · {model.window_days} dias · {view === "cohort" ? "por coorte" : "por data do evento"}</span>}
+      {model && <span>Atribuição: {model.name} · {model.window_days} dias · {view === "cohort" ? "por data de captação do lead" : "por data do evento"}</span>}
     </div>
   );
 };

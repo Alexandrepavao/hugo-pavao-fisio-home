@@ -737,6 +737,12 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
 
 
+## Marketing › Análises (10/11/2026) — só Dev
+> Pedido do usuário: faltava um analytics dentro do Marketing para entender melhor tudo; e a dúvida “o que é coorte?”. Mesma branch `feat/marketing-dashboard-compacto` (PR rascunho #25). Detalhes: `docs/marketing-analises.md`.
+- **Feito (Dev):** tela **Análises** (`/admin/marketing/analises`) com quatro cartões e seis blocos — qualidade por campanha (dispersão custo × conversão), onde os leads se perdem (+ motivos), tempo até cada etapa, retorno por região/zona de SP, dia da semana × horário, retorno por mês de captação. “Coorte” foi trocado por “leads do período”/“data de captação do lead” em toda a tela do Marketing.
+- **Testes:** SQL N07 (28) e todos os novos (340); vitest da lógica (21 novos); E2E N26 (7) + N22/N25 reexecutados; typecheck e build.
+- **Pendente:** os mesmos de antes (APIs reais Meta/Google, alcance/frequência) e decisão de levar o PR #25 a produção.
+
 ## Zonas de São Paulo capital (09/11/2026)
 > Pedido do usuário: quando o lead preencher **São Paulo**, perguntar **bairro e zona** — para pacientes saberem onde atender e parceiros onde podem assumir pacientes. Só **São Paulo/SP (capital)**; em outras cidades pergunta-se só a cidade.
 - **Quiz de captação:** com cidade São Paulo e UF SP (qualquer grafia) aparecem **Bairro** e **Zona** (Sul, Norte, Leste, Oeste, Centro), obrigatórios. O banco valida a zona e limpa bairro/zona se a cidade mudar. Vão para o cadastro da pessoa **sem sobrescrever** dado já cadastrado.
