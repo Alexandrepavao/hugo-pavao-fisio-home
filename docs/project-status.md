@@ -729,3 +729,10 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 2. Configurar Resend/SMTP quando você tiver as credenciais; então testar recuperação de senha, primeiro acesso e envio de pesquisa por e-mail reais.
 3. Quando você tiver conteúdo real (cursos gravados) para o HP Academy, publicar as trilhas e vincular os cursos — continuam todas em rascunho, de propósito.
 4. Criar a primeira pesquisa e a primeira conta corporativa reais quando você tiver conteúdo/dados de verdade — as telas estão prontas, sem nenhum dado de exemplo inventado.
+
+## Dashboard compacto do Marketing (10/11/2026) — só Dev
+> Pedido do usuário: reformular o dashboard geral e de gestão de tráfego mantendo cartões e gráficos, corrigindo excesso de tamanho, espaços vazios e textos dentro dos cartões. Branch `feat/marketing-dashboard-compacto` (PR em rascunho). **Sem merge, produção ou DNS.** Detalhes, fórmulas, antes/depois e limitações: [`marketing-dashboard-compacto.md`](marketing-dashboard-compacto.md).
+- **Feito (Dev):** Visão geral com seis cartões compactos por objetivo (captação, vendas, reconhecimento), gráfico de evolução com seleção de métrica e período anterior tracejado, comparação Meta × Google, **funil por coorte** (lead → contato → agendamento → comparecimento → protocolo), **campanhas em cartões** (busca, ordenação, “Carregar mais”), filtros ativos com “Limpar”, faixa de sincronização e estados compactos. Migration **119**.
+- **Testes:** SQL N06 (27), N03 (170), N04 (46); vitest da lógica (17); E2E N25 (8) e N22 (9); typecheck, lint e build.
+- **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
+

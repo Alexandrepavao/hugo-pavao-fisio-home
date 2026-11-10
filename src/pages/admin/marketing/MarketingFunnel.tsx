@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Badge, KpiGrid, LevelSection, Msg, PageHead, State, Table, Td, btnGhost, confirmDialog, errText } from "@/lib/ui";
+import { Badge, LevelSection, Msg, PageHead, State, Table, Td, btnGhost, confirmDialog, errText } from "@/lib/ui";
 import { FunnelSection } from "./MktFunnelVisual";
-import { CoverageBanner, MktFilterBar, MktKpi, SevBadge, useDetail } from "./MktParts";
+import { CoverageBanner, MktFilterBar, MktGrid, MktKpi, SevBadge, useDetail } from "./MktParts";
 import { fmtKpi, money, num, rpcArgs, useMktFilters, useMktInvalidate, useMktOptions, useMktRpc, type FunnelResp, type Kpi, type KpisResp, type QualityItem, useNote } from "./mktApi";
 
 const GROUPS: { title: string; hint: string; keys: string[] }[] = [
@@ -58,7 +58,7 @@ const MarketingFunnel = () => {
 
         {GROUPS.map((g) => (
           <LevelSection key={g.title} level="summary" title={g.title} hint={g.hint}>
-            <KpiGrid>{g.keys.map((key) => <MktKpi key={key} k={byKey(key)} prev={k.previous_kpis.find((x) => x.key === key)} currency={cur} onOpen={(kind, t) => d.open(kind, t)} short />)}</KpiGrid>
+            <MktGrid>{g.keys.map((key) => <MktKpi key={key} k={byKey(key)} prev={k.previous_kpis.find((x) => x.key === key)} currency={cur} onOpen={(kind, t) => d.open(kind, t)} short />)}</MktGrid>
           </LevelSection>))}
 
         <h3 className="text-[0.9375rem] font-bold mb-2 mt-2">Catálogo de indicadores</h3>

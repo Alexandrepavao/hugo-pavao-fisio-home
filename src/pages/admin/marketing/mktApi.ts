@@ -12,17 +12,17 @@ export interface KpisResp { period: { from: string; to: string }; previous_perio
 export interface FunnelStep { key: string; label: string; count: number | null; available: boolean; reason?: string | null; rate_from_previous: number | null; rate_from_first: number | null }
 export interface FunnelResp { view: string; steps: FunnelStep[]; basis: string; model: { name: string; window_days: string }; hub_confirmed: { leads: number; sales: number; new_buyers: number; sold: number };
   provider_reported: { by_currency: Record<string, { reported_results: number | null }>; note: string }; coverage: Coverage }
-export interface SeriesResp { granularity: "day" | "week"; currency: string; points: { day: string; spend: number | null; leads: number; qualified: number; sales: number; received: number }[]; note: string }
+export interface SeriesResp { granularity: "day" | "week"; currency: string; points: { day: string; spend: number | null; impressions?: number | null; clicks?: number | null; leads: number; qualified: number; sales: number; sold?: number; received: number }[]; note: string }
 export interface CampaignRow { campaign_id: string; name: string; platform: string; account: string; external_id: string; origin: string; platform_objective: string | null; platform_status: string | null; class_state: string; include_in_hub: boolean;
   include_in_reports: boolean; front: string | null; purpose: string | null; primary_result: string | null; spend: number | null; impressions: number | null; clicks: number | null; reported_results: number | null; other_currency: string | null;
-  ctr: number | null; cpc: number | null; leads: number; qualified: number; sales: number; sold: number; received: number; cpl: number | null; roas: number | null }
+  ctr: number | null; cpc: number | null; leads: number; qualified: number; sales: number; sold: number; received: number; cpl: number | null; roas: number | null; events?: Record<string, number> }
 export interface AdRow { id: string; name: string; status: string | null; creative: string | null; campaign: string; spend: number | null; impressions: number | null; clicks: number | null; reported_results: number | null; ctr: number | null; cpc: number | null }
 export interface Reconciliation { currency: string; total: number; parts: { key: string; label: string; spend: number; campaigns: number }[]; sum_of_parts: number; reconciles: boolean; other_currencies_not_summed: Record<string, number>; excluded_by_overlap: number; note: string }
 export interface QualityItem { key: string; label: string; count: number; amount?: number; severity: "ok" | "info" | "warn" | "bad"; detail: string; hint: string }
 export interface Option { id: string; name?: string; label?: string; platform?: string; enabled?: boolean; status?: string; origin?: string; account_id?: string; state?: string }
 export interface FilterOptions { units: Option[]; fronts: Option[]; purposes: Option[]; platforms: Option[]; accounts: Option[]; campaigns: Option[]; products: Option[]; pipelines: Option[]; owners: Option[]; is_admin: boolean }
 
-export const MKT_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--chart-6))"];   // sem o verde do tema
+export const MKT_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-4))", "hsl(var(--chart-2))", "hsl(var(--chart-6))"];   // azul-marinho, azul, âmbar e neutro — sem o verde nem o roxo do tema
 export const PLATFORM_LABEL: Record<string, string> = { meta: "Meta Ads", google: "Google Ads" };
 
 // ---------------------------------------------------------------- formatação
@@ -52,7 +52,8 @@ export function useMktFilters(defaultView: "event" | "cohort" = "event", scope: 
   const period = usePeriodFilterState(); const [sp, setSp] = useSearchParams();
   const range = period.preset === "personalizado" ? period.custom : presetRange(period.preset);
   const view = (sp.get("visao") === "coorte" ? "cohort" : sp.get("visao") === "evento" ? "event" : defaultView) as "event" | "cohort";
-  const set = useCallback((k: string, v: string) => { const n = new URLSearchParams(sp); if (v) n.set(k, v); else n.delete(k); setSp(n, { replace: true }); }, [sp, setSp]);
+  // lê a URL do navegador (não o snapshot da renderização): duas mudanças seguidas (ex.: trocar a plataforma e limpar a conta) não se sobrescrevem
+  const set = useCallback((k: string, v: string) => { const n = new URLSearchParams(window.location.search); if (v) n.set(k, v); else n.delete(k); setSp(n, { replace: true }); }, [setSp]);
   const filters = useMemo(() => {
     const f: Record<string, string> = { scope }; if (period.unit) f.unit = period.unit;
     for (const [url, key] of Object.entries(FILTER_KEYS)) { const v = sp.get(url); if (v) f[key] = v; }
@@ -60,7 +61,9 @@ export function useMktFilters(defaultView: "event" | "cohort" = "event", scope: 
   }, [sp, period.unit, scope]);
   const extraCount = Object.keys(FILTER_KEYS).filter((k) => sp.get(k)).length;
   const clear = () => { period.onClear(); };
-  return { period, range, view, setView: (v: "event" | "cohort") => set("visao", v === "cohort" ? "coorte" : "evento"), filters, get: (k: string) => sp.get(k) ?? "", set, extraCount, clear };
+  // limpa só os filtros (unidade + os da barra); mantém período, comparação e visão. A URL é lida do navegador porque a mudança da unidade acontece no mesmo instante.
+  const clearFilters = () => { period.onUnit(""); const n = new URLSearchParams(window.location.search); Object.keys(FILTER_KEYS).forEach((k) => n.delete(k)); n.delete("unidade"); setSp(n, { replace: true }); };
+  return { period, range, view, setView: (v: "event" | "cohort") => set("visao", v === "cohort" ? "coorte" : "evento"), filters, get: (k: string) => sp.get(k) ?? "", set, extraCount, clear, clearFilters };
 }
 export type MktFilters = ReturnType<typeof useMktFilters>;
 

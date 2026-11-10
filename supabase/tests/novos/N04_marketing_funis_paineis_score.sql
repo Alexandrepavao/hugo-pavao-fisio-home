@@ -65,8 +65,8 @@ begin
 
   -- ============ FUNIS
   set local role authenticated; perform pg_temp.as_user(u_mgr);
-  fl := public.mkt_funnels_list(); rep := rep || pg_temp.chk(jsonb_array_length(fl -> 'funnels') >= 3 and jsonb_array_length(fl -> 'step_types') = 18, 'três funis padrão (Pacientes, Parceiros, Academy) e o catálogo de 18 etapas');
-  fid := (select (x ->> 'id')::uuid from jsonb_array_elements(fl -> 'funnels') x where x ->> 'name' like 'Pacientes%');
+  fl := public.mkt_funnels_list(); rep := rep || pg_temp.chk(jsonb_array_length(fl -> 'funnels') >= 3 and jsonb_array_length(fl -> 'step_types') = 19, 'três funis padrão (Pacientes, Parceiros, Academy) e o catálogo de 19 etapas (inclui Contato realizado, da migration 119)');
+  fid := (select (x ->> 'id')::uuid from jsonb_array_elements(fl -> 'funnels') x where x ->> 'name' like 'Pacientes: do anúncio%');
   res := public.mkt_funnel_run(fid, v_today - 29, v_today, jsonb_build_object('scope', 'all', 'campaign', camp::text), 'event');
   rep := rep || pg_temp.chk((pg_temp.step(res, 'impressions') ->> 'count')::int = 5000 and (pg_temp.step(res, 'clicks') ->> 'count')::int = 100 and (pg_temp.step(res, 'lead') ->> 'count')::int = 12, 'etapas de mídia (impressões 5.000, cliques 100) e Hub (12 leads)');
   rep := rep || pg_temp.chk((pg_temp.step(res, 'qualified') ->> 'count')::int = 6 and (pg_temp.step(res, 'scheduled') ->> 'count')::int = 3 and (pg_temp.step(res, 'attended') ->> 'count')::int = 1 and (pg_temp.step(res, 'sold') ->> 'count')::int = 1 and (pg_temp.step(res, 'received') ->> 'count')::int = 1, 'MQL 6, agendamento 3, compareceu 1, venda 1, recebimento 1');

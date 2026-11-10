@@ -1,17 +1,18 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, Info, Sparkles } from "lucide-react";
+import { AlertTriangle, Info, Sparkles, X } from "lucide-react";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { IndicatorSheet, type IndicatorTrigger } from "@/lib/IndicatorSheet";
 import { RANGE_LABEL } from "@/lib/period";
-import { Badge, StatCard, btnGhost, btnPrimary } from "@/lib/ui";
+import { Badge, btnGhost, btnPrimary } from "@/lib/ui";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MetricCard } from "./MktDashParts";
 import { FILTER_KEYS, askAssistant, PLATFORM_LABEL, delta, fmtKpi, fmtDay, kpiOf, prevOf, useMktOptions, when, type Kpi, type KpisResp, type MktFilters, type Coverage } from "./mktApi";
 
 const sel = "hp-input w-full";
 const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="grid gap-1 text-xs font-medium text-muted-foreground">{label}{children}</label>;
 
 /** Barra de filtros compartilhada por todas as páginas do Marketing: período, organização/unidade (conforme acesso), frente, plataforma, conta, campanha, finalidade, produto, funil e responsável. */
-export const MktFilterBar = ({ f, showView = true }: { f: MktFilters; showView?: boolean }) => {
+export const MktFilterBar = ({ f, showView = true, showPlatform = true }: { f: MktFilters; showView?: boolean; showPlatform?: boolean }) => {
   const opts = useMktOptions().data;
   const o = (k: keyof typeof FILTER_KEYS) => f.get(k);
   const set = f.set;
@@ -30,15 +31,48 @@ export const MktFilterBar = ({ f, showView = true }: { f: MktFilters; showView?:
     </div>
   );
   const p = f.period;
+  const nameOf = (list: { id: string; name?: string; label?: string }[] | undefined, id: string, none?: string) => (id === "none" ? none : (list?.find((x) => x.id === id)?.name ?? list?.find((x) => x.id === id)?.label)) ?? "Selecionado";
+  const chips: { key: string; label: string; clear: () => void }[] = [];
+  if (p.unit) chips.push({ key: "unidade", label: `Unidade: ${nameOf(opts?.units, p.unit)}`, clear: () => p.onUnit("") });
+  const add = (k: keyof typeof FILTER_KEYS, label: string, text: string) => { if (o(k)) chips.push({ key: k, label: `${label}: ${text}`, clear: () => set(k, "") }); };
+  add("frente", "Linha", nameOf(opts?.fronts, o("frente"), "Sem frente"));
+  add("conta", "Conta", nameOf(opts?.accounts, o("conta")));
+  add("campanha", "Campanha", nameOf(opts?.campaigns, o("campanha")));
+  add("finalidade", "Tipo/objetivo", nameOf(opts?.purposes, o("finalidade"), "Sem finalidade"));
+  add("produto", "Produto", nameOf(opts?.products, o("produto")));
+  add("funil", "Funil de destino", nameOf(opts?.pipelines, o("funil")));
+  add("resp", "Responsável", nameOf(opts?.owners, o("resp")));
+  if (o("plataforma")) chips.push({ key: "plataforma", label: `Plataforma: ${PLATFORM_LABEL[o("plataforma")] ?? o("plataforma")}`, clear: () => { set("plataforma", ""); } });
+  const seg = "hp-seg inline-flex rounded-lg border border-border overflow-hidden text-sm";
+  const segBtn = (on: boolean) => `px-3 h-9 font-medium ${on ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 mb-4" data-testid="mkt-filters">
-      {showView ? (
-        <div role="group" aria-label="Visão dos resultados" className="hp-seg inline-flex rounded-lg border border-border overflow-hidden text-sm">
-          {([["event", "Por data do evento"], ["cohort", "Por coorte de captação"]] as const).map(([v, l]) => (
-            <button key={v} type="button" aria-pressed={f.view === v} onClick={() => f.setView(v)} className={`px-3 h-9 font-medium ${f.view === v ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}>{l}</button>))}
-        </div>) : <span />}
-      <PeriodFilter preset={p.preset} from={f.range.from} to={f.range.to} onPreset={p.onPreset} onFrom={p.onFrom} onTo={p.onTo} unit={p.unit} units={(opts?.units ?? []).map((u) => ({ id: u.id, name: u.name ?? "" }))} onUnit={p.onUnit}
-        onClear={f.clear} extra={extra} extraCount={f.extraCount} extraSummary={RANGE_LABEL[p.preset]} />
+    <div className="mb-4 grid gap-2" data-testid="mkt-filters">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {showView ? (
+            <div role="group" aria-label="Visão dos resultados" className={seg}>
+              {([["event", "Por data do evento"], ["cohort", "Por coorte de captação"]] as const).map(([v, l]) => (
+                <button key={v} type="button" aria-pressed={f.view === v} onClick={() => f.setView(v)} className={segBtn(f.view === v)}>{l}</button>))}
+            </div>) : null}
+          {showPlatform && (
+            <div role="group" aria-label="Plataforma" className={seg} data-testid="mkt-platform-toggle">
+              {([["", "Todas"], ["meta", "Meta"], ["google", "Google"]] as const).map(([v, l]) => (
+                <button key={v || "all"} type="button" aria-pressed={o("plataforma") === v} onClick={() => { set("plataforma", v); set("conta", ""); }} className={segBtn(o("plataforma") === v)}>{l}</button>))}
+            </div>)}
+        </div>
+        <PeriodFilter preset={p.preset} from={f.range.from} to={f.range.to} onPreset={p.onPreset} onFrom={p.onFrom} onTo={p.onTo} unit={p.unit} units={(opts?.units ?? []).map((u) => ({ id: u.id, name: u.name ?? "" }))} onUnit={p.onUnit}
+          compare={p.compare} onCompare={p.onCompare} onClear={f.clear} extra={extra} extraCount={f.extraCount} extraSummary={RANGE_LABEL[p.preset]} />
+      </div>
+      {chips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" data-testid="mkt-active-filters" aria-label="Filtros ativos">
+          <span className="text-xs text-muted-foreground mr-1">Filtros ativos:</span>
+          {chips.map((c) => (
+            <span key={c.key} className="inline-flex items-center gap-1 rounded-full border border-border bg-card pl-2.5 pr-1 py-0.5 text-[12px] max-w-full">
+              <span className="truncate max-w-[14rem]" title={c.label}>{c.label}</span>
+              <button type="button" onClick={c.clear} aria-label={`Remover filtro ${c.label}`} className="rounded-full p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><X size={12} aria-hidden /></button>
+            </span>))}
+          <button type="button" onClick={f.clearFilters} className="text-[12px] text-primary hover:underline ml-1" data-testid="mkt-clear-filters">Limpar filtros</button>
+        </div>)}
     </div>
   );
 };
@@ -46,15 +80,18 @@ export const MktFilterBar = ({ f, showView = true }: { f: MktFilters; showView?:
 /** Cartão de indicador do Marketing: valor, comparação com o período anterior (sem “bom/ruim” em cor), fórmula e detalhamento clicável com os MESMOS filtros. */
 export const useDetail = (f: MktFilters) => {
   const [t, setT] = useState<IndicatorTrigger | null>(null);
-  const open = (kind: string, title?: string) => setT({ rpc: "mkt_indicator_detail", title, scope: `${f.range.from} a ${f.range.to} · ${f.view === "cohort" ? "coorte" : "por evento"}`, params: { p_kind: kind, p_from: f.range.from, p_to: f.range.to, p_filters: f.filters, p_view: f.view } });
+  const open = (kind: string, title?: string, view?: "event" | "cohort") => { const v = view ?? f.view; setT({ rpc: "mkt_indicator_detail", title, scope: `${f.range.from} a ${f.range.to} · ${v === "cohort" ? "coorte" : "por evento"}`, params: { p_kind: kind, p_from: f.range.from, p_to: f.range.to, p_filters: f.filters, p_view: v } }); };
   return { open, sheet: <IndicatorSheet trigger={t} onClose={() => setT(null)} /> };
 };
 export const MktKpi = ({ k, prev, currency, onOpen, short }: { k: Kpi | undefined; prev?: Kpi; currency: string; onOpen?: (kind: string, title: string) => void; short?: boolean }) => {
   if (!k) return null;
   const d = delta(k, prev);
-  return <StatCard label={k.label} value={fmtKpi(k, currency)} unavailable={!k.available} delta={d ? { dir: d.dir, text: d.text } : null} tone={k.warning ? "warning" : undefined}
-    basis={k.available ? (short ? k.formula.split(";")[0] : k.formula) + (k.warning ? ` ⚠ ${k.warning}` : "") : `Não disponível: ${k.reason ?? "sem fonte"}`} onClick={k.detail && onOpen ? () => onOpen(k.detail!, k.label) : undefined} />;
+  return <MetricCard testId={`mkt-kpi-${k.key}`} label={k.label} icon={Info} value={fmtKpi(k, currency)} noBase={!k.available} reason={k.available ? null : (k.reason ?? "Sem fonte")} warning={k.warning}
+    info={<><p>{short ? k.formula.split(";")[0] : k.formula}</p><p className="mt-1 text-muted-foreground">Fonte: {k.source}.{k.denominator ? ` Base: ${k.denominator}.` : ""}</p></>}
+    delta={d ? { dir: d.dir, text: d.text } : null} onOpen={k.detail && onOpen ? () => onOpen(k.detail!, k.label) : undefined} />;
 };
+/** Grade de cartões compactos do Marketing: duas colunas no celular, três no tablet/desktop médio e quatro em telas largas. */
+export const MktGrid = ({ children }: { children: ReactNode }) => <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">{children}</div>;
 export const kpiByKeys = (r: KpisResp | undefined, keys: string[]) => keys.map((k) => ({ k: kpiOf(r, k), p: prevOf(r, k) }));
 
 /** Faixa de cobertura/atualização: deixa claro o intervalo efetivamente coberto e que falha não é gasto zero. */

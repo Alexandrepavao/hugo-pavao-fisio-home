@@ -105,6 +105,8 @@ Esta fase **importa relatórios e cruza dados internamente**. **Não envia** eve
 
 Projeto (não implementado) do envio de conversões a Meta/Google: [`marketing-conversoes-externas.md`](marketing-conversoes-externas.md).
 
+> **Dashboard compacto (Visão geral):** a Visão geral foi reformulada em cartões compactos e gráficos — composição, fórmulas, estados e limitações em [`marketing-dashboard-compacto.md`](marketing-dashboard-compacto.md) (migration 119).
+
 ## 8b. Gerenciador, funil visual, painéis, pontuação e assistente (migrations 114–117)
 
 * **Gerenciador** (`mkt_manager`, página Anúncios e criativos): tabela **campanha → conjunto → anúncio** com mídia (da plataforma) ao lado do confirmado no Hub: leads, **MQL** (etapa de qualificação), **SAL** (oportunidade com agendamento), compareceram, vendas, vendido, recebido, **CPL/CPMQL/CPSAL/CPA/ROAS**; presets de colunas (Captação, Resultado, Mídia, **Janelas 7-3-1**). Os toques guardam conjunto/anúncio pelos ids do link, ligados dentro da mesma campanha; o que não traz id vai para **“Sem anúncio identificado”**, de modo que conjuntos + “sem anúncio” **fecham com a campanha** (a tela avisa se não fechar). Gasto de conjunto/anúncio é detalhamento da plataforma e **nunca soma** ao total. **Janelas 7-3-1**: últimos 7, 3 e 1 dia **por data do evento, terminando no fim do período**. Aba **Criativos** em cards (ordenar por ROAS/Leads/MQL/Vendas/Investimento/menor CPMQL, etiquetas editáveis pelo administrador). Não há análise de transcrição/copy.
