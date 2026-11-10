@@ -3,7 +3,7 @@ import { ArrowDown, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Badge, Msg, State, btnGhost, btnPrimary, confirmDialog, errText } from "@/lib/ui";
 import { MktAssistantButton } from "./MktParts";
-import { money, num, rpcArgs, useMktInvalidate, useMktRpc, useNote, type FunnelDef, type FunnelRun, type MktFilters, type StepType } from "./mktApi";
+import { funnelName, money, num, rpcArgs, useMktInvalidate, useMktRpc, useNote, type FunnelDef, type FunnelRun, type MktFilters, type StepType } from "./mktApi";
 
 interface ListResp { funnels: FunnelDef[]; step_types: StepType[] }
 export const useFunnels = () => useMktRpc<ListResp>("mkt_funnels_list", {});
@@ -14,7 +14,7 @@ const pct = (v: number | null) => (v == null ? "—" : `${v.toLocaleString("pt-B
 export const FunnelView = ({ run }: { run: FunnelRun }) => {
   const base = Math.max(1, ...run.steps.filter((s) => s.available && s.count != null).map((s) => s.count as number));
   return (
-    <ol className="grid gap-1" data-testid="mkt-funnel-visual" aria-label={`Funil ${run.funnel.name}`}>
+    <ol className="grid gap-1" data-testid="mkt-funnel-visual" aria-label={`Funil ${funnelName(run.funnel.name)}`}>
       {run.steps.map((s, i) => {
         const w = s.available && s.count != null ? Math.max(4, Math.round((s.count / base) * 100)) : 0; const bottleneck = run.bottleneck_index === i;
         return (<li key={`${s.index}-${s.kind}`} className="grid gap-1">
@@ -86,7 +86,7 @@ export const FunnelSection = ({ f, isAdmin }: { f: MktFilters; isAdmin: boolean 
             {cur && <><button type="button" className={btnGhost} onClick={() => setEditor("edit")}>Editar</button><button type="button" className={btnGhost} onClick={del}>Excluir</button></>}</>}</div>
       </div>
       <State loading={list.isLoading} error={list.error} />
-      {funnels.length > 0 && <div role="tablist" aria-label="Funis" className="flex flex-wrap gap-2 mb-3">{funnels.map((x) => <button key={x.id} role="tab" type="button" aria-selected={cur?.id === x.id} onClick={() => { setSel(x.id); setEditor(null); }} className={`px-3 h-9 rounded-lg border text-sm font-medium ${cur?.id === x.id ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground hover:text-foreground"}`}>{x.name}</button>)}</div>}
+      {funnels.length > 0 && <div role="tablist" aria-label="Funis" className="flex flex-wrap gap-2 mb-3">{funnels.map((x) => <button key={x.id} role="tab" type="button" aria-selected={cur?.id === x.id} onClick={() => { setSel(x.id); setEditor(null); }} className={`px-3 h-9 rounded-lg border text-sm font-medium ${cur?.id === x.id ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground hover:text-foreground"}`}>{funnelName(x.name)}</button>)}</div>}
       <Msg m={msg} />
       {editor && list.data && <FunnelEditor key={editor + (cur?.id ?? "")} def={editor === "edit" ? cur ?? null : null} types={list.data.step_types} onClose={() => setEditor(null)} onSaved={(id) => { setSel(id); setEditor(null); inv(); setMsg({ kind: "ok", text: "Funil salvo." }); }} />}
       <State loading={run.isLoading} error={run.error} />

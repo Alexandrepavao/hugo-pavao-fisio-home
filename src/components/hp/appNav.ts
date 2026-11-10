@@ -1,4 +1,4 @@
-import { BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
+import { LineChart, BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
 import { APPS, appVisible, type AppId } from "./apps";
@@ -84,9 +84,10 @@ export const PAGES_NAV: FrameNavSection[] = [
 export const MARKETING_NAV: FrameNavSection[] = [
   { label: "Marketing", items: [
     { to: "/admin/marketing", label: "Visão geral", icon: LayoutDashboard, end: true, keywords: "marketing campanhas investimento leads funil retorno dashboard" },
+    { to: "/admin/marketing/analises", label: "Análises", icon: LineChart, keywords: "análises analytics tempo perdas qualidade campanhas região horário retorno mês grupo de leads" },
     { to: "/admin/marketing/campanhas", label: "Campanhas", icon: Megaphone, keywords: "campanhas meta google classificação frente finalidade" },
     { to: "/admin/marketing/anuncios", label: "Anúncios e criativos", icon: Image, keywords: "anúncios criativos conjuntos grupos facebook instagram posicionamento" },
-    { to: "/admin/marketing/funil", label: "Funil e atribuição", icon: Filter, keywords: "funil atribuição conversão indicadores coorte qualidade dados" },
+    { to: "/admin/marketing/funil", label: "Funil e atribuição", icon: Filter, keywords: "funil atribuição conversão indicadores coorte grupo de leads qualidade dados" },
     { to: "/admin/marketing/leads", label: "Leads e pontuação", icon: Gauge, keywords: "leads pontuação nota score quente morno frio priorizar" },
     { to: "/admin/marketing/paineis", label: "Painéis", icon: LayoutGrid, keywords: "painéis dashboards personalizar indicadores widgets" },
   ] },

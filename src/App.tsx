@@ -99,6 +99,7 @@ const OnboardingFisio = lazy(() => import("./pages/onboarding/OnboardingFisio"))
 const OnboardingPaciente = lazy(() => import("./pages/onboarding/OnboardingPaciente"));
 const Welcome = lazy(() => import("./pages/portal/Welcome"));
 const MarketingOverview = lazy(() => import("./pages/admin/marketing/MarketingOverview"));
+const MarketingAnalytics = lazy(() => import("./pages/admin/marketing/MarketingAnalytics"));
 const MarketingCampaigns = lazy(() => import("./pages/admin/marketing/MarketingCampaigns"));
 const MarketingAds = lazy(() => import("./pages/admin/marketing/MarketingAds"));
 const MarketingLeads = lazy(() => import("./pages/admin/marketing/MarketingLeads"));
@@ -233,6 +234,7 @@ const App = () => (
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
                 <Route path="marketing" element={g(R.leads, <FeatureGate feature="marketing"><MarketingOverview /></FeatureGate>)} />
+                <Route path="marketing/analises" element={g(R.leads, <FeatureGate feature="marketing"><MarketingAnalytics /></FeatureGate>)} />
                 <Route path="marketing/campanhas" element={g(R.leads, <FeatureGate feature="marketing"><MarketingCampaigns /></FeatureGate>)} />
                 <Route path="marketing/anuncios" element={g(R.leads, <FeatureGate feature="marketing"><MarketingAds /></FeatureGate>)} />
                 <Route path="marketing/funil" element={g(R.leads, <FeatureGate feature="marketing"><MarketingFunnel /></FeatureGate>)} />

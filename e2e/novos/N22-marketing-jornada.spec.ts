@@ -7,9 +7,17 @@ import { join } from "node:path";
 import { SUPABASE_URL } from "../helpers";
 import { api, collectErrors, devSql, loginAs, QA, runId, signIn, spDate } from "../release/helpers-release";
 
-test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" });
+test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: Number(process.env.MKT_W ?? 1280), height: Number(process.env.MKT_H ?? 900) } });
 const sql = async <T,>(q: string) => (await devSql(q)) as T[];
-const shot = async (p: Page, name: string) => { if (process.env.MKT_SHOTS) await p.screenshot({ path: join(process.env.MKT_SHOTS, `${name}.png`), fullPage: true }); };   // só para revisão visual (MKT_SHOTS=pasta)
+const shot = async (p: Page, name: string) => {   // só para revisão visual (MKT_SHOTS=pasta; MKT_TAG=sufixo, ex. 1440; MKT_THEMES=light,dark)
+  if (!process.env.MKT_SHOTS) return;
+  const tag = process.env.MKT_TAG ? `-${process.env.MKT_TAG}` : ""; const themes = (process.env.MKT_THEMES ?? "light").split(",");
+  for (const t of themes) {
+    await p.evaluate((th) => { try { localStorage.setItem("hp-theme", th); } catch { /* sem storage */ } document.documentElement.dataset.theme = th; }, t); await p.waitForTimeout(700);
+    await p.screenshot({ path: join(process.env.MKT_SHOTS, `${name}${tag}-${t}.png`), fullPage: true });
+  }
+  await p.evaluate(() => { try { localStorage.setItem("hp-theme", "light"); } catch { /* sem storage */ } document.documentElement.dataset.theme = "light"; });
+};
 const noOverflow = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
 test.describe.serial("@novos Marketing: do anúncio ao recebimento", () => {
@@ -60,7 +68,7 @@ test.describe.serial("@novos Marketing: do anúncio ao recebimento", () => {
     await page.getByRole("button", { name: "Criar e editar" }).click(); await expect(page).toHaveURL(/\/admin\/paginas\/[0-9a-f-]{36}$/);
     await page.getByRole("button", { name: "Publicar", exact: true }).click(); await expect(page.getByText("Página publicada.")).toBeVisible();
   };
-  const kpi = (page: Page, label: string) => page.locator("li", { has: page.getByText(label, { exact: true }) }).first();
+  const kpi = (page: Page, label: string) => page.locator('[data-testid^="mkt-kpi-"], [data-testid^="mkt-metric-"]', { has: page.getByText(label, { exact: true }) }).first();
 
   test("fixtures: Marketing habilitado, conta e campanhas manuais classificadas, gasto de 5 dias, etapas de qualificação, serviço de avaliação, página com formulário e produto", async ({ page, context }) => {
     test.skip(!process.env.SUPABASE_ACCESS_TOKEN, "precisa de SUPABASE_ACCESS_TOKEN para preparar e limpar fixtures");
@@ -113,21 +121,24 @@ test.describe.serial("@novos Marketing: do anúncio ao recebimento", () => {
   test("dashboard: cartões, funil, reconciliação e detalhamento conciliam com os dados criados; visão por coorte confere", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto(`/admin/marketing?periodo=7dias&campanha=${S.camp}&visao=evento`); await expect(page.getByTestId("mkt-overview")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("mkt-coverage")).toContainText("Cobertura do gasto"); await expect(page.getByTestId("mkt-coverage")).toContainText(/último toque pago/i);
-    await expect(kpi(page, "Investimento")).toContainText("R$ 500"); await expect(kpi(page, "Leads qualificados")).toContainText("1"); await expect(kpi(page, "Novos compradores")).toContainText("1");
-    await expect(kpi(page, "Valor vendido")).toContainText("R$ 1.000"); await expect(kpi(page, "Valor recebido (líquido de estornos)")).toContainText("R$ 500"); await expect(kpi(page, "Retorno (ROAS sobre vendas)")).toContainText("2x");
-    const f = page.getByTestId("mkt-funnel"); for (const [label, n] of [["Lead", "1"], ["Qualificado", "1"], ["Agendamento", "1"], ["Comparecimento", "1"], ["Venda", "1"], ["Recebimento", "1"]] as const) await expect(f.getByRole("button", { name: new RegExp(`^${label}`) })).toContainText(n);
+    await expect(page.getByTestId("mkt-coverage")).toContainText("Gasto coletado"); await expect(page.getByTestId("mkt-coverage")).toContainText(/último toque pago/i);
+    await expect(page.getByTestId("mkt-metric-spend")).toContainText("R$ 500,00"); await expect(page.getByTestId("mkt-metric-leads")).toContainText("1"); await expect(page.getByTestId("mkt-metric-cpl")).toContainText("R$ 500,00");
+    await expect(page.getByTestId("mkt-metric-sales")).toContainText("1"); await expect(page.getByTestId("mkt-metric-revenue")).toContainText("R$ 1.000"); await expect(page.getByTestId("mkt-metric-roas")).toContainText("2x");
+    // funil por COORTE (lead → contato → agendamento → comparecimento → protocolo vendido): a mesma pessoa percorre as 5 etapas
+    const f = page.getByTestId("mkt-funnel"); await expect(f).toBeVisible({ timeout: 30_000 });
+    for (const k of ["lead", "contacted", "scheduled", "attended", "sold"]) await expect(f.getByTestId(`mkt-funnel-step-${k}`)).toContainText("1");
     // o mesmo número vem do servidor (cartão = RPC)
     const mgr = await signIn(QA.manager); const r = (await api(mgr).rpc("mkt_kpis", { p_from: spDate(-6), p_to: spDate(0), p_filters: { scope: "hub", campaign: S.camp }, p_view: "event" })).body;
     const val = (k: string) => r.kpis.find((x: { key: string }) => x.key === k).value; expect(val("spend")).toBe(500); expect(val("leads")).toBe(1); expect(val("sold")).toBe(1000); expect(val("received")).toBe(500); expect(val("media_cost_per_new_customer")).toBe(500); expect(val("roas_sales")).toBe(2); expect(val("first_response_min")).toBe(20);
     expect(val("eval_done")).toBe(1); expect(val("cost_per_eval")).toBe(500); expect(val("attendance_rate")).toBe(100);
     // detalhamento com os mesmos filtros
-    await kpi(page, "Investimento").getByRole("button").click(); await expect(page.getByRole("dialog")).toContainText(camp); await expect(page.getByRole("dialog")).toContainText("R$ 500,00"); await page.keyboard.press("Escape");
-    await f.getByRole("button", { name: /^Venda/ }).click(); await expect(page.getByRole("dialog")).toContainText(personName); await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Ver registros: Investimento" }).click(); await expect(page.getByRole("dialog")).toContainText(camp); await expect(page.getByRole("dialog")).toContainText("R$ 500,00"); await page.keyboard.press("Escape");
+    await f.getByTestId("mkt-funnel-step-sold").click(); await expect(page.getByRole("dialog")).toContainText(personName); await page.keyboard.press("Escape");
     // coorte: os leads captados no período e o que aconteceu com eles
-    await page.getByRole("button", { name: "Por coorte de captação" }).click(); await expect(page).toHaveURL(/visao=coorte/); await expect(kpi(page, "Valor vendido")).toContainText("R$ 1.000"); await expect(page.getByTestId("mkt-coverage")).toContainText("por coorte");
-    await expect(page.getByTestId("mkt-reconciliation")).toContainText("Total efetivo"); await shot(page, "visao-geral");
-    await page.goto(`/admin/marketing/funil?periodo=7dias&campanha=${S.camp}&visao=coorte`); await expect(page.getByTestId("mkt-model")).toBeVisible({ timeout: 30_000 }); await page.waitForTimeout(1500); await shot(page, "funil-atribuicao");
+    await page.getByRole("button", { name: "Por data de captação do lead" }).click(); await expect(page).toHaveURL(/visao=coorte/); await expect(page.getByTestId("mkt-metric-revenue")).toContainText("R$ 1.000"); await expect(page.getByTestId("mkt-coverage")).toContainText("por data de captação do lead");
+    await expect(page.getByTestId("mkt-reconciliation")).toContainText("confere"); await expect(page.getByTestId("mkt-campaign-card").filter({ hasText: camp })).toBeVisible(); await shot(page, "visao-geral");
+    await page.goto(`/admin/marketing/funil?periodo=7dias&campanha=${S.camp}&visao=coorte`); await expect(page.getByTestId("mkt-model")).toBeVisible({ timeout: 30_000 });
+    await expect(kpi(page, "Leads qualificados")).toContainText("1"); await expect(kpi(page, "Novos compradores")).toContainText("1"); await expect(kpi(page, "Valor recebido (líquido de estornos)")).toContainText("R$ 500"); await expect(kpi(page, "ROAS sobre vendas")).toContainText("2x"); await page.waitForTimeout(1500); await shot(page, "funil-atribuicao");
     expect(errors, errors.join("\n")).toEqual([]);
   });
 

@@ -730,6 +730,19 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 3. Quando você tiver conteúdo real (cursos gravados) para o HP Academy, publicar as trilhas e vincular os cursos — continuam todas em rascunho, de propósito.
 4. Criar a primeira pesquisa e a primeira conta corporativa reais quando você tiver conteúdo/dados de verdade — as telas estão prontas, sem nenhum dado de exemplo inventado.
 
+## Dashboard compacto do Marketing (10/11/2026) — só Dev
+> Pedido do usuário: reformular o dashboard geral e de gestão de tráfego mantendo cartões e gráficos, corrigindo excesso de tamanho, espaços vazios e textos dentro dos cartões. Branch `feat/marketing-dashboard-compacto` (PR em rascunho). **Sem merge, produção ou DNS.** Detalhes, fórmulas, antes/depois e limitações: [`marketing-dashboard-compacto.md`](marketing-dashboard-compacto.md).
+- **Feito (Dev):** Visão geral com seis cartões compactos por objetivo (captação, vendas, reconhecimento), gráfico de evolução com seleção de métrica e período anterior tracejado, comparação Meta × Google, **funil por coorte** (lead → contato → agendamento → comparecimento → protocolo), **campanhas em cartões** (busca, ordenação, “Carregar mais”), filtros ativos com “Limpar”, faixa de sincronização e estados compactos. Migration **119**.
+- **Testes:** SQL N06 (27), N03 (170), N04 (46); vitest da lógica (17); E2E N25 (8) e N22 (9); typecheck, lint e build.
+- **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
+
+
+## Marketing › Análises (10/11/2026) — só Dev
+> Pedido do usuário: faltava um analytics dentro do Marketing para entender melhor tudo; e a dúvida “o que é coorte?”. Mesma branch `feat/marketing-dashboard-compacto` (PR rascunho #25). Detalhes: `docs/marketing-analises.md`.
+- **Feito (Dev):** tela **Análises** (`/admin/marketing/analises`) com quatro cartões e seis blocos — qualidade por campanha (dispersão custo × conversão), onde os leads se perdem (+ motivos), tempo até cada etapa, retorno por região/zona de SP, dia da semana × horário, retorno por mês de captação. “Coorte” foi trocado por “leads do período”/“data de captação do lead” em toda a tela do Marketing.
+- **Testes:** SQL N07 (28) e todos os novos (340); vitest da lógica (21 novos); E2E N26 (7) + N22/N25 reexecutados; typecheck e build.
+- **Pendente:** os mesmos de antes (APIs reais Meta/Google, alcance/frequência) e decisão de levar o PR #25 a produção.
+
 ## Zonas de São Paulo capital (09/11/2026)
 > Pedido do usuário: quando o lead preencher **São Paulo**, perguntar **bairro e zona** — para pacientes saberem onde atender e parceiros onde podem assumir pacientes. Só **São Paulo/SP (capital)**; em outras cidades pergunta-se só a cidade.
 - **Quiz de captação:** com cidade São Paulo e UF SP (qualquer grafia) aparecem **Bairro** e **Zona** (Sul, Norte, Leste, Oeste, Centro), obrigatórios. O banco valida a zona e limpa bairro/zona se a cidade mudar. Vão para o cadastro da pessoa **sem sobrescrever** dado já cadastrado.
