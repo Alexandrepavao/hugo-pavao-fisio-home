@@ -729,3 +729,10 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 2. Configurar Resend/SMTP quando você tiver as credenciais; então testar recuperação de senha, primeiro acesso e envio de pesquisa por e-mail reais.
 3. Quando você tiver conteúdo real (cursos gravados) para o HP Academy, publicar as trilhas e vincular os cursos — continuam todas em rascunho, de propósito.
 4. Criar a primeira pesquisa e a primeira conta corporativa reais quando você tiver conteúdo/dados de verdade — as telas estão prontas, sem nenhum dado de exemplo inventado.
+
+## Zonas de São Paulo capital (09/11/2026)
+> Pedido do usuário: quando o lead preencher **São Paulo**, perguntar **bairro e zona** — para pacientes saberem onde atender e parceiros onde podem assumir pacientes. Só **São Paulo/SP (capital)**; em outras cidades pergunta-se só a cidade.
+- **Quiz de captação:** com cidade São Paulo e UF SP (qualquer grafia) aparecem **Bairro** e **Zona** (Sul, Norte, Leste, Oeste, Centro), obrigatórios. O banco valida a zona e limpa bairro/zona se a cidade mudar. Vão para o cadastro da pessoa **sem sobrescrever** dado já cadastrado.
+- **Onboarding (paciente e fisioterapeuta):** a zona é exigida quando o endereço é São Paulo/SP. O fisioterapeuta ainda marca **as zonas que pode atender** (várias, opcional) — `professional_profiles.service_zones`.
+- **CRM (Contatos e Dashboard):** bloco **“Zonas de São Paulo”** com contatos por zona, **fisioterapeutas ativos que atendem cada zona**, bairros mais citados e “Sem zona informada”; clicar numa zona lista os contatos.
+- **Cadastros antigos ficam sem zona** (nada é inferido; o bairro nunca foi coletado no quiz). Migration **118**; testes SQL `novos/N05` (30), E2E `N24` (3); E2E do quiz (08, R25, R01) ajustados para preencher bairro/zona.
