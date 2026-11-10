@@ -37,3 +37,10 @@ Todos usam a mesma fonte dos cartões (`private.mkt_events`, visão por captaç�
 - Meta/Google reais seguem sem validação (lançamento manual nos testes).
 - Região depende do cadastro: cadastros antigos ficam em “Sem localização”.
 - Tempos e retornos dos meses recentes sobem à medida que os leads avançam.
+
+## Quando ainda não há dados
+Sem leads de campanha no período, a tela mostra os seis blocos “apagados”, cada um com o que vai trazer e o que precisa existir (conta de anúncios, campanhas, leads com origem, cidade/zona no cadastro) e uma linha de explicação com o caminho (Conectar conta / Ver campanhas). Nenhum número é inventado.
+
+## Dados de demonstração (somente Dev)
+Para ver as telas cheias no preview: `node supabase/tools/marketing-demo.mjs seed` cria 2 contas, 15 campanhas, ~75 dias de gasto, 126 leads, agendamentos, vendas, recebimentos, zonas e perdas — **tudo com “DEMO” no nome**. `... remove` apaga tudo; `... status` conta o que existe. O script recusa qualquer projeto que não seja o Dev.
+**Atenção:** os dados DEMO convivem com o banco de teste compartilhado; rode `remove` antes de `promover.mjs` ou de testes que contem campanhas/leads totais (N25/N26 já foram ajustados para tolerar os DEMO, mas a contagem de testes antigos fora do Marketing não foi revisada).

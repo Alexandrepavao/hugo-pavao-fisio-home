@@ -176,7 +176,7 @@ test.describe.serial("@novos Marketing: dashboard compacto (cartões e gráficos
     await page.goto("/admin/marketing?periodo=mes&plataforma=google&conta=" + acc); await ready(page); await expect(page.getByTestId("mkt-active-filters")).toContainText("Plataforma: Google Ads"); await expect(page.getByTestId("mkt-active-filters")).toContainText("Conta:");
     await page.getByTestId("mkt-clear-filters").click(); await expect(page).not.toHaveURL(/plataforma=|conta=/); await expect(page).toHaveURL(/periodo=mes/);
     // busca e paginação das campanhas
-    await ready(page); await page.getByTestId("mkt-campaign-search").fill("pilates"); await expect(page.getByTestId("mkt-campaign-card")).toHaveCount(1); await page.getByTestId("mkt-campaign-search").fill("");
+    await ready(page); await page.getByTestId("mkt-campaign-search").fill("N25 Google | Pesquisa — pilates"); await expect(page.getByTestId("mkt-campaign-card")).toHaveCount(1); await page.getByTestId("mkt-campaign-search").fill("");
     await expect(page.getByTestId("mkt-campaign-card")).toHaveCount(9); await page.getByTestId("mkt-campaign-more").click(); await expect.poll(() => page.getByTestId("mkt-campaign-card").count()).toBeGreaterThanOrEqual(15);
     expect(errors, errors.join("\n")).toEqual([]);
   });

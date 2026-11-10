@@ -205,7 +205,9 @@ test.describe.serial("@novos Marketing: Análises", () => {
   test("estados: período sem leads e unidade sem contas mostram “Sem base” e explicação, sem zeros inventados nem blocos vazios", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/marketing/analises?periodo=personalizado&de=2020-01-01&ate=2020-01-07"); await readyA(page, false);
-    await expect(page.getByTestId("mkt-an-empty")).toBeVisible({ timeout: 30_000 }); await expect(page.getByTestId("mkt-an-card-leads").locator("p.tabular")).toHaveText("0"); await expect(page.getByTestId("mkt-an-card-leads")).toContainText("Nenhum lead no período"); await expect(page.getByTestId("mkt-an-card-conv")).toContainText("Sem base");
+    await expect(page.getByTestId("mkt-an-empty")).toBeVisible({ timeout: 30_000 }); await expect(page.getByTestId("mkt-an-empty")).toContainText("Nenhum lead de campanha neste período");
+    await expect(page.getByTestId("mkt-an-ghosts").locator('[data-testid^="mkt-an-ghost-"]')).toHaveCount(6); await expect(page.getByTestId("mkt-an-ghost-quality")).toContainText("Aparece quando há");
+    await expect(page.getByTestId("mkt-an-card-leads").locator("p.tabular")).toHaveText("0"); await expect(page.getByTestId("mkt-an-card-leads")).toContainText("Nenhum lead no período"); await expect(page.getByTestId("mkt-an-card-conv")).toContainText("Sem base");
     await expect(page.getByTestId("mkt-an-quality")).toHaveCount(0); await expect(page.getByText("Indisponível")).toHaveCount(0); await shot(page, "analises-sem-leads");
     const emptyUnit = ((await devSql(`select id from public.units where slug = 'n26-sem-contas'`)) as { id: string }[])[0].id;
     await page.goto(`/admin/marketing/analises?${RANGE()}&unidade=${emptyUnit}`); await readyA(page, false); await expect(page.getByTestId("mkt-an-empty")).toBeVisible({ timeout: 30_000 }); await expect(page.getByTestId("mkt-an-card-sale-time")).toContainText("Sem base");

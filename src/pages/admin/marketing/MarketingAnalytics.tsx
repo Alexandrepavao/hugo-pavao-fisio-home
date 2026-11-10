@@ -1,18 +1,46 @@
 import { Link } from "react-router-dom";
-import { Percent, Timer, TrendingDown, Users } from "lucide-react";
+import { BarChart3, Clock, Filter, MapPin, Percent, Timer, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { PageHead } from "@/lib/ui";
 import { InfoTip, MetricCard, StateLine } from "./MktDashParts";
 import { DropoffBlock, HoursBlock, MonthlyBlock, QualityBlock, RegionBlock, TimingBlock } from "./MktAnalyticsBlocks";
 import { MktAssistantButton, MktFilterBar } from "./MktParts";
-import { fmtDay, rpcArgs, useMktFilters, useMktRpc } from "./mktApi";
+import { fmtDay, rpcArgs, useMktFilters, useMktOptions, useMktRpc } from "./mktApi";
 import { STAGES, biggestLoss, dropSteps, fmtDays, fmtRate, rate, type AnalyticsResp } from "./mktAnalytics";
 
 const nfi = (v: number) => v.toLocaleString("pt-BR");
 const shortOf = (label: string) => (label === "Leads captados" ? "Leads" : STAGES.find((s) => s.label === label)?.short ?? label);
 
+/** Quando ainda não há leads de campanha: mostra a estrutura da tela (o que cada bloco vai trazer e o que falta), sem inventar nenhum número. */
+const GHOSTS = [
+  { id: "quality", icon: BarChart3, title: "Qualidade por campanha", what: "Custo por lead × conversão em venda, campanha a campanha, com leitura (“barata e converte”, “cara e converte pouco”).", needs: "gasto das campanhas e leads ligados a elas" },
+  { id: "dropoff", icon: Filter, title: "Onde os leads se perdem", what: "Quantos leads chegam a contato, agendamento, comparecimento e venda, e os motivos de perda.", needs: "leads com origem de campanha no CRM" },
+  { id: "timing", icon: Clock, title: "Tempo até cada etapa", what: "Quantos dias, em mediana, do lead ao primeiro contato, ao agendamento e à venda.", needs: "leads que já avançaram no funil" },
+  { id: "regions", icon: MapPin, title: "Retorno por região", what: "Leads, vendas e receita por zona de São Paulo ou cidade.", needs: "cidade e zona preenchidas no cadastro" },
+  { id: "hours", icon: Clock, title: "Dia da semana e horário", what: "Mapa de quando os leads chegam e em quanto tempo recebem o primeiro contato.", needs: "leads no período" },
+  { id: "monthly", icon: TrendingUp, title: "Retorno por mês de captação", what: "Quanto cada mês de leads já devolveu em relação ao que foi investido.", needs: "gasto e recebimentos dos leads" },
+] as const;
+const EmptyAnalytics = ({ hasAccounts, hasCampaigns }: { hasAccounts: boolean; hasCampaigns: boolean }) => (
+  <div className="grid gap-3" data-testid="mkt-an-ghosts">
+    <StateLine testId="mkt-an-empty" action={!hasAccounts ? <Link to="/admin/marketing/integracoes" className="text-primary font-medium hover:underline">Conectar conta</Link> : !hasCampaigns ? <Link to="/admin/marketing/campanhas" className="text-primary font-medium hover:underline">Ver campanhas</Link> : undefined}>
+      {!hasAccounts ? "Ainda não há conta de anúncios acompanhada. Conecte Meta ou Google (ou lance o gasto manualmente) e deixe os leads chegarem com a origem da campanha: é aí que estes blocos se enchem."
+        : !hasCampaigns ? "Há conta de anúncios, mas nenhuma campanha ainda. Quando houver campanhas e leads ligados a elas, as análises aparecem."
+        : "Nenhum lead de campanha neste período e escopo. Amplie o período ou ajuste os filtros."}
+    </StateLine>
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" aria-label="O que as análises vão mostrar">
+      {GHOSTS.map((g) => (
+        <section key={g.id} data-testid={`mkt-an-ghost-${g.id}`} className="rounded-xl border border-dashed border-border bg-card/50 p-4">
+          <div className="flex items-center gap-2 mb-1.5"><g.icon size={15} aria-hidden className="text-muted-foreground" /><h3 className="text-[14px] font-bold">{g.title}</h3></div>
+          <p className="text-[12.5px] text-muted-foreground leading-snug">{g.what}</p>
+          <p className="text-[11.5px] text-muted-foreground mt-2"><b className="text-foreground">Aparece quando há:</b> {g.needs}.</p>
+        </section>))}
+    </div>
+  </div>
+);
+
 /** Análises: o porquê dos números. Sempre por grupo de leads (captados no período, acompanhados até hoje); os filtros e o período são os mesmos das outras telas do Marketing. */
 const MarketingAnalytics = () => {
   const f = useMktFilters("cohort", "hub");
+  const opts = useMktOptions().data;
   const q = useMktRpc<AnalyticsResp>("mkt_analytics", rpcArgs(f)); const d = q.data;
   const steps = d ? dropSteps(d.dropoff.overall) : []; const worst = d ? biggestLoss(steps) : null;
   const sold = d?.timing.overall.sold; const conv = d ? rate(d.dropoff.overall.sold, d.leads) : null;
@@ -41,7 +69,7 @@ const MarketingAnalytics = () => {
           </>)}
         </div>
 
-        {empty ? <StateLine testId="mkt-an-empty" action={<Link to="/admin/marketing/integracoes" className="text-primary font-medium hover:underline">Ver integrações</Link>}>Nenhum lead captado neste período e escopo. Amplie o período ou ajuste os filtros; as análises aparecem quando houver leads ligados a campanhas.</StateLine> : null}
+        {empty ? <EmptyAnalytics hasAccounts={(opts?.accounts.length ?? 0) > 0} hasCampaigns={(opts?.campaigns.length ?? 0) > 0} /> : null}
 
         {d && !empty && (<>
           <QualityBlock data={d} />
