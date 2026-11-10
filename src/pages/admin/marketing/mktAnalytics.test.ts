@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MIN_VOLUME, bandGrid, bandLabel, bestSlot, biggestLoss, dropSteps, fmtDays, fmtMinutes, fmtRate, median, monthLabel, paybackOf, qualityCalc, rate, regionCalc, type QualityRow } from "./mktAnalytics";
+import { MIN_VOLUME, curveRows, dayLabel, groupKpis, hasCurve, bandGrid, bandLabel, bestSlot, biggestLoss, dropSteps, fmtDays, fmtMinutes, fmtRate, median, monthLabel, paybackOf, qualityCalc, rate, regionCalc, type AnalyticsResp, type CurvePoint, type QualityRow } from "./mktAnalytics";
 
 const q = (o: Partial<QualityRow> & { campaign_id: string }): QualityRow => ({ name: o.campaign_id, platform: "meta", leads: 20, spend: 1000, attended: 5, sold: 2, revenue: 2000, ...o });
 
@@ -73,5 +73,31 @@ describe("região", () => {
   it("conversão e agendamento sobre os leads da própria região", () => {
     const [r] = regionCalc([{ key: "zone:sul", kind: "zone", label: "Zona Sul", leads: 20, scheduled: 10, attended: 6, sold: 3, revenue: 3000 }]);
     expect(r.conv).toBe(15); expect(r.schedRate).toBe(50);
+  });
+});
+
+describe("curva de tempo", () => {
+  const pts = (rows: [number, number, number][]): CurvePoint[] => rows.map(([day, n, base]) => ({ day, n, base }));
+  it("rótulos em horas e dias", () => { expect(dayLabel(0.25)).toBe("6 h"); expect(dayLabel(1)).toBe("1 d"); expect(dayLabel(30)).toBe("30 d"); });
+  it("% = chegaram até X dias ÷ leads com ao menos X dias de vida; base pequena vira nulo", () => {
+    const rows = curveRows({ contacted: pts([[1, 5, 20], [3, 9, 20], [7, 3, 4]]), sold: pts([[1, 0, 20], [3, 2, 20], [7, 1, 4]]) });
+    expect(rows.map((r) => r.contacted)).toEqual([25, 45]); expect(rows[1].sold).toBe(10); expect(rows).toHaveLength(2);   // o ponto de 7 dias (base 4) some: base pequena não vira número expect(rows[1].n?.contacted).toBe("9 de 20");
+  });
+  it("corta o trecho final sem nenhum ponto válido (leads novos demais)", () => { const rows = curveRows({ contacted: pts([[1, 5, 20], [3, 9, 20], [7, 3, 4], [14, 0, 0]]) }); expect(rows.map((r) => r.day)).toEqual([1, 3]); });
+  it("sem curva ou sem pontos suficientes: nada a desenhar", () => { expect(curveRows(undefined)).toEqual([]); expect(hasCurve(curveRows({ contacted: pts([[1, 5, 20]]) }))).toBe(false); expect(hasCurve(curveRows({ contacted: pts([[1, 5, 20], [3, 9, 20]]) }))).toBe(true); });
+});
+
+describe("KPIs do grupo de leads", () => {
+  const base = (o: Partial<AnalyticsResp> = {}): AnalyticsResp => ({ currency: "BRL", period: { from: "a", to: "b" }, leads: 20, basis: "", timing: { overall: {}, by_campaign: [] }, totals: { spend: 2000, revenue: 6000, received: 3000, sales: 4 },
+    dropoff: { overall: { leads: 20, contacted: 16, scheduled: 10, attended: 8, sold: 4 }, by_campaign: [], lost_reasons: [], lost_total: 0 }, quality: [], regions: [], hours: { heat: [], first_response: [] }, monthly: { rows: [], first_month: "a" }, ...o });
+  it("custo por lead, custo por venda, ROAS, ticket médio, agendamento, comparecimento e conversão pelos totais do grupo", () => {
+    const k = groupKpis(base()); expect(k.cpl).toBe(100); expect(k.cps).toBe(500); expect(k.roas).toBe(3); expect(k.ticket).toBe(1500); expect(k.sched).toBe(50); expect(k.attend).toBe(80); expect(k.conv).toBe(20);
+  });
+  it("sem gasto: custos e ROAS sem base; sem vendas: ticket sem base — nunca zero", () => {
+    const k = groupKpis(base({ totals: { spend: null, revenue: 0, received: 0, sales: 0 } })); expect(k.cpl).toBeNull(); expect(k.cps).toBeNull(); expect(k.roas).toBeNull(); expect(k.ticket).toBeNull();
+  });
+  it("comparecimento só com agendamentos; ROAS só com gasto positivo", () => {
+    expect(groupKpis(base({ dropoff: { overall: { leads: 5, contacted: 3, scheduled: 0, attended: 0, sold: 0 }, by_campaign: [], lost_reasons: [], lost_total: 0 } })).attend).toBeNull();
+    expect(groupKpis(base({ totals: { spend: 0, revenue: 100, received: 0, sales: 1 } })).roas).toBeNull();
   });
 });

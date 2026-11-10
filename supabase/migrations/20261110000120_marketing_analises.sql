@@ -1,6 +1,7 @@
 -- HP Group Hub — 120 Marketing: Análises (entender o porquê dos números).
 -- Uma só função de leitura, public.mkt_analytics(período, filtros), sempre por GRUPO DE LEADS (os leads captados no período, acompanhados até hoje):
---  · tempo até cada etapa (contato, agendamento, comparecimento, venda), geral e por campanha
+--  · tempo até cada etapa (contato, agendamento, comparecimento, venda), geral e por campanha, e a curva acumulada de quanto tempo os leads levam (só leads com tempo de vida suficiente em cada ponto)
+--  · totais do grupo (investimento, receita vendida, recebido líquido de estorno, vendas) para custo por lead, custo por venda, ROAS e ticket médio
 --  · onde os leads se perdem (etapa a etapa) e os motivos de perda mais citados
 --  · qualidade por campanha (custo por lead, custo por venda, conversão lead → venda, retorno)
 --  · retorno por região (zona de São Paulo capital ou cidade)
@@ -24,13 +25,21 @@ begin
   op as materialized (select person_id, opp_id, campaign_id, ev_at created_at from ev where kind = 'lead' and ev_at is not null),
   -- primeira vez em que cada pessoa do grupo atingiu cada etapa
   st as materialized (select e.person_id, e.kind, min(e.ev_at) at from ev e join op on op.person_id = e.person_id where e.kind in ('contacted', 'scheduled', 'attended', 'sold') and e.ev_at is not null group by 1, 2),
-  tmk as materialized (select st.person_id, st.kind, op.campaign_id, greatest(0, extract(epoch from (st.at - op.created_at)) / 86400.0) d from st join op on op.person_id = st.person_id),
+  tmk as materialized (select st.person_id, st.kind, op.campaign_id, op.created_at, greatest(0, extract(epoch from (st.at - op.created_at)) / 86400.0) d from st join op on op.person_id = st.person_id),
   money as materialized (select e.person_id, coalesce(sum(e.cents) filter (where e.kind = 'sale'), 0) sold, coalesce(sum(e.cents) filter (where e.kind = 'payment'), 0) received from ev e join op on op.person_id = e.person_id group by 1),
   spend as materialized (select sd.campaign_id, sum(sd.spend) s from public.mkt_spend_daily sd join sc on sc.campaign_id = sd.campaign_id
                           where sd.resolution = 'active' and sd.currency = cur and sd.day between p_from and p_to group by 1),
   -- ---------------- 1) tempo até cada etapa
   t_all as (select coalesce(jsonb_object_agg(kind, jsonb_build_object('n', n, 'median_days', md, 'avg_days', av)), '{}') j
               from (select kind, count(*) n, round((percentile_cont(0.5) within group (order by d))::numeric, 1) md, round(avg(d)::numeric, 1) av from tmk group by kind) x),
+  -- curva acumulada: dos leads com pelo menos k dias de vida, quantos já chegaram à etapa em até k dias (cada ponto só usa leads “maduros” para não penalizar os recentes)
+  curve as (select coalesce(jsonb_object_agg(kind, pts), '{}') j from (
+              select kd.kind, jsonb_agg(jsonb_build_object('day', ks.k, 'n', (select count(*) from tmk t where t.kind = kd.kind and t.d <= ks.k and t.created_at <= now() - make_interval(secs => (ks.k * 86400)::double precision)),
+                       'base', (select count(*) from op where op.created_at <= now() - make_interval(secs => (ks.k * 86400)::double precision))) order by ks.k) pts
+                from (values ('contacted'), ('scheduled'), ('attended'), ('sold')) kd(kind)
+                cross join (select unnest(array[0.25, 1, 2, 3, 5, 7, 10, 14, 21, 30, 45, 60]::numeric[]) k) ks group by kd.kind) z),
+  tot as (select jsonb_build_object('spend', (select sum(s) from spend), 'revenue', (select coalesce(sum(sold), 0) from money) / 100.0, 'received', (select coalesce(sum(received), 0) from money) / 100.0,
+                                    'sales', (select count(*) from ev e join op on op.person_id = e.person_id where e.kind = 'sale')) j),
   t_camp as (select coalesce(jsonb_agg(r order by (r ->> 'leads')::int desc, r ->> 'name'), '[]') j from (
               select jsonb_build_object('campaign_id', c.id, 'name', c.name, 'platform', sc.platform, 'leads', o.n,
                        'stages', coalesce((select jsonb_object_agg(z.kind, jsonb_build_object('n', z.n, 'median_days', z.md))
@@ -90,7 +99,8 @@ begin
                         from generate_series(0, least(12, ((extract(year from p_to) * 12 + extract(month from p_to)) - (extract(year from ms.m) * 12 + extract(month from ms.m)))::int)) k)) order by ms.m), '[]') j from ms)
   select jsonb_build_object(
     'currency', cur, 'period', jsonb_build_object('from', p_from, 'to', p_to), 'leads', (select count(*) from op),
-    'timing', jsonb_build_object('overall', (select j from t_all), 'by_campaign', (select j from t_camp)),
+    'timing', jsonb_build_object('overall', (select j from t_all), 'by_campaign', (select j from t_camp), 'curve', (select j from curve)),
+    'totals', (select j from tot),
     'dropoff', jsonb_build_object('overall', (select j from d_all), 'by_campaign', (select j from d_camp), 'lost_reasons', (select j from lost), 'lost_total', (select n from lost_n)),
     'quality', (select j from qual), 'regions', (select j from reg),
     'hours', jsonb_build_object('heat', (select j from heat), 'first_response', (select j from resp)),

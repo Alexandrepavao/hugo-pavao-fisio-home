@@ -142,13 +142,17 @@ test.describe.serial("@novos Marketing: Análises", () => {
       from (select id, abs(hashtext(id::text)) % 7 k from public.people where full_name like 'Lead ${TAG} %') z where p.id = z.id`);
   });
 
-  test("1440 px: quatro cartões compactos e seis blocos de análise, sem overflow, sem erros de console e sem o jargão “coorte”", async ({ page, context }) => {
+  test("1440 px: dez cartões compactos, gráficos nos seis blocos de análise, sem overflow, sem erros de console e sem o jargão “coorte”", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto(`/admin/marketing/analises?${RANGE()}`); await readyA(page);
-    const cards = page.getByTestId("mkt-an-cards").locator('[data-testid^="mkt-an-card-"]'); await expect(cards).toHaveCount(4);
+    const cards = page.getByTestId("mkt-an-cards").locator('[data-testid^="mkt-an-card-"]'); await expect(cards).toHaveCount(10);
     const hs = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height))); for (const h of hs) { expect(h).toBeGreaterThanOrEqual(100); expect(h).toBeLessThanOrEqual(140); }
     expect(num(await page.getByTestId("mkt-an-card-leads").locator("p.tabular").innerText())).toBeGreaterThan(20);
     await expect(page.getByTestId("mkt-an-card-conv")).toContainText("%"); await expect(page.getByTestId("mkt-an-card-sale-time")).toContainText(/dia|h|min/);
+    for (const id of ["cpl", "cps", "roas", "ticket"]) { await expect(page.getByTestId(`mkt-an-card-${id}`)).toContainText(id === "roas" ? "x" : "R$"); await expect(page.getByTestId(`mkt-an-card-${id}`)).not.toContainText("Sem base"); }
+    for (const id of ["sched", "attend"]) await expect(page.getByTestId(`mkt-an-card-${id}`)).toContainText("%"); await expect(page.getByTestId("mkt-an-card-contact-time")).toContainText(/min|h|dia/);
+    // gráficos de verdade (não só barras de CSS): funil empilhado, curva de tempo, regiões e meses
+    for (const id of ["mkt-an-drop-chart", "mkt-an-curve", "mkt-an-region-chart", "mkt-an-monthly-chart"]) await expect(page.getByTestId(id).locator("svg.recharts-surface").first()).toBeVisible();
     for (const id of ["quality", "dropoff", "timing", "regions", "hours", "monthly"]) await expect(page.getByTestId(`mkt-an-${id}`)).toBeVisible();
     await expect(page.getByTestId("mkt-an-scatter").locator("svg").first()).toBeVisible(); expect(await page.getByTestId("mkt-an-quality-row").count()).toBeGreaterThanOrEqual(5);
     await expect(page.getByTestId("mkt-an-heat")).toBeVisible(); await expect(page.getByTestId("mkt-an-month-row").first()).toBeVisible();
@@ -165,12 +169,13 @@ test.describe.serial("@novos Marketing: Análises", () => {
     await page.goto(`/admin/marketing/analises?${RANGE()}`); await readyA(page);
     const leads = num(await page.getByTestId("mkt-an-card-leads").locator("p.tabular").innerText()); expect(leads).toBeGreaterThan(20);
     const sum = (sel: string, attr: string) => page.locator(sel).evaluateAll((els, a) => els.reduce((s, e) => s + Number(e.getAttribute(a) ?? 0), 0), attr);
-    expect(num(await page.getByTestId("mkt-an-drop-leads").locator("p.tabular").first().innerText())).toBe(leads);
+    const counts = JSON.parse((await page.getByTestId("mkt-an-drop-chart").getAttribute("data-counts")) ?? "{}") as { leads: number; contacted: number };
+    expect(counts.leads, "leads do gráfico do funil").toBe(leads);
     expect(await sum('[data-testid="mkt-an-region-row"]', "data-leads"), "regiões somam os leads").toBe(leads);
     expect(await sum('[data-testid="mkt-an-heat"] [role="cell"]', "data-n"), "horários somam os leads").toBe(leads);
     expect(await sum('[data-testid="mkt-an-month-row"]', "data-leads"), "meses somam os leads").toBe(leads);
     const q = await sum('[data-testid="mkt-an-quality-row"]', "data-leads"); expect(q, "campanhas somam no máximo os leads").toBeLessThanOrEqual(leads); expect(q).toBeGreaterThan(0);
-    const contacted = num(await page.getByTestId("mkt-an-drop-contacted").locator("p.tabular").first().innerText());
+    const contacted = counts.contacted;
     // a Visão geral conta a mesma coisa pelo funil dos leads do período
     await page.goto(`/admin/marketing?${RANGE()}&visao=coorte`); await ready(page);
     await expect(page.getByTestId("mkt-funnel-step-lead")).toBeVisible({ timeout: 30_000 });
@@ -197,7 +202,7 @@ test.describe.serial("@novos Marketing: Análises", () => {
     await page.goto(`/admin/marketing/analises?${RANGE()}&campanha=${camp}`); await readyA(page);
     await expect(page.getByTestId("mkt-active-filters")).toContainText("Campanha:");
     await expect(page.getByTestId("mkt-an-card-leads").locator("p.tabular")).toHaveText("5"); await expect(page.getByTestId("mkt-an-quality-row")).toHaveCount(1); await expect(page.getByTestId("mkt-an-quality-row")).toContainText("Volume baixo");
-    await expect(page.getByTestId("mkt-an-scatter")).toContainText("ao menos duas campanhas"); await expect(page.getByTestId("mkt-an-card-worst")).toContainText("Sem base");
+    await expect(page.getByTestId("mkt-an-scatter")).toContainText("ao menos duas campanhas"); await expect(page.getByTestId("mkt-an-worst")).toContainText("Volume pequeno");
     await expect(page.getByTestId("mkt-an-dropoff")).toContainText("Volume pequeno");
     expect(errors, errors.join("\n")).toEqual([]);
   });

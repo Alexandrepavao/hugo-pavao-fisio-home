@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
-import { BarChart3, Clock, Filter, MapPin, Percent, Timer, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { Banknote, BarChart3, CalendarCheck, Clock, Filter, MapPin, Percent, Receipt, Target, Timer, TrendingUp, UserCheck, Users, Zap } from "lucide-react";
 import { PageHead } from "@/lib/ui";
 import { InfoTip, MetricCard, StateLine } from "./MktDashParts";
 import { DropoffBlock, HoursBlock, MonthlyBlock, QualityBlock, RegionBlock, TimingBlock } from "./MktAnalyticsBlocks";
 import { MktAssistantButton, MktFilterBar } from "./MktParts";
 import { fmtDay, rpcArgs, useMktFilters, useMktOptions, useMktRpc } from "./mktApi";
-import { STAGES, biggestLoss, dropSteps, fmtDays, fmtRate, rate, type AnalyticsResp } from "./mktAnalytics";
+import { fmtValue } from "./mktMetrics";
+import { STAGES, fmtDays, fmtRate, groupKpis, type AnalyticsResp } from "./mktAnalytics";
 
 const nfi = (v: number) => v.toLocaleString("pt-BR");
-const shortOf = (label: string) => (label === "Leads captados" ? "Leads" : STAGES.find((s) => s.label === label)?.short ?? label);
 
 /** Quando ainda não há leads de campanha: mostra a estrutura da tela (o que cada bloco vai trazer e o que falta), sem inventar nenhum número. */
 const GHOSTS = [
@@ -42,8 +42,8 @@ const MarketingAnalytics = () => {
   const f = useMktFilters("cohort", "hub");
   const opts = useMktOptions().data;
   const q = useMktRpc<AnalyticsResp>("mkt_analytics", rpcArgs(f)); const d = q.data;
-  const steps = d ? dropSteps(d.dropoff.overall) : []; const worst = d ? biggestLoss(steps) : null;
-  const sold = d?.timing.overall.sold; const conv = d ? rate(d.dropoff.overall.sold, d.leads) : null;
+  const k = d ? groupKpis(d) : null; const c = d?.dropoff.overall; const cur = d?.currency ?? "BRL"; const sold = d?.timing.overall.sold; const contact = d?.timing.overall.contacted;
+  const noSpend = d?.totals?.spend == null;
   const empty = d && d.leads === 0;
   return (
     <div data-testid="mkt-analytics">
@@ -57,15 +57,27 @@ const MarketingAnalytics = () => {
           <Link to="/admin/marketing" className="text-primary hover:underline">Voltar à visão geral</Link>
         </p>
 
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3" data-testid="mkt-an-cards">
-          {q.isLoading && !d ? [0, 1, 2, 3].map((i) => <div key={i} className="rounded-xl border border-border bg-card min-h-[110px] animate-pulse" aria-hidden />) : (<>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3" data-testid="mkt-an-cards">
+          {q.isLoading && !d ? Array.from({ length: 10 }, (_, i) => <div key={i} className="rounded-xl border border-border bg-card min-h-[110px] animate-pulse" aria-hidden />) : (<>
             <MetricCard testId="mkt-an-card-leads" label="Leads do período" shortLabel="Leads" icon={Users} value={d ? nfi(d.leads) : "—"} noBase={!d || d.leads === 0} reason="Nenhum lead no período" info={<p>Pessoas captadas no período e ligadas a uma campanha do escopo (uma por pessoa).</p>} />
+            <MetricCard testId="mkt-an-card-cpl" label="Custo por lead" icon={Target} value={fmtValue("cpl", k?.cpl ?? null, cur)} noBase={k?.cpl == null} reason={noSpend ? "Sem gasto coletado" : "Sem leads"} note={d && k?.cpl != null ? `${fmtValue("spend", d.totals.spend, cur)} em ${nfi(d.leads)} leads` : null}
+              info={<p>Investimento do período no escopo ÷ leads do grupo. Sem gasto coletado, aparece “Sem base” (nunca zero).</p>} />
+            <MetricCard testId="mkt-an-card-cps" label="Custo por venda" icon={Receipt} value={fmtValue("cps", k?.cps ?? null, cur)} noBase={k?.cps == null} reason={noSpend ? "Sem gasto coletado" : "Nenhuma venda no grupo"} note={c ? `${nfi(c.sold)} lead${c.sold === 1 ? "" : "s"} com venda` : null}
+              info={<p>Investimento do período ÷ leads do grupo que já compraram. Quanto custa, em anúncio, cada paciente ou aluno conquistado.</p>} />
+            <MetricCard testId="mkt-an-card-conv" label="Lead → venda" icon={Percent} value={fmtRate(k?.conv ?? null)} noBase={k?.conv == null} reason="Sem leads no período" note={d && c ? `${nfi(c.sold)} de ${nfi(d.leads)} leads` : null}
+              info={<p>Leads do grupo com venda confirmada ÷ leads do grupo. Leads recentes ainda podem comprar.</p>} />
+            <MetricCard testId="mkt-an-card-roas" label="Retorno sobre o investimento" shortLabel="ROAS" icon={TrendingUp} value={fmtValue("roas", k?.roas ?? null, cur)} noBase={k?.roas == null} reason={noSpend ? "Sem gasto coletado" : "Sem base"} note={d && k?.roas != null ? `${fmtValue("revenue", d.totals.revenue, cur)} vendidos` : null}
+              info={<p>Valor vendido ao grupo ÷ investimento do período. Receita atribuída à campanha pelo modelo de atribuição configurado.</p>} />
+            <MetricCard testId="mkt-an-card-ticket" label="Ticket médio" icon={Banknote} value={fmtValue("revenue", k?.ticket ?? null, cur)} noBase={k?.ticket == null} reason="Nenhuma venda no grupo" note={d ? `${nfi(d.totals.sales)} venda${d.totals.sales === 1 ? "" : "s"}` : null}
+              info={<p>Valor vendido ao grupo ÷ número de vendas confirmadas.</p>} />
+            <MetricCard testId="mkt-an-card-sched" label="Taxa de agendamento" shortLabel="Agendamento" icon={CalendarCheck} value={fmtRate(k?.sched ?? null)} noBase={k?.sched == null} reason="Sem leads no período" note={d && c ? `${nfi(c.scheduled)} de ${nfi(d.leads)} leads` : null}
+              info={<p>Leads do grupo que chegaram a ter um agendamento ÷ leads do grupo.</p>} />
+            <MetricCard testId="mkt-an-card-attend" label="Taxa de comparecimento" shortLabel="Comparecimento" icon={UserCheck} value={fmtRate(k?.attend ?? null)} noBase={k?.attend == null} reason="Nenhum agendamento no grupo" note={c ? `${nfi(c.attended)} de ${nfi(c.scheduled)} agendados` : null}
+              info={<p>Leads que compareceram ÷ leads que agendaram, dentro do mesmo grupo.</p>} />
+            <MetricCard testId="mkt-an-card-contact-time" label="Tempo até o 1º contato" shortLabel="Até o 1º contato" icon={Zap} value={fmtDays(contact?.median_days)} noBase={contact?.median_days == null} reason="Nenhum contato registrado" note={contact ? `${nfi(contact.n)} lead${contact.n === 1 ? "" : "s"} contatado${contact.n === 1 ? "" : "s"}` : null}
+              info={<p>Mediana do tempo entre a captação do lead e o primeiro contato humano registrado no CRM. Quanto menor, melhor a chance de conversão.</p>} />
             <MetricCard testId="mkt-an-card-sale-time" label="Tempo até a primeira venda" shortLabel="Até a venda" icon={Timer} value={fmtDays(sold?.median_days)} noBase={sold?.median_days == null} reason="Nenhuma venda no grupo" note={sold ? `${nfi(sold.n)} venda${sold.n === 1 ? "" : "s"} no grupo` : null}
               info={<p>Mediana de dias corridos entre a captação do lead e a primeira venda confirmada. Só conta leads que já compraram.</p>} />
-            <MetricCard testId="mkt-an-card-conv" label="Lead → venda" icon={Percent} value={fmtRate(conv)} noBase={conv == null} reason="Sem leads no período" note={d ? `${nfi(d.dropoff.overall.sold)} de ${nfi(d.leads)} leads` : null}
-              info={<p>Leads do grupo com venda confirmada ÷ leads do grupo. Leads recentes ainda podem comprar.</p>} />
-            <MetricCard testId="mkt-an-card-worst" label="Maior perda do funil" shortLabel="Maior perda" icon={TrendingDown} value={worst ? fmtRate(worst.step.lostPct, 0) : "Sem base"} noBase={!worst} reason={d && d.leads > 0 ? `Menos de 10 leads por etapa` : "Sem leads no período"}
-              note={worst ? `${shortOf(worst.prevLabel)} → ${shortOf(worst.step.label)}` : null} info={<p>A etapa em que a maior parte dos leads fica pelo caminho em relação à etapa anterior. Só é apontada com 10 leads ou mais na etapa anterior.</p>} />
           </>)}
         </div>
 

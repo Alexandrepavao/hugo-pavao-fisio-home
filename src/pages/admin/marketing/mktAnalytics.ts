@@ -3,6 +3,7 @@
 
 export type StageKey = "contacted" | "scheduled" | "attended" | "sold";
 export interface StageStat { n: number; median_days: number | null; avg_days?: number | null }
+export interface CurvePoint { day: number; n: number; base: number }
 export interface Counts { leads: number; contacted: number; scheduled: number; attended: number; sold: number }
 export interface CampaignRef { campaign_id: string; name: string; platform: string }
 export interface QualityRow extends CampaignRef { leads: number; spend: number | null; attended: number; sold: number; revenue: number }
@@ -10,7 +11,8 @@ export interface RegionRow { key: string; kind: "zone" | "city" | "none"; label:
 export interface MonthRow { month: string; leads: number; spend: number | null; sold: number; cum: number[] }
 export interface AnalyticsResp {
   currency: string; period: { from: string; to: string }; leads: number; basis: string;
-  timing: { overall: Partial<Record<StageKey, StageStat>>; by_campaign: (CampaignRef & { leads: number; stages: Partial<Record<StageKey, StageStat>> })[] };
+  timing: { overall: Partial<Record<StageKey, StageStat>>; by_campaign: (CampaignRef & { leads: number; stages: Partial<Record<StageKey, StageStat>> })[]; curve?: Partial<Record<StageKey, CurvePoint[]>> };
+  totals: { spend: number | null; revenue: number; received: number; sales: number };
   dropoff: { overall: Counts; by_campaign: (CampaignRef & Counts)[]; lost_reasons: { reason: string; n: number }[]; lost_total: number };
   quality: QualityRow[]; regions: RegionRow[];
   hours: { heat: { dow: number; band: number; n: number }[]; first_response: { band: number; n: number; median_min: number | null }[] };
@@ -105,3 +107,32 @@ export const lastCum = (r: MonthRow): number | null => (r.cum.length ? r.cum[r.c
 
 // ---------------------------------------------------------------- região
 export const regionCalc = (rows: RegionRow[]) => rows.map((r) => ({ ...r, conv: rate(r.sold, r.leads), schedRate: rate(r.scheduled, r.leads) }));
+
+// ---------------------------------------------------------------- curva de tempo: % dos leads que chegaram à etapa em até X dias
+export const CURVE_COLORS: Record<StageKey, string> = { contacted: "hsl(var(--chart-1))", scheduled: "hsl(var(--chart-4))", attended: "hsl(var(--chart-2))", sold: "hsl(var(--foreground))" };
+export const dayLabel = (d: number) => (d < 1 ? `${Math.round(d * 24)} h` : `${d} d`);
+export type CurveRow = { day: number; label: string } & Partial<Record<StageKey, number | null>> & { n?: Partial<Record<StageKey, string>> };
+/** Cada ponto = leads que chegaram à etapa em até X dias ÷ leads com pelo menos X dias de vida. Base pequena (< MIN_VOLUME) vira nulo: a linha quebra em vez de inventar. */
+export const curveRows = (curve: AnalyticsResp["timing"]["curve"]): CurveRow[] => {
+  if (!curve) return [];
+  const days = (curve.contacted ?? curve.sold ?? []).map((p) => p.day);
+  const all = days.map((day) => {
+    const row: CurveRow = { day, label: dayLabel(day), n: {} };
+    STAGES.forEach((s) => { const pt = curve[s.key]?.find((p) => p.day === day); const ok = pt && pt.base >= MIN_VOLUME; row[s.key] = ok ? (pt.n / pt.base) * 100 : null; if (pt && row.n) row.n[s.key] = `${pt.n} de ${pt.base}`; });
+    return row;
+  });
+  let end = all.length; while (end > 0 && STAGES.every((s) => all[end - 1][s.key] == null)) end--;   // sem pontos válidos no final (leads novos demais): não desenha o trecho vazio
+  return all.slice(0, end);
+};
+/** Há alguma linha que se possa desenhar (ao menos 2 pontos com base suficiente em alguma etapa)? */
+export const hasCurve = (rows: CurveRow[]): boolean => STAGES.some((s) => rows.filter((r) => r[s.key] != null).length >= 2);
+
+// ---------------------------------------------------------------- KPIs do grupo de leads
+export interface GroupKpis { cpl: number | null; cps: number | null; roas: number | null; ticket: number | null; sched: number | null; attend: number | null; conv: number | null }
+export const groupKpis = (d: AnalyticsResp): GroupKpis => {
+  const c = d.dropoff.overall; const spend = d.totals?.spend ?? null; const revenue = d.totals?.revenue ?? 0; const sales = d.totals?.sales ?? 0;
+  return {
+    cpl: spend != null && c.leads > 0 ? spend / c.leads : null, cps: spend != null && c.sold > 0 ? spend / c.sold : null, roas: spend != null && spend > 0 ? revenue / spend : null,
+    ticket: sales > 0 ? revenue / sales : null, sched: rate(c.scheduled, c.leads), attend: rate(c.attended, c.scheduled), conv: rate(c.sold, c.leads),
+  };
+};

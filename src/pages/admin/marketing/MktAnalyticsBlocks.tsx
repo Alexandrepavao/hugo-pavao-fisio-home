@@ -1,11 +1,11 @@
 import { Fragment, useState, type ReactNode } from "react";
-import { CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
 import { tooltipStyle } from "@/lib/IndicatorCharts";
 import { MKT_COLORS, PLATFORM_LABEL } from "./mktApi";
 import { InfoTip, Panel, StateLine } from "./MktDashParts";
 import { fmtValue } from "./mktMetrics";
 import {
-  DOW, DOW_FULL, MIN_VOLUME, READING, STAGES, bandGrid, bandLabel, bestSlot, biggestLoss, dropSteps, fmtDays, fmtMinutes, fmtRate, lastCum, median, monthLabel, paybackOf, qualityCalc, rate, regionCalc,
+  CURVE_COLORS, DOW, DOW_FULL, MIN_VOLUME, READING, STAGES, bandGrid, bandLabel, bestSlot, biggestLoss, curveRows, dropSteps, fmtDays, fmtMinutes, fmtRate, hasCurve, lastCum, median, monthLabel, paybackOf, qualityCalc, rate, regionCalc,
   type AnalyticsResp, type QualityCalc, type StageKey,
 } from "./mktAnalytics";
 
@@ -17,7 +17,6 @@ const Hint = ({ title, children }: { title: string; children: ReactNode }) => <s
 const Toggle = ({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) => (
   <button type="button" onClick={onClick} aria-expanded={on} className="h-7 px-2.5 rounded-full border border-border bg-card text-[12px] font-medium text-muted-foreground hover:text-foreground">{on ? "Ocultar" : "Ver"} {label}</button>
 );
-const Bar = ({ pct, color = "hsl(var(--primary))" }: { pct: number; color?: string }) => <span className="block h-2 rounded-full bg-muted overflow-hidden"><span className="block h-full rounded-full" style={{ width: `${Math.min(100, Math.max(pct > 0 ? 2 : 0, pct))}%`, background: color }} /></span>;
 
 // ================================================================= 1) qualidade por campanha
 const ReadingTag = ({ r }: { r: QualityCalc["reading"] }) => (r === "none" ? null : (
@@ -74,31 +73,55 @@ export const QualityBlock = ({ data }: { data: AnalyticsResp }) => {
 };
 
 // ================================================================= 2) onde os leads se perdem
+const chartTick = { fontSize: 11.5 } as const;
+const LOST_FILL = "hsl(var(--chart-6) / .30)";
 export const DropoffBlock = ({ data }: { data: AnalyticsResp }) => {
   const [by, setBy] = useState(false); const d = data.dropoff; const steps = dropSteps(d.overall); const worst = biggestLoss(steps); const first = Math.max(1, d.overall.leads);
-  const maxLost = Math.max(1, ...d.lost_reasons.map((x) => x.n));
+  const chart = steps.map((s) => ({ name: s.label, reached: s.count, lost: s.lost, tail: 0.0001, pct: s.fromPrev, lostN: s.lost, key: s.key }));
+  const maxLost = Math.max(1, ...d.lost_reasons.map((x) => x.n)); const reasons = d.lost_reasons.map((x) => ({ reason: x.reason, n: x.n }));
   return (
-    <Panel title="Onde os leads se perdem" testId="mkt-an-dropoff" hint={<Hint title="Perda etapa a etapa">Mostra quantos leads do grupo chegaram a cada etapa e quantos ficaram pelo caminho em relação à etapa anterior. “Maior perda” só é apontada quando a etapa anterior tem {MIN_VOLUME} leads ou mais.</Hint>}
+    <Panel title="Onde os leads se perdem" testId="mkt-an-dropoff" hint={<Hint title="Perda etapa a etapa">Cada barra azul é quantos leads do grupo chegaram à etapa; a parte clara é quantos ficaram pelo caminho em relação à etapa anterior. “Maior perda” só é apontada quando a etapa anterior tem {MIN_VOLUME} leads ou mais.</Hint>}
       right={d.by_campaign.length > 1 ? <Toggle on={by} onClick={() => setBy(!by)} label="por campanha" /> : undefined}>
       {d.overall.leads === 0 ? <StateLine>Nenhum lead captado neste período e escopo.</StateLine> : (
         <div className="grid gap-4">
-          <ol className="grid gap-1.5" data-testid="mkt-an-drop-steps">
-            {steps.map((s, i) => (
-              <li key={s.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 px-1" data-testid={`mkt-an-drop-${s.key}`}>
-                <div className="min-w-0"><div className="flex items-center gap-2 text-[12.5px] font-medium"><span className="truncate">{s.label}</span>
-                  {worst?.step.key === s.key && <span className="text-[10.5px] rounded-full px-2 py-px whitespace-nowrap" style={{ background: "hsl(var(--warning-soft))", border: "1px solid hsl(var(--warning) / .5)" }}>Maior perda</span>}</div>
-                  <div className="mt-1"><Bar pct={(s.count / first) * 100} /></div></div>
-                <div className="text-right leading-tight"><p className="tabular text-[17px] font-bold">{nfi(s.count)}</p>
-                  {i > 0 && <p className="text-[11px] text-muted-foreground tabular">{fmtRate(s.fromPrev)} da anterior{s.lost > 0 ? ` · −${nfi(s.lost)}` : ""}</p>}</div>
-              </li>))}
-          </ol>
+          <div style={{ height: 232 }} data-testid="mkt-an-drop-chart" data-counts={JSON.stringify(d.overall)} role="img"
+            aria-label={`Funil dos leads: ${steps.map((s) => `${s.label} ${s.count}`).join(", ")}`}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap={10}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" horizontal={false} />
+                <XAxis type="number" hide domain={[0, Math.ceil(first * 1.32)]} />
+                <YAxis type="category" dataKey="name" width={112} tick={chartTick} tickLine={false} axisLine={false} />
+                <Tooltip cursor={{ fill: "hsl(var(--muted) / .4)" }} {...tooltipStyle} content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null; const r = payload[0].payload as (typeof chart)[number];
+                  return <div style={tooltipStyle.contentStyle as React.CSSProperties}><p style={{ fontWeight: 600 }}>{r.name}: {nfi(r.reached)} leads</p>{r.pct != null && <p>{fmtRate(r.pct)} da etapa anterior</p>}{r.lostN > 0 && <p>Ficaram pelo caminho: {nfi(r.lostN)}</p>}</div>;
+                }} />
+                <Bar dataKey="reached" stackId="f" fill="hsl(var(--chart-1))" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="lost" stackId="f" fill={LOST_FILL} stroke="hsl(var(--chart-6))" strokeDasharray="3 3" isAnimationActive={false} />
+                <Bar dataKey="tail" stackId="f" fill="transparent" isAnimationActive={false}>
+                  <LabelList dataKey="reached" content={(p) => {
+                    const i = Number(p.index); const r = chart[i]; if (!r) return null; const x = Number(p.x ?? 0); const y = Number(p.y ?? 0); const h = Number(p.height ?? 0);
+                    return <text x={x + 6} y={y + h / 2} dominantBaseline="central" fontSize={12.5}><tspan fontWeight={700} fill="hsl(var(--foreground))">{nfi(r.reached)}</tspan>{r.pct != null && <tspan dx={6} fill="hsl(var(--muted-foreground))" fontSize={11}>{fmtRate(r.pct, 0)}</tspan>}</text>;
+                  }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[11.5px] text-muted-foreground -mt-2">Barra azul = chegaram · faixa clara = ficaram pelo caminho · % = sobre a etapa anterior.</p>
           {worst ? <p className="text-[12.5px]" data-testid="mkt-an-worst">Maior perda: entre <b>{worst.prevLabel}</b> e <b>{worst.step.label}</b> — {fmtRate(worst.step.lostPct, 0)} dos leads ficaram por aqui ({nfi(worst.step.lost)} de {nfi(steps[steps.findIndex((s) => s.key === worst.step.key) - 1].count)}).</p>
-            : <p className="text-[12.5px] text-muted-foreground">Volume pequeno (menos de {MIN_VOLUME} leads na etapa anterior): ainda não dá para apontar onde mais se perde.</p>}
+            : <p className="text-[12.5px] text-muted-foreground" data-testid="mkt-an-worst">Volume pequeno (menos de {MIN_VOLUME} leads na etapa anterior): ainda não dá para apontar onde mais se perde.</p>}
           <div>
-            <p className="text-[12.5px] font-semibold mb-1.5">Motivos de perda {d.lost_total > 0 ? <span className="font-normal text-muted-foreground">({nfi(d.lost_total)} oportunidades perdidas)</span> : null}</p>
-            {d.lost_reasons.length === 0 ? <p className="text-[12.5px] text-muted-foreground">Nenhuma oportunidade do grupo foi marcada como perdida.</p> : (
-              <ul className="grid gap-1.5" data-testid="mkt-an-lost">{d.lost_reasons.map((x) => (
-                <li key={x.reason} className="grid grid-cols-[minmax(0,12rem)_1fr_auto] items-center gap-2 text-[12.5px]"><span className="truncate" title={x.reason}>{x.reason}</span><Bar pct={(x.n / maxLost) * 100} color="hsl(var(--chart-6))" /><span className="tabular font-semibold">{nfi(x.n)}</span></li>))}</ul>)}
+            <p className="text-[12.5px] font-semibold mb-1">Motivos de perda {d.lost_total > 0 ? <span className="font-normal text-muted-foreground">({nfi(d.lost_total)} oportunidades perdidas)</span> : null}</p>
+            {reasons.length === 0 ? <p className="text-[12.5px] text-muted-foreground">Nenhuma oportunidade do grupo foi marcada como perdida.</p> : (
+              <div style={{ height: Math.max(90, reasons.length * 34 + 14) }} data-testid="mkt-an-lost" role="img" aria-label={`Motivos de perda: ${reasons.map((x) => `${x.reason} ${x.n}`).join(", ")}`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={reasons} layout="vertical" margin={{ top: 0, right: 28, left: 0, bottom: 0 }} barCategoryGap={8}>
+                    <XAxis type="number" hide domain={[0, maxLost]} />
+                    <YAxis type="category" dataKey="reason" width={132} tick={chartTick} tickLine={false} axisLine={false} tickFormatter={(v: string) => (v.length > 22 ? `${v.slice(0, 21)}…` : v)} />
+                    <Tooltip cursor={{ fill: "hsl(var(--muted) / .4)" }} {...tooltipStyle} formatter={(v: number) => [`${nfi(v)} oportunidades`, "Perdidas"]} />
+                    <Bar dataKey="n" fill="hsl(var(--chart-6))" radius={[0, 4, 4, 0]} isAnimationActive={false}><LabelList dataKey="n" position="right" fontSize={12} fontWeight={700} /></Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>)}
           </div>
           {by && (
             <div className="overflow-x-auto" data-testid="mkt-an-drop-campaigns"><table className="w-full text-[12.5px] min-w-[520px]"><thead><tr className="text-left text-muted-foreground text-[11px] uppercase tracking-wide"><th className="py-1 pr-2 font-medium">Campanha</th><th className="px-2 font-medium text-right">Leads</th>
@@ -114,19 +137,38 @@ export const DropoffBlock = ({ data }: { data: AnalyticsResp }) => {
 
 // ================================================================= 3) tempo até cada etapa
 export const TimingBlock = ({ data }: { data: AnalyticsResp }) => {
-  const [by, setBy] = useState(false); const t = data.timing; const max = Math.max(0.0001, ...STAGES.map((s) => t.overall[s.key]?.median_days ?? 0));
-  const anyData = STAGES.some((s) => (t.overall[s.key]?.n ?? 0) > 0);
+  const [by, setBy] = useState(false); const t = data.timing; const anyData = STAGES.some((s) => (t.overall[s.key]?.n ?? 0) > 0);
+  const rows = curveRows(t.curve); const drawable = hasCurve(rows);
   return (
-    <Panel title="Tempo até cada etapa" testId="mkt-an-timing" hint={<Hint title="Tempo desde a captação">Mediana, em dias corridos, do momento em que o lead chegou até a primeira vez que atingiu a etapa. Conta só quem chegou à etapa; leads recentes ainda podem avançar, então os números tendem a subir com o tempo.</Hint>}
+    <Panel title="Tempo até cada etapa" testId="mkt-an-timing" hint={<Hint title="Quanto tempo os leads levam">A curva mostra, para cada etapa, que parte dos leads já chegou nela em até X dias depois de captada. Cada ponto usa só leads com pelo menos X dias de vida (leads recentes ainda não tiveram tempo) e só aparece com {MIN_VOLUME} leads ou mais. Os números abaixo são a mediana em dias corridos de quem chegou à etapa.</Hint>}
       right={t.by_campaign.length > 1 && anyData ? <Toggle on={by} onClick={() => setBy(!by)} label="por campanha" /> : undefined}>
       {!anyData ? <StateLine testId="mkt-an-timing-empty">Nenhum lead do grupo chegou a contato, agendamento, comparecimento ou venda ainda — sem base para medir tempo.</StateLine> : (
         <div className="grid gap-4">
-          <ul className="grid gap-2.5" data-testid="mkt-an-timing-list">
+          {drawable ? (
+            <div data-testid="mkt-an-curve">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-1 text-[12px]" aria-hidden>{STAGES.map((s) => <span key={s.key} className="inline-flex items-center gap-1.5"><span className="h-0.5 w-4 rounded" style={{ background: CURVE_COLORS[s.key] }} />{s.label}</span>)}</div>
+              <div style={{ height: 232 }} role="img" aria-label="Curva do tempo: percentual dos leads que chegaram a cada etapa em até X dias">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
+                    <XAxis dataKey="label" tick={chartTick} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={14} />
+                    <YAxis domain={[0, 100]} tick={chartTick} tickLine={false} axisLine={false} width={40} tickFormatter={(v: number) => `${v}%`} />
+                    <Tooltip {...tooltipStyle} content={({ active, payload, label }) => {
+                      if (!active || !payload?.length) return null; const r = payload[0].payload as (typeof rows)[number];
+                      return <div style={tooltipStyle.contentStyle as React.CSSProperties}><p style={{ fontWeight: 600 }}>Em até {label}</p>{STAGES.map((s) => <p key={s.key}>{s.label}: {r[s.key] == null ? "Sem base" : `${fmtRate(r[s.key] as number, 0)} (${r.n?.[s.key]})`}</p>)}</div>;
+                    }} />
+                    {STAGES.map((s) => <Line key={s.key} type="monotone" dataKey={s.key} stroke={CURVE_COLORS[s.key]} strokeWidth={s.key === "sold" ? 2.6 : 2} strokeDasharray={s.key === "attended" ? "5 3" : undefined} dot={{ r: 2.5 }} connectNulls={false} isAnimationActive={false} />)}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="text-[11.5px] text-muted-foreground">% dos leads (com tempo de vida suficiente) que chegaram à etapa em até X depois da captação.</p>
+            </div>) : <StateLine testId="mkt-an-curve-empty">Poucos leads com tempo de vida suficiente para desenhar a curva (mínimo de {MIN_VOLUME} por ponto). Veja as medianas abaixo.</StateLine>}
+          <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2" data-testid="mkt-an-timing-list">
             {STAGES.map((s) => { const st = t.overall[s.key]; return (
-              <li key={s.key} className="grid grid-cols-[7.5rem_1fr_auto] sm:grid-cols-[9rem_1fr_auto] items-center gap-3" data-testid={`mkt-an-time-${s.key}`}>
-                <span className="text-[12.5px] font-medium truncate">{s.label}</span>
-                {st && st.median_days != null ? <Bar pct={(st.median_days / max) * 100} /> : <span className="text-[12px] text-muted-foreground">Sem base</span>}
-                <span className="text-right leading-tight"><span className="block tabular text-[15px] font-bold">{st ? fmtDays(st.median_days) : "—"}</span><span className="block text-[11px] text-muted-foreground tabular">{st ? `${nfi(st.n)} lead${st.n === 1 ? "" : "s"}${st.avg_days != null ? ` · média ${fmtDays(st.avg_days)}` : ""}` : "nenhum lead"}</span></span>
+              <li key={s.key} className="rounded-lg border border-border px-3 py-2" data-testid={`mkt-an-time-${s.key}`}>
+                <p className="text-[11.5px] text-muted-foreground flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: CURVE_COLORS[s.key] }} />{s.label}</p>
+                <p className="tabular text-[18px] font-bold leading-tight">{st ? fmtDays(st.median_days) : "Sem base"}</p>
+                <p className="text-[11px] text-muted-foreground tabular">{st ? `${nfi(st.n)} lead${st.n === 1 ? "" : "s"}${st.avg_days != null ? ` · média ${fmtDays(st.avg_days)}` : ""}` : "nenhum lead"}</p>
               </li>); })}
           </ul>
           {by && (
@@ -143,18 +185,30 @@ export const TimingBlock = ({ data }: { data: AnalyticsResp }) => {
 
 // ================================================================= 4) região
 export const RegionBlock = ({ data }: { data: AnalyticsResp }) => {
-  const cur = data.currency; const rows = regionCalc(data.regions); const max = Math.max(1, ...rows.map((r) => r.leads)); const total = rows.reduce((a, r) => a + r.leads, 0); const noLoc = rows.find((r) => r.kind === "none");
+  const cur = data.currency; const rows = regionCalc(data.regions); const total = rows.reduce((a, r) => a + r.leads, 0); const noLoc = rows.find((r) => r.kind === "none");
+  const chart = rows.map((r) => ({ name: r.label, leads: r.leads, sold: r.sold }));
   return (
     <Panel title="Retorno por região" testId="mkt-an-regions" hint={<Hint title="Região do lead">Zona de São Paulo capital (preenchida no quiz ou no cadastro) ou cidade informada. Mostra o que cada região entrega — leads, agendamentos, vendas e receita —, não o custo: o investimento em anúncios não é medido por região.</Hint>}>
       {rows.length === 0 ? <StateLine testId="mkt-an-regions-empty">Nenhum lead neste período e escopo.</StateLine> : (
         <div className="grid gap-3">
-          <ul className="grid gap-2.5" data-testid="mkt-an-regions-list">
+          <div style={{ height: Math.max(150, rows.length * 40 + 30) }} data-testid="mkt-an-region-chart" role="img" aria-label={`Leads e vendas por região: ${rows.map((r) => `${r.label} ${r.leads} leads ${r.sold} vendas`).join("; ")}`}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chart} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }} barCategoryGap={8} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" horizontal={false} />
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" width={104} tick={chartTick} tickLine={false} axisLine={false} />
+                <Tooltip cursor={{ fill: "hsl(var(--muted) / .4)" }} {...tooltipStyle} />
+                <Bar dataKey="leads" name="Leads" fill="hsl(var(--chart-1))" radius={[0, 3, 3, 0]} isAnimationActive={false}><LabelList dataKey="leads" position="right" fontSize={11.5} fontWeight={700} /></Bar>
+                <Bar dataKey="sold" name="Vendas" fill="hsl(var(--chart-2))" radius={[0, 3, 3, 0]} isAnimationActive={false}><LabelList dataKey="sold" position="right" fontSize={11.5} /></Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex gap-4 text-[11.5px] text-muted-foreground -mt-1" aria-hidden><span><span style={{ color: "hsl(var(--chart-1))" }}>■</span> Leads</span><span><span style={{ color: "hsl(var(--chart-2))" }}>■</span> Vendas</span></div>
+          <ul className="grid gap-1.5" data-testid="mkt-an-regions-list">
             {rows.map((r) => (
-              <li key={r.key} className="grid gap-1" data-testid="mkt-an-region-row" data-leads={r.leads}>
-                <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5"><span className="text-[12.5px] font-medium" title={r.label}>{r.label}</span>
-                  <span className="text-[12px] tabular text-muted-foreground"><b className="text-foreground">{nfi(r.leads)}</b> leads · {nfi(r.scheduled)} agend. · <b className="text-foreground">{nfi(r.sold)}</b> vendas · {fmtValue("revenue", r.revenue, cur)}</span></div>
-                <Bar pct={(r.leads / max) * 100} color={r.kind === "none" ? "hsl(var(--chart-6))" : undefined} />
-                <p className="text-[11px] text-muted-foreground tabular">{fmtRate(r.schedRate, 0)} agendaram · {r.conv == null ? "Sem base" : `${fmtRate(r.conv)} compraram`}</p>
+              <li key={r.key} className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-t border-border pt-1.5 text-[12px]" data-testid="mkt-an-region-row" data-leads={r.leads}>
+                <span className="font-medium" title={r.label}>{r.label}</span>
+                <span className="tabular text-muted-foreground"><b className="text-foreground">{nfi(r.leads)}</b> leads · {nfi(r.scheduled)} agend. ({fmtRate(r.schedRate, 0)}) · <b className="text-foreground">{nfi(r.sold)}</b> vendas ({r.conv == null ? "Sem base" : fmtRate(r.conv)}) · {fmtValue("revenue", r.revenue, cur)}</span>
               </li>))}
           </ul>
           {noLoc && total > 0 && noLoc.leads / total >= 0.3 && <p className="text-[12px] text-muted-foreground" data-testid="mkt-an-region-warn">{fmtRate(rate(noLoc.leads, total), 0)} dos leads estão sem localização: peça cidade (e zona em São Paulo) no formulário para este quadro ficar completo.</p>}
@@ -190,18 +244,35 @@ export const HoursBlock = ({ data }: { data: AnalyticsResp }) => {
 // ================================================================= 6) retorno por mês de captação
 export const MonthlyBlock = ({ data }: { data: AnalyticsResp }) => {
   const [tri, setTri] = useState(false); const cur = data.currency; const rows = data.monthly.rows.filter((r) => r.leads > 0 || (r.spend ?? 0) > 0); const width = Math.max(0, ...rows.map((r) => r.cum.length));
+  const chart = rows.map((r) => ({ name: monthLabel(r.month), invested: r.spend, received: lastCum(r) }));
+  const drawable = chart.some((c) => c.invested != null || (c.received ?? 0) > 0);
+  const axis = (v: number) => (Math.abs(v) >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mil` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`);
   return (
     <Panel title="Retorno por mês de captação" testId="mkt-an-monthly" hint={<Hint title="Quanto cada mês já devolveu">Para cada mês, pega os leads captados nele e soma o que esse grupo já pagou (recebimentos líquidos de estorno) até hoje, comparando com o investimento do mesmo mês. “Pago” = recebido ≥ investido. Meses recentes ainda estão em andamento. Mostra os últimos 12 meses do período.</Hint>}
       right={rows.length > 0 && width > 1 ? <Toggle on={tri} onClick={() => setTri(!tri)} label="mês a mês" /> : undefined}>
       {rows.length === 0 ? <StateLine testId="mkt-an-monthly-empty">Nenhum lead captado neste período e escopo.</StateLine> : (
         <div className="grid gap-3">
-          <ul className="grid gap-3" data-testid="mkt-an-monthly-list">
+          {drawable && (
+            <div data-testid="mkt-an-monthly-chart">
+              <div className="flex gap-4 text-[12px] mb-1" aria-hidden><span><span style={{ color: "hsl(var(--chart-6))" }}>■</span> Investido</span><span><span style={{ color: "hsl(var(--chart-1))" }}>■</span> Recebido até hoje</span></div>
+              <div style={{ height: 220 }} role="img" aria-label={`Investido e recebido por mês de captação: ${chart.map((c) => `${c.name} investido ${c.invested ?? "sem base"} recebido ${c.received ?? "sem base"}`).join("; ")}`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chart} margin={{ top: 14, right: 8, left: 0, bottom: 0 }} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" vertical={false} />
+                    <XAxis dataKey="name" tick={chartTick} tickLine={false} axisLine={false} />
+                    <YAxis tick={chartTick} tickLine={false} axisLine={false} width={66} tickFormatter={axis} />
+                    <Tooltip cursor={{ fill: "hsl(var(--muted) / .4)" }} {...tooltipStyle} formatter={(v: number | null, n: string) => [fmtValue("revenue", v, cur), n]} />
+                    <Bar dataKey="invested" name="Investido" fill="hsl(var(--chart-6))" radius={[3, 3, 0, 0]} maxBarSize={44} isAnimationActive={false} />
+                    <Bar dataKey="received" name="Recebido" fill="hsl(var(--chart-1))" radius={[3, 3, 0, 0]} maxBarSize={44} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>)}
+          <ul className="grid gap-2" data-testid="mkt-an-monthly-list">
             {rows.map((r) => { const rec = lastCum(r); const st = paybackOf(r.spend, rec); const prog = r.spend && r.spend > 0 && rec != null ? (rec / r.spend) * 100 : 0; return (
-              <li key={r.month} className="grid gap-1" data-testid="mkt-an-month-row" data-payback={st} data-leads={r.leads}>
-                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5"><span className="text-[12.5px] font-semibold">{monthLabel(r.month)}</span>
-                  <span className="text-[12px] tabular text-muted-foreground">{nfi(r.leads)} leads · {nfi(r.sold)} vendas · investido <b className="text-foreground">{fmtValue("spend", r.spend, cur)}</b> · recebido <b className="text-foreground">{fmtValue("revenue", rec, cur)}</b></span></div>
-                {st === "nobase" ? <p className="text-[11.5px] text-muted-foreground">Sem investimento coletado neste mês: não dá para comparar.</p> : (
-                  <><Bar pct={Math.min(100, prog)} /><p className="text-[11.5px] text-muted-foreground tabular">{st === "paid" ? <b className="text-foreground">Já pagou o investimento</b> : <>Recebeu <b className="text-foreground">{fmtRate(prog, 0)}</b> do que foi investido</>}{st === "paid" && rec != null && r.spend ? ` · ${(rec / r.spend).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}x` : ""}</p></>)}
+              <li key={r.month} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-t border-border pt-1.5 text-[12px]" data-testid="mkt-an-month-row" data-payback={st} data-leads={r.leads}>
+                <span className="font-semibold">{monthLabel(r.month)}</span>
+                <span className="tabular text-muted-foreground">{nfi(r.leads)} leads · {nfi(r.sold)} vendas · {st === "nobase" ? "sem investimento coletado" : st === "paid" ? <b className="text-foreground">já pagou o investimento{rec != null && r.spend ? ` (${(rec / r.spend).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}x)` : ""}</b> : <>recebeu <b className="text-foreground">{fmtRate(prog, 0)}</b> do investido</>}</span>
               </li>); })}
           </ul>
           {tri && (
@@ -214,4 +285,3 @@ export const MonthlyBlock = ({ data }: { data: AnalyticsResp }) => {
     </Panel>
   );
 };
-

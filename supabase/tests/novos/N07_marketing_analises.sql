@@ -130,6 +130,16 @@ begin
   rep := rep || pg_temp.chk((select (x ->> 'median_min')::numeric from jsonb_array_elements(an -> 'hours' -> 'first_response') x where (x ->> 'band')::int = 2) = 2880 and (select (x ->> 'n')::int from jsonb_array_elements(an -> 'hours' -> 'first_response') x where (x ->> 'band')::int = 2) = 4
       and (select (x ->> 'median_min')::numeric from jsonb_array_elements(an -> 'hours' -> 'first_response') x where (x ->> 'band')::int = 5) = 4320, 'primeira resposta por faixa: 2.880 min (4 leads da manhã) e 4.320 min (2 da noite)');
 
+  -- ============ curva acumulada e totais do grupo
+  rep := rep || pg_temp.chk((select (x ->> 'n')::int from jsonb_array_elements(an -> 'timing' -> 'curve' -> 'contacted') x where (x ->> 'day')::numeric = 0.25) = 0
+      and (select (x ->> 'n')::int from jsonb_array_elements(an -> 'timing' -> 'curve' -> 'contacted') x where (x ->> 'day')::numeric = 1) = 2
+      and (select (x ->> 'n')::int from jsonb_array_elements(an -> 'timing' -> 'curve' -> 'contacted') x where (x ->> 'day')::numeric = 3) = 6, 'curva do contato: 0 em 6 h, 2 em até 1 dia, 6 em até 3 dias');
+  rep := rep || pg_temp.chk((select (x ->> 'base')::int from jsonb_array_elements(an -> 'timing' -> 'curve' -> 'sold') x where (x ->> 'day')::numeric = 7) = 10
+      and (select (x ->> 'n')::int from jsonb_array_elements(an -> 'timing' -> 'curve' -> 'sold') x where (x ->> 'day')::numeric = 7) = 0
+      and (select (x ->> 'base')::int from jsonb_array_elements(an -> 'timing' -> 'curve' -> 'sold') x where (x ->> 'day')::numeric = 30) = 0, 'curva: cada ponto só usa leads com tempo de vida suficiente (10 leads com 7 dias de vida; nenhum com 30)');
+  rep := rep || pg_temp.chk((an -> 'totals' ->> 'spend')::numeric = 750 and (an -> 'totals' ->> 'revenue')::numeric = 2000 and (an -> 'totals' ->> 'received')::numeric = 800 and (an -> 'totals' ->> 'sales')::int = 2,
+      'totais do grupo: investimento 750, vendido 2.000, recebido líquido 800, 2 vendas');
+
   -- ============ retorno por mês de captação
   rep := rep || pg_temp.chk((select sum((x ->> 'leads')::int) from jsonb_array_elements(an -> 'monthly' -> 'rows') x) = 10 and (select sum((x ->> 'sold')::int) from jsonb_array_elements(an -> 'monthly' -> 'rows') x) = 2
       and (select sum((x ->> 'spend')::numeric) from jsonb_array_elements(an -> 'monthly' -> 'rows') x) = 750, 'meses somam 10 leads, 2 vendas e R$ 750 de gasto');
@@ -141,7 +151,7 @@ begin
   an := public.mkt_analytics(v_today - 29, v_today, jsonb_build_object('scope', 'all', 'campaign', camp_g::text));
   rep := rep || pg_temp.chk((an ->> 'leads')::int = 4 and jsonb_array_length(an -> 'quality') = 1 and (an -> 'dropoff' -> 'overall' ->> 'sold')::int = 1 and (select sum((x ->> 'leads')::int) from jsonb_array_elements(an -> 'regions') x) = 4, 'com a campanha do Google no filtro: 4 leads, 1 campanha, 1 venda');
   an := public.mkt_analytics(v_today + 1, v_today + 2, f_all);
-  rep := rep || pg_temp.chk((an ->> 'leads')::int = 0 and an -> 'timing' -> 'overall' = '{}'::jsonb and an -> 'regions' = '[]'::jsonb and an -> 'quality' = '[]'::jsonb, 'período sem leads: tudo vazio (a tela mostra "sem base"), nada inventado');
+  rep := rep || pg_temp.chk((an ->> 'leads')::int = 0 and an -> 'timing' -> 'overall' = '{}'::jsonb and an -> 'regions' = '[]'::jsonb and an -> 'quality' = '[]'::jsonb and an -> 'totals' -> 'spend' = 'null'::jsonb and (an -> 'totals' ->> 'sales')::int = 0, 'período sem leads: tudo vazio e gasto nulo (a tela mostra "sem base"), nada inventado');
   rep := rep || pg_temp.chk(pg_temp.err('select public.mkt_analytics(current_date, current_date - 1)') like '%período inválido%' and pg_temp.err('select public.mkt_analytics(current_date - 800, current_date)') like '%período inválido%', 'período invertido ou maior que 2 anos é recusado');
 
   -- ============ permissões e isolamento
