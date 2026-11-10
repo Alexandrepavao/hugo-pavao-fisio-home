@@ -7,6 +7,7 @@ import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { GeoView, type Geo } from "../GeoSection";
 import LeadTypeBadge from "./LeadTypeBadge";
+import CrmZoneSection from "./CrmZoneSection";
 import { LEAD_KINDS, LEAD_TYPE, isLeadKind } from "./leadTypes";
 
 const TABS: [string, string][] = [["", "Todos os contatos"], ...LEAD_KINDS.map((k) => [k, LEAD_TYPE[k].short] as [string, string])];
@@ -61,6 +62,7 @@ const CrmGeoSection = ({ unit, uf, onUf }: { unit: string; uf?: string | null; o
         <GeoView geo={geo.data} loading={geo.isLoading} error={geo.error} selectedUf={selected} onSelectUf={select} noun="contato(s)" countLabel="Contatos"
           emptyTitle={kind ? `Nenhum contato de ${LEAD_TYPE[kind as keyof typeof LEAD_TYPE].short.toLowerCase()} no CRM ainda` : "Nenhum contato no CRM ainda"} route="/admin/crm/leads" routeLabel="Ir para a Gestão de leads" missing="sem cidade/estado no cadastro" completeRoute="/admin/pessoas"
           onCity={(c) => c.key && setCity({ city: c.city, uf: c.uf, key: c.key })} selectedCityKey={city?.key ?? null} cityPanel={panel} />
+        <CrmZoneSection kind={kind} unit={unit} />
       </div>
       <Sheet open={!!who} onOpenChange={(o) => { if (!o) setWho(null); }}>
         <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col gap-0" data-testid="geo-contato-detalhe">

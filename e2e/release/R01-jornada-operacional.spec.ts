@@ -39,7 +39,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     await p.goto("/avaliacao");
     await p.getByLabel("Nome completo").fill(name); await p.getByLabel("E-mail", { exact: true }).fill(email); await p.getByLabel("WhatsApp com DDD").fill(phone);
     await p.getByRole("checkbox").click(); await p.getByRole("button", { name: "Continuar" }).click();
-    await p.getByLabel("Cidade").fill("São Paulo"); await p.getByLabel("UF").selectOption("SP"); await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByLabel("Cidade").fill("São Paulo"); await p.getByLabel("UF").selectOption("SP"); await p.getByLabel("Bairro").fill("Pinheiros"); await p.getByLabel("Zona de São Paulo").selectOption("oeste"); await p.getByRole("button", { name: "Continuar" }).click();
     await p.getByRole("button", { name: "Concordo, continuar" }).click();
     for (const label of ["dor ou desconforto", "deseja melhorar", "qualidade de vida melhoraria"]) { await expect(p.getByText(new RegExp(label))).toBeVisible(); await p.getByRole("radio", { name: "5" }).click(); await p.getByRole("button", { name: "Continuar" }).click(); }
     await p.getByRole("radio", { name: "Realizar atividades diárias" }).click(); await p.getByRole("button", { name: "Continuar" }).click();

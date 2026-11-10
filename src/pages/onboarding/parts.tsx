@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { fmtCep, fmtCpf, fmtPhone, lookupCep, MIN_PASSWORD } from "@/lib/doc";
 import { UF_LIST } from "@/lib/quiz";
+import { SP_ZONES, isSpCapital } from "@/lib/spZones";
 import { LINK_BTN, PRIMARY_BTN, type Errors, type FormState } from "./shared";
 
 export const Field = ({ id, label, error, hint, children, className = "" }: { id: string; label: string; error?: string; hint?: string; children: ReactNode; className?: string }) => (
@@ -116,6 +117,9 @@ export const ContactAddressFields = ({ v, set, errors, lockEmail, extra }: { v: 
         <input id="ob-city" className="hp-input" value={v.city} onChange={(e) => set("city", e.target.value)} autoComplete="address-level2" aria-invalid={!!errors.city} /></Field>
       <Field id="ob-uf" label="UF" error={errors.state_uf} className="sm:col-span-1">
         <select id="ob-uf" className="hp-input" value={v.state_uf} onChange={(e) => set("state_uf", e.target.value)} aria-invalid={!!errors.state_uf}><option value="">—</option>{UF_LIST.map((u) => <option key={u} value={u}>{u}</option>)}</select></Field>
+      {isSpCapital(v.city, v.state_uf) && (
+        <Field id="ob-zone" label="Zona de São Paulo" error={errors.zone} className="sm:col-span-3" hint="Para sabermos a região onde você está.">
+          <select id="ob-zone" className="hp-input" value={v.zone ?? ""} onChange={(e) => set("zone", e.target.value)} aria-invalid={!!errors.zone}><option value="">Escolha…</option>{SP_ZONES.map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}</select></Field>)}
       {extra}
     </div>
   );

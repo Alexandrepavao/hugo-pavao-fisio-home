@@ -736,3 +736,10 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Testes:** SQL N06 (27), N03 (170), N04 (46); vitest da lógica (17); E2E N25 (8) e N22 (9); typecheck, lint e build.
 - **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
 
+
+## Zonas de São Paulo capital (09/11/2026)
+> Pedido do usuário: quando o lead preencher **São Paulo**, perguntar **bairro e zona** — para pacientes saberem onde atender e parceiros onde podem assumir pacientes. Só **São Paulo/SP (capital)**; em outras cidades pergunta-se só a cidade.
+- **Quiz de captação:** com cidade São Paulo e UF SP (qualquer grafia) aparecem **Bairro** e **Zona** (Sul, Norte, Leste, Oeste, Centro), obrigatórios. O banco valida a zona e limpa bairro/zona se a cidade mudar. Vão para o cadastro da pessoa **sem sobrescrever** dado já cadastrado.
+- **Onboarding (paciente e fisioterapeuta):** a zona é exigida quando o endereço é São Paulo/SP. O fisioterapeuta ainda marca **as zonas que pode atender** (várias, opcional) — `professional_profiles.service_zones`.
+- **CRM (Contatos e Dashboard):** bloco **“Zonas de São Paulo”** com contatos por zona, **fisioterapeutas ativos que atendem cada zona**, bairros mais citados e “Sem zona informada”; clicar numa zona lista os contatos.
+- **Cadastros antigos ficam sem zona** (nada é inferido; o bairro nunca foi coletado no quiz). Migration **118**; testes SQL `novos/N05` (30), E2E `N24` (3); E2E do quiz (08, R25, R01) ajustados para preencher bairro/zona.
