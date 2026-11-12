@@ -8,6 +8,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { GeoView, type Geo } from "../GeoSection";
 import LeadTypeBadge from "./LeadTypeBadge";
 import CrmZoneSection from "./CrmZoneSection";
+import SpCityPanel from "./SpCityPanel";
+import { isSpCapital } from "@/lib/spZones";
 import { LEAD_KINDS, LEAD_TYPE, isLeadKind } from "./leadTypes";
 
 const TABS: [string, string][] = [["", "Todos os contatos"], ...LEAD_KINDS.map((k) => [k, LEAD_TYPE[k].short] as [string, string])];
@@ -28,13 +30,17 @@ const CrmGeoSection = ({ unit, uf, onUf }: { unit: string; uf?: string | null; o
     queryKey: ["crm-geo", kind, unit],
     queryFn: async () => { const { data, error } = await supabase.rpc("crm_geo_distribution", { p_kind: kind || null, p_unit: unit || null }); if (error) throw error; return data as Geo; },
   });
+  const sp = !!city && isSpCapital(city.city, city.uf);   // São Paulo capital: mapa das zonas; as demais cidades: lista
   const contacts = useQuery({
-    queryKey: ["crm-geo-contacts", city?.key, city?.uf, kind, unit], enabled: !!city,
+    queryKey: ["crm-geo-contacts", city?.key, city?.uf, kind, unit], enabled: !!city && !sp,
     queryFn: async () => { const { data, error } = await supabase.rpc("crm_geo_contacts", { p_city_key: city!.key, p_uf: city!.uf, p_kind: kind || null, p_unit: unit || null }); if (error) throw error; return data as CityContact[]; },
   });
 
-  const panel = city && (
-    <section className="hp-card p-4 mt-3" data-testid="geo-cidade-contatos" aria-label={`Contatos em ${city.city}`}>
+  const asPerson = (c: { person_id: string; full_name: string; phone: string | null; email: string | null }, place: { city: string; uf: string }) => setWho({ person_id: c.person_id, full_name: c.full_name, phone: c.phone, email: c.email, city: place.city, state_uf: place.uf, kinds: [], is_company: false });
+  const panel = city && sp ? (
+    <SpCityPanel kind={kind} unit={unit} onClose={() => setCity(null)} onOpenPerson={(c) => asPerson(c, { city: "São Paulo", uf: "SP" })} />
+  ) : city && (
+    <section className="hp-card p-4" data-testid="geo-cidade-contatos" aria-label={`Contatos em ${city.city}`}>
       <div className="flex items-center justify-between gap-2 mb-2">
         <h3 className="text-sm font-medium">Contatos em {city.city}/{city.uf}{contacts.data ? ` (${contacts.data.length})` : ""}</h3>
         <button type="button" className="text-accent hover:underline text-sm" onClick={() => setCity(null)}>fechar</button>
@@ -61,7 +67,7 @@ const CrmGeoSection = ({ unit, uf, onUf }: { unit: string; uf?: string | null; o
         <Tabs tabs={TABS} value={kind} onChange={(v) => { setKind(v); setCity(null); select(null); }} />
         <GeoView geo={geo.data} loading={geo.isLoading} error={geo.error} selectedUf={selected} onSelectUf={select} noun="contato(s)" countLabel="Contatos"
           emptyTitle={kind ? `Nenhum contato de ${LEAD_TYPE[kind as keyof typeof LEAD_TYPE].short.toLowerCase()} no CRM ainda` : "Nenhum contato no CRM ainda"} route="/admin/crm/leads" routeLabel="Ir para a Gestão de leads" missing="sem cidade/estado no cadastro" completeRoute="/admin/pessoas"
-          onCity={(c) => c.key && setCity({ city: c.city, uf: c.uf, key: c.key })} selectedCityKey={city?.key ?? null} cityPanel={panel} />
+          onCity={(c) => c.key && setCity({ city: c.city, uf: c.uf, key: c.key })} selectedCityKey={city?.key ?? null} cityPanel={panel} panelBelowCity />
         <CrmZoneSection kind={kind} unit={unit} />
       </div>
       <Sheet open={!!who} onOpenChange={(o) => { if (!o) setWho(null); }}>

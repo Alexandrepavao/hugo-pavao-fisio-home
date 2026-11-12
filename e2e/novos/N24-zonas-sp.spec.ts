@@ -58,6 +58,33 @@ test.describe.serial("@novos Zonas de São Paulo", () => {
     expect(errors, errors.join("\n")).toEqual([]);
   });
 
+  test("CRM › Distribuição geográfica: clicar em São Paulo desce um painel logo abaixo da linha, com o mapa das zonas e a zona que cada contato cadastrou", async ({ page, context }) => {
+    await loginAs(context, QA.manager); const errors = collectErrors(page);
+    await page.goto("/admin/crm/contatos"); await expect(page.getByTestId("crm-geo")).toBeVisible({ timeout: 40_000 });
+    const linha = page.getByTestId("geo-cidade").filter({ hasText: "São Paulo" }).first(); await expect(linha).toBeVisible({ timeout: 30_000 });
+    await linha.getByRole("button", { name: "São Paulo" }).click();
+    // o painel é a linha seguinte da mesma tabela (abaixo da cidade clicada), não um bloco depois da tabela inteira
+    const painel = page.getByTestId("geo-cidade-painel"); await expect(painel).toBeVisible({ timeout: 30_000 });
+    expect(await linha.evaluate((tr) => (tr.nextElementSibling as HTMLElement | null)?.dataset.testid), "painel logo abaixo da linha de São Paulo").toBe("geo-cidade-painel");
+    const lb = await linha.boundingBox(); const pb = await painel.boundingBox(); expect(pb && lb && pb.y >= lb.y + lb.height - 1).toBe(true);
+    // mapa de São Paulo com as 5 zonas
+    const mapa = painel.getByTestId("sp-mapa"); await expect(mapa).toBeVisible(); for (const z of ["sul", "norte", "leste", "oeste", "centro"]) await expect(mapa.getByTestId(`sp-mapa-${z}`)).toBeVisible();
+    const box = await mapa.boundingBox(); expect(box && box.height > 150 && box.width > 150, "mapa com tamanho útil").toBe(true);
+    // a lista mostra a zona de cada contato; o lead do teste cadastrou Zona Leste e Tatuapé
+    const meu = painel.getByTestId("sp-contato").filter({ hasText: nome }); await expect(meu).toBeVisible({ timeout: 20_000 }); await expect(meu).toContainText("Zona Leste"); await expect(meu).toContainText("Tatuapé");
+    await shot(page, "crm-sao-paulo-mapa");
+    // clicar numa zona do mapa filtra a lista
+    const total = await painel.getByTestId("sp-contato").count();
+    await mapa.getByTestId("sp-mapa-leste").click(); await expect(mapa.getByTestId("sp-mapa-leste")).toHaveAttribute("aria-pressed", "true");
+    await expect(meu).toBeVisible(); const zonas = await painel.getByTestId("sp-contato").evaluateAll((trs) => trs.map((r) => r.textContent ?? "")); expect(zonas.length).toBeGreaterThan(0); expect(zonas.every((z) => z.includes("Zona Leste"))).toBe(true);
+    await painel.getByTestId("sp-filtro-none").click(); const sem = await painel.getByTestId("sp-contato").evaluateAll((trs) => trs.map((r) => r.textContent ?? "")); expect(sem.every((z) => z.includes("Não informada"))).toBe(true); await expect(meu).toHaveCount(0);
+    await painel.getByTestId("sp-filtro-todas").click(); await expect(painel.getByTestId("sp-contato")).toHaveCount(total);
+    // clicar no nome abre o formulário; fechar recolhe o painel
+    await meu.getByRole("button", { name: new RegExp(nome) }).click(); await expect(page.getByTestId("geo-contato-detalhe")).toContainText(nome); await page.keyboard.press("Escape");
+    await painel.getByRole("button", { name: "fechar" }).click(); await expect(page.getByTestId("geo-cidade-painel")).toHaveCount(0);
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+
   test("onboarding do paciente: em São Paulo/SP pede a zona; em outra cidade não", async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto("/onboarding-paciente"); await expect(page.getByTestId("onboarding-form")).toBeVisible({ timeout: 40_000 });

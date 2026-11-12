@@ -737,6 +737,13 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
 
 
+## CRM: resumo do lead em modal + São Paulo por zona com mapa (12/11/2026)
+> Pedido do usuário: (1) clicar nos itens dos cartões que listam leads e ver um modal com o resumo; (2) em Distribuição geográfica, ao clicar em São Paulo, descer um painel abaixo da cidade com a zona que cada pessoa cadastrou, com mapa; (3) apagar os cadastros de teste dos leads sem retorno. Detalhes: `docs/crm-resumo-lead-e-mapa-sp.md`.
+- **Resumo do lead:** modal só leitura (contato, WhatsApp, zona, origem, etapa, dias sem contato, últimos registros, tarefas e respostas do formulário), nos cartões de leads do Início e do CRM; cartões de outros assuntos continuam sem clique.
+- **São Paulo por zona:** painel logo abaixo da linha da cidade, com mapa dos 96 distritos (GeoSampa) agrupados nas 5 zonas, filtro por zona e a zona de cada contato. Migration 121 (uma função de leitura `crm_sp_contacts`).
+- **Limpeza em produção (12/11):** apagados “Fisio Teste” e “teste teste teste” (2 pessoas, 3 oportunidades, 4 contatos, 4 interações, 1 tarefa, 2 respostas de quiz), após backup em `D:\Claudeackups-hp-group`; “Jan Teste” mantido. “Leads sem retorno” caiu de 86 para 83.
+- **Testes:** SQL N05 (32 OK) · E2E N24 (4), N27 (4), R31/R32/01 (15) · typecheck e lint.
+
 ## Marketing › Análises (10/11/2026) — só Dev
 > Pedido do usuário: faltava um analytics dentro do Marketing para entender melhor tudo; e a dúvida “o que é coorte?”. Mesma branch `feat/marketing-dashboard-compacto` (PR rascunho #25). Detalhes: `docs/marketing-analises.md`.
 - **Feito (Dev):** tela **Análises** (`/admin/marketing/analises`) com quatro cartões e seis blocos — qualidade por campanha (dispersão custo × conversão), onde os leads se perdem (+ motivos), tempo até cada etapa, retorno por região/zona de SP, dia da semana × horário, retorno por mês de captação. “Coorte” foi trocado por “leads do período”/“data de captação do lead” em toda a tela do Marketing.
