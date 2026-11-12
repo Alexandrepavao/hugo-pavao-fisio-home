@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate, fmtDateTime } from "@/lib/format";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge, State, btnGhost, btnPrimary } from "@/lib/ui";
+import LeadSummaryDialog from "@/components/hp/LeadSummaryDialog";
 
 export type CardKind =
   | "receipts" | "overdue" | "new_patients" | "evaluations_scheduled" | "win_rate" | "overdue_tasks"
@@ -39,6 +41,8 @@ const SNAPSHOT_KINDS = new Set<CardKind>([
 // Cartões que usam a RPC do CRM (crm_card_detail, escopo private.crm_units/crm_effective_owner) em vez da
 // RPC geral do painel administrativo (dashboard_card_detail, escopo private.dash_units).
 const CRM_KINDS = new Set<CardKind>(["crm_new_leads", "crm_open_deals", "crm_open_value", "crm_won_deals", "crm_win_rate", "crm_stale_deals", "crm_commission_potential"]);
+// Cartões cujos registros são oportunidades (leads): o item vira um botão que abre o resumo do lead num modal.
+const LEAD_ITEM_KINDS = new Set<CardKind>(["leads_sem_retorno", "crm_new_leads", "crm_open_deals", "crm_open_value", "crm_won_deals", "crm_win_rate", "crm_stale_deals", "crm_commission_potential"]);
 const fmtValue = (kind: CardKind, v: number | null) => {
   if (v == null) return "Indisponível";
   if (FMT[kind] === "brl") return brl(v);
@@ -54,7 +58,7 @@ export interface CardDetailTrigger { kind: CardKind; from: string; to: string; u
  * usam dashboard_card_detail (escopo manager/ops_admin/unit_manager/finance). */
 export const CardDetailSheet = ({ trigger, onClose }: { trigger: CardDetailTrigger | null; onClose: () => void }) => {
   const { kind, from, to, unit, unitLabel, prevFrom, prevTo, owner, pipeline } = trigger ?? { kind: "receipts" as CardKind, from: "", to: "", unit: "", unitLabel: "" };
-  const open = !!trigger;
+  const open = !!trigger; const [lead, setLead] = useState<string | null>(null); const clickable = LEAD_ITEM_KINDS.has(kind);
   const rpc = kind && CRM_KINDS.has(kind) ? "crm_card_detail" : "dashboard_card_detail";
   const params = (f: string, t: string) => rpc === "crm_card_detail"
     ? { p_kind: kind, p_from: f, p_to: t, p_unit: unit || null, p_owner: owner || null, p_pipeline: pipeline || null }
@@ -84,6 +88,7 @@ export const CardDetailSheet = ({ trigger, onClose }: { trigger: CardDetailTrigg
     ? Math.round(((d.value - prev.data.value) / prev.data.value) * 1000) / 10 : null;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
         {trigger && (<>
@@ -116,8 +121,8 @@ export const CardDetailSheet = ({ trigger, onClose }: { trigger: CardDetailTrigg
                   <p className="text-sm text-muted-foreground">Nenhum registro no critério deste cartão.</p>
                 ) : (
                   <ul className="grid gap-2">
-                    {d.items.map((it) => (
-                      <li key={it.id} className="hp-card p-3 text-sm flex items-start justify-between gap-3">
+                    {d.items.map((it) => {
+                      const body = (<>
                         <div className="min-w-0">
                           <p className="font-medium truncate">{it.title}</p>
                           {it.subtitle && <p className="text-xs text-muted-foreground truncate">{it.subtitle}</p>}
@@ -126,9 +131,16 @@ export const CardDetailSheet = ({ trigger, onClose }: { trigger: CardDetailTrigg
                         <div className="text-right shrink-0">
                           {it.amount_cents != null && <p className="tabular font-medium">{brl(it.amount_cents)}</p>}
                           {it.tag && <Badge>{it.tag}</Badge>}
+                          {clickable && <p className="text-[11px] text-accent mt-1">Ver resumo</p>}
                         </div>
-                      </li>
-                    ))}
+                      </>);
+                      return clickable ? (
+                        <li key={it.id}><button type="button" onClick={() => setLead(it.id)} data-testid="card-item-lead" aria-label={`Ver resumo do lead ${it.title}`}
+                          className="hp-card p-3 text-sm flex items-start justify-between gap-3 w-full text-left hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{body}</button></li>
+                      ) : (
+                        <li key={it.id} className="hp-card p-3 text-sm flex items-start justify-between gap-3">{body}</li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -142,5 +154,7 @@ export const CardDetailSheet = ({ trigger, onClose }: { trigger: CardDetailTrigg
         </>)}
       </SheetContent>
     </Sheet>
+    <LeadSummaryDialog opportunityId={lead} onClose={() => setLead(null)} />
+    </>
   );
 };

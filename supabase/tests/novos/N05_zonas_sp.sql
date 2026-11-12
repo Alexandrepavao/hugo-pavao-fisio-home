@@ -100,8 +100,11 @@ begin
   rep := rep || pg_temp.chk((select count(*) from public.crm_zone_contacts('sul', null, ua)) = 1 and (select full_name from public.crm_zone_contacts('sul', null, ua)) = 'Paciente Sul N05', 'lista os contatos da zona sul');
   rep := rep || pg_temp.chk((select count(*) from public.crm_zone_contacts('none', null, ua)) = 1, 'lista os de São Paulo capital sem zona');
   rep := rep || pg_temp.chk(pg_temp.err('select * from public.crm_zone_contacts(''nordeste'', null, null)') like '%zona inválida%', 'zona inválida na consulta é recusada');
-  perform pg_temp.as_user(u_phy); rep := rep || pg_temp.chk(pg_temp.err('select public.crm_zone_distribution()') like '42501%' and pg_temp.err('select * from public.crm_zone_contacts(''sul'')') like '42501%', 'fisioterapeuta não acessa a distribuição do CRM');
-  reset role; set local role anon; rep := rep || pg_temp.chk(pg_temp.err('select public.crm_zone_distribution()') like '42501%', 'anônimo não acessa a distribuição por zona'); reset role;
+  rep := rep || pg_temp.chk((select count(*) from public.crm_sp_contacts(null, ua)) = 3 and (select count(*) from public.crm_sp_contacts(null, ua) where zone = 'sul') = 1 and (select count(*) from public.crm_sp_contacts(null, ua) where zone is null) = 1
+      and (select count(*) from public.crm_sp_contacts(null, ua) where zone = 'oeste') = 1, 'lista única de São Paulo capital: 3 contatos, cada um com a zona que cadastrou (sul, oeste e um sem zona); Campinas fica de fora');
+  rep := rep || pg_temp.chk((select count(*) from public.crm_sp_contacts(null, ua)) = (select (res ->> 'total_sp')::int), 'a lista bate com o total de São Paulo capital da distribuição por zona');
+  perform pg_temp.as_user(u_phy); rep := rep || pg_temp.chk(pg_temp.err('select public.crm_zone_distribution()') like '42501%' and pg_temp.err('select * from public.crm_zone_contacts(''sul'')') like '42501%' and pg_temp.err('select * from public.crm_sp_contacts()') like '42501%', 'fisioterapeuta não acessa a distribuição do CRM nem a lista de São Paulo');
+  reset role; set local role anon; rep := rep || pg_temp.chk(pg_temp.err('select public.crm_zone_distribution()') like '42501%' and pg_temp.err('select * from public.crm_sp_contacts()') like '42501%', 'anônimo não acessa a distribuição por zona nem a lista de São Paulo'); reset role;
 
   raise exception 'RELATORIO_N05%', rep;
 end $$;
