@@ -21,7 +21,7 @@ export const CityZoneMap = ({ map, zones, counts, selected, onSelect, cityName }
       {/* rótulos por cima de TODAS as zonas (uma zona pintada depois não pode esconder o nome da anterior) */}
       {zones.map((z) => {
         const n = counts[z.id] ?? 0; const lab = map.labels[z.id]; if (!lab || !map.paths[z.id]) return null; const [lx, ly] = lab;
-        const small = z.id === "centro" || z.id.endsWith("-centro"); const short = z.label.replace("Zona ", "");
+        const small = z.id === "centro" || z.id.endsWith("-centro"); const short = z.label.replace(/^(Zona|Regional) /, "");
         return (
           <g key={`l-${z.id}`} pointerEvents="none" aria-hidden>
             <text x={lx} y={ly - 8} textAnchor="middle" fontSize={small ? 13 : 19} fontWeight={700} fill="hsl(var(--foreground))" paintOrder="stroke" stroke="hsl(var(--card))" strokeWidth={3.5} strokeLinejoin="round">{short}</text>

@@ -21,6 +21,10 @@ export const CAPITALS: CapitalMeta[] = [
   { key: "saopaulo", uf: "SP", name: "São Paulo", zones: SP_ZONES.map((z) => ({ id: z.id, label: z.label })), hasBairroList: false, zoneLabel: "Zona de São Paulo", zonePrompt: "Escolha a zona de São Paulo." },
   { key: "riodejaneiro", uf: "RJ", name: "Rio de Janeiro", zones: [{ id: "rj-sul", label: "Zona Sul" }, { id: "rj-norte", label: "Zona Norte" }, { id: "rj-oeste", label: "Zona Oeste" }, { id: "rj-centro", label: "Centro" }],
     hasBairroList: true, zoneLabel: "Zona do Rio de Janeiro", zonePrompt: "Escolha a zona do Rio de Janeiro." },
+  { key: "belohorizonte", uf: "MG", name: "Belo Horizonte", zones: [
+      { id: "bh-barreiro", label: "Regional Barreiro" }, { id: "bh-centrosul", label: "Regional Centro-Sul" }, { id: "bh-leste", label: "Regional Leste" }, { id: "bh-nordeste", label: "Regional Nordeste" },
+      { id: "bh-noroeste", label: "Regional Noroeste" }, { id: "bh-norte", label: "Regional Norte" }, { id: "bh-oeste", label: "Regional Oeste" }, { id: "bh-pampulha", label: "Regional Pampulha" }, { id: "bh-vendanova", label: "Regional Venda Nova" }],
+    hasBairroList: false, zoneLabel: "Regional de Belo Horizonte", zonePrompt: "Escolha a regional de Belo Horizonte." },
 ];
 
 /** Mesma normalização do banco: sem acento, só letras, minúsculas (“São Paulo”, “sao paulo” e “  SAO  PAULO ” viram “saopaulo”). */
@@ -38,6 +42,7 @@ export const zoneWithCity = (id: string): string => { const c = CAPITALS.find((x
 /** Bairros e mapa da cidade, carregados só quando a tela precisa (os desenhos pesam dezenas de KB). */
 export const loadCityGeo = async (c: CapitalMeta): Promise<CityGeo> => {
   if (c.key === "riodejaneiro") return (await import("./geo/rio")).RIO_GEO;
+  if (c.key === "belohorizonte") return (await import("./geo/belohorizonte")).BH_GEO;
   const { SP_MAP } = await import("./spMapData");
   return { neighborhoods: [], map: SP_MAP as unknown as CityGeo["map"], credit: "Distritos do município: GeoSampa / Prefeitura de São Paulo (dados abertos), agrupados nas zonas pela subprefeitura; geometria simplificada." };
 };

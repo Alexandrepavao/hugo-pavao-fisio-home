@@ -7,6 +7,7 @@
 |---|---|---|---|
 | **São Paulo** (SP) | Sul, Norte, Leste, Oeste, Centro | digitado (como desde a migration 118) | 96 distritos do GeoSampa/Prefeitura, agrupados pela subprefeitura |
 | **Rio de Janeiro** (RJ) | Zona Sul, Zona Norte, Zona Oeste, Centro | **escolhido de 164 bairros** oficiais | Prefeitura do Rio (Data.Rio, ODbL): limites dos bairros + Região de Planejamento. Centro = AP1; Zona Sul = RP 2.1; Zona Norte = RP 2.2 (Grande Tijuca) + AP3; Zona Oeste = AP4 (Barra e Jacarepaguá) + AP5 |
+| **Belo Horizonte** (MG) | Regional Barreiro, Centro-Sul, Leste, Nordeste, Noroeste, Norte, Oeste, Pampulha e Venda Nova | digitado (como São Paulo) | Prefeitura de BH (dados.pbh.gov.br): as 9 regionais administrativas, desenho simplificado. O Hipercentro é divisão interna do Centro-Sul e não vira regional própria |
 
 As demais capitais **continuam perguntando só a cidade** até serem liberadas; cidades que não são capital (Niterói, Santo André, Campinas…) nunca perguntam zona.
 
@@ -18,7 +19,7 @@ As demais capitais **continuam perguntando só a cidade** até serem liberadas; 
 - **Resumo do lead (modal) e Admin › dados do cadastro:** mostram bairro e zona com o nome da cidade.
 
 ## Como funciona por dentro
-- **Banco (migration 122):** tabela `geo_zones` (cidade, UF, id da zona, nome) com a lista oficial; leitura pública, escrita só por migration. Ids únicos: São Paulo mantém `sul/norte/leste/oeste/centro`; as demais usam prefixo (`rj-sul`…). `quiz_save_progress`, o trigger que leva a zona do quiz ao cadastro, `onb_address` e `onboarding_submit_physio` passam a validar **a zona da cidade informada** (zona de outra cidade é recusada; cidade fora da lista ignora bairro/zona). Os checks de `people.zone`, `quiz_leads.zone` e `professional_profiles.service_zones` passam a consultar `geo_zones`. CRM: `crm_capital_contacts(cidade, UF)` (leitura).
+- **Banco (migration 122; BH na 124, que só acrescenta linhas em `geo_zones` e ajusta a busca):** tabela `geo_zones` (cidade, UF, id da zona, nome) com a lista oficial; leitura pública, escrita só por migration. Ids únicos: São Paulo mantém `sul/norte/leste/oeste/centro`; as demais usam prefixo (`rj-sul`…). `quiz_save_progress`, o trigger que leva a zona do quiz ao cadastro, `onb_address` e `onboarding_submit_physio` passam a validar **a zona da cidade informada** (zona de outra cidade é recusada; cidade fora da lista ignora bairro/zona). Os checks de `people.zone`, `quiz_leads.zone` e `professional_profiles.service_zones` passam a consultar `geo_zones`. CRM: `crm_capital_contacts(cidade, UF)` (leitura).
 - **Site:** `src/lib/capitals.ts` (lista de capitais liberadas e helpers), `src/lib/geo/<cidade>.ts` (bairros + desenho, carregados só quando a tela precisa), `BairroZonaFields` (quiz e cadastros), `CityZoneMap` e `CapitalCityPanel` (CRM). Front e banco precisam andar juntos: capital nova = linha em `geo_zones` **e** entrada em `CAPITALS`.
 
 ## Como liberar a próxima capital (roteiro)
@@ -29,7 +30,9 @@ As demais capitais **continuam perguntando só a cidade** até serem liberadas; 
 5. Conferir o mapa visualmente (claro e escuro) antes de publicar.
 
 ## Limitações
-- Só **São Paulo e Rio de Janeiro** estão liberadas; as outras 25 capitais dependem de levantar e conferir uma fonte oficial para cada uma.
+- Só **São Paulo, Rio de Janeiro e Belo Horizonte** estão liberadas; as outras 24 capitais dependem de levantar e conferir uma fonte oficial para cada uma. (Regra do usuário: uma capital só é trabalhada quando **já existe alguém dela no cadastro**; em 13/11/2026 não havia ninguém das demais 24.)
+- **Belo Horizonte sem lista de bairros:** a base oficial de bairros da PBH (322 áreas) não traz nomes populares como Savassi, Funcionários, Centro ou Santa Efigênia; uma lista assim faria muita gente cair em “Outro bairro”. Por isso o bairro é digitado e a **regional é escolhida**. Para ter a lista (como no Rio), falta a base de “bairros populares” da PBH, que o portal só entrega pelo navegador.
+- Em BH o nome das zonas é “Regional X”; na busca global vale “regional barreiro”, “fisioterapeuta regional norte belo horizonte” (e “zona sul” continua sendo só São Paulo e Rio).
 - A divisão do Rio segue a Prefeitura: **Barra da Tijuca e Jacarepaguá estão na Zona Oeste**, e a Grande Tijuca (Tijuca, Vila Isabel…) na Zona Norte. Quem usa outra convenção pode escolher “Outro bairro” e a zona que preferir.
 - Os mapas servem para ilustrar e filtrar; **não** servem para medir áreas ou localizar endereços. A zona de cada contato é a que **ele informou** (nada é deduzido).
 - Cadastros antigos ficam em “Sem zona informada”.
