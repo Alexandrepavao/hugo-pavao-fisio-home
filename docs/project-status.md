@@ -769,3 +769,11 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Onboarding (paciente e fisioterapeuta):** a zona é exigida quando o endereço é São Paulo/SP. O fisioterapeuta ainda marca **as zonas que pode atender** (várias, opcional) — `professional_profiles.service_zones`.
 - **CRM (Contatos e Dashboard):** bloco **“Zonas de São Paulo”** com contatos por zona, **fisioterapeutas ativos que atendem cada zona**, bairros mais citados e “Sem zona informada”; clicar numa zona lista os contatos.
 - **Cadastros antigos ficam sem zona** (nada é inferido; o bairro nunca foi coletado no quiz). Migration **118**; testes SQL `novos/N05` (30), E2E `N24` (3); E2E do quiz (08, R25, R01) ajustados para preencher bairro/zona.
+
+## Zonas e regionais nas capitais — lote 2: Belo Horizonte (13/11/2026)
+> Regra do usuário: só se faz o mapa de capital que **já tem gente no cadastro**. Produção em 13/11: São Paulo (39), Rio (1), Belo Horizonte (1); as outras 24 capitais, 0. Então BH é o último lote por ora.
+- **Migration 124:** 9 linhas em `geo_zones` (`bh-barreiro`, `bh-centrosul`, `bh-leste`, `bh-nordeste`, `bh-noroeste`, `bh-norte`, `bh-oeste`, `bh-pampulha`, `bh-vendanova`) + `search_people` passa a tirar a frase da zona dos termos livres (“regional barreiro”) e trata “regional” como palavra de ligação. Aditiva: nada existente é alterado, sem remoção de constraint.
+- **Site:** `capitals.ts` (BH, bairro digitado, regional escolhida), `src/lib/geo/belohorizonte.ts` (desenho das 9 regionais, 26 KB, carregado só quando a tela precisa), rótulo do mapa (“Regional X” → “X”).
+- **Sem lista de bairros** em BH de propósito: a base oficial (322 áreas) não traz Savassi, Funcionários, Centro etc. Ver `docs/zonas-capitais.md`.
+- **Testes:** SQL N10 (21 itens), unitário (11), E2E N30 (4: quiz, painel do CRM com mapa, busca, 390 px); N08/N09 seguem passando.
+- Fonte dos dados: dados.pbh.gov.br (regionais e bairros), baixados pelo usuário em `D:\Claude\dados-externos\bh`.
