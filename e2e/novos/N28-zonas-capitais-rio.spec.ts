@@ -89,7 +89,9 @@ test.describe.serial("@novos Zonas e bairros: Rio de Janeiro", () => {
     await page.goto("/onboarding-paciente"); await expect(page.getByTestId("onboarding-form")).toBeVisible({ timeout: 40_000 });
     await page.locator("#ob-name").fill("Paciente Rio Teste N28"); await page.locator("#ob-pref").fill("Paciente"); await page.locator("#ob-birth").fill("1950-03-02"); await page.locator("#ob-cpf").fill("111.444.777-35");
     await page.getByRole("button", { name: /^Continuar/ }).click(); await expect(page.getByTestId("onboarding-etapa")).toContainText("Etapa 2 de 4");
-    await page.locator("#ob-street").fill("Avenida Teste"); await page.locator("#ob-number").fill("1"); await page.locator("#ob-cep").fill("20040-020");
+    // CEP sem endereço no serviço externo (assíncrono): não preenche nada, e a espera garante que nenhuma resposta tardia sobrescreva cidade/bairro durante o teste
+    await page.locator("#ob-cep").fill("00000-000"); await page.locator("#ob-street").click(); await expect(page.getByText("Buscando endereço…")).toHaveCount(0, { timeout: 20_000 }); await page.waitForTimeout(500);
+    await page.locator("#ob-street").fill("Avenida Teste"); await page.locator("#ob-number").fill("1");
     await page.locator("#ob-city").fill("Niterói"); await page.locator("#ob-uf").selectOption("RJ"); await expect(page.locator("#ob-neigh")).toHaveJSProperty("tagName", "INPUT"); await expect(page.locator("#ob-zone")).toHaveCount(0);
     await page.locator("#ob-city").fill("Rio de Janeiro"); await expect(page.locator("#ob-neigh")).toHaveJSProperty("tagName", "SELECT"); await expect(page.locator("#ob-zone")).toBeDisabled();
     await expect(page.locator("#ob-neigh option")).not.toHaveCount(2, { timeout: 20_000 });
