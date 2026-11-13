@@ -3,7 +3,7 @@ import { HeartPulse, Home, ShieldCheck, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isValidCpf, isValidEmail, isValidPhone, MIN_PASSWORD, onlyDigits, fmtPhone } from "@/lib/doc";
 import { isFullName } from "@/lib/quiz";
-import { isSpCapital } from "@/lib/spZones";
+import { capitalOf } from "@/lib/capitals";
 import {AccessFields, ContactAddressFields, DoneScreen, Field, FormError, IdentityFields, NextButton, OnboardingFrame, StepTitle } from "./parts";
 import { ONBOARDING_CONSENT_VERSION, usePageMeta, type Errors, type FormState } from "./shared";
 
@@ -42,7 +42,7 @@ const OnboardingPaciente = () => {
       if (!v.street.trim()) e.street = "Informe a rua.";
       if (!v.street_number.trim()) e.street_number = "Informe o número (ou S/N).";
       if (!v.neighborhood.trim()) e.neighborhood = "Informe o bairro.";
-      if (isSpCapital(v.city, v.state_uf) && !v.zone) e.zone = "Escolha a zona de São Paulo.";
+      const cap = capitalOf(v.city, v.state_uf); if (cap && !v.zone) e.zone = cap.zonePrompt;
       if (!v.city.trim()) e.city = "Informe a cidade.";
       if (!v.state_uf) e.state_uf = "Escolha a UF.";
     } else if (step === 2) {

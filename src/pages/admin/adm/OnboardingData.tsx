@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { SP_ZONE_LABEL } from "@/lib/spZones";
+import { zoneWithCity } from "@/lib/capitals";
 
 const PIX: Record<string, string> = { cpf: "CPF", cnpj: "CNPJ", email: "E-mail", phone: "Celular", random: "Chave aleatória" };
 const WORK: Record<string, string> = { pf: "Pessoa física", pj: "Pessoa jurídica" };
@@ -35,10 +35,10 @@ const OnboardingData = ({ personId }: { personId: string }) => {
     <section data-testid="adm-onboarding-dados">
       <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Dados do onboarding (somente leitura)</h3>
       <div className="rounded-md border border-border p-3 grid gap-4">
-        <dl className="grid gap-3 sm:grid-cols-2"><Row label="Data de nascimento" value={d.birth_date ? fmt(d.birth_date) : null} /><Row label="RG" value={d.rg} /><Row label="Zona de São Paulo" value={d.zone ? SP_ZONE_LABEL[d.zone] : null} /></dl>
+        <dl className="grid gap-3 sm:grid-cols-2"><Row label="Data de nascimento" value={d.birth_date ? fmt(d.birth_date) : null} /><Row label="RG" value={d.rg} /><Row label="Zona onde mora" value={d.zone ? zoneWithCity(d.zone) : null} /></dl>
         {d.profile && (<div><p className="text-xs font-medium mb-1.5">Perfil profissional</p><dl className="grid gap-3 sm:grid-cols-2">
           <Row label="Atua como" value={WORK[d.profile.work_as]} /><Row label="UF do CREFITO" value={d.profile.council_uf} />
-          <Row label="Especialidades" value={d.profile.specialties.join(", ")} /><Row label="Zonas de SP que atende" value={d.profile.service_zones?.length ? d.profile.service_zones.map((z) => SP_ZONE_LABEL[z] ?? z).join(", ") : null} /><Row label="Outras regiões de atendimento" value={d.profile.service_regions} />
+          <Row label="Especialidades" value={d.profile.specialties.join(", ")} /><Row label="Zonas que atende" value={d.profile.service_zones?.length ? d.profile.service_zones.map(zoneWithCity).join(", ") : null} /><Row label="Outras regiões de atendimento" value={d.profile.service_regions} />
           <Row label="Formação" value={d.profile.education} /><Row label="Apresentação" value={d.profile.bio} /></dl></div>)}
         {d.bank && (<div><p className="text-xs font-medium mb-1.5">Pagamento dos repasses</p><dl className="grid gap-3 sm:grid-cols-2">
           <Row label="Chave PIX" value={d.bank.pix_key ? `${PIX[d.bank.pix_key_type ?? ""] ?? ""}: ${d.bank.pix_key}` : null} /><Row label="Banco" value={d.bank.bank_name} />

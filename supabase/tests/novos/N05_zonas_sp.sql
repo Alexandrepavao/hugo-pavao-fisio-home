@@ -60,9 +60,9 @@ begin
   r := public.onboarding_link_create('fisio.n05@n05.local', null, ua, 14); tk := r ->> 'token'; reset role;
   set local role anon; perform pg_temp.as_anon(1);
   t := pg_temp.err(format('select public.onboarding_submit_physio(%L, %L::jsonb, ''v1'')', tk, pg_temp.fisio()::text));
-  rep := rep || pg_temp.chk(t like '%zona de São Paulo%', 'fisioterapeuta de São Paulo capital sem zona é recusado');
+  rep := rep || pg_temp.chk(t like '%Informe a zona da cidade%', 'fisioterapeuta de São Paulo capital sem zona é recusado');
   t := pg_temp.err(format('select public.onboarding_submit_physio(%L, %L::jsonb, ''v1'')', tk, pg_temp.fisio('{"zone":"sudeste"}')::text));
-  rep := rep || pg_temp.chk(t like '%zona de São Paulo%', 'zona inventada no endereço é recusada');
+  rep := rep || pg_temp.chk(t like '%Informe a zona da cidade%', 'zona inventada no endereço é recusada');
   t := pg_temp.err(format('select public.onboarding_submit_physio(%L, %L::jsonb, ''v1'')', tk, pg_temp.fisio('{"zone":"leste","service_zones":["leste","norte","marte"]}')::text));
   rep := rep || pg_temp.chk(t like '%Zona de atendimento inválida%', 'zona de atendimento inventada é recusada');
   perform public.onboarding_submit_physio(tk, pg_temp.fisio('{"zone":"leste","service_zones":["leste","norte","norte"]}'), 'v1'); reset role;
@@ -71,7 +71,7 @@ begin
   rep := rep || pg_temp.chk((select service_zones from public.professional_profiles where person_id = pe.id) = array['leste', 'norte'], 'fisioterapeuta grava as zonas que atende (sem repetir)');
   set local role anon; perform pg_temp.as_anon(2);
   t := pg_temp.err(format('select public.onboarding_submit_patient(%L::jsonb, ''v1'')', pg_temp.pac()::text));
-  rep := rep || pg_temp.chk(t like '%zona de São Paulo%', 'paciente de São Paulo capital sem zona é recusado');
+  rep := rep || pg_temp.chk(t like '%Informe a zona da cidade%', 'paciente de São Paulo capital sem zona é recusado');
   perform public.onboarding_submit_patient(pg_temp.pac('{"zone":"sul"}'), 'v1'); reset role;
   select * into pe from public.people where document_number = '11144477735' or document_number = '111.444.777-35' order by created_at desc limit 1;
   rep := rep || pg_temp.chk(pe.zone = 'sul', 'paciente grava a zona no cadastro');
