@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { brl, fmtDateTime } from "@/lib/format";
 import { Badge, State, btnGhost, btnPrimary } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SP_ZONE_LABEL, isSpCapital } from "@/lib/spZones";
+import { capitalOf, zoneLabel } from "@/lib/capitals";
 import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
 
 interface OppRow {
@@ -44,7 +44,7 @@ const LeadSummaryDialog = ({ opportunityId, onClose }: { opportunityId: string |
   const phone = contacts.data?.find((c) => c.type === "phone" || c.type === "whatsapp"); const email = contacts.data?.find((c) => c.type === "email");
   const last = o ? (o.last_contact_at ?? o.created_at) : null; const stale = !!o && o.status === "open" && !!last && Date.now() - new Date(last).getTime() > STALE_H * 36e5;
   const owner = o?.owner_user_id ? users.data?.find((u) => u.user_id === o.owner_user_id)?.name : null;
-  const p = o?.person; const sp = !!p?.city && !!p?.state_uf && isSpCapital(p.city, p.state_uf);
+  const p = o?.person; const sp = !!capitalOf(p?.city, p?.state_uf);   // capital com zonas liberadas: mostra bairro e zona
   const place = p ? [sp && p.neighborhood ? p.neighborhood : null, p.city && p.state_uf ? `${p.city}/${p.state_uf}` : p.city].filter(Boolean).join(" · ") : "";
   const st = o ? STATUS[o.status] : null;
 
@@ -67,7 +67,7 @@ const LeadSummaryDialog = ({ opportunityId, onClose }: { opportunityId: string |
               <a className="inline-flex items-center gap-1 text-accent hover:underline text-[13px]" href={waLink(phone.value)} target="_blank" rel="noreferrer"><MessageCircle size={14} aria-hidden />WhatsApp</a></div>}
             {email && <span className="inline-flex items-center gap-1.5 min-w-0"><Mail size={14} aria-hidden className="text-muted-foreground shrink-0" /><a className="hover:underline break-all" href={`mailto:${email.value}`}>{email.value}</a></span>}
             {!phone && !email && !contacts.isLoading && <p className="text-muted-foreground">Sem telefone nem e-mail cadastrados.</p>}
-            {place && <span className="inline-flex items-center gap-1.5"><MapPin size={14} aria-hidden className="text-muted-foreground" />{place}{sp && p?.zone ? <Badge tone="info">{SP_ZONE_LABEL[p.zone] ?? p.zone}</Badge> : null}</span>}
+            {place && <span className="inline-flex items-center gap-1.5"><MapPin size={14} aria-hidden className="text-muted-foreground" />{place}{sp && p?.zone ? <Badge tone="info">{zoneLabel(p.zone)}</Badge> : null}</span>}
           </div>
 
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border p-3" data-testid="lead-resumo-fatos">

@@ -5,7 +5,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { fmtCep, fmtCpf, fmtPhone, lookupCep, MIN_PASSWORD } from "@/lib/doc";
 import { UF_LIST } from "@/lib/quiz";
-import { SP_ZONES, isSpCapital } from "@/lib/spZones";
+import { capitalOf } from "@/lib/capitals";
+import BairroZonaFields from "@/components/hp/BairroZonaFields";
 import { LINK_BTN, PRIMARY_BTN, type Errors, type FormState } from "./shared";
 
 export const Field = ({ id, label, error, hint, children, className = "" }: { id: string; label: string; error?: string; hint?: string; children: ReactNode; className?: string }) => (
@@ -111,15 +112,19 @@ export const ContactAddressFields = ({ v, set, errors, lockEmail, extra }: { v: 
         <input id="ob-number" className="hp-input" value={v.street_number} onChange={(e) => set("street_number", e.target.value)} placeholder="S/N" aria-invalid={!!errors.street_number} /></Field>
       <Field id="ob-compl" label="Complemento (opcional)" error={errors.complement} className="sm:col-span-2">
         <input id="ob-compl" className="hp-input" value={v.complement} onChange={(e) => set("complement", e.target.value)} autoComplete="address-line2" /></Field>
-      <Field id="ob-neigh" label="Bairro" error={errors.neighborhood} className="sm:col-span-2">
-        <input id="ob-neigh" className="hp-input" value={v.neighborhood} onChange={(e) => set("neighborhood", e.target.value)} aria-invalid={!!errors.neighborhood} /></Field>
-      <Field id="ob-city" label="Cidade" error={errors.city} className="sm:col-span-3">
+      <Field id="ob-city" label="Cidade" error={errors.city} className="sm:col-span-5">
         <input id="ob-city" className="hp-input" value={v.city} onChange={(e) => set("city", e.target.value)} autoComplete="address-level2" aria-invalid={!!errors.city} /></Field>
       <Field id="ob-uf" label="UF" error={errors.state_uf} className="sm:col-span-1">
         <select id="ob-uf" className="hp-input" value={v.state_uf} onChange={(e) => set("state_uf", e.target.value)} aria-invalid={!!errors.state_uf}><option value="">—</option>{UF_LIST.map((u) => <option key={u} value={u}>{u}</option>)}</select></Field>
-      {isSpCapital(v.city, v.state_uf) && (
-        <Field id="ob-zone" label="Zona de São Paulo" error={errors.zone} className="sm:col-span-3" hint="Para sabermos a região onde você está.">
-          <select id="ob-zone" className="hp-input" value={v.zone ?? ""} onChange={(e) => set("zone", e.target.value)} aria-invalid={!!errors.zone}><option value="">Escolha…</option>{SP_ZONES.map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}</select></Field>)}
+      {(() => {
+        const cap = capitalOf(v.city, v.state_uf);
+        return cap ? (
+          <BairroZonaFields capital={cap} neighborhood={v.neighborhood} zone={v.zone ?? ""} onChange={(n, z) => { set("neighborhood", n); set("zone", z); }} ids={{ neigh: "ob-neigh", zone: "ob-zone" }} inputClass="hp-input" Wrap={Field}
+            errors={{ neighborhood: errors.neighborhood, zone: errors.zone }} className={{ neigh: "sm:col-span-3", zone: "sm:col-span-3" }} />
+        ) : (
+          <Field id="ob-neigh" label="Bairro" error={errors.neighborhood} className="sm:col-span-3">
+            <input id="ob-neigh" className="hp-input" value={v.neighborhood} onChange={(e) => set("neighborhood", e.target.value)} aria-invalid={!!errors.neighborhood} /></Field>);
+      })()}
       {extra}
     </div>
   );

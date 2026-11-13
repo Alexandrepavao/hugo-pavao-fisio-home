@@ -8,8 +8,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { GeoView, type Geo } from "../GeoSection";
 import LeadTypeBadge from "./LeadTypeBadge";
 import CrmZoneSection from "./CrmZoneSection";
-import SpCityPanel from "./SpCityPanel";
-import { isSpCapital } from "@/lib/spZones";
+import CapitalCityPanel from "./CapitalCityPanel";
+import { capitalOf } from "@/lib/capitals";
 import { LEAD_KINDS, LEAD_TYPE, isLeadKind } from "./leadTypes";
 
 const TABS: [string, string][] = [["", "Todos os contatos"], ...LEAD_KINDS.map((k) => [k, LEAD_TYPE[k].short] as [string, string])];
@@ -30,15 +30,15 @@ const CrmGeoSection = ({ unit, uf, onUf }: { unit: string; uf?: string | null; o
     queryKey: ["crm-geo", kind, unit],
     queryFn: async () => { const { data, error } = await supabase.rpc("crm_geo_distribution", { p_kind: kind || null, p_unit: unit || null }); if (error) throw error; return data as Geo; },
   });
-  const sp = !!city && isSpCapital(city.city, city.uf);   // São Paulo capital: mapa das zonas; as demais cidades: lista
+  const capital = city ? capitalOf(city.city, city.uf) : null;   // capital liberada (São Paulo, Rio de Janeiro…): mapa das zonas; as demais cidades: lista
   const contacts = useQuery({
-    queryKey: ["crm-geo-contacts", city?.key, city?.uf, kind, unit], enabled: !!city && !sp,
+    queryKey: ["crm-geo-contacts", city?.key, city?.uf, kind, unit], enabled: !!city && !capital,
     queryFn: async () => { const { data, error } = await supabase.rpc("crm_geo_contacts", { p_city_key: city!.key, p_uf: city!.uf, p_kind: kind || null, p_unit: unit || null }); if (error) throw error; return data as CityContact[]; },
   });
 
   const asPerson = (c: { person_id: string; full_name: string; phone: string | null; email: string | null }, place: { city: string; uf: string }) => setWho({ person_id: c.person_id, full_name: c.full_name, phone: c.phone, email: c.email, city: place.city, state_uf: place.uf, kinds: [], is_company: false });
-  const panel = city && sp ? (
-    <SpCityPanel kind={kind} unit={unit} onClose={() => setCity(null)} onOpenPerson={(c) => asPerson(c, { city: "São Paulo", uf: "SP" })} />
+  const panel = city && capital ? (
+    <CapitalCityPanel capital={capital} kind={kind} unit={unit} onClose={() => setCity(null)} onOpenPerson={(c) => asPerson(c, { city: capital.name, uf: capital.uf })} />
   ) : city && (
     <section className="hp-card p-4" data-testid="geo-cidade-contatos" aria-label={`Contatos em ${city.city}`}>
       <div className="flex items-center justify-between gap-2 mb-2">

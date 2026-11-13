@@ -737,6 +737,13 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
 
 
+## Zonas e bairros nas capitais — lote 1: Rio de Janeiro (12/11/2026) — só Dev até a confirmação
+> Pedido do usuário: replicar zonas/bairros/mapa para todas as capitais de estado (Rio sim, Santo André não). Decisões: divisão oficial de cada cidade; entrega em lotes começando pelo Rio; bairro escolhido de lista com a zona automática. Detalhes e roteiro das próximas capitais: `docs/zonas-capitais.md`.
+- **Feito (Dev):** migration 122 (`geo_zones` + validação pela cidade), Rio de Janeiro liberado (164 bairros oficiais, 4 zonas, mapa), quiz e cadastros com bairro em lista e zona automática, zonas que o fisioterapeuta atende por capital, painel do CRM com mapa por capital.
+- **Testes:** SQL N08 (25) e N05 (32); unitário `capitals.test.ts` (7); E2E N28 (3), N24 (4), N27 (4), R29/R30 (13), R31/R32/01 (15); typecheck, lint e build.
+- **Depende de você:** a migration troca 3 regras de validação (drop/add de constraint) — o promover exige confirmação explícita; não apaga dado.
+- **Pendente:** as outras 25 capitais (uma fonte oficial por cidade).
+
 ## CRM: resumo do lead em modal + São Paulo por zona com mapa (12/11/2026)
 > Pedido do usuário: (1) clicar nos itens dos cartões que listam leads e ver um modal com o resumo; (2) em Distribuição geográfica, ao clicar em São Paulo, descer um painel abaixo da cidade com a zona que cada pessoa cadastrou, com mapa; (3) apagar os cadastros de teste dos leads sem retorno. Detalhes: `docs/crm-resumo-lead-e-mapa-sp.md`.
 - **Resumo do lead:** modal só leitura (contato, WhatsApp, zona, origem, etapa, dias sem contato, últimos registros, tarefas e respostas do formulário), nos cartões de leads do Início e do CRM; cartões de outros assuntos continuam sem clique.
