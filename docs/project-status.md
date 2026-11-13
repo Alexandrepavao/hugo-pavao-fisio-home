@@ -737,6 +737,12 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Pendente:** APIs reais (credenciais Meta/Google), alcance/frequência (não coletados), decisão de estender o cartão compacto aos demais aplicativos.
 
 
+## Busca global de pessoas + funil do CRM em gráfico (13/11/2026)
+> Pedido do usuário: melhorar a barra de pesquisa (buscar pessoas/leads/palavras, e perguntar por fisioterapeuta + bairro/cidade/zona) e a “Conversão entre etapas” do CRM em gráfico. Detalhes: `docs/busca-global.md`.
+- **Busca (Ctrl+K):** sem lista de páginas; entende tipo + lugar na mesma frase (“fisioterapeuta zona sul”), mostra o que entendeu, recentes e “/” para páginas. Função `search_people` (migration 123, SECURITY INVOKER).
+- **CRM › Conversão entre etapas:** gráfico de barras empilhadas (chegaram × ficaram pelo caminho), maior perda e lista compacta com os números exatos.
+- **Testes:** SQL N09 (24); E2E N29 (5), R12/R24 (12); typecheck, lint e build.
+
 ## Zonas e bairros nas capitais — lote 1: Rio de Janeiro (12/11/2026) — só Dev até a confirmação
 > Pedido do usuário: replicar zonas/bairros/mapa para todas as capitais de estado (Rio sim, Santo André não). Decisões: divisão oficial de cada cidade; entrega em lotes começando pelo Rio; bairro escolhido de lista com a zona automática. Detalhes e roteiro das próximas capitais: `docs/zonas-capitais.md`.
 - **Feito (Dev):** migration 122 (`geo_zones` + validação pela cidade), Rio de Janeiro liberado (164 bairros oficiais, 4 zonas, mapa), quiz e cadastros com bairro em lista e zona automática, zonas que o fisioterapeuta atende por capital, painel do CRM com mapa por capital.

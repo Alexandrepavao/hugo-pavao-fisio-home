@@ -43,6 +43,7 @@ test.describe("@release CRM: conversão por funil", () => {
     await page.goto("/admin/crm/relatorios");
     const a = (await (await resp).json()) as { chain: { name: string; reached: number; conv_prev_pct: number | null; conv_first_pct: number | null }[]; won_step: { won: number }; stage_history: { name: string; n: number }[] };
     const funil = page.getByTestId("funil-etapas"); await expect(funil).toBeVisible({ timeout: 40_000 });
+    await expect(page.getByTestId("funil-grafico").locator("svg.recharts-surface").first()).toBeVisible(); await expect(page.getByTestId("funil-grafico-bloco")).toContainText(/Maior perda|Volume pequeno/);   // o funil também é gráfico
     const steps = funil.getByTestId("funil-etapa"); await expect(steps).toHaveCount(a.chain.length + 1);
     for (const [i, c] of a.chain.entries()) {
       const t = (await steps.nth(i).innerText()).replace(/\s+/g, " ");

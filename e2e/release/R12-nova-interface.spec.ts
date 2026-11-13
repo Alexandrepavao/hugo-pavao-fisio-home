@@ -38,7 +38,7 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     await expect(page.getByTestId("env-badge-fixed")).toBeHidden();
     // busca global abre
     await header.getByRole("button", { name: "Buscar (Ctrl+K)" }).click();
-    await expect(page.getByPlaceholder(/Buscar páginas do painel/)).toBeVisible(); await page.keyboard.press("Escape");
+    await expect(page.getByPlaceholder(/Buscar (pessoa|páginas)/)).toBeVisible(); await page.keyboard.press("Escape");
     // notificações: só itens reais do próprio usuário (lista ou “nada atrasado”)
     await header.getByRole("button", { name: /^Notificações/ }).click();
     await expect(page.getByText("Precisa da sua atenção")).toBeVisible();
