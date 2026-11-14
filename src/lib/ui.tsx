@@ -171,6 +171,7 @@ export const Msg = ({ m }: { m: { kind: "ok" | "err"; text: string } | null }) =
 /** Mensagens de erro do banco (funções em português) chegam limpas; códigos técnicos viram texto genérico. */
 export const errText = (e: { message: string; code?: string } | null | undefined, fallback = "Não foi possível concluir a operação."): string => {
   if (!e) return fallback;
+  if (e.code === "25006" || /read-only transaction/i.test(e.message)) return "Modo “ver como”: somente leitura. Nada é gravado em nome da pessoa.";
   if (e.code === "42501") return "Você não tem permissão para esta ação.";
   if (e.code === "23505") return "Já existe um registro com estes dados.";
   if (e.code === "P0409") return "Horário indisponível: já existe agendamento neste período.";

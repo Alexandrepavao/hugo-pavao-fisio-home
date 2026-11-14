@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import FeatureGate from "./components/hp/FeatureGate";
 import EnvBadge from "./components/hp/EnvBadge";
 import { AuthProvider, STAFF_ROLES, type AppRole } from "./auth/AuthProvider";
+import ViewAsBanner from "./components/hp/ViewAsBanner";
 import RequireAuth from "./auth/RequireAuth";
 import { AskProvider } from "./lib/ui";
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -21,6 +22,7 @@ const AdminHome = lazy(() => import("./pages/admin/AdminHome"));
 const Overview = lazy(() => import("./pages/admin/Overview"));
 const People = lazy(() => import("./pages/admin/People"));
 const Audit = lazy(() => import("./pages/admin/Audit"));
+const ViewAs = lazy(() => import("./pages/admin/ViewAs"));
 const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
 const CrmDashboard = lazy(() => import("./pages/admin/crm/CrmDashboard"));
@@ -150,6 +152,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ViewAsBanner />
           <AskProvider>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-navy-400" role="status">Carregando…</div>}>
             <Routes>
@@ -249,6 +252,7 @@ const App = () => (
                 <Route path="configuracoes" element={g(["manager", "ops_admin"], <SettingsHub />)} />
                 <Route path="conta" element={<Account />} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
+                <Route path="ver-como" element={g(["manager"], <ViewAs />)} />
               </Route>
               <Route path="/boas-vindas" element={g(R.portal, <Welcome />)} />
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />

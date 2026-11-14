@@ -1,4 +1,4 @@
-import { LineChart, BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
+import { Eye, LineChart, BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
 import { APPS, appVisible, type AppId } from "./apps";
@@ -31,6 +31,7 @@ export const GESTAO_NAV: FrameNavSection[] = [
     { to: "/admin/configuracoes", label: "Configurações", icon: Settings, roles: ADMINS, end: true, keywords: "parâmetros whatsapp captação financeiro" },
   ] },
   { label: "Controle", items: [
+    { to: "/admin/ver-como", label: "Ver como", icon: Eye, roles: ["manager"], keywords: "ver como fisioterapeuta paciente visão impersonar simular acesso app" },
     { to: "/admin/auditoria", label: "Auditoria", icon: ScrollText, roles: ["manager"], keywords: "log histórico" },
     { to: "/admin/status", label: "Estado dos módulos", icon: ListChecks, roles: ADMINS, feature: "system_status" },
   ] },

@@ -790,3 +790,9 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Testes:** SQL N12 (19), E2E N32 (4) e ajustes nos testes antigos do quiz (R25, 08: +1 etapa).
 - **Incidente corrigido (PR #31, 13/11):** a migration 122 (zonas do Rio) deixou `private.zone_valid_any`/`zones_all_valid` sem EXECUTE para `authenticated`; criar/editar pessoa pelo painel falhava com “permission denied” (quiz e onboarding não foram afetados). Corrigido pela migration 127; o teste N13 grava com o papel do usuário. Causa de não ter sido pega: o N08 gravava como administrador do banco.
 - Falhas de hora do dia já conhecidas (não são desta mudança): R18 “Metas” e R19 “Lembretes de envio” falham depois das ~21h (horário de Brasília), como o N03 do marketing.
+
+## “Ver como” para o gestor (14/11/2026)
+> Pedido: o gestor vê o app do fisioterapeuta e do paciente como a pessoa vê. Decisões: somente leitura, só gestor, dado clínico visível com registro. Detalhes: `docs/ver-como.md`.
+- **Migration 128:** sessões de “ver como” + `hp_pre_request` (gancho do PostgREST que troca a identidade e liga o modo somente leitura quando o cabeçalho `x-view-as` é válido; sem cabeçalho não faz nada). **Muda a configuração do PostgREST (`pgrst.db_pre_request`), que vale para TODAS as chamadas** — instruções para desligar em `docs/ver-como.md`.
+- **Tela:** Gestão › Ver como (lista de fisioterapeutas e pacientes com acesso, últimas sessões) + faixa laranja “Ver como … somente leitura” + “Sair do ver como”.
+- **Testes:** SQL N14/N15, E2E N33; regressões de portais (R35–R41), permissões (R02), responsáveis (R36) e interface (R12) passaram.
