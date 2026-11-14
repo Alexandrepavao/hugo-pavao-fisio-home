@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ClipboardList, Navigation, Route as RouteIcon, Settings2, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -20,8 +20,15 @@ const RouteTab = ({ professionalId, date, isManager }: { professionalId: string;
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const q = useQuery({ queryKey: ["route-day", professionalId, date], enabled: !!professionalId, retry: false, queryFn: () => routeDay(professionalId, date) });
   const [view, setView] = useState<"lista" | "mapa">("lista");
-  const [sug, setSug] = useState<Suggestion | null>(null);
-  const [line, setLine] = useState<{ coords: [number, number][]; info: string } | null>(null);
+  // Sugestão e linha do trajeto valem só para o profissional e o dia em que foram calculadas: trocar de dia/agenda as descarta (antes, a sugestão antiga apontava para atendimentos de outro dia e quebrava a tela).
+  const ctx = `${professionalId}|${date}`;
+  const [sugRaw, setSugRaw] = useState<{ ctx: string; v: Suggestion } | null>(null);
+  const sug = sugRaw?.ctx === ctx ? sugRaw.v : null;
+  const setSug = (v: Suggestion | null) => setSugRaw(v ? { ctx, v } : null);
+  const [lineRaw, setLineRaw] = useState<{ ctx: string; v: { coords: [number, number][]; info: string } } | null>(null);
+  const line = lineRaw?.ctx === ctx ? lineRaw.v : null;
+  const setLine = (v: { coords: [number, number][]; info: string } | null) => setLineRaw(v ? { ctx, v } : null);
+  useEffect(() => { setSugRaw(null); setLineRaw(null); }, [ctx]);   // ao voltar a um dia anterior a sugestão não reaparece (a agenda pode ter mudado)
   const [busy, setBusy] = useState(false);
 
   const d = q.data?.day, mx = q.data?.matrix;
@@ -109,7 +116,7 @@ const RouteTab = ({ professionalId, date, isManager }: { professionalId: string;
             <p data-testid="route-suggestion-msg">{sug.message}</p>
             {sug.status === "improved" && sug.after && (<>
               <div className="overflow-x-auto"><table className="rt-diff" data-testid="route-diff"><thead><tr><th>Atendimento</th><th>Horário atual</th><th>Horário sugerido</th></tr></thead><tbody>
-                {sug.moves.map((mv) => { const a = calc.byId.get(mv.id)!; return <tr key={mv.id}><td>{a.person} <span className="rt-muted">· {a.service}</span></td><td>{fmtClock(mv.from, tz)}</td><td className="is-new">{fmtClock(mv.to, tz)}</td></tr>; })}</tbody></table></div>
+                {sug.moves.map((mv) => { const a = calc.byId.get(mv.id); if (!a) return null; return <tr key={mv.id}><td>{a.person} <span className="rt-muted">· {a.service}</span></td><td>{fmtClock(mv.from, tz)}</td><td className="is-new">{fmtClock(mv.to, tz)}</td></tr>; })}</tbody></table></div>
               <div className="rt-kpis"><div className="rt-kpi"><span>Deslocamento estimado</span><b>{Math.round(sug.before.travelS / 60)} → {Math.round(sug.after.travelS / 60)} min</b><small>antes → depois, só trechos com estimativa. {MSG_NO_TRAFFIC}</small></div>
                 <div className="rt-kpi"><span>Trechos inviáveis</span><b>{sug.before.infeasible} → {sug.after.infeasible}</b><small>antes → depois</small></div></div>
               <p className="rt-small rt-muted">Nenhum atendimento é encurtado. Confirmados, fixos, remotos e passados não se movem. A agenda só muda se você aplicar; o servidor revalida tudo antes.</p>
@@ -145,7 +152,7 @@ const StopItem = ({ s, i, a, tz, profile, onMode, first, startLabel }: { s: Stop
     if (s.verdict === "unknown") return { cls: "is-unknown", text: MSG_UNAVAILABLE };
     if (s.legKind === "none") return { cls: "", text: first ? "Ponto de partida não definido" : "—" };
     const base = s.legKind === "same" ? "Mesmo local" : `${fmtMinutes(s.legS)} de deslocamento${first && startLabel ? ` desde ${startLabel}` : ""}`;
-    if (s.verdict === "infeasible") return { cls: "is-bad", text: `${base} · Inviável: faltam ${mins(s.shortByMs)} min` };
+    if (s.verdict === "infeasible") return { cls: "is-bad", text: `${base} · Inviável: ${Math.ceil(s.shortByMs / MIN) <= 1 ? "falta menos de 1 min" : `faltam ${Math.ceil(s.shortByMs / MIN)} min`}` };
     if (s.verdict === "tight") return { cls: "is-tight", text: `${base} · folga curta (${mins(s.slackMs ?? 0)} min)` };
     return { cls: "", text: `${base}${s.slackMs !== null ? ` · folga ${mins(s.slackMs)} min` : ""}` };
   })();

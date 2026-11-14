@@ -122,6 +122,18 @@ test.describe.serial("@novos Rota de atendimentos", () => {
     await shot(page, "rota-celular-mapa-real");
   });
 
+  test("N35-2c trocar de data com a sugestão aberta descarta a sugestão e não quebra a tela", async ({ page, context }) => {
+    const pageErrors: string[] = []; page.on("pageerror", (e) => pageErrors.push(e.message));
+    await loginAs(context, "qa.fisio@hp-test.dev"); await openRota(page, D1);
+    await page.getByTestId("route-suggest").click(); await expect(page.getByTestId("route-suggestion")).toBeVisible();
+    await page.locator("#pd-date").fill(D2);                                                              // outro dia, com outros atendimentos
+    await expect(page.getByTestId("route-stop").first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("route-suggestion")).toHaveCount(0);                                     // a sugestão do dia anterior não vale para este
+    await page.locator("#pd-date").fill(D1); await expect(page.getByTestId("route-stop").first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("route-suggestion")).toHaveCount(0);                                     // e não volta sozinha ao retornar
+    expect(pageErrors).toEqual([]);
+  });
+
   test("N35-3 simular mostra antes/depois e NÃO altera a agenda", async ({ page, context }) => {
     const before = JSON.stringify(await state());
     await loginAs(context, "qa.fisio@hp-test.dev"); await openRota(page, D1);

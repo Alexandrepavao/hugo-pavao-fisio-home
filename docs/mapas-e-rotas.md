@@ -133,3 +133,13 @@ Validação real parcial: matriz de tempos e geometria do trajeto (ORS) e mapa. 
 ## 12. Google Calendar (reaproveitado, sem mudança)
 
 A rota **não cria nem publica nada no Google**. Aplicar uma sugestão **move o próprio atendimento** de horário (mesmo id, mesmo paciente, mesmo pacote — nada de atendimento novo): a sincronização automática existente **atualiza o MESMO evento** (id determinístico por atendimento — impossível duplicar). O evento continua só com “Atendimento HP” + unidade (sem paciente por padrão, **sem endereço do paciente nem do profissional, sem dado clínico**). Mudar formato/local/horário fixo **não dispara sincronização** (o gatilho só observa `status`, `period` e `professional_id`; verificado no teste SQL N17). Simulações nunca chegam ao Google. **Não validado contra uma conta Google real nesta entrega** (depende da conexão OAuth de cada usuário).
+
+## 13. Simulação para teste manual: gestores que também atendem (Dev)
+
+Criada em 14/11/2026 para ver e editar à mão. **Somente Dev; pacientes fictícios** (“<nome> Simulação”), bairros reais de São Paulo (coordenadas de bairro) e tempos **reais** do ORS (ou do cache dele).
+
+* **Login:** `qa.manager@hp-test.dev` (papel gestor) — é o profissional **“Jan (simulação)”**. **“Hugo (simulação)”** não tem login: aparece no seletor “Agenda clínica de” (o gestor vê todas as agendas).
+* **Onde:** `/admin/meu-dia` → aba **Rota** (menu “Produtividade → Meu dia”). `/fisio/dia` é só do papel fisioterapeuta e o gestor não entra nele.
+* **Dias:** seg 16/11 (Jan: 7 atendimentos em zigue-zague — um confirmado, um com horário fixo, um remoto, um com local aproximado por CEP; Hugo: 5) e ter 17/11 (Jan: trecho apertado Itaim→Lapa, paciente sem local, atendimento na unidade, horários livres para “melhor encaixe”).
+* **Criar/recriar:** `supabase/tools/rota-simulacao-jan-hugo.sql` (idempotente). **Remover tudo:** `supabase/tools/rota-simulacao-limpar.sql`. Rodar só no Dev.
+* Ao testar “Aplicar na agenda”, a simulação muda de fato (é o mesmo atendimento em outro horário); para voltar ao estado inicial, rode de novo o script de criação.
