@@ -9,6 +9,8 @@ import OpportunitySheet from "./OpportunitySheet";
 import LeadTypeBadge from "./LeadTypeBadge";
 import { LEAD_KINDS, LEAD_TYPE } from "./leadTypes";
 import CrmImportDialog from "./CrmImportDialog";
+import { PartnerAreaTag } from "@/components/hp/PartnerSummary";
+import { isPartnerKind, partnerLine, sourceLabel, usePartnerProfiles } from "@/lib/quizProfile";
 import { cardName, isStale, type Opp, type PipelineInfo, type Stage, type StaffUser } from "./types";
 
 /** Gestão de leads: a fila de qualificação/distribuição — oportunidades ainda na PRIMEIRA etapa do funil
@@ -40,6 +42,7 @@ const Leads = () => {
   const kindOf = (o: Opp) => pipes.data?.find((p) => p.id === o.pipeline_id)?.kind;
   const shown = (leads.data ?? []).filter((o) => !kindFilter || kindOf(o) === kindFilter);
   const opened = leads.data?.find((o) => o.id === openId) ?? null;
+  const profiles = usePartnerProfiles("person", shown.filter((o) => isPartnerKind(kindOf(o))).map((o) => o.person_id));   // leads de parceiro/Academy: tag de área e resumo
 
   const assign = async (opp: Opp, ownerId: string) => {
     const { error } = await supabase.from("opportunities").update({ owner_user_id: ownerId || null }).eq("id", opp.id);
@@ -63,9 +66,9 @@ const Leads = () => {
           {shown.map((o) => (
             <tr key={o.id}>
               <Td><button className="font-medium text-left hover:underline" onClick={() => setOpenId(o.id)}>{cardName(o)}</button>{o.legal_entity && <span className="block text-xs text-muted-foreground">Contato: {o.person?.full_name}</span>}{isStale(o) && <span className="ml-2"><Badge tone="danger">Sem retorno</Badge></span>}</Td>
-              <Td><LeadTypeBadge kind={kindOf(o)} short /></Td>
-              <Td>{o.title}</Td>
-              <Td>{o.source ?? "—"}</Td>
+              <Td><div className="flex flex-wrap items-center gap-1.5"><LeadTypeBadge kind={kindOf(o)} short /><PartnerAreaTag profile={profiles.get(o.person_id)} /></div></Td>
+              <Td>{o.title}{profiles.get(o.person_id) && <span className="block text-xs text-muted-foreground" data-testid="lead-resumo-parceiro">{partnerLine(profiles.get(o.person_id))}</span>}</Td>
+              <Td>{sourceLabel(o.source) || "—"}</Td>
               <Td>{fmtDateTime(o.created_at)}</Td>
               <Td><select value={o.owner_user_id ?? ""} onChange={(e) => assign(o, e.target.value)} aria-label={`Responsável de ${cardName(o)}`}><option value="">Sem responsável</option>{(users.data ?? []).map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></Td>
               <Td><button className="hp-btn hp-btn-outline hp-btn-sm" onClick={() => setOpenId(o.id)}>Abrir</button></Td>

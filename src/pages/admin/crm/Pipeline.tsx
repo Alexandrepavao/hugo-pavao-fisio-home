@@ -10,6 +10,8 @@ import { Badge, EmptyState, errText, Msg, PageHead, promptText, State, Table, Td
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import OpportunitySheet from "./OpportunitySheet";
+import { PartnerAreaTag } from "@/components/hp/PartnerSummary";
+import { isPartnerKind, partnerLine, sourceLabel, usePartnerProfiles, type PartnerProfile } from "@/lib/quizProfile";
 import CompanyDialog from "./CompanyDialog";
 import LeadTypeBadge from "./LeadTypeBadge";
 import { LEAD_TYPE, isLeadKind } from "./leadTypes";
@@ -47,6 +49,7 @@ const Pipeline = () => {
     if (error) throw error; return data as unknown as Opp[];
   } });
   const nameOf = (id: string | null) => users.data?.find((u) => u.user_id === id)?.name ?? "Sem responsável";
+  const profiles = usePartnerProfiles("person", (opps.data ?? []).map((o) => o.person_id), isPartnerKind(curPipe?.kind));   // funis de parceiro/Academy: tag de área e resumo em cada card
 
   const filtered = useMemo(() => (opps.data ?? []).filter((o) => {
     if (q && !`${o.title} ${o.person?.full_name ?? ""} ${o.legal_entity?.legal_name ?? ""} ${o.legal_entity?.trade_name ?? ""}`.toLowerCase().includes(q.toLowerCase())) return false;
@@ -130,10 +133,10 @@ const Pipeline = () => {
           accessibility={{ screenReaderInstructions: { draggable: "Para mover a oportunidade, pressione Espaço, use as setas para escolher a etapa e pressione Espaço para soltar. Esc cancela." } }}>
           <div className="overflow-x-auto pb-2" style={{ overscrollBehaviorX: "contain" }} tabIndex={0} role="region" aria-label="Quadro do funil">
             <div className="flex gap-3 items-stretch" style={{ width: "max-content", minWidth: "100%" }}>
-              {stageList.map((s) => <Column key={s.id} stage={s} items={filtered.filter((o) => o.stage_id === s.id)} allStages={stageList} nameOf={nameOf} onOpen={setOpenId} onMove={moveTo} dragging={!!dragId} />)}
+              {stageList.map((s) => <Column key={s.id} stage={s} items={filtered.filter((o) => o.stage_id === s.id)} allStages={stageList} nameOf={nameOf} profiles={profiles} onOpen={setOpenId} onMove={moveTo} dragging={!!dragId} />)}
             </div>
           </div>
-          <DragOverlay dropAnimation={null}>{dragged && <CardBody o={dragged} nameOf={nameOf} overlay />}</DragOverlay>
+          <DragOverlay dropAnimation={null}>{dragged && <CardBody o={dragged} nameOf={nameOf} profile={profiles.get(dragged.person_id)} overlay />}</DragOverlay>
         </DndContext>
       )}
       {stages.data && opps.data && view === "lista" && (filtered.length === 0 ? <EmptyState icon={KanbanSquare} title="Nenhuma oportunidade com estes filtros">Ajuste os filtros ou crie uma nova oportunidade.</EmptyState> : (
@@ -141,7 +144,7 @@ const Pipeline = () => {
           <section key={s.id} aria-label={s.name}><h3 className="mb-2 flex items-center gap-2">{s.name}<Badge>{items.length}</Badge></h3>
             <Table head={["Pessoa", "Título", "Responsável", "Próximo contato", "Origem", "Valor"]} right={[5]}>
               {items.map((o) => <tr key={o.id} className="cursor-pointer" onClick={() => setOpenId(o.id)}><Td><button className="font-medium text-left hover:underline" onClick={(e) => { e.stopPropagation(); setOpenId(o.id); }}>{cardName(o)}</button>{isStale(o) && <span className="ml-2"><Badge tone="danger">Sem retorno</Badge></span>}</Td>
-              <Td>{o.title}</Td><Td>{nameOf(o.owner_user_id)}</Td><Td>{fmtDate(o.next_contact_at)}</Td><Td>{o.source ?? "—"}</Td><Td num>{o.value_cents > 0 ? brl(o.value_cents) : "—"}</Td></tr>)}</Table></section>); })}</div>))}
+              <Td>{o.title}{profiles.get(o.person_id) && <span className="block text-xs text-muted-foreground" data-testid="lista-resumo-parceiro">{partnerLine(profiles.get(o.person_id))}</span>}</Td><Td>{nameOf(o.owner_user_id)}</Td><Td>{fmtDate(o.next_contact_at)}</Td><Td>{sourceLabel(o.source) || "—"}</Td><Td num>{o.value_cents > 0 ? brl(o.value_cents) : "—"}</Td></tr>)}</Table></section>); })}</div>))}
 
       <OpportunitySheet opp={opened} stages={stageList} users={users.data ?? []} onClose={() => setOpenId(null)} onChanged={() => qc.invalidateQueries({ queryKey: oppKey })} />
       <NewOpp open={showNew} onOpenChange={setShowNew} pipeId={pid} kind={curPipe?.kind ?? ""} pipeName={curPipe?.name ?? ""} onDone={() => { setShowNew(false); void qc.invalidateQueries({ queryKey: oppKey }); void qc.invalidateQueries({ queryKey: ["crm-overview"] }); m.ok("Oportunidade criada."); }} />
@@ -149,7 +152,7 @@ const Pipeline = () => {
   );
 };
 
-const Column = ({ stage, items, allStages, nameOf, onOpen, onMove, dragging }: { stage: Stage; items: Opp[]; allStages: Stage[]; nameOf: (id: string | null) => string; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void; dragging: boolean }) => {
+const Column = ({ stage, items, allStages, nameOf, profiles, onOpen, onMove, dragging }: { stage: Stage; items: Opp[]; allStages: Stage[]; nameOf: (id: string | null) => string; profiles: Map<string, PartnerProfile>; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void; dragging: boolean }) => {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const total = items.reduce((a, o) => a + o.value_cents, 0);
   return (
@@ -161,29 +164,34 @@ const Column = ({ stage, items, allStages, nameOf, onOpen, onMove, dragging }: {
       </header>
       <ul className="flex-1 overflow-y-auto p-2 grid gap-2 content-start" style={{ minHeight: "4rem" }}>
         {items.length === 0 && <li className="text-xs text-muted-foreground text-center py-3">Nenhuma oportunidade</li>}
-        {items.map((o) => <Card key={o.id} o={o} stages={allStages} nameOf={nameOf} onOpen={onOpen} onMove={onMove} />)}
+        {items.map((o) => <Card key={o.id} o={o} stages={allStages} nameOf={nameOf} profile={profiles.get(o.person_id)} onOpen={onOpen} onMove={onMove} />)}
       </ul>
     </section>
   );
 };
 
-const CardBody = ({ o, nameOf, overlay }: { o: Opp; nameOf: (id: string | null) => string; overlay?: boolean }) => (
+const CardBody = ({ o, nameOf, profile, overlay }: { o: Opp; nameOf: (id: string | null) => string; profile?: PartnerProfile; overlay?: boolean }) => (
   <div className="hp-card p-3 text-left" style={overlay ? { boxShadow: "var(--shadow-pop)", width: "16.5rem" } : undefined}>
     <p className="font-medium text-foreground leading-5 pr-6 break-words">{cardName(o)}</p>
     <p className="text-xs text-muted-foreground mt-0.5 break-words">{o.legal_entity ? `Contato: ${o.person?.full_name ?? "—"}` : o.title}</p>
+    {profile && (
+      <div className="mt-1.5 grid gap-1" data-testid="card-resumo-parceiro">
+        <div className="flex flex-wrap items-center gap-1.5"><PartnerAreaTag profile={profile} />{profile.experience && <span className="text-xs text-muted-foreground">{profile.experience.label}</span>}</div>
+        {profile.resumo && <p className="text-xs text-muted-foreground line-clamp-2 break-words">{profile.resumo}</p>}
+      </div>)}
     <div className="flex flex-wrap items-center gap-1.5 mt-2">
       {isStale(o) && <Badge tone="danger">Sem retorno</Badge>}
       {o.next_contact_at && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarClock size={12} aria-hidden />{fmtDate(o.next_contact_at)}</span>}
       {o.value_cents > 0 && <span className="text-xs tabular font-medium">{brl(o.value_cents)}</span>}
     </div>
     <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-      <span className="truncate">{o.source ?? "manual"}</span>
+      <span className="truncate">{sourceLabel(o.source) || "manual"}</span>
       <span className={`grid place-items-center rounded-full font-semibold ${o.owner_user_id ? "bg-primary text-primary-foreground" : "border border-dashed border-input text-muted-foreground"}`} style={{ width: "1.375rem", height: "1.375rem", fontSize: "0.625rem" }} title={nameOf(o.owner_user_id)} aria-label={`Responsável: ${nameOf(o.owner_user_id)}`}>{o.owner_user_id ? initials(nameOf(o.owner_user_id)) : "?"}</span>
     </div>
   </div>
 );
 
-const Card = ({ o, stages, nameOf, onOpen, onMove }: { o: Opp; stages: Stage[]; nameOf: (id: string | null) => string; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void }) => {
+const Card = ({ o, stages, nameOf, profile, onOpen, onMove }: { o: Opp; stages: Stage[]; nameOf: (id: string | null) => string; profile?: PartnerProfile; onOpen: (id: string) => void; onMove: (o: Opp, stageId: string) => void }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: o.id });
   return (
     <li ref={setNodeRef} style={{ position: "relative", touchAction: "manipulation" }}>
@@ -191,7 +199,7 @@ const Card = ({ o, stages, nameOf, onOpen, onMove }: { o: Opp; stages: Stage[]; 
       <div style={isDragging ? { visibility: "hidden" } : undefined}>
       <div {...attributes} {...listeners} role="button" aria-roledescription="item arrastável" aria-label={`${cardName(o)}, ${o.title}. Enter abre os detalhes.`} tabIndex={0} className="cursor-grab active:cursor-grabbing rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
         onClick={() => onOpen(o.id)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onOpen(o.id); } else listeners?.onKeyDown?.(e); }}>
-        <CardBody o={o} nameOf={nameOf} />
+        <CardBody o={o} nameOf={nameOf} profile={profile} />
       </div>
       </div>
       <DropdownMenu>

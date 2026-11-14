@@ -7,12 +7,14 @@ import { Badge, State, btnGhost, btnPrimary } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { capitalOf, zoneLabel } from "@/lib/capitals";
 import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
+import { PartnerSummary } from "@/components/hp/PartnerSummary";
+import { isPartnerKind, sourceLabel, usePartnerProfiles } from "@/lib/quizProfile";
 
 interface OppRow {
   id: string; title: string; status: string; value_cents: number; owner_user_id: string | null; person_id: string; created_at: string; last_contact_at: string | null; next_contact_at: string | null; closed_at: string | null;
   source: string | null; campaign: string | null;
   person: { full_name: string; city: string | null; state_uf: string | null; neighborhood: string | null; zone: string | null } | null;
-  stage: { name: string; kind: string } | null; pipeline: { name: string } | null; lost_reason: { name: string } | null;
+  stage: { name: string; kind: string } | null; pipeline: { name: string; kind: string } | null; lost_reason: { name: string } | null;
 }
 interface Contact { type: string; value: string; is_primary: boolean }
 const STATUS: Record<string, [string, "info" | "success" | "danger" | "neutral"]> = { open: ["Em aberto", "info"], won: ["Ganha", "success"], lost: ["Perdida", "danger"] };
@@ -30,12 +32,13 @@ const LeadSummaryDialog = ({ opportunityId, onClose }: { opportunityId: string |
     queryKey: ["lead-summary", id], enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase.from("opportunities")
-        .select("id, title, status, value_cents, owner_user_id, person_id, created_at, last_contact_at, next_contact_at, closed_at, source, campaign, person:people(full_name, city, state_uf, neighborhood, zone), stage:pipeline_stages(name, kind), pipeline:pipelines(name), lost_reason:loss_reasons(name)")
+        .select("id, title, status, value_cents, owner_user_id, person_id, created_at, last_contact_at, next_contact_at, closed_at, source, campaign, person:people(full_name, city, state_uf, neighborhood, zone), stage:pipeline_stages(name, kind), pipeline:pipelines(name, kind), lost_reason:loss_reasons(name)")
         .eq("id", id!).maybeSingle();
       if (error) throw error; return data as unknown as OppRow | null;
     },
   });
   const o = opp.data; const pid = o?.person_id;
+  const profile = usePartnerProfiles("person", [pid], !!o && isPartnerKind(o.pipeline?.kind)).get(pid ?? "");   // lead de parceiro/Academy: resumo do formulário de parceria
   const contacts = useQuery({ queryKey: ["lead-summary-contacts", pid], enabled: !!pid, queryFn: async () => ((await supabase.from("person_contacts").select("type, value, is_primary").eq("person_id", pid!).order("is_primary", { ascending: false })).data ?? []) as Contact[] });
   const history = useQuery({ queryKey: ["lead-summary-history", id], enabled: !!id, queryFn: async () => (await supabase.from("interactions").select("id, channel, summary, created_at").eq("opportunity_id", id!).order("created_at", { ascending: false }).limit(3)).data ?? [] });
   const tasks = useQuery({ queryKey: ["lead-summary-tasks", id], enabled: !!id, queryFn: async () => (await supabase.from("crm_tasks").select("id, title, due_at").eq("opportunity_id", id!).is("done_at", null).order("due_at").limit(3)).data ?? [] });
@@ -62,6 +65,8 @@ const LeadSummaryDialog = ({ opportunityId, onClose }: { opportunityId: string |
             {stale && last && <span className="inline-flex items-center gap-1 text-[12px]" style={{ color: "hsl(var(--warning))" }}><AlertTriangle size={13} aria-hidden />Sem contato há {daysSince(last)} dias</span>}
           </div>
 
+          <PartnerSummary profile={profile} />
+
           <div className="grid gap-1.5" data-testid="lead-resumo-contato">
             {phone && <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><span className="inline-flex items-center gap-1.5"><Phone size={14} aria-hidden className="text-muted-foreground" /><a className="hover:underline" href={`tel:${digits(phone.value)}`}>{phone.value}</a></span>
               <a className="inline-flex items-center gap-1 text-accent hover:underline text-[13px]" href={waLink(phone.value)} target="_blank" rel="noreferrer"><MessageCircle size={14} aria-hidden />WhatsApp</a></div>}
@@ -73,7 +78,7 @@ const LeadSummaryDialog = ({ opportunityId, onClose }: { opportunityId: string |
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-lg border border-border p-3" data-testid="lead-resumo-fatos">
             <div><dt className="text-xs text-muted-foreground">Chegou em</dt><dd>{fmtDateTime(o.created_at)}</dd></div>
             <div><dt className="text-xs text-muted-foreground">Último contato</dt><dd>{o.last_contact_at ? fmtDateTime(o.last_contact_at) : "Nenhum ainda"}</dd></div>
-            <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{[o.source, o.campaign].filter(Boolean).join(" · ") || "Não informada"}</dd></div>
+            <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{[sourceLabel(o.source), o.campaign].filter(Boolean).join(" · ") || "Não informada"}</dd></div>
             <div><dt className="text-xs text-muted-foreground">Responsável</dt><dd>{owner ?? (o.owner_user_id ? "—" : "Sem responsável")}</dd></div>
             {o.value_cents > 0 && <div><dt className="text-xs text-muted-foreground">Valor</dt><dd className="tabular">{brl(o.value_cents)}</dd></div>}
             {o.next_contact_at && o.status === "open" && <div><dt className="text-xs text-muted-foreground">Próximo contato</dt><dd>{fmtDateTime(o.next_contact_at)}</dd></div>}

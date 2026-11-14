@@ -142,6 +142,24 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     } catch (err) { setError(errText(err)); } finally { setBusy(false); }
   };
 
+  // Captura progressiva (só no formulário de parceria): o que a pessoa já marcou ou digitou na pergunta atual é gravado sem ela precisar clicar em Continuar. Não muda a etapa nem as perguntas
+  // visíveis; se o servidor recusar (resposta ainda incompleta), nada acontece. Ao fechar/esconder a página, o rascunho pendente é enviado com keepalive.
+  const draftStep = 4 + qPos;
+  const saveDraft = async (key: string, value: AnswerValue) => {
+    if (!leadId || journey !== "parceria") return;
+    try { await supabase.rpc("quiz_save_progress", { p_id: leadId, p_step: draftStep, p_answers: { [key]: value } }); } catch { /* rascunho é best-effort */ }
+  };
+  const flushDraft = (key: string, value: AnswerValue) => {
+    if (!leadId || journey !== "parceria") return;
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined; const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined; if (!url || !apikey) return;
+    try { void fetch(`${url}/rest/v1/rpc/quiz_save_progress`, { method: "POST", keepalive: true, headers: { apikey, authorization: `Bearer ${apikey}`, "content-type": "application/json" }, body: JSON.stringify({ p_id: leadId, p_step: draftStep, p_answers: { [key]: value } }) }); } catch { /* idem */ }
+  };
+  // pergunta opcional deixada em branco: segue sem gravar nada
+  const skipQuestion = (key: string) => {
+    setError(null); const list = visibleQuestions(journey, answers); const at = list.findIndex((q) => q.key === key);
+    if (at >= 0 && at + 1 < list.length) setQKey(list[at + 1].key); else setPhase("marketing");
+  };
+
   // Voltar: reabre a etapa anterior com a resposta já dada (a etapa de contato não volta: o cadastro já foi gravado).
   const canGoBack = phase === "question" || phase === "marketing" || phase === "health-consent";
   const goBack = () => {
@@ -293,7 +311,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
                   )}
 
                   {phase === "question" && currentQuestion && (
-                    <QuestionStep key={currentQuestion.key} q={currentQuestion} initial={answers[currentQuestion.key]} busy={busy} error={error} onAnswer={saveAnswer} />
+                    <QuestionStep key={currentQuestion.key} q={currentQuestion} initial={answers[currentQuestion.key]} busy={busy} error={error} onAnswer={saveAnswer} onSkip={skipQuestion} onDraft={journey === "parceria" ? saveDraft : undefined} onFlush={journey === "parceria" ? flushDraft : undefined} />
                   )}
 
                   {phase === "marketing" && (
@@ -346,14 +364,38 @@ const Choice = ({ selected, label, onClick }: { selected: boolean; label: string
   </button>
 );
 
-const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; initial?: AnswerValue; busy: boolean; error: string | null; onAnswer: (key: string, v: AnswerValue) => void }) => {
+const QuestionStep = ({ q, initial, busy, error, onAnswer, onSkip, onDraft, onFlush }: { q: Question; initial?: AnswerValue; busy: boolean; error: string | null; onAnswer: (key: string, v: AnswerValue) => void; onSkip: (key: string) => void; onDraft?: (key: string, v: AnswerValue) => void; onFlush?: (key: string, v: AnswerValue) => void }) => {
   const [value, setValue] = useState<string | null>(typeof initial?.value === "string" ? initial.value : null);
   const [detalhe, setDetalhe] = useState(initial?.detalhe ?? "");
   const [localError, setLocalError] = useState<string | null>(null);
   const [multi, setMulti] = useState<string[]>(Array.isArray(initial?.value) ? initial.value : []);
 
+  // resposta atual no formato gravado (ou null se ainda não há o que gravar) — usada pela captura progressiva
+  const current = (): AnswerValue | null => {
+    if (q.kind === "multi") return multi.length ? { value: multi, label: multi.map((v) => q.options?.find((o) => o.value === v)?.label ?? v).join(", ") } : null;
+    if (q.kind === "text") { const t = (value ?? "").trim(); if (!t) return null; if (q.key === "crefito" && (t.length < 3 || !/\d/.test(t))) return null; return { value: t, label: t }; }
+    if (value === null) return null;
+    return { value, label: q.kind === "scale" ? value : q.options?.find((o) => o.value === value)?.label ?? value, ...(q.kind === "options-other" && value === (q.options?.at(-1)?.value) ? { detalhe: detalhe.trim() || undefined } : {}) };
+  };
+  const draftRef = useRef<AnswerValue | null>(null); const sentRef = useRef<string>(initial ? JSON.stringify(initial) : "");
+  const cur = current(); const curJson = cur ? JSON.stringify(cur) : "";
+  useEffect(() => {
+    draftRef.current = cur && curJson !== sentRef.current ? cur : null;
+    if (!onDraft || !cur || curJson === sentRef.current) return;
+    const h = setTimeout(() => { sentRef.current = curJson; draftRef.current = null; onDraft(q.key, cur); }, 900);
+    return () => clearTimeout(h);
+  }, [curJson]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {   // a página foi fechada/escondida com algo ainda não enviado: manda agora
+    if (!onFlush) return;
+    const flush = () => { if (draftRef.current) { onFlush(q.key, draftRef.current); sentRef.current = JSON.stringify(draftRef.current); draftRef.current = null; } };
+    const vis = () => { if (document.visibilityState === "hidden") flush(); };
+    document.addEventListener("visibilitychange", vis); window.addEventListener("pagehide", flush);
+    return () => { document.removeEventListener("visibilitychange", vis); window.removeEventListener("pagehide", flush); };
+  }, [onFlush, q.key]);
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (q.kind === "text" && q.optional && !(value ?? "").trim()) { onSkip(q.key); return; }
     if (q.kind === "multi") {
       if (multi.length === 0) return;
       const label = multi.map((v) => q.options?.find((o) => o.value === v)?.label ?? v).join(", ");
@@ -362,7 +404,7 @@ const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; init
     }
     if (q.kind === "text") {
       const t = (value ?? "").trim();
-      if (t.length < 3 || !/\d/.test(t)) return setLocalError("Informe o número do seu CREFITO (ex.: 123456-F).");
+      if (q.key === "crefito" && (t.length < 3 || !/\d/.test(t))) return setLocalError("Informe o número do seu CREFITO (ex.: 123456-F).");
       setLocalError(null); onAnswer(q.key, { value: t, label: t }); return;
     }
     if (value === null) return;
@@ -418,8 +460,13 @@ const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; init
 
       {q.kind === "text" && (
         <div className="mt-8">
-          <label htmlFor="q-text" className="block text-sm text-navy-700 mb-1.5">Número do CREFITO</label>
-          <input id="q-text" value={value ?? ""} onChange={(e) => { setValue(e.target.value); setLocalError(null); }} maxLength={30} placeholder={q.placeholder} className="hp-input" autoFocus autoComplete="off" required />
+          <label htmlFor="q-text" className="block text-sm text-navy-700 mb-1.5">{q.textLabel ?? "Número do CREFITO"}</label>
+          {q.multiline
+            ? (<>
+                <textarea id="q-text" value={value ?? ""} onChange={(e) => { setValue(e.target.value); setLocalError(null); }} maxLength={q.maxLength ?? 1000} rows={6} placeholder={q.placeholder} className="hp-input" autoFocus />
+                <p className="text-[12px] text-navy-400 mt-1 text-right tabular" aria-live="polite">{(value ?? "").length}/{q.maxLength ?? 1000}</p>
+              </>)
+            : <input id="q-text" value={value ?? ""} onChange={(e) => { setValue(e.target.value); setLocalError(null); }} maxLength={q.maxLength ?? 30} placeholder={q.placeholder} className="hp-input" autoFocus autoComplete="off" required />}
         </div>
       )}
 
@@ -445,7 +492,7 @@ const QuestionStep = ({ q, initial, busy, error, onAnswer }: { q: Question; init
       )}
 
       {(localError ?? error) && <p role="alert" className="text-sm text-red-600 mt-4">{localError ?? error}</p>}
-      <ContinueButton busy={busy} disabled={q.kind === "multi" ? multi.length === 0 : q.kind === "text" ? !(value ?? "").trim() : value === null} />
+      <ContinueButton busy={busy} disabled={q.kind === "multi" ? multi.length === 0 : q.kind === "text" ? (!q.optional && !(value ?? "").trim()) : value === null} />
     </form>
   );
 };

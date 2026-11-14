@@ -29,6 +29,7 @@ export interface Question {
   exclusiveValue?: string; // multi: essa opção é exclusiva das demais (ex.: "Nenhuma")
   healthSensitive?: boolean;
   placeholder?: string; // text: exemplo mostrado no campo
+  multiline?: boolean; textLabel?: string; maxLength?: number; optional?: boolean; // text longo (caixa de texto), com rótulo próprio; `optional` = pode seguir em branco
   intro?: string; bullets?: string[]; note?: string; // texto explicativo mostrado acima das opções
   showIf?: (answers: AnswerMap) => boolean; // pergunta condicional: some quando a resposta anterior a torna desnecessária
 }
@@ -135,6 +136,12 @@ export const PARCERIA_QUESTIONS: Question[] = [
       { value: "mais_seis_meses", label: "Em mais de 6 meses" }, { value: "nao_sei", label: "Ainda não sei" },
     ],
     showIf: (a) => a.interesse_programa_clinica?.value !== "nao_momento",
+  },
+  {
+    key: "resumo_experiencia", question: "Para finalizar: conte, em poucas linhas, sua experiência profissional.", kind: "text", multiline: true, optional: true, maxLength: 1000,
+    textLabel: "Resumo da sua experiência profissional (opcional)",
+    placeholder: "Ex.: 8 anos de atuação em ortopedia e esportiva, 3 deles em atendimento domiciliar; pós-graduação em…",
+    note: "Pode ser curto. Esse texto ajuda a nossa equipe a conhecer você antes do contato. Se preferir, pule esta etapa.",
   },
 ];
 
