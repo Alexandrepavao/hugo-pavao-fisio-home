@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { sourceLabel } from "@/lib/quizProfile";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, ExternalLink, Phone, ShoppingCart } from "lucide-react";
@@ -96,7 +97,7 @@ const LeadPanel = ({ personId, opportunityId, name, phone, conversationId, myId,
             <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
               <div><dt className="text-xs text-muted-foreground">Responsável</dt><dd data-testid="lead-owner">{ownerName}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Valor</dt><dd className="tabular">{o.value_cents > 0 ? brl(o.value_cents) : "—"}</dd></div>
-              <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{o.source ?? "—"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{sourceLabel(o.source) || "—"}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Campanha</dt><dd>{o.campaign ?? "—"}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Criada em</dt><dd>{fmtDate(o.created_at)}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Último contato</dt><dd>{o.last_contact_at ? fmtDateTime(o.last_contact_at) : "—"}</dd></div>

@@ -4,6 +4,11 @@ import { supabase } from "@/lib/supabase";
 import { brl, fmtDateTime } from "@/lib/format";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge, State, btnGhost, btnPrimary } from "@/lib/ui";
+import { PartnerAreaTag } from "@/components/hp/PartnerSummary";
+import { partnerLine, usePartnerProfiles } from "@/lib/quizProfile";
+
+// status das captações (vêm do servidor em inglês)
+const CAPTURE_STATUS: Record<string, string> = { started: "Iniciado", partial: "Parou no meio", completed: "Concluído", enviado: "Enviado" };
 
 type DetailRpc = "adm_indicator_detail" | "adm_central_detail" | "crm_indicator_detail" | "capture_indicator_detail" | "mkt_indicator_detail";
 interface DetailItem { id: string; title: string; subtitle?: string; amount_cents?: number; date?: string; tag?: string }
@@ -21,6 +26,8 @@ export const IndicatorSheet = ({ trigger, onClose }: { trigger: IndicatorTrigger
     queryFn: async () => { const { data, error } = await supabase.rpc(trigger!.rpc, trigger!.params); if (error) throw error; return data as Detail; },
   });
   const d = detail.data;
+  // captações de parceria: tag de área e resumo (o id do registro é o da captação)
+  const profiles = usePartnerProfiles("quiz", (d?.items ?? []).map((it) => it.id), trigger?.rpc === "capture_indicator_detail");
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
@@ -45,10 +52,16 @@ export const IndicatorSheet = ({ trigger, onClose }: { trigger: IndicatorTrigger
                           <p className="font-medium break-words">{it.title}</p>
                           {it.subtitle && <p className="text-xs text-muted-foreground break-words">{it.subtitle}</p>}
                           {it.date && <p className="text-xs text-muted-foreground">{fmtDateTime(it.date)}</p>}
+                          {profiles.get(it.id) && (
+                            <div className="mt-1.5 grid gap-1" data-testid="captacao-resumo-parceiro">
+                              <div className="flex flex-wrap items-center gap-1.5"><PartnerAreaTag profile={profiles.get(it.id)} />{profiles.get(it.id)?.experience && <span className="text-xs text-muted-foreground">{profiles.get(it.id)?.experience?.label}</span>}</div>
+                              {!profiles.get(it.id)?.area && !profiles.get(it.id)?.experience && <span className="text-xs text-muted-foreground">{partnerLine(profiles.get(it.id)) || "Ainda sem respostas do perfil"}</span>}
+                              {profiles.get(it.id)?.resumo && <p className="text-xs text-muted-foreground line-clamp-2 break-words">{profiles.get(it.id)?.resumo}</p>}
+                            </div>)}
                         </div>
                         <div className="text-right shrink-0">
                           {it.amount_cents != null && it.amount_cents > 0 && <p className="tabular font-medium">{brl(it.amount_cents)}</p>}
-                          {it.tag && <Badge>{it.tag}</Badge>}
+                          {it.tag && <Badge>{trigger?.rpc === "capture_indicator_detail" ? (CAPTURE_STATUS[it.tag] ?? it.tag) : it.tag}</Badge>}
                         </div>
                       </li>))}
                   </ul>)}

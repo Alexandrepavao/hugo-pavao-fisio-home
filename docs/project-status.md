@@ -783,3 +783,10 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Migration 125 (aditiva):** `search_quiz_leads_v2` e `quiz_lead_geo_v2` (filtros `p_experience`/`p_area`, valores do formulário de parceria; a lista devolve o texto das duas respostas). As funções da 087 ficam como estavam.
 - **Tela:** Captação de leads › segmento Parceiros/HP Academy ganha os dois filtros (lista e mapa) e a coluna “Experiência · Área”.
 - **Isolamento verificado:** parceiro não vira paciente e vice-versa (código, SQL N11 com 30 itens, E2E N31 e produção só leitura: 4 pessoas nos dois funis, todas preencheram os dois formulários).
+
+## Parceiro: resumo da experiência, tag de área e resumo nos cards (13/11/2026)
+> Pedido: cards com resumo, “Quiz: Academy”, tag de área do parceiro, pergunta final de experiência profissional e captura progressiva. Detalhes: `docs/resumo-parceiro-e-cards.md`.
+- **Migration 126 (aditiva):** `resumo_experiencia` aceito na jornada de parceria + `quiz_profiles`. **Migration 127 (correção, já em produção):** EXECUTE nas funções de checagem de zona (ver abaixo).
+- **Testes:** SQL N12 (19), E2E N32 (4) e ajustes nos testes antigos do quiz (R25, 08: +1 etapa).
+- **Incidente corrigido (PR #31, 13/11):** a migration 122 (zonas do Rio) deixou `private.zone_valid_any`/`zones_all_valid` sem EXECUTE para `authenticated`; criar/editar pessoa pelo painel falhava com “permission denied” (quiz e onboarding não foram afetados). Corrigido pela migration 127; o teste N13 grava com o papel do usuário. Causa de não ter sido pega: o N08 gravava como administrador do banco.
+- Falhas de hora do dia já conhecidas (não são desta mudança): R18 “Metas” e R19 “Lembretes de envio” falham depois das ~21h (horário de Brasília), como o N03 do marketing.

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sourceLabel } from "@/lib/quizProfile";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -179,7 +180,7 @@ const Reports = () => {
             <p className="text-xs text-muted-foreground mb-2">Mesmas regras, agrupadas pela origem registrada na oportunidade (“Sem origem” quando vazia).</p>
             {d.by_source.length === 0 ? <p className="text-sm text-muted-foreground">Sem movimentação no período.</p> : (
               <Table head={["Origem", "Criadas", "Ganhas", "Perdidas", "Em aberto", "Conversão", "Valor ganho"]} right={[1, 2, 3, 4, 5, 6]}>
-                {d.by_source.map((r) => <tr key={r.source}><Td>{r.source}</Td>
+                {d.by_source.map((r) => <tr key={r.source}><Td>{sourceLabel(r.source)}</Td>
                   <Td num>{clickBtn(r.created, () => open("created", "source", r.source))}</Td><Td num>{clickBtn(r.won, () => open("won", "source", r.source))}</Td><Td num>{clickBtn(r.lost, () => open("lost", "source", r.source))}</Td>
                   <Td num>{clickBtn(r.open, () => open("open", "source", r.source))}</Td><Td num>{pct(r.conv_pct)}</Td><Td num>{brl(r.won_value_cents)}</Td></tr>)}
               </Table>)}

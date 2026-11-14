@@ -6,6 +6,8 @@ import { brl, fmtDateTime } from "@/lib/format";
 import { Badge, errText, Msg, Tabs, promptText, useMsg } from "@/lib/ui";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
+import { PartnerAreaTag, PartnerSummary } from "@/components/hp/PartnerSummary";
+import { isPartnerKind, sourceLabel, usePartnerProfiles } from "@/lib/quizProfile";
 import LeadTypeBadge from "./LeadTypeBadge";
 import { LEAD_TYPE, isLeadKind, pipeLabel } from "./leadTypes";
 import { cardName, isStale, type Opp, type PipelineInfo, type Stage, type StaffUser, type Task } from "./types";
@@ -43,6 +45,8 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["opp-hist", id] }); void qc.invalidateQueries({ queryKey: ["opp-tasks", id] }); void qc.invalidateQueries({ queryKey: ["person-opps"] }); void qc.invalidateQueries({ queryKey: ["crm-overview"] }); onChanged(); };
   const pipeOf = (pid: string | undefined) => (pipes.data ?? []).find((p) => p.id === pid);
   const curPipeId = opp?.pipeline_id ?? (allStages.data ?? []).find((s) => s.id === opp?.stage_id)?.pipeline_id;
+  // lead de parceiro (Equipe ou HP Academy): a tag de área e o resumo vêm do formulário de parceria
+  const profile = usePartnerProfiles("person", [opp?.person_id], !!opp && isPartnerKind(pipeOf(curPipeId)?.kind)).get(opp?.person_id ?? "");
   // cada oportunidade anda sozinha pelo funil dela: mover uma nunca move as outras da mesma pessoa
   const moveSibling = async (o: SiblingOpp, stageId: string) => {
     if (o.stage_id === stageId) return; const st = (allStages.data ?? []).find((x) => x.id === stageId); let reason: string | undefined;
@@ -89,10 +93,10 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
             <SheetTitle className="text-[1.0625rem]">{cardName(opp)}</SheetTitle>
             <SheetDescription>{opp.legal_entity ? `Contato: ${opp.person?.full_name ?? "—"} · ${opp.title}` : opp.title}</SheetDescription>
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {isLeadKind(pipeOf(curPipeId)?.kind) && <LeadTypeBadge kind={pipeOf(curPipeId)?.kind} />}<Badge tone="info">{stageName(opp.stage_id)}</Badge>
+              {isLeadKind(pipeOf(curPipeId)?.kind) && <LeadTypeBadge kind={pipeOf(curPipeId)?.kind} />}<PartnerAreaTag profile={profile} /><Badge tone="info">{stageName(opp.stage_id)}</Badge>
               {opp.status === "won" && <Badge tone="success">Ganha</Badge>}{opp.status === "lost" && <Badge tone="danger">Perdida</Badge>}
               {isStale(opp) && <Badge tone="danger">Sem retorno há 48h+</Badge>}
-              {opp.source && <Badge>{opp.source}</Badge>}{opp.campaign && <Badge tone="gold">{opp.campaign}</Badge>}
+              {opp.source && <Badge>{sourceLabel(opp.source)}</Badge>}{opp.campaign && <Badge tone="gold">{opp.campaign}</Badge>}
             </div>
           </SheetHeader>
           <div className="px-5 pt-3"><Tabs tabs={[["resumo", "Resumo"], ["formulario", "Formulário"], ["historico", "Histórico"], ["tarefas", `Tarefas${tasks.data?.length ? ` (${tasks.data.length})` : ""}`]]} value={tab} onChange={setTab} /></div>
@@ -100,6 +104,7 @@ const OpportunitySheet = ({ opp, stages, users, onClose, onChanged }: Props) => 
             <Msg m={msg} />
             {tab === "resumo" && (
               <div className="grid gap-4">
+                <PartnerSummary profile={profile} />
                 <div><label htmlFor="ow" className="block mb-1">Responsável</label>
                   <select id="ow" value={opp.owner_user_id ?? ""} onChange={(e) => patch({ owner_user_id: e.target.value || null }, "Responsável atualizado.")}><option value="">Sem responsável</option>{users.map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
                 <div><label htmlFor="nc" className="block mb-1">Próximo contato</label>

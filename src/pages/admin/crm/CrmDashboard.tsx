@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { sourceLabel } from "@/lib/quizProfile";
 import CrmGeoSection from "./CrmGeoSection";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -96,7 +97,7 @@ const CrmDashboard = () => {
     if (unit) q = q.eq("unit_id", unit); if (owner) q = q.eq("owner_user_id", owner); if (pipeline) q = q.eq("pipeline_id", pipeline);
     const { data, error } = await q; if (error) throw error;
     const by = new Map<string, number>();
-    for (const o of data ?? []) { const k = o.source || "Não informada"; by.set(k, (by.get(k) ?? 0) + 1); }
+    for (const o of data ?? []) { const k = sourceLabel(o.source) || "Não informada"; by.set(k, (by.get(k) ?? 0) + 1); }
     return [...by.entries()].map(([origem, n]) => ({ name: origem, value: n })).sort((a, b) => b.value - a.value).slice(0, 6);
   } });
 

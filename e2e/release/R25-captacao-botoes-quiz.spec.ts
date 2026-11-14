@@ -55,14 +55,14 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const p = await ctx.newPage(); const errors = collectErrors(p);
     await ctx.route(/wa\.me|api\.whatsapp\.com/, (r) => r.abort());
     const email = `fisio.clinica.${runId.toLowerCase()}@example.com`;
-    await p.goto("/seja-parceiro?from=%2Ftrabalhe-conosco"); await expect(p.getByText(/Etapa 1 de 11/)).toBeVisible();
+    await p.goto("/seja-parceiro?from=%2Ftrabalhe-conosco"); await expect(p.getByText(/Etapa 1 de 12/)).toBeVisible();
     await p.waitForTimeout(500); await p.screenshot({ path: "docs/screenshots/quiz/parceria-1-contato-desktop.png" });
     await contact(p, `Fisio Clínica E2E ${runId}`, email);
     await p.getByLabel("Cidade").fill("Campinas"); await p.getByLabel("UF").selectOption("SP"); await next(p);
     await p.getByRole("radio", { name: "Fisioterapeuta em atuação" }).click(); await next(p);
     await p.getByRole("radio", { name: "Ativo" }).click(); await next(p);
     // registro ativo: pergunta o CREFITO (obrigatório: em branco ou sem número não avança)
-    await expect(p.getByRole("heading", { name: "Qual é o número do seu CREFITO?" })).toBeVisible(); await expect(p.getByText(/Etapa 5 de 12/)).toBeVisible();
+    await expect(p.getByRole("heading", { name: "Qual é o número do seu CREFITO?" })).toBeVisible(); await expect(p.getByText(/Etapa 5 de 13/)).toBeVisible();
     await expect(p.getByRole("button", { name: "Continuar" })).toBeDisabled();
     await p.getByLabel("Número do CREFITO").fill("sem numero"); await next(p); await expect(p.getByRole("alert")).toContainText("número do seu CREFITO");
     await p.getByLabel("Número do CREFITO").fill("CREFITO-3/123456-F"); await next(p);
@@ -81,11 +81,16 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
 
     // pergunta de prazo só aparece quando há interesse
     await expect(p.getByRole("heading", { name: /quando você gostaria de começar/ })).toBeVisible();
-    await expect(p.getByText(/Etapa 11 de 12/)).toBeVisible();
+    await expect(p.getByText(/Etapa 11 de 13/)).toBeVisible();
     await p.getByRole("button", { name: "Voltar" }).click();                            // Voltar mantém a resposta anterior
     await expect(p.getByRole("radio", { name: "Quero entender melhor como funcionaria" })).toHaveAttribute("aria-checked", "true");
     await next(p);
     await p.getByRole("radio", { name: "Entre 3 e 6 meses" }).click(); await next(p);
+
+    // última pergunta: resumo da experiência profissional (opcional, caixa de texto)
+    await expect(p.getByRole("heading", { name: /conte, em poucas linhas, sua experiência profissional/ })).toBeVisible(); await expect(p.getByText(/Etapa 12 de 13/)).toBeVisible();
+    await expect(p.getByRole("button", { name: "Continuar" })).toBeEnabled();   // opcional: pode seguir em branco
+    await p.getByLabel(/Resumo da sua experiência profissional/).fill("8 anos em ortopedia e esportiva, 3 deles em atendimento domiciliar."); await next(p);
 
     await p.getByRole("button", { name: "Concluir" }).click(); await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible({ timeout: 30_000 });
     const preview = p.getByLabel("Prévia da mensagem (você pode editar)");
@@ -99,6 +104,7 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     expect(a.interesse_programa_clinica).toMatchObject({ value: "quero_entender", label: "Quero entender melhor como funcionaria" });
     expect(a.prazo_programa_clinica).toMatchObject({ value: "tres_seis_meses", label: "Entre 3 e 6 meses" });
     expect(a.crefito).toMatchObject({ value: "CREFITO-3/123456-F" });
+    expect(a.resumo_experiencia).toMatchObject({ value: "8 anos em ortopedia e esportiva, 3 deles em atendimento domiciliar." });
     // o mesmo lead ganha DUAS oportunidades: parceria (equipe) e HP Academy (interesse no programa), cada uma no seu funil
     const opps = (await g.get(`opportunities?select=source,pipeline:pipelines(kind)&person_id=eq.${list.body[0].person_id}&status=eq.open`)).body as { source: string; pipeline: { kind: string } }[];
     expect(opps.map((o) => `${o.pipeline.kind}|${o.source}`).sort()).toEqual(["education|quiz:academy", "partners|quiz:parceria"]);
@@ -113,9 +119,10 @@ test.describe.serial("@release Captação: botões do site → quiz (nome comple
     await p.getByRole("radio", { name: "Geriátrica" }).click(); await next(p); await p.getByRole("radio", { name: "Ainda não atendo" }).click(); await next(p);
     await expect(p.getByText("O que você busca na parceria")).toBeVisible(); await p.getByRole("checkbox").nth(0).click(); await next(p);
     await expect(p.getByText("Em quais áreas você gostaria")).toBeVisible(); await p.getByRole("checkbox").nth(5).click(); await next(p);
-    await expect(p.getByText(/Etapa 9 de 11/)).toBeVisible();
+    await expect(p.getByText(/Etapa 9 de 12/)).toBeVisible();
     await p.getByRole("radio", { name: "Não neste momento" }).click(); await next(p);
-    await expect(p.getByRole("heading", { name: "Quase lá" })).toBeVisible(); await expect(p.getByText(/Etapa 10 de 10/)).toBeVisible();
+    await expect(p.getByRole("heading", { name: /conte, em poucas linhas, sua experiência profissional/ })).toBeVisible(); await next(p);   // resumo opcional: pula em branco
+    await expect(p.getByRole("heading", { name: "Quase lá" })).toBeVisible(); await expect(p.getByText(/Etapa 11 de 11/)).toBeVisible();
     await expect(p.getByRole("heading", { name: /quando você gostaria de começar/ })).toHaveCount(0);
     await p.getByRole("button", { name: "Concluir" }).click(); await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible({ timeout: 30_000 });
     await expect(p.getByLabel("Prévia da mensagem (você pode editar)")).not.toHaveValue(/Quando gostaria de começar/);

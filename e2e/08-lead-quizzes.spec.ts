@@ -128,6 +128,7 @@ test.describe("quizzes de captação", () => {
     await expect(p.getByText("programa de ensino para você ter a sua própria clínica")).toBeVisible();
     await p.getByRole("radio", { name: "Não neste momento" }).click();
     await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByRole("button", { name: "Continuar" }).click(); // resumo da experiência (opcional): segue em branco
 
     await p.getByRole("button", { name: "Concluir" }).click(); // marketing opcional fica desmarcado
     await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible();
