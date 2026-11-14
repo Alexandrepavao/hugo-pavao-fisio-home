@@ -8,7 +8,7 @@ import { fmtDateTime } from "@/lib/format";
 import { PeriodFilter } from "@/lib/PeriodFilter";
 import { presetRange, toExclusive, type RangePreset } from "@/lib/period";
 import { Badge, PageHead, State, StatCard, Table, Td, Tabs, btnGhost, type Tone } from "@/lib/ui";
-import { JOURNEY_QUESTIONS, type Journey } from "@/lib/quiz";
+import { JOURNEY_QUESTIONS, PARCERIA_QUESTIONS, type Journey } from "@/lib/quiz";
 import CaptureAnalytics from "./CaptureAnalytics";
 
 interface LeadRow {
@@ -17,6 +17,7 @@ interface LeadRow {
   origin_path: string | null; page_slug: string | null; started_at: string; completed_at: string | null; last_activity_at: string;
   owner_user_id: string | null; stage_name: string | null; next_contact_at: string | null; needs_review: boolean; wants_academy: boolean;
   whatsapp_clicked_at: string | null; person_id: string; opportunity_id: string; has_health_answers: boolean; academy_interest: boolean; total_count: number;
+  experience_label: string | null; area_label: string | null;   // respostas do formulário de parceria (vazio nos leads de paciente)
 }
 
 interface LeadGeo { total: number; sem_localizacao: number; by_state: { uf: string; count: number; pct: number }[]; by_city: { city: string; uf: string; count: number }[] }
@@ -37,12 +38,18 @@ const PAGE_SIZE = 25;
 /** Segmentos = tipo de lead (mesma lógica do CRM). Parceiro inclui quem também é Academy: a Academy é a parceria com interesse no programa de clínica própria. */
 const SEGMENTS: [string, string][] = [["", "Todos"], ["patient", "Pacientes"], ["partner", "Parceiros"], ["academy", "HP Academy"]];
 const SEG_NOUN: Record<string, string> = { "": "lead(s)", patient: "paciente(s)", partner: "parceiro(s)", academy: "interessado(s) na Academy" };
+/** Os filtros de experiência profissional e de área só existem para o lead de parceiro (parceria e HP Academy): vêm das perguntas do formulário de parceria, com as mesmas opções. */
+const isPartnerSegment = (s: string) => s === "partner" || s === "academy";
+const optionsOf = (key: string): [string, string][] => (PARCERIA_QUESTIONS.find((q) => q.key === key)?.options ?? []).map((o) => [o.value, o.label]);
+const EXPERIENCE_OPTIONS = optionsOf("momento_profissional"); const AREA_OPTIONS = optionsOf("area_atuacao");
+const labelOf = (opts: [string, string][], v: string) => opts.find(([k]) => k === v)?.[1] ?? v;
 
 const LeadCapture = () => {
   const [segment, setSegment] = useState<string>("");
   const [uf, setUf] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("");
   const [needsReview, setNeedsReview] = useState<string>("");
+  const [experience, setExperience] = useState<string>(""); const [area, setArea] = useState<string>("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [sel, setSel] = useState<string | null>(null);
@@ -50,13 +57,15 @@ const LeadCapture = () => {
   const [preset, setPreset] = useState<RangePreset>("mes"); const [custom, setCustom] = useState(presetRange("mes"));
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
   const review = needsReview === "" ? null : needsReview === "true";
+  const partnerSeg = isPartnerSegment(segment);
+  const exp = partnerSeg ? experience : ""; const are = partnerSeg ? area : "";   // fora do segmento de parceiros os dois filtros não se aplicam
 
   const leads = useQuery({
-    queryKey: ["quiz-leads", segment, status, needsReview, search, uf, page],
+    queryKey: ["quiz-leads", segment, status, needsReview, search, uf, page, exp, are],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("search_quiz_leads", {
+      const { data, error } = await supabase.rpc("search_quiz_leads_v2", {
         p_segment: segment || null, p_status: status || null, p_needs_review: review,
-        p_search: search || null, p_uf: uf, p_limit: PAGE_SIZE, p_offset: page * PAGE_SIZE,
+        p_search: search || null, p_uf: uf, p_limit: PAGE_SIZE, p_offset: page * PAGE_SIZE, p_experience: exp || null, p_area: are || null,
       });
       if (error) throw error;
       return data as LeadRow[];
@@ -65,9 +74,9 @@ const LeadCapture = () => {
 
   // o mapa usa os mesmos filtros da lista, menos o estado (senão o estado clicado apagaria o resto do mapa)
   const geo = useQuery({
-    queryKey: ["quiz-lead-geo", segment, status, needsReview, search],
+    queryKey: ["quiz-lead-geo", segment, status, needsReview, search, exp, are],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("quiz_lead_geo", { p_segment: segment || null, p_status: status || null, p_needs_review: review, p_search: search || null });
+      const { data, error } = await supabase.rpc("quiz_lead_geo_v2", { p_segment: segment || null, p_status: status || null, p_needs_review: review, p_search: search || null, p_experience: exp || null, p_area: are || null });
       if (error) throw error;
       return data as LeadGeo;
     },
@@ -93,8 +102,8 @@ const LeadCapture = () => {
   });
 
   const total = leads.data?.[0]?.total_count ?? 0;
-  const extraCount = (status ? 1 : 0) + (needsReview ? 1 : 0) + (search ? 1 : 0);
-  const extraSummary = [status && statusLabel[status], needsReview === "true" && "Revisar", search && `"${search}"`].filter(Boolean).join(" · ");
+  const extraCount = (status ? 1 : 0) + (needsReview ? 1 : 0) + (search ? 1 : 0) + (exp ? 1 : 0) + (are ? 1 : 0);
+  const extraSummary = [status && statusLabel[status], needsReview === "true" && "Revisar", search && `"${search}"`, exp && labelOf(EXPERIENCE_OPTIONS, exp), are && labelOf(AREA_OPTIONS, are)].filter(Boolean).join(" · ");
 
   return (
     <div>
@@ -103,7 +112,7 @@ const LeadCapture = () => {
           <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit="" units={[]} compare={false}
             onPreset={(p) => { setPreset(p); if (p !== "personalizado") setCustom(presetRange(p)); }}
             onFrom={(v) => setCustom({ ...custom, from: v })} onTo={(v) => setCustom({ ...custom, to: v })}
-            onUnit={() => {}} onCompare={() => {}} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setSegment(""); setUf(null); setStatus(""); setNeedsReview(""); setSearch(""); setPage(0); }}
+            onUnit={() => {}} onCompare={() => {}} onClear={() => { setPreset("mes"); setCustom(presetRange("mes")); setSegment(""); setUf(null); setStatus(""); setNeedsReview(""); setSearch(""); setExperience(""); setArea(""); setPage(0); }}
             extraCount={extraCount} extraSummary={extraSummary || undefined}
             extra={
               <div className="grid gap-3">
@@ -117,6 +126,16 @@ const LeadCapture = () => {
                   </select></div>
                 <div><label htmlFor="lc-search" className="block text-xs mb-1">Buscar (nome, e-mail, telefone)</label>
                   <input id="lc-search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} /></div>
+                {partnerSeg && (<>
+                  <div><label htmlFor="lc-exp" className="block text-xs mb-1">Experiência profissional</label>
+                    <select id="lc-exp" value={experience} onChange={(e) => { setExperience(e.target.value); setPage(0); }}>
+                      <option value="">Todas</option>{EXPERIENCE_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select></div>
+                  <div><label htmlFor="lc-area" className="block text-xs mb-1">Área de atuação</label>
+                    <select id="lc-area" value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}>
+                      <option value="">Todas</option>{AREA_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select></div>
+                </>)}
               </div>
             } />
         } />
@@ -124,20 +143,21 @@ const LeadCapture = () => {
       <Tabs tabs={[["leads", "Captações"], ["indicadores", "Indicadores"]]} value={tab} onChange={(v) => setTab(v as "leads" | "indicadores")} />
       {tab === "indicadores" ? <CaptureAnalytics from={from} to={to} fromIso={`${from}T00:00:00.000Z`} toIso={toExclusive(to)} unit="" /> : (<>
       <LeadMap geo={geo.data} loading={geo.isLoading} error={geo.error} segment={segment} uf={uf}
-        onSegment={(v) => { setSegment(v); setUf(null); setPage(0); }} onUf={(v) => { setUf(v); setPage(0); }} />
+        onSegment={(v) => { setSegment(v); setUf(null); setPage(0); if (!isPartnerSegment(v)) { setExperience(""); setArea(""); } }} onUf={(v) => { setUf(v); setPage(0); }} />
       <MetricsPanel metrics={metrics.data} loading={metrics.isLoading} />
 
       <h2 className="text-base font-medium mb-2">{uf ? `Captações em ${uf}` : "Todas as captações"}</h2>
       <State loading={leads.isLoading} error={leads.error} empty={leads.data?.length === 0} emptyText="Nenhuma captação encontrada com esses filtros." />
       {leads.data && leads.data.length > 0 && (
         <>
-          <Table head={["Nome / contato", "Segmento", "Status", "Cidade/UF", "Origem", "Etapa comercial", "Próx. contato", "Última atividade"]}>
+          <Table head={["Nome / contato", "Segmento", ...(partnerSeg ? ["Experiência · Área"] : []), "Status", "Cidade/UF", "Origem", "Etapa comercial", "Próx. contato", "Última atividade"]}>
             {leads.data.map((l) => (
               <tr key={l.id}>
                 <Td><button type="button" className="text-accent hover:underline font-medium text-left" aria-label={`Ver o que ${l.full_name} preencheu`} onClick={() => setSel(l.id)}>{l.full_name}</button>
                   {l.needs_review && <Badge tone="warning">Revisar</Badge>}
                   <div className="text-xs text-muted-foreground">{l.email} · {l.phone}</div></Td>
                 <Td>{l.journey === "atendimento" ? "Paciente" : "Parceiro"}{l.academy_interest && <Badge tone="gold">Academy</Badge>}</Td>
+                {partnerSeg && <Td><span data-testid="lead-exp-area">{l.experience_label ?? <span className="text-muted-foreground">—</span>}{l.area_label && <span className="block text-xs text-muted-foreground">{l.area_label}</span>}</span></Td>}
                 <Td><Badge tone={statusTone[l.status]}>{statusLabel[l.status]}</Badge></Td>
                 <Td>{l.city || l.state_uf ? `${l.city ?? "—"}/${l.state_uf ?? "—"}` : <span className="text-muted-foreground">não informado</span>}</Td>
                 <Td>{l.origin_path ?? "—"}</Td>
