@@ -777,3 +777,9 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Sem lista de bairros** em BH de propósito: a base oficial (322 áreas) não traz Savassi, Funcionários, Centro etc. Ver `docs/zonas-capitais.md`.
 - **Testes:** SQL N10 (21 itens), unitário (11), E2E N30 (4: quiz, painel do CRM com mapa, busca, 390 px); N08/N09 seguem passando.
 - Fonte dos dados: dados.pbh.gov.br (regionais e bairros), baixados pelo usuário em `D:\Claude\dados-externos\bh`.
+
+## Captação de leads — filtros do parceiro e isolamento dos formulários (13/11/2026)
+> Pedido: filtros de experiência profissional e área no lead de parceiro; conferir se o formulário de parceria salva como paciente. Detalhes: `docs/captacao-filtros-parceiro.md`.
+- **Migration 125 (aditiva):** `search_quiz_leads_v2` e `quiz_lead_geo_v2` (filtros `p_experience`/`p_area`, valores do formulário de parceria; a lista devolve o texto das duas respostas). As funções da 087 ficam como estavam.
+- **Tela:** Captação de leads › segmento Parceiros/HP Academy ganha os dois filtros (lista e mapa) e a coluna “Experiência · Área”.
+- **Isolamento verificado:** parceiro não vira paciente e vice-versa (código, SQL N11 com 30 itens, E2E N31 e produção só leitura: 4 pessoas nos dois funis, todas preencheram os dois formulários).
