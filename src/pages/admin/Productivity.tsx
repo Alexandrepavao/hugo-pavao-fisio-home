@@ -8,6 +8,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import CalendarViews, { KIND_LABEL, type EventKind } from "./CalendarViews";
 import CalendarConnect from "./CalendarConnect";
 import { addDays, calTitle, dayKey, parseDay, type CalView } from "./calendarUtil";
+import RouteTab from "./route/RouteTab";
 import { Badge, EmptyState, errText, FilterBar, FilterField, Msg, PageHead, State, Tabs, useMsg } from "@/lib/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -40,6 +41,7 @@ const Productivity = () => {
   const toggleKind = (k: EventKind) => setKinds((cur) => { const n = new Set(cur); if (n.has(k)) n.delete(k); else n.add(k); return n.size ? n : cur; });
   const profs = useQuery({ queryKey: ["agenda-profs"], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("my_agenda_professionals"); if (error) throw error; return data as AgendaProf[]; } });
   const others = (profs.data ?? []).filter((p) => !p.is_self);
+  const selfProf = (profs.data ?? []).find((p) => p.is_self);
   const other = useQuery({ queryKey: ["prof-day", viewProf, date], enabled: !!viewProf, queryFn: async () => { const { data, error } = await supabase.rpc("professional_day", { p_professional: viewProf, p_date: date }); if (error) throw error; return data as { is_self: boolean; appointments: ApptRow[] }; } });
   const apptList = (viewProf ? other.data?.appointments : day.data?.appointments) ?? [];
   const focus = useQuery({ queryKey: ["focus-open"], queryFn: async () => ((await supabase.from("focus_sessions").select("id, started_at, ended_at, planned_minutes").is("ended_at", null).order("started_at", { ascending: false }).limit(1)).data?.[0] ?? null) as FocusSession | null });
@@ -54,7 +56,7 @@ const Productivity = () => {
     <div>
       <PageHead eyebrow="Pessoal" title="Meu dia" hint="Suas tarefas, os compromissos de CRM atribuídos a você e sua agenda clínica, em um só lugar — sem duplicar nada. Tarefas pessoais são privadas até que você as marque como visíveis à equipe."
         actions={<button className="hp-btn hp-btn-primary" onClick={() => setShowNew(true)}><Plus size={16} aria-hidden />Nova tarefa</button>} />
-      {isManager && <Tabs tabs={[["dia", "Meu dia"], ["equipe", "Equipe"]]} value={tab} onChange={setTab} />}
+      {(isManager || selfProf) && <Tabs tabs={[["dia", "Meu dia"], ["rota", "Rota"], ...(isManager ? [["equipe", "Equipe"] as [string, string]] : [])]} value={tab} onChange={(t) => { setTab(t); if (t === "rota") setView("dia"); }} />}
       <Msg m={msg} />
       <div className="hp-cal-bar hp-card" role="toolbar" aria-label="Navegação do calendário">
         <div className="flex items-center gap-1.5">
@@ -62,9 +64,9 @@ const Productivity = () => {
           <button className="hp-btn hp-btn-outline" onClick={() => setDate(todayISO())}>Hoje</button>
           <button className="hp-cal-nav" onClick={() => shift(1)} aria-label="Próximo"><ChevronRight size={18} aria-hidden /></button>
         </div>
-        <h2 className="hp-cal-title" aria-live="polite">{tab === "dia" && view === "dia" ? parseDay(date).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : calTitle(view === "dia" ? "mes" : view, date)}</h2>
+        <h2 className="hp-cal-title" aria-live="polite">{(tab === "dia" || tab === "rota") && view === "dia" ? parseDay(date).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : calTitle(view === "dia" ? "mes" : view, date)}</h2>
         <div className="hp-cal-bar-right">
-          {tab === "dia" && others.length > 0 && <><label htmlFor="pd-prof" className="sr-only">Agenda clínica de</label><select id="pd-prof" className="!w-auto" value={viewProf} onChange={(e) => setViewProf(e.target.value)}><option value="">Minha agenda</option>{others.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></>}
+          {(tab === "dia" || tab === "rota") && others.length > 0 && <><label htmlFor="pd-prof" className="sr-only">Agenda clínica de</label><select id="pd-prof" className="!w-auto" value={viewProf} onChange={(e) => setViewProf(e.target.value)}><option value="">Minha agenda</option>{others.map((p) => <option key={p.id} value={p.id}>{p.display_name}</option>)}</select></>}
           <label htmlFor="pd-date" className="sr-only">Data</label><input id="pd-date" type="date" className="!w-auto" value={date} onChange={(e) => setDate(e.target.value)} />
           {tab === "dia" && (
             <div role="group" aria-label="Visualização" className="inline-flex rounded-full border border-input overflow-hidden">
@@ -124,6 +126,7 @@ const Productivity = () => {
           <FocusWidget session={focus.data} onChanged={refresh} />
         </div>
       )}
+      {tab === "rota" && <RouteTab professionalId={viewProf || selfProf?.id || ""} date={date} isManager={isManager} />}
       {tab === "equipe" && isManager && <TeamDay date={date} />}
       {tab === "dia" && <div className="mt-8"><CalendarConnect /></div>}
       <NewTaskDialog open={showNew} onOpenChange={setShowNew} date={date} onCreated={() => { setShowNew(false); refresh(); }} />
