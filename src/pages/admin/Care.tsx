@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { fmtDateTime } from "@/lib/format";
 import JourneyPanel from "./JourneyPanel";
+import PhysioJourneyEditor from "@/portal/journey/PhysioJourneyEditor";
 import { PhysioEvolution } from "@/portal/Evolution";
 import { PrescriptionManager } from "@/portal/Training";
 import RenewalQueue from "./RenewalQueue";
@@ -40,6 +41,7 @@ const Patients = () => {
       <ul className="border border-border bg-card divide-y divide-border">{rels.data.map((r) => <li key={r.id}><button className={`w-full text-left p-3 ${sel === r.person_id ? "bg-muted" : ""}`} onClick={() => setSel(r.person_id)}>{names.data?.[r.person_id] ?? "Paciente"}</button></li>)}</ul>
       {sel && detail.data && <div className="space-y-8">
         <JourneyPanel person={sel} />
+        <PhysioJourneyEditor person={sel} firstName={(names.data?.[sel] ?? "").split(" ")[0]} />
         <PhysioEvolution person={sel} />
         <PrescriptionManager person={sel} />
         <form onSubmit={assign} className="hp-card p-4 grid gap-3 sm:grid-cols-3 items-end"><div><label htmlFor="cc" className="block text-xs mb-1">Conteúdo</label><select id="cc"   value={content} onChange={(e) => setContent(e.target.value)}><option value="">…</option>{contents.data?.map((c) => <option key={c.id} value={c.id}>{c.title} ({KIND[c.kind]})</option>)}</select></div>

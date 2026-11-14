@@ -796,3 +796,10 @@ Preservado integralmente o que a sessão 6 entregou (contratos recorrentes/MRR, 
 - **Migration 128:** sessões de “ver como” + `hp_pre_request` (gancho do PostgREST que troca a identidade e liga o modo somente leitura quando o cabeçalho `x-view-as` é válido; sem cabeçalho não faz nada). **Muda a configuração do PostgREST (`pgrst.db_pre_request`), que vale para TODAS as chamadas** — instruções para desligar em `docs/ver-como.md`.
 - **Tela:** Gestão › Ver como (lista de fisioterapeutas e pacientes com acesso, últimas sessões) + faixa laranja “Ver como … somente leitura” + “Sair do ver como”.
 - **Testes:** SQL N14/N15, E2E N33; regressões de portais (R35–R41), permissões (R02), responsáveis (R36) e interface (R12) passaram.
+
+## Área do paciente: jornada visual + demonstração para a consulta (14/11/2026) — só Dev
+> Referência visual aprovada pelo proprietário. Detalhes, limites e testes: `docs/area-paciente-jornada-visual.md`; capturas antes/depois em `docs/screenshots/paciente-jornada/`.
+- **Portal real:** Início reformulado (objetivo, próxima ação, jornada definida pelo fisioterapeuta, dor e atividades com registros reais, exercícios, semana, sessões separadas, conteúdos educativos), estado sem dados honesto, data de nascimento como “primeiro passo”; abas Evolução e Agenda reaproveitam os componentes.
+- **Fisioterapeuta:** editor de jornada (etapas + etapa atual), conteúdos educativos e botão “Apresentar acompanhamento” → demonstração isolada (moldura de celular, tour guiado, 3 exemplos, banner permanente “DEMONSTRAÇÃO — Dados ilustrativos”).
+- **Migration 129 (aditiva, aplicada só no Dev)**; testes SQL N16 (29), unitário (11), E2E N34 (8) e regressão de portais (62) passaram.
+- **Pendências:** vídeos de exercício (vínculo exercício↔Bunny e vídeos aprovados), envio real de e-mail/push, revisão jurídica; nada em produção.

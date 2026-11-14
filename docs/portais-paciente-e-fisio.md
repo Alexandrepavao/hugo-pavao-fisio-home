@@ -1,5 +1,7 @@
 # Portais do paciente e do fisioterapeuta — estado implementado (F1–F8)
 
+> **Atualização 14/11/2026:** o Início do paciente foi redesenhado (jornada visual) e há uma demonstração interativa para o fisioterapeuta — ver [`area-paciente-jornada-visual.md`](area-paciente-jornada-visual.md). As fases F1–F8 (migrations 096–103) já estão no banco de produção desde 09/11, junto com o lote do Marketing; o texto abaixo é o registro original (“somente Dev”) e está desatualizado nesse ponto.
+
 > 2026-11-05/06 · branch `feat/portais-paciente-fisio` · **Somente Dev.** Nada foi para produção. Plano e decisões do proprietário: [`plano-portais-paciente-e-fisio.md`](plano-portais-paciente-e-fisio.md).
 > Migrations **096 → 103** (aplicadas no Dev, uma a uma) · testes SQL **S33–S40** (323 itens) · E2E **R35–R41** · E2E existentes ajustados às novas rotas (R03, R04, R05, R09, R15, R16, R29, 06).
 > Legenda: ✅ implementado e comprovado por teste · 🟡 implementado, com limite descrito · 🔒 depende de serviço/decisão externa e **não** está provado.

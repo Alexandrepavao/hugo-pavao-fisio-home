@@ -1,6 +1,7 @@
 import { PatientPart, PersonalData, Chat } from "@/pages/portal/Patient";
 import Journey from "@/pages/portal/Journey";
 import { PortalPage } from "./AppShell";
+import { LiveJourneyParts } from "./journey/LiveParts";
 import { PatientEvolutionPanel } from "./Evolution";
 import { PatientTickets } from "./Tickets";
 import { PatientTrainingPanel } from "./Training";
@@ -8,8 +9,8 @@ import { Link } from "react-router-dom";
 import { AccessLogSection, ConsentsSection, NotificationsSection, OffersSection, RepresentativesSection, RepresentedSection } from "./PatientAccess";
 
 /** Abas do portal do paciente que reaproveitam as telas já provadas (agenda, jornada, orientações, pacote). Os blocos novos entram por fase (docs/plano-portais-paciente-e-fisio.md). */
-export const PatientAgenda = () => <PortalPage title="Agenda"><PatientPart part="agenda" /></PortalPage>;
-export const PatientEvolution = () => <PortalPage title="Evolução"><PatientEvolutionPanel /><Journey /></PortalPage>;
+export const PatientAgenda = () => <PortalPage title="Agenda"><LiveJourneyParts parts={["next", "week"]} /><PatientPart part="agenda" /></PortalPage>;
+export const PatientEvolution = () => <PortalPage title="Evolução"><LiveJourneyParts parts={["journey", "pain", "functional"]} /><PatientEvolutionPanel /><Journey /></PortalPage>;
 export const PatientTraining = () => <PortalPage title="Treinos em casa"><PatientTrainingPanel /><PatientPart part="orientacoes" /></PortalPage>;
 export const PatientTicketsPage = () => <PortalPage title="Chamados" subtitle="Suporte da equipe HP para quem já é paciente"><PatientTickets /></PortalPage>;
 export const PatientMore = () => (

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
+import { useApptActions } from "@/portal/apptActions";
 import { btnDanger, btnGhost, btnPrimary, confirmDialog, errText, inputCls, Msg, State, useMsg } from "@/lib/ui";
 
 interface Appt { id: string; starts_at: string; status: string; service_name: string; professional_name: string; unit_name: string; timezone: string; survey_answered: boolean; patient_confirmed_at: string | null; professional_confirmed_at: string | null; can_confirm: boolean; uses_package: boolean; session_consumed: boolean; can_cancel: boolean; cancel_consumes: boolean; late_cancel_hours: number | null }
@@ -21,20 +22,7 @@ export const PatientPart = ({ part }: { part: "agenda" | "pacote" | "orientacoes
   const bks = useQuery({ queryKey: ["my-pkg-breakdown"], retry: false, queryFn: async () => ((await supabase.rpc("my_package_breakdown")).data ?? []) as { id: string; contracted: number; adjusted: number; attended: number; no_show: number; late_cancel: number; consumed_other: number; refunded: number; balance: number }[] });
   const survey = useQuery({ queryKey: ["survey"], queryFn: async () => (await supabase.from("surveys").select("id").eq("active", true).limit(1).maybeSingle()).data });
 
-  const confirm = async (a: Appt) => { const { error } = await supabase.rpc("my_appointment_confirm", { p_id: a.id });
-    if (error) m.err(errText(error)); else { m.ok("Presença confirmada. Obrigado!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
-  // A regra de consumo é a do produto do pacote: cancelar com menos de `late_cancel_hours` de antecedência desconta 1 sessão. O paciente é avisado ANTES.
-  const cancel = async (a: Appt) => {
-    const h = a.late_cancel_hours;
-    const consequence = !a.uses_package ? "Este atendimento não usa pacote, então nenhuma sessão é descontada."
-      : a.cancel_consumes ? `Faltam menos de ${h} h para o atendimento: pela regra do seu pacote, esta sessão SERÁ DESCONTADA.`
-      : `Você está cancelando com mais de ${h} h de antecedência: nenhuma sessão será descontada.`;
-    if (!(await confirmDialog("Cancelar atendimento?", `${a.service_name} com ${a.professional_name}, ${fmtDateTime(a.starts_at, a.timezone)}. ${consequence}`, "Cancelar atendimento", true))) return;
-    const { data, error } = await supabase.rpc("my_appointment_cancel", { p_id: a.id, p_reason: null });
-    if (error) return m.err(errText(error));
-    m.ok((data as { session_consumed?: boolean } | null)?.session_consumed ? "Atendimento cancelado. A sessão foi descontada do seu pacote, conforme a regra de cancelamento tardio." : "Atendimento cancelado. Nenhuma sessão foi descontada.");
-    void qc.invalidateQueries({ queryKey: ["my-appts"] }); void qc.invalidateQueries({ queryKey: ["my-pkgs"] }); void qc.invalidateQueries({ queryKey: ["my-pkg-breakdown"] });
-  };
+  const { confirm, cancel } = useApptActions(m);   // mesmas regras de sempre (consequência avisada antes de cancelar)
   const rate = async (a: Appt, score: number) => { const { error } = await supabase.rpc("survey_submit", { p_survey: survey.data!.id, p_appointment: a.id, p_score: score, p_comment: null });
     if (error) m.err(errText(error)); else { m.ok("Obrigado pela avaliação!"); void qc.invalidateQueries({ queryKey: ["my-appts"] }); } };
 
