@@ -4,15 +4,16 @@ import { cacheKey, orsProvider, ProviderError, roundLL, userMessage } from "../.
 // SIMULADO: nenhuma requisição real ao OpenRouteService. O `fetch` é um dublê; isto prova o contrato do adaptador, não a integração real.
 const pts = [{ lat: -23.55612, lng: -46.65591 }, { lat: -23.6021, lng: -46.6659 }];
 const res = (status: number, body: unknown = {}, headers: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers });
-const deps = (impl: (url: string, init: RequestInit) => Response | Promise<Response>) => ({ fetch: vi.fn(async (u: any, i: any) => impl(String(u), i)) as unknown as typeof fetch, sleep: vi.fn(async () => {}) });
+type FetchMock = { mock: { calls: [string, RequestInit & { headers: Record<string, string> }][] } };
+const deps = (impl: (url: string, init: RequestInit) => Response | Promise<Response>) => ({ fetch: vi.fn(async (u: RequestInfo | URL, i?: RequestInit) => impl(String(u), i as RequestInit)) as unknown as typeof fetch, sleep: vi.fn(async () => {}) });
 
 describe("adaptador ORS (respostas simuladas)", () => {
   it("envia só coordenadas (lng,lat) e o perfil — nenhum identificador — e converte durações; nulo continua nulo", async () => {
     const d = deps((_u, init) => { const b = JSON.parse(String(init.body)); expect(Object.keys(b).sort()).toEqual(["locations", "metrics"]); expect(b.locations[0]).toEqual([-46.65591, -23.55612]); return res(200, { durations: [[0, 600.4], [null, 0]] }); });
     const m = await orsProvider("k", d).matrix("driving-car", pts);
     expect(m).toEqual([[0, 600], [null, 0]]);
-    const init = (d.fetch as any).mock.calls[0][1]; expect(init.headers.Authorization).toBe("k");
-    expect((d.fetch as any).mock.calls[0][0]).toBe("https://api.openrouteservice.org/v2/matrix/driving-car");
+    const init = (d.fetch as unknown as FetchMock).mock.calls[0][1]; expect(init.headers.Authorization).toBe("k");
+    expect((d.fetch as unknown as FetchMock).mock.calls[0][0]).toBe("https://api.openrouteservice.org/v2/matrix/driving-car");
   });
   it("429: espera e tenta UMA vez; persistindo, vira rate_limited", async () => {
     const d = deps(() => res(429, {}, { "retry-after": "1" }));
@@ -36,7 +37,7 @@ describe("adaptador ORS (respostas simuladas)", () => {
   });
   it("recusa perfil inválido e número de pontos fora do limite antes de gastar cota", async () => {
     const d = deps(() => res(200, {}));
-    await expect(orsProvider("k", d).matrix("driving-hgv" as any, pts)).rejects.toMatchObject({ code: "bad_request" });
+    await expect(orsProvider("k", d).matrix("driving-hgv" as never, pts)).rejects.toMatchObject({ code: "bad_request" });
     await expect(orsProvider("k", d).matrix("driving-car", Array.from({ length: 26 }, () => pts[0]))).rejects.toMatchObject({ code: "bad_request" });
     await expect(orsProvider("k", d).matrix("driving-car", [pts[0]])).rejects.toMatchObject({ code: "bad_request" });
     expect(d.fetch).not.toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { loadMapLibre, MAP_ATTRIBUTION, STYLE_URL } from "./mapLib";
+import type { GeoJSONSource, Map as MlMap, MapMouseEvent, Marker as MlMarker } from "maplibre-gl";
+import { loadMapLibre, MAP_ATTRIBUTION, STYLE_URL, type MapLibre } from "./mapLib";
 
 export interface MapPoint { key: string; n: number | null; lat: number; lng: number; label: string; kind?: "stop" | "start" | "remote" | "approx" }
 interface Props { points: MapPoint[]; line?: [number, number][] | null; attribution?: string | null; onPick?: (p: { lat: number; lng: number }) => void; pin?: { lat: number; lng: number } | null; height?: number }
@@ -7,7 +8,7 @@ interface Props { points: MapPoint[]; line?: [number, number][] | null; attribut
 /** Mapa (MapLibre + OpenFreeMap). Pontos numerados na ordem do dia; a linha só aparece quando o provedor devolveu a GEOMETRIA do trajeto (nunca uma reta inventada).
  *  Com `onPick`, vira o seletor do alfinete manual (clique = posição; o usuário confirma antes de salvar). */
 const RouteMap = ({ points, line, attribution, onPick, pin, height }: Props) => {
-  const el = useRef<HTMLDivElement>(null); const mapRef = useRef<any>(null); const libRef = useRef<any>(null); const markers = useRef<any[]>([]);
+  const el = useRef<HTMLDivElement>(null); const mapRef = useRef<MlMap | null>(null); const libRef = useRef<MapLibre | null>(null); const markers = useRef<MlMarker[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "unavailable">("loading");
   const pickRef = useRef(onPick); pickRef.current = onPick;
 
@@ -20,7 +21,7 @@ const RouteMap = ({ points, line, attribution, onPick, pin, height }: Props) => 
         const map = new lib.Map({ container: el.current, style: STYLE_URL, center: [-46.65, -23.55], zoom: 10, attributionControl: { compact: true } });
         map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
         map.on("load", () => { if (!dead) setState("ready"); }); map.on("error", () => { /* tiles falhando não derrubam a tela */ });
-        map.on("click", (e: any) => pickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng }));
+        map.on("click", (e: MapMouseEvent) => pickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng }));
         mapRef.current = map;
       } catch { setState("unavailable"); }
     });
@@ -44,8 +45,9 @@ const RouteMap = ({ points, line, attribution, onPick, pin, height }: Props) => 
 
   useEffect(() => {
     const map = mapRef.current; if (!map || state !== "ready") return;
-    const data = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line ?? [] } };
-    if (map.getSource("trajeto")) { map.getSource("trajeto").setData(data); return; }
+    const data: GeoJSON.Feature<GeoJSON.LineString> = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line ?? [] } };
+    const src = map.getSource("trajeto") as GeoJSONSource | undefined;
+    if (src) { src.setData(data); return; }
     map.addSource("trajeto", { type: "geojson", data });
     map.addLayer({ id: "trajeto", type: "line", source: "trajeto", paint: { "line-color": "#2f6fe4", "line-width": 4, "line-opacity": 0.85 }, layout: { "line-cap": "round", "line-join": "round" } });
   }, [line, state]);
