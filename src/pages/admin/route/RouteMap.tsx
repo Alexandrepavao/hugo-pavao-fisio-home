@@ -37,6 +37,7 @@ const RouteMap = ({ points, line, attribution, onPick, pin, height }: Props) => 
       d.style.cssText = `width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 13px system-ui;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);color:#fff;background:${p.kind === "start" ? "#6B4FA3" : p.kind === "remote" ? "#8d7bbd" : p.kind === "approx" ? "#c98a00" : "#12284C"}`;
       d.textContent = p.kind === "start" ? "P" : p.n ? String(p.n) : "•";
       markers.current.push(new lib.Marker({ element: d }).setLngLat([p.lng, p.lat]).addTo(map));
+      d.setAttribute("aria-label", p.n ? `${p.n}. ${p.label}` : p.label);   // o MapLibre troca o rótulo por "Map marker" ao adicionar: reaplica o nosso
     }
     if (all.length) { const b = new lib.LngLatBounds(); all.forEach((p) => b.extend([p.lng, p.lat])); map.fitBounds(b, { padding: 50, maxZoom: 15, duration: 0 }); }
   }, [points, pin, state]);

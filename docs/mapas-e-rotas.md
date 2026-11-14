@@ -17,7 +17,7 @@ Estado: **somente Dev** (branch `feat/rota-atendimentos`). Verificado em **14/11
 
 | Camada | Escolha | Por quê |
 |---|---|---|
-| Renderização do mapa | **MapLibre GL JS** (BSD-3, sem chave) | Biblioteca livre; o provedor de tiles é trocável. **Ainda não instalada neste ambiente** (ver §11): até lá a tela mostra “Mapa indisponível” e a lista com os tempos funciona normalmente. |
+| Renderização do mapa | **MapLibre GL JS** (BSD-3, sem chave) | Biblioteca livre; o provedor de tiles é trocável. Instalada (`maplibre-gl` 4.7.1) e carregada só quando um mapa abre; se falhar (rede/bloqueio) a tela mostra “Mapa indisponível” e a lista com os tempos continua funcionando. |
 | Tiles (mapa de fundo) | **OpenFreeMap** (tiles vetoriais, `tiles.openfreemap.org`) | Sem chave, sem cadastro; uso comercial permitido; sem limite de visualizações declarado. **Sem SLA** (mantido por doação). Atribuição obrigatória: "© OpenMapTiles · Dados © OpenStreetMap". Logs anonimizados pelo provedor. |
 | Rotas / matriz de tempos | **OpenRouteService (ORS)**, plano gratuito, **chave própria, só no backend** | Matriz e direções para carro/a pé/bicicleta. Detalhes e limites na seção 4. |
 | Geocodificação | **Desligada por padrão** | Veja seção 5. O alfinete manual no mapa sempre existe. |
@@ -115,16 +115,17 @@ Se a chave faltar, a função devolve `unavailable` e a tela avisa. Para ativar:
 | Adaptador do provedor (cabeçalhos, só coordenadas, 429/401/5xx, arredondamento, perfil) | testes unitários com `fetch` **dublê** | **Simulado** — prova o contrato, **não** a integração real |
 | Banco: permissões, snapshot de local, aplicar com tudo-ou-nada, auditoria sem coordenadas, contador de uso | `supabase/tests/novos/N17_rota_atendimentos.sql` (63 verificações, Dev) | **Real** (banco Dev) |
 | Edge Function `route-planner` no Dev: autenticação, permissão, cache, “Estimativa indisponível” sem chave, recusa de apply sem estimativa | chamadas reais à função publicada no Dev (E2E N35) | **Real** para tudo que não depende do provedor |
-| Tempos de deslocamento exibidos nos testes de tela | fixture “Rota Teste” com tempos **SIMULADOS** no cache (`provider='simulado'`); a tela mostra “Dados de teste: tempos SIMULADOS” | **Simulado** |
-| Chamada ao OpenRouteService | **NÃO realizada** — `ORS_API_KEY` não existe no Dev | **Pendente** |
-| Mapa (MapLibre + OpenFreeMap) | **NÃO validado** — biblioteca não instalada | **Pendente** |
+| Tempos de deslocamento exibidos nos testes de tela | fixture “Rota Teste” com tempos **SIMULADOS** no cache (`provider='simulado'`, semeado pelo próprio teste) e teto diário marcado como esgotado para forçar “Estimativa indisponível”; a tela mostra “Dados de teste: tempos SIMULADOS”. Não gasta cota do provedor | **Simulado** |
+| Chamada ao OpenRouteService | **Realizada em 14/11/2026 (Dev)**: com `ORS_API_KEY` configurada, `status` → `configured: true` e `day` de 23/11 (4 atendimentos domiciliares, coordenadas de TESTE, nenhum paciente real) devolveu matriz 5×5 do provedor (`provider: ors`, `simulated: false`, `source: provider`, durações entre ~9 e ~28 min, atribuição presente). Resultado é do provedor, sem trânsito em tempo real | **Real** (uma chamada; limites e termos ainda não confirmados) |
+| Mapa (MapLibre + OpenFreeMap) | E2E N35-2b: `data-state=ready`, tiles reais do OpenFreeMap, pontos numerados 1–4 + ponto de partida, atribuição visível; desktop e celular (390 px) sem rolagem lateral. Capturas `docs/screenshots/rota/rota-desktop-mapa.png` e `rota-celular-mapa-real.png` | **Real** (navegador do teste) |
+| Linha do trajeto (“Desenhar trajeto no mapa”, `directions`) | 1 chamada real em 14/11 (dia 23/11, coordenadas de teste): `status: ok`, 824 pontos, ~51 km, ~94 min, atribuição presente. A linha só é desenhada com a geometria do provedor | **Real** (uma chamada; desenho na tela ainda sem captura) |
 
-Nada acima autoriza dizer que a integração real com o provedor foi validada.
+Validação real parcial: matriz de tempos e geometria do trajeto (ORS) e mapa. Ainda não validados: comportamento sob 429/limite real do provedor e os Termos de Uso do ORS.
 
 ## 11. Pendências externas objetivas
 
-1. **Instalar `maplibre-gl`** no projeto (`npm install maplibre-gl@4.7.1`, cache em D:) e trocar o import dinâmico de `src/pages/admin/route/mapLib.ts` por import estático (instruções no próprio arquivo). Depois: validar o mapa em desktop e celular.
-2. **Chave do OpenRouteService** (uma vez só): criar a conta gratuita em **account.heigit.org** → gerar a API key → criar o Secret **`ORS_API_KEY`** em Supabase **Dev** → Edge Functions → Secrets. Depois rodar a rota com um dia real de teste e registrar o consumo.
+1. ~~Instalar `maplibre-gl`~~ **Feito em 14/11** (4.7.1, cache em D:; `mapLib.ts` carrega a biblioteca sob demanda).
+2. ~~Chave do OpenRouteService~~ **Feita em 14/11** (Secret `ORS_API_KEY` no Dev). “Desenhar trajeto” (`directions`) também foi exercido (1 chamada real). Falta registrar o consumo depois de uso de verdade.
 3. **Ler os Termos de Uso do ORS** (uso comercial e privacidade das coordenadas) antes de qualquer dado real de paciente — §4.
 4. Revisar a política de privacidade/termos do HP Group para informar o uso de provedor de rotas (só coordenadas arredondadas saem do sistema).
 5. Produção: nada foi levado. Para promover: migration 130 + publicar a função `route-planner` + Secrets, nessa ordem, só com autorização.

@@ -1,6 +1,6 @@
 // NOVO — N35: "Rota de atendimentos" (Meu dia → Rota). Somente Dev.
-// IMPORTANTE — SIMULADO × REAL: o secret ORS_API_KEY NÃO existe no Dev; por isso estes testes usam a fixture "Rota Teste" com tempos de deslocamento SIMULADOS
-// gravados no cache (provider='simulado'; a tela avisa "Dados de teste"). Eles provam permissões, regras, interface e fluxo de aplicação — NÃO provam a integração real com o provedor.
+// IMPORTANTE — SIMULADO × REAL: estes testes usam a fixture "Rota Teste" com tempos de deslocamento SIMULADOS gravados no cache (provider='simulado'; a tela avisa
+// "Dados de teste") e o teto diário esgotado para forçar "Estimativa indisponível" — não gastam cota. A chamada REAL ao provedor é provada à parte (ver docs/mapas-e-rotas.md §10). Eles provam permissões, regras, interface e fluxo de aplicação — NÃO provam a integração real com o provedor.
 //  · lista numerada com deslocamento/folga estimados, indicadores com base de cálculo, "Tempo estimado sem trânsito em tempo real."
 //  · rota sugerida (heurística) mostra antes/depois e NÃO altera a agenda; aplicar exige confirmação e revalida no servidor; agenda mudou → recusa sem alterar nada
 //  · sem estimativa → "Estimativa indisponível", nunca zero, sem sugerir; remoto sem deslocamento; permissões; celular sem rolagem lateral; sem erros de console
@@ -43,6 +43,26 @@ async function reseed() {
       insert into public.appointments (org_id, unit_id, professional_id, person_id, service_id, period, status, service_mode)
         values ('${ORG}', '${UNIT}', '${PROF}', v_p, '${SVC}', tstzrange('${D2} 10:00-03'::timestamptz, '${D2} 10:30-03'::timestamptz), 'scheduled', 'remote');
     end $$;`);
+
+  await seedSimulatedLegs();
+}
+
+/** Mesmo com a chave real do provedor configurada no Dev, estes testes NÃO gastam cota nem dependem da rede: o cache recebe tempos SIMULADOS (provider='simulado')
+ *  para os pontos da fixture e o teto diário é marcado como esgotado, o que força o caminho "Estimativa indisponível" nos pares sem cache (ex.: Campinas). */
+const SIM_PTS: Record<string, [number, number]> = { sede: [-23.5614, -46.6559], carla: [-23.5005, -46.6256], bruno: [-23.6021, -46.6659], davi: [-23.5402, -46.5767], ana: [-23.5667, -46.6917] };
+const hav = (a: number[], b: number[]) => { const r = (x: number) => (x * Math.PI) / 180, dl = r(b[0] - a[0]), dn = r(b[1] - a[1]); return 2 * 6371 * Math.asin(Math.sqrt(Math.sin(dl / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dn / 2) ** 2)); };
+async function seedSimulatedLegs() {
+  const key = (p: number[], q: number[]) => `driving-car|${p[0].toFixed(3)}|${p[1].toFixed(3)}|${q[0].toFixed(3)}|${q[1].toFixed(3)}`;
+  const rows: string[] = [];
+  for (const [an, a] of Object.entries(SIM_PTS)) for (const [bn, b] of Object.entries(SIM_PTS)) if (an !== bn) rows.push(`('${key(a, b)}','${ORG}','driving-car',${Math.round(((hav(a, b) * 1.35) / 24) * 3600 + 180)},null,'simulado',now(),now() + interval '30 days')`);
+  await devSql(`delete from public.route_leg_cache where org_id = '${ORG}';
+    insert into public.route_leg_cache (cache_key, org_id, profile, duration_s, distance_m, provider, fetched_at, expires_at) values ${rows.join(",")};
+    insert into public.route_usage (org_id, day, kind, calls) values ('${ORG}', (now() at time zone 'America/Sao_Paulo')::date, 'matrix', 100000)
+      on conflict (org_id, day, kind) do update set calls = 100000;`);
+}
+async function cleanSimulated() {
+  await devSql(`delete from public.route_leg_cache where org_id = '${ORG}' and provider = 'simulado';
+    delete from public.route_usage where org_id = '${ORG}' and kind = 'matrix' and calls >= 100000;`);
 }
 const state = async () => (await devSql(`select a.id, a.status, to_char(lower(a.period) at time zone 'America/Sao_Paulo', 'HH24:MI') hhmm, p.full_name n, a.service_mode m, (upper(a.period) - lower(a.period))::text dur from public.appointments a join public.people p on p.id = a.person_id
   where a.professional_id = '${PROF}' and p.full_name like 'Rota Teste %' and (lower(a.period) at time zone 'America/Sao_Paulo')::date = '${D1}' order by lower(a.period), a.status`)) as { id: string; status: string; hhmm: string; n: string; m: string; dur: string }[];
@@ -55,7 +75,7 @@ const openRota = async (p: Page, date: string) => {
 test.describe.serial("@novos Rota de atendimentos", () => {
   test.setTimeout(240_000);
   test.beforeAll(async () => { await reseed(); });
-  test.afterAll(async () => { await reseed(); });
+  test.afterAll(async () => { await reseed(); await cleanSimulated(); });
 
   test("N35-1 lista numerada, deslocamento e folga estimados, indicadores com base, aviso de teste e de trânsito (desktop)", async ({ page, context }) => {
     await loginAs(context, "qa.fisio@hp-test.dev"); const errors = collectErrors(page);
@@ -84,6 +104,22 @@ test.describe.serial("@novos Rota de atendimentos", () => {
     await shot(page, "rota-celular-mapa");
     await page.getByRole("button", { name: "Lista", exact: true }).click(); await expect(page.getByTestId("route-stop").first()).toBeVisible();
     await shot(page, "rota-celular-lista");
+  });
+
+  test("N35-2b mapa (MapLibre + OpenFreeMap) carrega com pontos numerados e atribuição — desktop e celular", async ({ page, context }) => {
+    await loginAs(context, "qa.fisio@hp-test.dev"); await openRota(page, D1);
+    const map = page.getByTestId("route-map");
+    await expect(map).toBeVisible({ timeout: 20_000 });
+    await expect(map).toHaveAttribute("data-state", "ready", { timeout: 30_000 });                       // biblioteca carregada e mapa criado
+    await expect(map.getByRole("img", { name: /^1\. / })).toBeVisible(); await expect(map.getByRole("img", { name: /^4\. / })).toBeVisible();   // pontos numerados na ordem do dia
+    await expect(map.locator(".rt-attrib")).toContainText("OpenFreeMap");
+    await page.waitForTimeout(4000);                                                                       // tiles chegam
+    await shot(page, "rota-desktop-mapa", true);
+    await page.setViewportSize({ width: 390, height: 844 }); await openRota(page, D1);
+    await page.getByRole("button", { name: "Mapa", exact: true }).click();
+    await expect(page.getByTestId("route-map")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+    expect(await noOverflow(page)).toBe(true); await page.waitForTimeout(4000);
+    await shot(page, "rota-celular-mapa-real");
   });
 
   test("N35-3 simular mostra antes/depois e NÃO altera a agenda", async ({ page, context }) => {
@@ -135,7 +171,8 @@ test.describe.serial("@novos Rota de atendimentos", () => {
   test("N35-6 sem estimativa: 'Estimativa indisponível', nunca zero, sem sugerir; remoto sem deslocamento", async ({ page, context }) => {
     await loginAs(context, "qa.fisio@hp-test.dev"); await openRota(page, D2);
     await expect(page.getByTestId("route-unavailable")).toContainText("Estimativa indisponível");
-    await page.getByTestId("route-suggest").click(); await expect(page.getByTestId("route-suggestion-msg")).toContainText("Estimativa indisponível");     // não sugere nada sem estimativa
+    await expect(page.getByTestId("route-suggest")).toBeDisabled();                                       // limite diário esgotado: não oferece sugerir (e nada é sugerido sem estimativa)
+    await expect(page.getByTestId("route-suggestion-msg")).toHaveCount(0);
     await expect(page.getByTestId("route-apply")).toHaveCount(0);
     await expect(page.locator(".rt-leg", { hasText: "Estimativa indisponível" }).first()).toBeVisible();
     await expect(page.locator(".rt-leg", { hasText: "Sem deslocamento (atendimento remoto)" })).toHaveCount(1);
