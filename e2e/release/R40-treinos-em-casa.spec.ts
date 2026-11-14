@@ -39,7 +39,7 @@ test.describe.serial("@release Treinos em casa", () => {
     await page.getByRole("button", { name: "Concluir treino" }).click(); await expect(page.getByText("Marque ao menos um exercício que você fez.")).toBeVisible();
     await page.getByLabel(`Fiz: ${ex}`).check(); await page.getByLabel(/Esforço/).fill("6"); await page.getByLabel(/Dor durante o treino/).fill("2"); await page.getByRole("button", { name: "Concluir treino" }).click();
     await expect(page.getByText("Treino registrado. Parabéns!")).toBeVisible({ timeout: 20_000 }); await expect(today).toContainText("Feito"); await expect(today).toContainText("Você já registrou o treino de hoje");
-    await page.goto("/paciente"); await expect(page.getByTestId("patient-home")).toContainText(/1 de 1 hoje/, { timeout: 30_000 });
+    await page.goto("/paciente"); await expect(page.getByTestId("patient-home")).toContainText(/Registrado hoje: 1 de 1/, { timeout: 30_000 })   // Início redesenhado (jornada visual): o resumo do treino de hoje mudou de texto;
     expect(errors.filter((e) => !/403|42501/.test(e)), errors.join("\n")).toEqual([]);
   });
 

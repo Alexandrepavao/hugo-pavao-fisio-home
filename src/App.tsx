@@ -23,6 +23,7 @@ const Overview = lazy(() => import("./pages/admin/Overview"));
 const People = lazy(() => import("./pages/admin/People"));
 const Audit = lazy(() => import("./pages/admin/Audit"));
 const ViewAs = lazy(() => import("./pages/admin/ViewAs"));
+const DemoPresenter = lazy(() => import("./portal/journey/demo/DemoPresenter"));
 const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
 const CrmDashboard = lazy(() => import("./pages/admin/crm/CrmDashboard"));
@@ -267,6 +268,7 @@ const App = () => (
                 <Route path="chamados" element={<PatientTicketsPage />} />
               </Route>
               {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
+              <Route path="/fisio/apresentar" element={g(["physio"], <DemoPresenter />)} />
               <Route path="/fisio" element={g(["physio"], <PhysioShell />)}>
                 <Route index element={<PhysioHome />} />
                 <Route path="pacientes" element={<Care />} />
