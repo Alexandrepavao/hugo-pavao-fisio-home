@@ -75,12 +75,13 @@ test.describe.serial("@novos Ver como (gestor)", () => {
       await page.goto(rota); await expect(faixa, `faixa em ${rota}`).toBeVisible({ timeout: 30_000 }); await page.waitForLoadState("networkidle");
       await expect(page.getByText(/Modo “ver como”|Sem permissão ou falha/), `sem erro em ${rota}`).toHaveCount(0); expect(new URL(page.url()).pathname, `continua em ${rota}`).toBe(rota);
     }
+    const badTelas = [...bad];   // chamadas com erro SÓ nas telas do fisioterapeuta (a visita ao painel abaixo é de propósito e pode gerar um 403 próprio do painel)
     // o gestor não passeia pelo painel enquanto vê como o fisioterapeuta (a rota é do gestor)
     await page.goto("/admin/ver-como"); await expect(page).not.toHaveURL(/\/admin\/ver-como/, { timeout: 20_000 });
     await page.goto("/fisio"); await expect(faixa).toBeVisible({ timeout: 30_000 });
     await page.getByTestId("view-as-exit").click(); await expect(page).toHaveURL(/\/admin\/ver-como/, { timeout: 30_000 }); await expect(page.getByTestId("view-as-banner")).toHaveCount(0);
     const rec = page.getByTestId("view-as-sessao").first(); await expect(rec).toContainText("Fisioterapeuta"); await expect(rec).toContainText("encerrada");
-    expect(bad, "nenhuma chamada à API falhou nas telas do fisioterapeuta:\n" + bad.join("\n")).toEqual([]); expect(errors, errors.join("\n")).toEqual([]);
+    expect(badTelas, "nenhuma chamada à API falhou nas telas do fisioterapeuta:\n" + badTelas.join("\n")).toEqual([]); expect(errors, errors.join("\n")).toEqual([]);
   });
 
   test("tela: ver como paciente abre o app do paciente (todas as telas sem erro) e o gestor continua gestor em outra aba", async ({ page, context, browser }) => {
