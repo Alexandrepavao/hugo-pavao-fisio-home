@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, type AppRole } from "./AuthProvider";
+import { viewAsHome } from "@/lib/viewAs";
 
 /** Guarda de rota de interface. A proteção real de dados é feita por RLS no banco. */
 const RequireAuth = ({ children, roles }: { children: ReactNode; roles?: AppRole[] }) => {
-  const { loading, session, noAccess, hasRole } = useAuth();
+  const { loading, session, noAccess, hasRole, viewAs } = useAuth();
   const location = useLocation();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-navy-400" role="status">Carregando…</div>;
@@ -18,6 +19,8 @@ const RequireAuth = ({ children, roles }: { children: ReactNode; roles?: AppRole
         </div>
       </div>
     );
+  // “ver como”: a rota que a pessoa vista não pode abrir (ex.: o painel do gestor) leva de volta ao início do app dela
+  if (viewAs && roles && !hasRole(...roles)) return <Navigate to={viewAsHome(viewAs.kind)} replace />;
   if (roles && !hasRole(...roles))
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-6 text-center" role="alert">

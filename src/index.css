@@ -143,3 +143,8 @@
     @apply flex items-center justify-center border border-dashed border-accent/50 bg-accent/5 text-center text-[13px] uppercase tracking-[0.16em] text-accent px-6 py-4;
   }
 }
+
+
+/* “Ver como” (gestor): a faixa fixa no topo empurra a página e os cabeçalhos fixos descem junto */
+html[data-view-as="1"] body { padding-top: var(--view-as-h, 0px); }
+html[data-view-as="1"] .sticky.top-0, html[data-view-as="1"] header.sticky { top: var(--view-as-h, 0px) !important; }
