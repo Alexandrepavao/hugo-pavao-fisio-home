@@ -12,7 +12,9 @@ const shot = async (p: Page, name: string, full = false) => { if (process.env.MK
 const noOverflow = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
 const ORG = "268b67d7-faa3-43c2-bb91-0616c78e10d0", UNIT = "9ace3ebd-352c-4832-b488-904f6a708e22", PROF = "3b6e077e-bee8-437b-b4fe-e3c413cdd457", SVC = "3c2ac8b8-8322-4e04-85a2-c832c38d475c";
-const RUN = Date.now().toString(36); const NAME = `Paciente N36 ${RUN}`; const EMAIL = `n36.${RUN}@hp-test.dev`; const PWD = `Teste-${RUN}-Aa1!`;
+const RUN = Date.now().toString(36);
+const OFF = 48 + (parseInt(RUN, 36) % 400); // deslocamento em horas: execuções seguidas nunca sobrepõem atendimentos da mesma profissional
+const NAME = `Paciente N36 ${RUN}`; const EMAIL = `n36.${RUN}@hp-test.dev`; const PWD = `Teste-${RUN}-Aa1!`;
 const EV_TITLE = `[TESTE ${RUN}] Exercícios orientados na dor de ombro: ensaio fictício`; const COMPLAINT = "Dor no ombro direito ao levantar o braço"; const INTERNAL = `ANOTAÇÃO INTERNA ${RUN}: suspeita associada`;
 let personId = "", oppId = "", enrId = "", productId = "", userId = "";
 
@@ -35,7 +37,7 @@ test.describe.serial("@novos Jornada: avaliação → pendente → apresentaçã
     await devSql(`insert into public.user_accounts (user_id, org_id, person_id, display_name) values ('${userId}', '${ORG}', '${personId}', 'Paciente N36') on conflict (user_id) do nothing;
       insert into public.role_assignments (org_id, user_id, role) values ('${ORG}', '${userId}', 'member') on conflict do nothing;
       insert into public.appointments (org_id, unit_id, professional_id, person_id, service_id, period, opportunity_id)
-        values ('${ORG}', '${UNIT}', '${PROF}', '${personId}', '${SVC}', tstzrange(now() + interval '2 days', now() + interval '2 days 50 minutes'), '${oppId}');
+        values ('${ORG}', '${UNIT}', '${PROF}', '${personId}', '${SVC}', tstzrange(now() + make_interval(hours => ${OFF}), now() + make_interval(hours => ${OFF}, mins => 50)), '${oppId}');
       update public.opportunities set stage_id = (select st.id from public.pipeline_stages st join public.opportunities o on o.pipeline_id = st.pipeline_id where o.id = '${oppId}' and st.key = 'evaluation_scheduled') where id = '${oppId}';`);
     enrId = (await one<{ id: string }>(`select id from public.patient_enrollments where person_id = '${personId}'`)).id;
   });
@@ -93,7 +95,7 @@ test.describe.serial("@novos Jornada: avaliação → pendente → apresentaçã
     await page.getByLabel("Condições (separe por vírgula)").fill("tendinopatia");
     await page.getByTestId("pw-propose-form").getByRole("button", { name: "Traumato-Ortopédica" }).click();
     await page.getByTestId("pw-propose-send").click(); await expect(page.getByText("enviada para revisão clínica")).toBeVisible();
-    await expect(page.getByTestId("pw-evidence-nolib")).toBeVisible();                                                     // ainda não aprovada: não é sugerida
+    await expect(page.getByTestId("pw-evidence-panel")).toBeVisible(); await expect(page.getByTestId("pw-evidence-suggestion").filter({ hasText: EV_TITLE })).toHaveCount(0);   // ainda não aprovada: NÃO é sugerida (o Dev pode ter fichas aprovadas de execuções anteriores)
     // gestão aprova (precisa confirmar a fonte original)
     const ctx2 = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const p2 = await ctx2.newPage();
     await loginAs(ctx2, QA.manager); await p2.goto("/admin/evidencias"); await expect(p2.getByTestId("evidences-admin")).toBeVisible({ timeout: 20_000 });

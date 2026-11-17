@@ -50,3 +50,21 @@ Recuperação de senha e primeiro acesso **com e-mail real**; envio Resend; webh
 | Google Calendar com conta real | — | **NÃO executado** | Pendente (ver `docs/mapas-e-rotas.md` §11) |
 
 Observação: `supabase/tests/functions/google-sync-plan.test.mjs` aparece como “falha” no `vitest run` completo porque é um script com `process.exit`; falha igual **sem** estas mudanças (as 18 verificações dele passam quando executado com `node`).
+
+## Jornada: avaliação → apresentação → pendente → pagamento → ativo (branch `feat/apresentacao-jornada`, 17/11/2026, somente Dev)
+
+> Regra substituída: “Venda feita ativa” → **1ª parcela da contratação quitada**. Detalhes e limites em `docs/jornada-avaliacao-apresentacao-pagamento.md`. **Não existe provedor de pagamento no projeto** (recebimento = `payment_record`, manual) e **o envio real de e-mail não foi exercitado** (falta `PUBLIC_SITE_URL` no Dev).
+
+| O quê | Camada | Resultado | Natureza |
+|---|---|---|---|
+| Vínculo pendente/ativo, chaves de etapa, venda feita não ativa, parcial não ativa, 1ª parcela ativa, avulsa não ativa, duplicado/reconciliação, estorno, perda, permissões e isolamento | SQL `N18_jornada_pendente_ativo.sql` | ✅ 48 | **Real** (banco Dev) |
+| Apresentação (privacidade, concorrência, autoria, 16 áreas), biblioteca (fonte obrigatória, revisão, só aprovadas), publicação/versões, prévia, entrada sem lead prévio | SQL `N19_apresentacao_evidencias.sql` | ✅ 62 | **Real** |
+| Convite: só e-mail cadastrado, conta existente reutilizada sem mexer na senha, mascaramento, reenvio, convite vencido, só `service_role` | SQL `N20_convite_acesso_paciente.sql` | ✅ 22 | **Real** (sem e-mail) |
+| Jornada ponta a ponta pelas telas: pendente → captura (salva e retoma) → evidência (proposta + aprovação) → 7 etapas → **prévia real do portal** → publicar → paciente → venda/pagamento → ativo; acesso e rotas | E2E `N36-jornada-apresentacao-pagamento.spec.ts` | ✅ 7/7 (executado duas vezes) | **Real** (telas + banco); pagamento manual |
+| Convite pela tela: sem e-mail, conta existente, recusa de quem não tem vínculo | E2E `N37-convite-primeiro-acesso.spec.ts` | ✅ 2 · ⏭ 1 | **Envio real pelo Resend NÃO executado** (`N37-3` exige `N37_REAL_SEND_TO` + `PUBLIC_SITE_URL`) |
+| SQL de release completo (inclui `S02` ajustado) | `supabase/tests/release` | ✅ 1766/1766 | Real |
+| SQL novos completos | `supabase/tests/novos` | ✅ 731 + N19 62 após tornar o teste robusto a fichas de execuções anteriores | Real |
+| Regressão E2E dos fluxos de venda/pacote: `R01` (8), `R05` (4), `R20` (8), `R22` (8), `R23` (7), `03` (4) | Playwright | ✅ | Real |
+| Mudança INTENCIONAL de expectativa | `S02`, `R01-4/5`, `R05-preparo` | ajustados | “venda confirmada concede sessões” → “concede com a 1ª parcela quitada” |
+| `07-finance-behaviors` “comissão é gerada…” | Playwright | ❌ **não relacionado**: a opção “QA Gestor” não existe (o nome de exibição da conta hoje é “Gestor QA”) | Falha de teste preexistente; não corrigida aqui |
+| Testes SQL antigos `008_dashboard` e `020_dashboard_card_detail` | SQL (fora do release) | ❌ assumem banco vazio / totais globais (ex.: “sem dados…”, 319900) | Provavelmente preexistentes (Dev acumulado); **não verificado contra o estado anterior**; não são executados pelo `promover` |

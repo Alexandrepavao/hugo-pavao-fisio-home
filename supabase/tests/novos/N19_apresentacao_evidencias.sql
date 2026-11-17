@@ -11,11 +11,12 @@ create or replace function pg_temp.own(sql text) returns text language plpgsql s
 do $$
 declare
   rep text := ''; v_org uuid; ua uuid; v_pat uuid; st_new uuid; st_sched uuid; svc uuid; prof uuid; prof2 uuid; j jsonb; j2 jsonb; n int; v_rev int; v_pres uuid; e1 uuid; e2 uuid; o1 uuid; o2 uuid;
-  ev_a uuid; ev_b uuid; ev_c uuid; ev_d uuid; ev_e uuid; v_err text; v_pe_created uuid; v_pe_other uuid; v_pe_active uuid; v_ver int;
+  ev_a uuid; ev_b uuid; ev_c uuid; ev_d uuid; ev_e uuid; v_err text; v_base_app int; v_pos_a int; v_pos_c int; v_pe_created uuid; v_pe_other uuid; v_pe_active uuid; v_ver int;
   u_phy uuid := gen_random_uuid(); u_phy2 uuid := gen_random_uuid(); u_mgr uuid := gen_random_uuid(); u_sales uuid := gen_random_uuid(); u_p1 uuid := gen_random_uuid(); u_p2 uuid := gen_random_uuid();
   pe_phy uuid; pe_phy2 uuid; p1 uuid; p2 uuid;
 begin
   select id into v_org from public.organizations where slug = 'hp-group';
+  select count(*) into v_base_app from public.evidence_references where org_id = v_org and status = 'approved';   -- o Dev pode já ter fichas de testes anteriores: as contagens são relativas
   insert into public.units (org_id, name, slug) values (v_org, 'Unidade N19', 'n19-a') returning id into ua;
   select id into v_pat from public.pipelines where org_id = v_org and kind = 'patients' limit 1;
   select id into st_new from public.pipeline_stages where pipeline_id = v_pat and key = 'new_contact';
@@ -44,7 +45,7 @@ begin
 
   -- ---------------- 1. áreas e privacidade
   rep := rep || pg_temp.chk((select count(*) from public.physio_areas) = 16, 'as 16 áreas da fisioterapia estão cadastradas (categorias de organização)');
-  rep := rep || pg_temp.chk((select count(*) from public.evidence_references where org_id = v_org) = 0, 'a biblioteca de evidências NASCE VAZIA (nada inventado)');
+  rep := rep || pg_temp.chk((select count(*) from public.evidence_references where org_id = v_org and proposed_by is null) = 0, 'nada na biblioteca foi criado pelo sistema: toda ficha tem um autor humano (nenhuma referência inventada/semeada)');
   set local role authenticated; perform pg_temp.as_user(u_phy);
   rep := rep || pg_temp.chk(pg_temp.err('select count(*) from public.evaluation_presentations') like '42501%' and pg_temp.err('select count(*) from public.evidence_references') like '42501%'
     and pg_temp.err('select count(*) from public.presentation_versions') like '42501%' and pg_temp.err('select count(*) from public.presentation_evidence') like '42501%', 'tabelas sem acesso direto (só funções)');
@@ -96,7 +97,7 @@ begin
   rep := rep || pg_temp.chk(pg_temp.err(format('select public.evidence_review(%L, ''approve'', true, null)', ev_a)) like '42501%', 'a fisioterapeuta NÃO aprova a própria proposta (revisão clínica é da gestão)');
   rep := rep || pg_temp.chk(pg_temp.err(format('select public.presentation_evidence_pick(%L, %L, ''serve ao caso'', null)', v_pres, ev_a)) like '%APROVADAS%', 'ficha em rascunho não pode ser usada com o paciente');
   perform pg_temp.as_user(u_phy2);
-  rep := rep || pg_temp.chk(jsonb_array_length(public.evidence_list(null)) = 0, 'outra fisioterapeuta não vê rascunhos alheios');
+  rep := rep || pg_temp.chk(jsonb_array_length(public.evidence_list(null)) = v_base_app and not exists (select 1 from jsonb_array_elements(public.evidence_list(null)) x where x ->> 'status' <> 'approved'), 'outra fisioterapeuta vê só fichas APROVADAS (nunca rascunhos alheios)');
   perform pg_temp.as_user(u_p1);
   rep := rep || pg_temp.chk(pg_temp.err('select public.evidence_list(null)') like '42501%', 'paciente não lista a biblioteca');
   perform pg_temp.as_user(u_mgr);
@@ -105,13 +106,14 @@ begin
   perform public.evidence_review(ev_d, 'approve', true, null); perform public.evidence_review(ev_e, 'approve', true, null);
   rep := rep || pg_temp.chk(pg_temp.own(format('select reviewed_by from public.evidence_references where id = %L', ev_a)) = u_mgr::text and pg_temp.own(format('select reviewed_at from public.evidence_references where id = %L', ev_a)) is not null and pg_temp.own(format('select source_verified_at from public.evidence_references where id = %L', ev_a)) is not null, 'aprovação guarda revisor, data e verificação da fonte');
   perform pg_temp.as_user(u_phy2);
-  rep := rep || pg_temp.chk(jsonb_array_length(public.evidence_list('approved')) = 5, 'fichas aprovadas ficam visíveis para as fisioterapeutas');
+  rep := rep || pg_temp.chk(jsonb_array_length(public.evidence_list('approved')) = v_base_app + 5, 'as 5 fichas recém-aprovadas ficam visíveis para as fisioterapeutas');
 
   -- ---------------- 4. seleção para o caso: sugestão explicada, confirmação da profissional, limites
   perform pg_temp.as_user(u_phy);
   j := public.evidence_suggest(v_pres);
-  rep := rep || pg_temp.chk((j -> 0 ->> 'id')::uuid = ev_a, 'a sugestão ranqueia primeiro a ficha com área E condição do caso (tendinopatia)');
-  rep := rep || pg_temp.chk(jsonb_array_length(j -> 0 -> 'why') >= 2 and (j -> 0 -> 'why')::text like '%Mesma área%' and (j -> 0 -> 'why')::text like '%Condição citada%', 'cada sugestão explica POR QUE foi sugerida');
+  select ord into v_pos_a from jsonb_array_elements(j) with ordinality t(x, ord) where (x ->> 'id')::uuid = ev_a; select ord into v_pos_c from jsonb_array_elements(j) with ordinality t(x, ord) where (x ->> 'id')::uuid = ev_c;
+  rep := rep || pg_temp.chk(v_pos_a is not null and v_pos_c is not null and v_pos_a < v_pos_c, 'a ficha com área E condição do caso (tendinopatia) vem antes da que só coincide na área');
+  rep := rep || pg_temp.chk((select jsonb_array_length(x -> 'why') >= 2 and (x -> 'why')::text like '%Mesma área%' and (x -> 'why')::text like '%Condição citada%' from jsonb_array_elements(j) x where (x ->> 'id')::uuid = ev_a), 'cada sugestão explica POR QUE foi sugerida');
   rep := rep || pg_temp.chk(not exists (select 1 from jsonb_array_elements(j) x where (x ->> 'id')::uuid = ev_b), 'ficha de outra área sem relação com o caso não é sugerida');
   perform public.presentation_evidence_pick(v_pres, ev_a, 'Mostra que exercícios orientados ajudam pessoas com dor no ombro como a sua', 'O estudo incluiu adultos de 40 a 60 anos');
   perform public.presentation_evidence_pick(v_pres, ev_c, 'Treino específico para quem quer voltar ao esporte', null);

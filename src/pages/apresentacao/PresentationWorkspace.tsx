@@ -10,7 +10,7 @@ import { JourneyProvider, PatientDashboard } from "@/portal/journey/ui";
 import { usePreviewJourney } from "@/portal/journey/live";
 import type { EvolutionData } from "@/portal/Evolution";
 import PresentationSteps from "./PresentationSteps";
-import { AREAS, apiText, evidencePick, evidenceSave, evidenceSuggest, evidenceUnpick, isConflict, presentationOpen, presentationPublish, presentationSave, type LibraryItem, type PresentationDraft } from "./api";
+import { AREAS, apiText, portalAccessState, sendPortalInvite, type InviteResult, evidencePick, evidenceSave, evidenceSuggest, evidenceUnpick, isConflict, presentationOpen, presentationPublish, presentationSave, type LibraryItem, type PresentationDraft } from "./api";
 import "./presentation.css";
 
 type Tab = "dados" | "avaliacao" | "evidencias" | "apresentar" | "publicar";
@@ -115,6 +115,40 @@ const ProposeForm = ({ onDone }: { onDone: () => void }) => {
 };
 
 type PreviewState = ReturnType<typeof usePreviewJourney>;
+const INVITE_TEXT: Record<InviteResult["status"], string> = {
+  sent: "Convite enviado: o serviço de e-mail ACEITOU o envio. O link vale por tempo limitado e o paciente cria a própria senha. A entrega na caixa de entrada não é rastreada; o primeiro acesso aparece aqui quando for concluído.",
+  linked: "O paciente já tem conta: a identidade foi reutilizada e a senha não foi alterada. Nenhum e-mail foi enviado.",
+  no_email: "Acesso pendente — cadastrar e-mail. A avaliação e a prévia continuam normalmente; peça à equipe para cadastrar o e-mail do paciente.",
+  no_enrollment: "O vínculo deste paciente foi encerrado: não há convite a enviar.",
+  throttled: "Um convite acabou de ser enviado. Para evitar repetição, aguarde 10 minutos antes de reenviar.",
+  failed: "Não foi possível enviar agora.",
+};
+const AccessCard = ({ person }: { person: string }) => {
+  const [msg, m] = useMsg(); const [busy, setBusy] = useState(false);
+  const q = useQuery({ queryKey: ["portal-access", person], retry: false, queryFn: () => portalAccessState(person) });
+  const a = q.data;
+  const send = async () => {
+    setBusy(true);
+    try { const r = await sendPortalInvite(person); (r.status === "sent" || r.status === "linked" ? m.ok : m.err)(r.message ?? INVITE_TEXT[r.status]); await q.refetch(); } catch (e) { m.err(apiText(e)); } finally { setBusy(false); }
+  };
+  return (
+    <div className="pw-card" data-testid="pw-access">
+      <h2 className="font-semibold">Acesso do paciente à área dele</h2>
+      <p className="pw-help">O paciente pendente pode criar a senha e entrar em /paciente antes do pagamento. O convite vai pelo fluxo seguro do sistema (link temporário por e-mail); a senha nunca é enviada. Não há envio em massa.</p>
+      <State loading={q.isLoading} />
+      {a && (<dl className="grid gap-1 text-sm">
+        <div><dt className="inline font-semibold">E-mail cadastrado: </dt><dd className="inline" data-testid="pw-access-email">{a.has_email ? a.email_masked : "nenhum — Acesso pendente (cadastrar e-mail)"}</dd></div>
+        <div><dt className="inline font-semibold">Conta: </dt><dd className="inline" data-testid="pw-access-account">{a.account === "linked" ? "já criada e ligada a este paciente" : a.account === "invite_open" ? "convite aberto aguardando o primeiro acesso" : "ainda não criada"}</dd></div>
+        <div><dt className="inline font-semibold">Último envio: </dt><dd className="inline" data-testid="pw-access-last">{a.last_send ? `${fmtDateTime(a.last_send.at)} — ${a.last_send.outcome === "accepted" ? "aceito pelo serviço de e-mail" : a.last_send.outcome === "failed" ? `não aceito (${a.last_send.error_code ?? "erro"})` : a.last_send.outcome === "pending" ? "em andamento" : "limitado"}` : "nenhum"}</dd></div>
+        <div><dt className="inline font-semibold">Entrega na caixa de entrada: </dt><dd className="inline">não rastreada</dd></div>
+        <div><dt className="inline font-semibold">Primeiro acesso: </dt><dd className="inline" data-testid="pw-access-first">{a.first_access_at ? `concluído em ${fmtDateTime(a.first_access_at)}` : a.account === "linked" ? "conta ligada" : "ainda não concluído"}</dd></div>
+      </dl>)}
+      <Msg m={msg} />
+      <div><button type="button" className={btnGhost} disabled={busy || !a?.has_email || a?.account === "linked"} onClick={() => void send()} data-testid="pw-invite"><Send size={14} className="mr-1 inline" aria-hidden />{a?.account === "invite_open" ? "Reenviar convite de acesso" : "Enviar convite de acesso"}</button></div>
+    </div>
+  );
+};
+
 const PortalPreview = ({ d, pv, onRefresh }: { d: PresentationDraft; pv: PreviewState; onRefresh: () => void }) => {
   const { model, loading, error } = pv;
   return (
@@ -248,6 +282,7 @@ const PresentationWorkspace = () => {
             <p className="pw-help">Publicar não altera plano ativo nem cria consultas, convites ou cobranças. O objetivo vira a meta do paciente apenas se ele ainda não tiver uma meta ativa.</p>
             <div><button type="button" className={btnPrimary} disabled={!draft.can_publish || publishing || (draft.published_version > 0 && !draft.unpublished_changes)} onClick={() => void publish()} data-testid="pw-publish"><Send size={14} className="mr-1 inline" aria-hidden />Publicar apresentação</button></div>
           </div>)}
+        {tab === "publicar" && <AccessCard person={draft.person_id} />}
       </>)}
     </div>
   );

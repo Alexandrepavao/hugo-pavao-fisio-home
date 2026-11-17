@@ -60,3 +60,17 @@ export const evidenceList = (status?: string) => call<LibraryItem[]>("evidence_l
 export const evidenceSave = (id: string | null, p: Record<string, unknown>) => call<string>("evidence_save", { p_id: id, p });
 export const evidenceReview = (id: string, decision: "approve" | "retire" | "reject", sourceChecked: boolean, note: string | null) => call<void>("evidence_review", { p_id: id, p_decision: decision, p_source_checked: sourceChecked, p_note: note });
 export const myPresentation = () => call<MyPresentation>("my_presentation");
+
+export interface AccessState { has_email: boolean; email_masked: string | null; account: "none" | "invite_open" | "linked"; invite_expires_at: string | null; last_send: { at: string; outcome: "pending" | "accepted" | "failed" | "throttled"; error_code: string | null } | null; first_access_at: string | null; delivery_tracked: boolean }
+export const portalAccessState = (person: string) => call<AccessState>("portal_access_state", { p_person: person });
+export interface InviteResult { status: "sent" | "linked" | "no_email" | "no_enrollment" | "throttled" | "failed"; masked?: string | null; code?: string; message?: string }
+/** Convite de primeiro acesso: a função autoriza no banco, usa só o e-mail já cadastrado e o Auth envia pelo Resend. Nunca recebe nem devolve o e-mail completo. */
+export async function sendPortalInvite(person: string): Promise<InviteResult> {
+  const { data, error } = await supabase.functions.invoke("patient-invite", { body: { person_id: person } });
+  if (error) {
+    let payload: InviteResult | null = null; try { payload = await (error as { context?: Response }).context?.json(); } catch { /* sem corpo */ }
+    if (payload?.status) return payload;
+    throw new ApiError(undefined, "Não foi possível enviar o convite agora.");
+  }
+  return data as InviteResult;
+}
