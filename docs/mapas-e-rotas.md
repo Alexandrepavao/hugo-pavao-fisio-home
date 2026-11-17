@@ -126,9 +126,9 @@ Validação real parcial: matriz de tempos e geometria do trajeto (ORS) e mapa. 
 
 1. ~~Instalar `maplibre-gl`~~ **Feito em 14/11** (4.7.1, cache em D:; `mapLib.ts` carrega a biblioteca sob demanda).
 2. ~~Chave do OpenRouteService~~ **Feita em 14/11** (Secret `ORS_API_KEY` no Dev). “Desenhar trajeto” (`directions`) também foi exercido (1 chamada real). Falta registrar o consumo depois de uso de verdade.
-3. **Ler os Termos de Uso do ORS** (uso comercial e privacidade das coordenadas) antes de qualquer dado real de paciente — §4.
-4. Revisar a política de privacidade/termos do HP Group para informar o uso de provedor de rotas (só coordenadas arredondadas saem do sistema).
-5. Produção: nada foi levado. Para promover: migration 130 + publicar a função `route-planner` + Secrets, nessa ordem, só com autorização.
+3. **Termos de Uso do ORS** — lidos em 16/11/2026 até onde foi possível (páginas oficiais vazias sem JavaScript): uso comercial com a chave gratuita e retenção das coordenadas **NÃO confirmados**. Resumo, rascunho de e-mail ao ORS e perguntas em `docs/privacidade-provedor-de-rotas.md`.
+4. Política de Privacidade/Termos: **o app ainda não tem página pública**; a minuta do trecho sobre o provedor de rotas e as perguntas para o jurídico estão em `docs/privacidade-provedor-de-rotas.md` (nada publicado ao paciente).
+5. Produção: **levada em 16/11/2026** (migration 130, função `route-planner`, site; secret `ORS_API_KEY` criado pelo usuário). Para pausar o envio de coordenadas ao ORS basta remover esse secret.
 
 ## 12. Google Calendar (reaproveitado, sem mudança)
 
