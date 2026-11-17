@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import BestFit, { type BookMode } from "./route/BestFit";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import { useAuth } from "@/auth/AuthProvider";
@@ -42,7 +43,7 @@ const Day = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const { units, services } = useBase(); const { user, hasRole } = useAuth();
   const canConfirmForPatient = hasRole("manager", "ops_admin", "unit_manager", "sales");
   const [unitId, setUnitId] = useState(""); const [date, setDate] = useState(new Date().toISOString().slice(0, 10)); const [profId, setProfId] = useState(""); const [svcId, setSvcId] = useState("");
-  const [search, setSearch] = useState(""); const [person, setPerson] = useState<{ id: string; full_name: string } | null>(null); const [slot, setSlot] = useState(""); const [pkg, setPkg] = useState(""); const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState(""); const [person, setPerson] = useState<{ id: string; full_name: string } | null>(null); const [slot, setSlot] = useState(""); const [pkg, setPkg] = useState(""); const [busy, setBusy] = useState(false); const [mode, setMode] = useState<BookMode>("in_clinic");
   const [fProf, setFProf] = useState(""); const [fStatus, setFStatus] = useState("");   // filtros da lista do dia (o profissional/serviço do formulário abaixo são campos de preenchimento)
   const unit = units.data?.find((u) => u.id === (unitId || units.data?.[0]?.id));
   const uid = unit?.id ?? "";
@@ -60,8 +61,11 @@ const Day = () => {
 
   const book = async (e: FormEvent) => {
     e.preventDefault(); if (!person || !slot || !profId || !svcId) return m.err("Selecione paciente, profissional, serviço e horário."); setBusy(true);
-    const { error } = await supabase.rpc("book_appointment", { p_person: person.id, p_unit: uid, p_professional: profId, p_service: svcId, p_start: slot, p_package: pkg || null, p_opportunity: oppId || null });
-    setBusy(false); if (error) return m.err(errText(error)); m.ok("Agendamento criado."); setSlot(""); void qc.invalidateQueries({ queryKey: ["appts"] }); void qc.invalidateQueries({ queryKey: ["slots"] });
+    const { data: newId, error } = await supabase.rpc("book_appointment", { p_person: person.id, p_unit: uid, p_professional: profId, p_service: svcId, p_start: slot, p_package: pkg || null, p_opportunity: oppId || null });
+    if (error) { setBusy(false); return m.err(errText(error)); }
+    // Formato do atendimento (rota): domiciliar copia o local ATUAL do paciente para este atendimento; remoto não tem deslocamento.
+    let modeNote = ""; if (mode !== "in_clinic" && newId) { const r = await supabase.rpc("appointment_set_mode", { p_id: newId as string, p_mode: mode }); if (r.error) modeNote = ` Mas o formato não foi gravado: ${errText(r.error)}`; else if (mode === "home_visit" && !(r.data as { has_place?: boolean })?.has_place) modeNote = " O paciente ainda não tem local definido: defina na ficha para estimar o deslocamento."; }
+    setBusy(false); m.ok(`Agendamento criado.${modeNote}`); setSlot(""); void qc.invalidateQueries({ queryKey: ["appts"] }); void qc.invalidateQueries({ queryKey: ["slots"] });
   };
   const setStatus = async (a: Appt, s: string) => {
     const reason = s.startsWith("cancelled") ? (await promptText("Cancelar agendamento", "Motivo do cancelamento", { multiline: true, confirmLabel: "Cancelar agendamento", danger: true })) ?? "" : null; if (s.startsWith("cancelled") && !reason) return;
@@ -102,8 +106,10 @@ const Day = () => {
         {pkgs.data && pkgs.data.length > 0 && <div><label htmlFor="apk" className="block text-sm mb-1">Usar pacote</label><select id="apk"   value={pkg} onChange={(e) => setPkg(e.target.value)}><option value="">Sem pacote</option>{pkgs.data.map((p) => <option key={p.id} value={p.id}>{p.product.name}</option>)}</select></div>}
         {opps.data && opps.data.length > 0 && <div><label htmlFor="aop" className="block text-sm mb-1">Oportunidade</label><select id="aop"   value={oppId} onChange={(e) => setOppId(e.target.value)}><option value="">Nenhuma</option>{opps.data.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select></div>}
       </div>
+      <div><label htmlFor="amode" className="block text-sm mb-1">Formato</label><select id="amode" value={mode} onChange={(e) => setMode(e.target.value as BookMode)}><option value="in_clinic">Na unidade</option><option value="home_visit">Domiciliar</option><option value="remote">Remoto</option></select></div>
       <div className="sm:col-span-3"><button disabled={busy} className="hp-btn hp-btn-primary disabled:opacity-60">{busy ? "Agendando…" : "Agendar"}</button></div>
     </form>
+    <BestFit professionalId={profId} unitId={uid} serviceId={svcId} durationMin={services.data?.find((s) => s.id === svcId)?.duration_min ?? null} person={person} mode={mode} fromDate={date} onPick={(d, iso) => { setDate(d); setSlot(iso); }} />
     <State loading={day.isLoading} error={day.error} empty={inDay.length === 0} emptyText={fProf || fStatus ? "Nenhum agendamento neste dia com os filtros escolhidos." : "Nenhum agendamento neste dia."} />
     {inDay.length > 0 && <Table head={["Horário", "Paciente", "Profissional", "Serviço", "Estado", "Confirmações", "Sessão do pacote", "Ações"]}>
       {inDay.map((a) => <tr key={a.id}><Td>{new Date(parsePeriod(a.period)[0]).toLocaleTimeString("pt-BR", { timeZone: unit?.timezone, hour: "2-digit", minute: "2-digit" })}</Td><Td>{a.person?.full_name}</Td><Td>{a.professional?.display_name}</Td><Td>{a.service?.name}</Td><Td>{ST[a.status]}</Td>

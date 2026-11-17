@@ -7,6 +7,7 @@ import { useUnits } from "../finance/shared";
 import OnboardingData from "./OnboardingData";
 import PersonFormAnswers from "@/components/hp/PersonFormAnswers";
 import type { StaffUser } from "../crm/types";
+import PlaceEditor from "../route/PlaceEditor";
 
 interface PersonDetail {
   id: string; full_name: string; preferred_name: string | null; document_number: string | null;
@@ -110,6 +111,7 @@ const PersonAdmSheet = ({ personId, onClose, onChanged }: { personId: string | n
                     <div><label htmlFor="pf-uf" className="block text-xs mb-1">UF</label><input id="pf-uf" maxLength={2} value={form.state_uf ?? ""} onChange={(e) => set("state_uf", e.target.value.toUpperCase())} /></div>
                   </div>
                 </section>
+                <PlaceEditor kind="person" id={personId} title="Local para atendimento domiciliar" hint="Ponto no mapa usado só para calcular a rota do profissional. O endereço acima NÃO é enviado a nenhum serviço de mapas: o ponto é marcado por você." />
                 <section>
                   <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Administrativo</h3>
                   <div className="grid gap-3 sm:grid-cols-3">

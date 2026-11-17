@@ -32,3 +32,21 @@ Nota sobre advisors: os avisos remanescentes de "funções `SECURITY DEFINER` ex
 
 ## Não executado / não validado
 Recuperação de senha e primeiro acesso **com e-mail real**; envio Resend; webhooks/eventos repetidos vindos de provedor real; concorrência entre conexões simultâneas (só a restrição de exclusão foi comprovada dentro de uma sessão); E2E automatizado (Playwright); acessibilidade por leitor de tela; testes no deploy publicado atrás do login Netlify; produção.
+
+## Rota de atendimentos (branch `feat/rota-atendimentos`, 14/11/2026, somente Dev)
+
+> **Leia antes:** os tempos de deslocamento usados nos testes de tela são **SIMULADOS** (cache com `provider='simulado'`, semeado pelo próprio teste; a tela exibe “Dados de teste”). A integração real foi exercida **à parte**, em 14/11: com `ORS_API_KEY` no Dev, uma chamada `day` (coordenadas de teste) voltou do OpenRouteService (`provider: ors`, `simulated: false`) e o mapa MapLibre/OpenFreeMap carregou com tiles reais (N35-2b). Também exercida 1 chamada real de geometria do trajeto (`directions`). Não exercidos: Termos do ORS, Google Calendar com conta real. Detalhes em `docs/mapas-e-rotas.md` §10.
+
+| O quê | Camada | Resultado | Natureza |
+|---|---|---|---|
+| Viabilidade (10:00 + 30 min + 10 min = 10:40), folga só entre locais diferentes, trecho desconhecido ≠ 0, remoto sem deslocamento, CEP aproximado, rota sugerida (mesmos horários, nada encurtado, não move confirmado/fixo/remoto/passado, “indisponível” sem estimativa), melhor encaixe, coordenadas coladas | vitest `src/lib/route/core.test.ts` | ✅ 19 | **Simulado** (lógica pura) |
+| Adaptador ORS: só coordenadas arredondadas, 429/401/5xx, perfil/pontos inválidos, sem vazar chave, geometria do provedor | vitest `src/lib/route/providers.test.ts` | ✅ 9 | **Simulado** (`fetch` dublê) |
+| Permissões de local/preferências/rota/aplicar, isolamento de organização, snapshot de local, formato com ciência explícita, fuso da unidade, recusas (desatualizada/confirmado/fixo/outro dia/passado/conflito/bloqueio/disponibilidade), tudo-ou-nada, troca A↔B e cadeia no mesmo atendimento, herança na remarcação manual, duração preservada, registro sem coordenadas, contador com teto, Google sem gatilho novo | SQL `N17_rota_atendimentos.sql` | ✅ 63 | **Real** (banco Dev) |
+| N35-1…11 e 2b (mapa): lista/indicadores/avisos; celular sem rolagem lateral; simular não grava; agenda mudou → recusa sem alterar; aplicar com confirmação; “Estimativa indisponível” e remoto; preferências/ponto de partida opcional; permissões da função (200/401/403/400); Agenda: melhor encaixe e agendar domiciliar; cadastro: local do paciente sem alterar atendimentos marcados | Playwright `e2e/novos/N35-rota-atendimentos.spec.ts` | ✅ 12/12 | **Real** para tela, função, banco e mapa; tempos **simulados** |
+| Regressão tocada (Meu dia, Agenda): `05-productivity`, `04-agenda-concurrency` | Playwright | ✅ 4/4 | Real |
+| `tsc`, `vite build` | local | ✅ | — |
+| Chamada real ao OpenRouteService (matriz, 1 chamada, dia 23/11 de teste) | script autenticado como fisio QA → `route-planner` (Dev) | ✅ 200, `provider: ors`, `simulated: false` | **Real** |
+| Geometria do trajeto (`directions`, 1 chamada, dia 23/11 de teste) | script autenticado → `route-planner` (Dev) | ✅ 200, `status: ok`, 824 pontos | **Real** |
+| Google Calendar com conta real | — | **NÃO executado** | Pendente (ver `docs/mapas-e-rotas.md` §11) |
+
+Observação: `supabase/tests/functions/google-sync-plan.test.mjs` aparece como “falha” no `vitest run` completo porque é um script com `process.exit`; falha igual **sem** estas mudanças (as 18 verificações dele passam quando executado com `node`).

@@ -1,0 +1,66 @@
+/* Rota de atendimentos — azul-marinho, azul suave, lilás e âmbar (sem verde). Mesmos tokens da jornada do paciente. */
+.rt {
+  --rt-navy: 222 56% 21%; --rt-blue: 217 76% 52%; --rt-blue-soft: 217 88% 95%; --rt-lilac: 258 62% 56%; --rt-lilac-soft: 258 80% 95%;
+  --rt-amber: 37 92% 50%; --rt-amber-soft: 40 100% 93%; --rt-amber-ink: 30 80% 24%; --rt-ink: 222 40% 15%; --rt-muted: 220 14% 38%; --rt-line: 218 30% 88%; --rt-card: 0 0% 100%;
+  color: hsl(var(--rt-ink)); font-size: 14px; line-height: 1.45;
+}
+html[data-theme="dark"] .rt {
+  --rt-navy: 217 80% 78%; --rt-blue: 217 85% 68%; --rt-blue-soft: 222 40% 20%; --rt-lilac: 258 75% 78%; --rt-lilac-soft: 258 30% 22%;
+  --rt-amber: 38 92% 58%; --rt-amber-soft: 36 40% 18%; --rt-amber-ink: 40 90% 80%; --rt-ink: 210 30% 94%; --rt-muted: 215 18% 72%; --rt-line: 222 22% 28%; --rt-card: 222 30% 14%;
+}
+.rt *, .rt *::before, .rt *::after { box-sizing: border-box; }
+.rt h3, .rt h4, .rt p { margin: 0; }
+.rt-card { background: hsl(var(--rt-card)); border: 1px solid hsl(var(--rt-line)); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.rt-muted { color: hsl(var(--rt-muted)); }
+.rt-small { font-size: 12px; }
+.rt-note { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: hsl(var(--rt-muted)); }
+.rt-banner { border-radius: 12px; padding: 10px 12px; font-size: 13px; border: 1px solid hsl(var(--rt-amber) / .5); background: hsl(var(--rt-amber-soft)); color: hsl(var(--rt-amber-ink)); }
+.rt-banner.is-info { border-color: hsl(var(--rt-blue) / .4); background: hsl(var(--rt-blue-soft)); color: hsl(var(--rt-navy)); }
+.rt-banner.is-lilac { border-color: hsl(var(--rt-lilac) / .4); background: hsl(var(--rt-lilac-soft)); color: hsl(var(--rt-navy)); }
+
+/* indicadores */
+.rt-kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.rt-kpi { background: hsl(var(--rt-card)); border: 1px solid hsl(var(--rt-line)); border-radius: 14px; padding: 10px 12px; }
+.rt-kpi b { display: block; font-size: 22px; line-height: 1.1; color: hsl(var(--rt-navy)); font-variant-numeric: tabular-nums; }
+.rt-kpi span { display: block; font-size: 12px; color: hsl(var(--rt-muted)); }
+.rt-kpi small { display: block; font-size: 11px; color: hsl(var(--rt-muted)); margin-top: 4px; }
+.rt-kpi.is-partial b { color: hsl(var(--rt-amber-ink)); }
+
+/* lista + mapa: lado a lado no computador, alternados no celular */
+.rt-split { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .rt-split.has-map { grid-template-columns: minmax(0, 1fr) minmax(340px, 44%); align-items: start; } .rt-split .rt-mapbox { position: sticky; top: 12px; } .rt-toggle { display: none; } }
+.rt-toggle { display: inline-flex; border: 1px solid hsl(var(--rt-line)); border-radius: 999px; overflow: hidden; }
+.rt-toggle button { padding: 6px 14px; font-size: 13px; background: transparent; color: hsl(var(--rt-ink)); border: 0; cursor: pointer; }
+.rt-toggle button[aria-pressed="true"] { background: hsl(var(--rt-navy)); color: hsl(var(--rt-card)); }
+@media (max-width: 1023px) { .rt-split.has-map[data-view="lista"] .rt-mapbox { display: none; } .rt-split.has-map[data-view="mapa"] .rt-listbox { display: none; } }
+.rt-mapbox { border: 1px solid hsl(var(--rt-line)); border-radius: 14px; overflow: hidden; background: hsl(var(--rt-blue-soft)); min-height: 320px; position: relative; }
+.rt-map { width: 100%; height: 420px; }
+@media (max-width: 1023px) { .rt-map { height: 55vh; min-height: 320px; } }
+.rt-mapmsg { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; font-size: 13px; color: hsl(var(--rt-muted)); }
+.rt-attrib { font-size: 11px; color: hsl(var(--rt-muted)); padding: 4px 8px; }
+
+/* paradas */
+.rt-stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.rt-leg { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 6px 18px; padding-left: 14px; border-left: 2px dashed hsl(var(--rt-line)); font-size: 12px; color: hsl(var(--rt-muted)); min-height: 28px; }
+.rt-leg.is-tight { border-left-color: hsl(var(--rt-lilac)); color: hsl(var(--rt-navy)); }
+.rt-leg.is-bad { border-left-color: hsl(var(--rt-amber)); color: hsl(var(--rt-amber-ink)); font-weight: 600; }
+.rt-leg.is-unknown { border-left-color: hsl(var(--rt-lilac)); }
+.rt-stop { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: start; }
+.rt-num { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: hsl(var(--rt-navy)); color: hsl(var(--rt-card)); flex: none; }
+.rt-num.is-remote { background: hsl(var(--rt-lilac-soft)); color: hsl(var(--rt-navy)); border: 1px solid hsl(var(--rt-lilac) / .5); }
+.rt-num.is-past { background: hsl(var(--rt-blue-soft)); color: hsl(var(--rt-navy)); border: 1px solid hsl(var(--rt-line)); }
+.rt-time { font-variant-numeric: tabular-nums; font-weight: 700; color: hsl(var(--rt-navy)); }
+.rt-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rt-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; background: hsl(var(--rt-blue-soft)); color: hsl(var(--rt-navy)); border: 1px solid hsl(var(--rt-line)); }
+.rt-chip.is-lilac { background: hsl(var(--rt-lilac-soft)); }
+.rt-chip.is-amber { background: hsl(var(--rt-amber-soft)); color: hsl(var(--rt-amber-ink)); border-color: hsl(var(--rt-amber) / .5); }
+.rt-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rt-actions .hp-btn { min-height: 34px; }
+
+/* antes/depois */
+.rt-diff { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rt-diff th, .rt-diff td { text-align: left; padding: 6px 8px; border-bottom: 1px solid hsl(var(--rt-line)); }
+.rt-diff th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: hsl(var(--rt-muted)); }
+.rt-diff td.is-new { color: hsl(var(--rt-navy)); font-weight: 700; }
+.rt-pin { cursor: crosshair; }
+@media (prefers-reduced-motion: reduce) { .rt * { transition: none !important; animation: none !important; } }

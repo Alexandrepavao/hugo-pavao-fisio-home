@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
 import { fmtDateTime } from "@/lib/format";
 import JourneyPanel from "./JourneyPanel";
+import PlaceEditor from "./route/PlaceEditor";
 import PhysioJourneyEditor from "@/portal/journey/PhysioJourneyEditor";
 import { PhysioEvolution } from "@/portal/Evolution";
 import { PrescriptionManager } from "@/portal/Training";
@@ -41,6 +42,7 @@ const Patients = () => {
       <ul className="border border-border bg-card divide-y divide-border">{rels.data.map((r) => <li key={r.id}><button className={`w-full text-left p-3 ${sel === r.person_id ? "bg-muted" : ""}`} onClick={() => setSel(r.person_id)}>{names.data?.[r.person_id] ?? "Paciente"}</button></li>)}</ul>
       {sel && detail.data && <div className="space-y-8">
         <JourneyPanel person={sel} />
+        <PlaceEditor kind="person" id={sel} title="Local para atendimento domiciliar" hint="Marque o ponto no mapa (ou cole as coordenadas). Serve só para calcular a rota; o endereço do paciente não é enviado a serviços de mapas." />
         <PhysioJourneyEditor person={sel} firstName={(names.data?.[sel] ?? "").split(" ")[0]} />
         <PhysioEvolution person={sel} />
         <PrescriptionManager person={sel} />
