@@ -7,6 +7,7 @@ import { fmtDateTime } from "@/lib/format";
 import JourneyPanel from "./JourneyPanel";
 import PlaceEditor from "./route/PlaceEditor";
 import PhysioJourneyEditor from "@/portal/journey/PhysioJourneyEditor";
+import PresentationEntry from "@/pages/apresentacao/PresentationEntry";
 import { PhysioEvolution } from "@/portal/Evolution";
 import { PrescriptionManager } from "@/portal/Training";
 import RenewalQueue from "./RenewalQueue";
@@ -41,6 +42,7 @@ const Patients = () => {
     {rels.data && rels.data.length > 0 && <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
       <ul className="border border-border bg-card divide-y divide-border">{rels.data.map((r) => <li key={r.id}><button className={`w-full text-left p-3 ${sel === r.person_id ? "bg-muted" : ""}`} onClick={() => setSel(r.person_id)}>{names.data?.[r.person_id] ?? "Paciente"}</button></li>)}</ul>
       {sel && detail.data && <div className="space-y-8">
+        <PresentationEntry person={sel} />
         <JourneyPanel person={sel} />
         <PlaceEditor kind="person" id={sel} title="Local para atendimento domiciliar" hint="Marque o ponto no mapa (ou cole as coordenadas). Serve só para calcular a rota; o endereço do paciente não é enviado a serviços de mapas." />
         <PhysioJourneyEditor person={sel} firstName={(names.data?.[sel] ?? "").split(" ")[0]} />
