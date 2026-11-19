@@ -6,7 +6,7 @@
 const LOGO_URL = "https://hpfisioterapia.com.br/hp-logo.jpg";
 const NAVY = "#14283D";
 const NAVY_DEEP = "#0d1a2b";
-const GOLD = "#A6873F";
+const GOLD_DEFAULT = "#A6873F";
 const CREAM = "#FAF8F3";
 
 export const esc = (s: string) =>
@@ -19,8 +19,14 @@ export interface EmailContent {
 }
 
 /** Envelope visual comum: cabeçalho com logo, corpo, botão de ação opcional, rodapé. Tabelas para compatibilidade com clientes de e-mail. */
-export function renderShell(opts: { preheader: string; heading: string; bodyHtml: string; ctaLabel?: string; ctaUrl?: string; footNote?: string }): string {
-  const { preheader, heading, bodyHtml, ctaLabel, ctaUrl, footNote } = opts;
+let CURRENT_BRAND: EmailBrand | null = null;      // definida por renderAuthEmail durante a renderização (síncrona)
+/** Marca da organização do destinatário (opcional). Sem ela, vale a identidade HP (comportamento anterior). */
+export interface EmailBrand { name: string; logoUrl?: string | null; color?: string | null }
+const hexOk = (c?: string | null) => (c && /^#[0-9a-fA-F]{6}$/.test(c) ? c : null);
+
+export function renderShell(opts: { preheader: string; heading: string; bodyHtml: string; ctaLabel?: string; ctaUrl?: string; footNote?: string; brand?: EmailBrand | null }): string {
+  const { preheader, heading, bodyHtml, ctaLabel, ctaUrl, footNote } = opts; const brand = opts.brand ?? CURRENT_BRAND;
+  const GOLD = hexOk(brand?.color) ?? GOLD_DEFAULT; const brandName = brand?.name ?? "HP Fisioterapia"; const logo = brand ? (brand.logoUrl ?? "") : LOGO_URL;
   const cta = ctaLabel && ctaUrl
     ? `<tr><td align="center" style="padding:8px 0 28px 0">
          <a href="${esc(ctaUrl)}" style="background:${GOLD};color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:bold;font-size:15px;padding:14px 32px;border-radius:8px;display:inline-block">${esc(ctaLabel)}</a>
@@ -38,7 +44,7 @@ export function renderShell(opts: { preheader: string; heading: string; bodyHtml
 <tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:480px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e0d5">
 <tr><td align="center" style="background:${NAVY_DEEP};padding:28px 24px">
-  <img src="${LOGO_URL}" width="120" alt="HP Fisioterapia" style="display:block;border:0;max-width:120px;height:auto">
+  ${logo ? `<img src="${esc(logo)}" width="120" alt="${esc(brandName)}" style="display:block;border:0;max-width:120px;height:auto">` : `<span style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#ffffff">${esc(brandName)}</span>`}
 </td></tr>
 <tr><td style="padding:32px 32px 8px 32px">
   <h1 style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;color:${NAVY};font-weight:700">${esc(heading)}</h1>
@@ -47,7 +53,7 @@ export function renderShell(opts: { preheader: string; heading: string; bodyHtml
 <table role="presentation" width="100%"><tr><td style="padding:0 32px">${cta}</td></tr></table>
 <tr><td style="padding:0 32px 28px 32px;border-top:1px solid #efe9dc;padding-top:20px">
   <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8a94a3">
-    ${footNote ? esc(footNote) + "<br>" : ""}HP Group — hpfisioterapia.com.br
+    ${footNote ? esc(footNote) + "<br>" : ""}${brand ? esc(brandName) + " · plataforma HP Group Hub" : "HP Group — hpfisioterapia.com.br"}
   </p>
 </td></tr>
 </table>
@@ -64,7 +70,7 @@ export function renderPlainText(opts: { heading: string; bodyText: string; ctaLa
 
 export type AuthEmailType = "signup" | "invite" | "recovery" | "email_change" | "magiclink" | "reauthentication";
 
-export function renderAuthEmail(type: AuthEmailType, confirmUrl: string): EmailContent {
+function renderAuthEmailBase(type: AuthEmailType, confirmUrl: string): EmailContent {
   switch (type) {
     case "signup":
       return {
@@ -168,4 +174,15 @@ export function renderAuthEmail(type: AuthEmailType, confirmUrl: string): EmailC
         text: renderPlainText({ heading: "Seu link de acesso", bodyText: "Clique no link para acessar o HP Group Hub.", ctaLabel: "Acessar", ctaUrl: confirmUrl }),
       };
   }
+}
+
+/** Renderiza o e-mail na identidade da organização do destinatário (nome, cor e logo). Sem marca (ou organização HP) mantém o e-mail HP. */
+export function renderAuthEmail(type: AuthEmailType, confirmUrl: string, brand?: EmailBrand | null): EmailContent {
+  CURRENT_BRAND = brand ?? null;
+  try {
+    const c = renderAuthEmailBase(type, confirmUrl);
+    if (!brand) return c;
+    const sw = (t: string) => t.replaceAll("HP Group Hub", brand.name);
+    return { subject: sw(c.subject), html: sw(c.html), text: sw(c.text) };
+  } finally { CURRENT_BRAND = null; }
 }

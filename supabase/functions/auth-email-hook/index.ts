@@ -1,5 +1,6 @@
 // @ts-ignore - resolvido pelo Supabase Edge Runtime no deploy
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderAuthEmail, type AuthEmailType } from "./email-templates.ts";
 
 /**
@@ -126,12 +127,21 @@ Deno.serve(async (req: Request) => {
   // A página /confirmar exige um clique explícito antes de chamar verifyOtp() (evita que pré-visualizadores
   // automáticos de e-mail queimem o token de uso único) e nunca expõe o token em log nem em analytics.
   const confirmUrl = `${siteUrl}/confirmar?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(actionType)}`;
-  const { subject, html, text } = renderAuthEmail(actionType, confirmUrl);
+  // marca da organização do destinatário (só identifica o e-mail: nome/cor/logo públicos). HP ou nada encontrado → e-mail HP como antes.
+  let brand: { name: string; logoUrl: string | null; color: string | null } | null = null;
+  try {
+    const sb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", { auth: { persistSession: false } });
+    const { data: b } = await sb.rpc("email_brand_for_address", { p_email: email }) as { data: { found?: boolean; name?: string; logo_path?: string | null; color_primary?: string | null; is_default_brand?: boolean } | null };
+    if (b?.found && !b.is_default_brand && b.name) brand = { name: b.name, logoUrl: b.logo_path ? `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/org-brand/${b.logo_path}` : null, color: b.color_primary ?? null };
+  } catch { /* sem marca: segue com o e-mail HP */ }
+  const { subject, html, text } = renderAuthEmail(actionType, confirmUrl, brand);
+  // remetente: endereço verificado da plataforma; o NOME identifica a organização ("Clínica X via HP Group Hub")
+  const sender = brand ? `${brand.name.replace(/[<>"]/g, "")} via HP Group Hub <${(from.match(/<([^>]+)>/)?.[1] ?? from).trim()}>` : from;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${resendKey}`, "content-type": "application/json" },
-    body: JSON.stringify({ from, to: [email], subject, html, text }),
+    body: JSON.stringify({ from: sender, to: [email], subject, html, text }),
   });
 
   if (!res.ok) {
