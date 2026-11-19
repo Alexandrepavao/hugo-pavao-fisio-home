@@ -6,6 +6,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AppFrame from "@/components/hp/AppFrame";
 import { appForPath } from "@/components/hp/apps";
 import { navForApp } from "@/components/hp/appNav";
+import { OrgMenuItems } from "@/org/OrgWidgets";
 
 /** "Área do paciente" é o acompanhamento clínico (papel "member") — nada a ver com o Academy, que continua com "alunos".
  *  Só aparece para quem de fato tem o papel de paciente, então nunca leva a um "Sem permissão". */
@@ -31,6 +32,8 @@ const AdminLayout = () => {
       profileExtra={<>
         {appId === "hub" && <DropdownMenuItem asChild><Link to="/academy">Academy (portal do aluno)</Link></DropdownMenuItem>}
         {appId === "hub" && hasRole("member") && <DropdownMenuItem asChild><Link to="/paciente">Área do paciente</Link></DropdownMenuItem>}
+        {hasRole("manager", "ops_admin") && <DropdownMenuItem asChild><Link to="/admin/organizacao">Organização: marca, consumo e exportação</Link></DropdownMenuItem>}
+        <OrgMenuItems />
       </>}>
       <Outlet />
     </AppFrame>

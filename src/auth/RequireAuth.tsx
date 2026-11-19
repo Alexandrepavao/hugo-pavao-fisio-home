@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, type AppRole } from "./AuthProvider";
 import { viewAsHome } from "@/lib/viewAs";
+import { PendingInvitations } from "@/org/OrgWidgets";
 
 /** Guarda de rota de interface. A proteção real de dados é feita por RLS no banco. */
 const RequireAuth = ({ children, roles }: { children: ReactNode; roles?: AppRole[] }) => {
@@ -15,7 +16,8 @@ const RequireAuth = ({ children, roles }: { children: ReactNode; roles?: AppRole
       <div className="min-h-screen flex items-center justify-center px-6 text-center">
         <div className="max-w-md">
           <h1 className="text-2xl text-navy-900 mb-3">Acesso não liberado</h1>
-          <p className="text-navy-400">Sua conta ainda não possui permissões. Peça um convite ao responsável do HP Group.</p>
+          <p className="text-navy-400">Sua conta ainda não possui permissões. Peça um convite ao responsável pela sua organização.</p>
+          <PendingInvitations />
         </div>
       </div>
     );

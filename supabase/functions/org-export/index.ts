@@ -5,7 +5,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { zipSync, strToU8 } from "npm:fflate@0.8.2";
 
-const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-org", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const env = (k: string) => Deno.env.get(k) ?? "";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -17,7 +17,8 @@ Deno.serve(async (req: Request) => {
   const auth = req.headers.get("Authorization") ?? ""; if (!auth.startsWith("Bearer ")) return json({ error: "não autenticado" }, 401);
   const body = await req.json().catch(() => ({})) as { action?: string; export_id?: string };
   const url = env("SUPABASE_URL");
-  const asUser = createClient(url, env("SUPABASE_ANON_KEY"), { global: { headers: { Authorization: auth } }, auth: { persistSession: false, autoRefreshToken: false } });
+  const xorg = req.headers.get("x-org");   // organização ativa escolhida na interface; o banco revalida o vínculo (42501 se inválida)
+  const asUser = createClient(url, env("SUPABASE_ANON_KEY"), { global: { headers: { Authorization: auth, ...(xorg ? { "x-org": xorg } : {}) } }, auth: { persistSession: false, autoRefreshToken: false } });
   const svc = createClient(url, env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
 
   if (body.action === "download") {                                      // nova URL assinada para uma exportação já pronta (do próprio gestor)

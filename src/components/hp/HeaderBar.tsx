@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Bell, ChevronDown, ChevronRight, GraduationCap, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings, Sun, UserCog } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
+import { useOrg } from "@/org/OrgProvider";
 import { useAuth } from "@/auth/AuthProvider";
 import { initialsOf, shownName, useMyAccount } from "./useMyAccount";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -65,6 +66,7 @@ const HeaderBar = ({ app, section, apps, collapsed, onToggleCollapsed, drawerOpe
   homeTo?: string; profileExtra?: ReactNode;
 }) => {
   const { user, roles, signOut, hasRole } = useAuth();
+  const org = useOrg();
   const [theme, toggleTheme] = useThemeMode();
   const account = useMyAccount();
   const roleNames = [...new Set(roles.map((r) => ROLE_LABEL[r.role]))].join(", ");
@@ -74,7 +76,7 @@ const HeaderBar = ({ app, section, apps, collapsed, onToggleCollapsed, drawerOpe
     <header className="hp-header">
       <div className="hp-hd-brandcol">
         <button className="hp-hd-iconbtn hp-menu-mobile" onClick={onOpenDrawer} aria-label="Abrir menu" aria-expanded={drawerOpen}><Menu size={19} /></button>
-        <Link to={homeTo} className="hp-hd-brand" aria-label="HP Group — início do aplicativo"><img src={logo} alt="" /></Link>
+        <Link to={homeTo} className="hp-hd-brand" aria-label={`${org.brandName} — início do aplicativo`}>{org.isDefaultBrand ? <img src={logo} alt="" /> : org.logoUrl ? <img src={org.logoUrl} alt="" /> : <strong className="px-2 text-sm text-foreground truncate max-w-[9rem]">{org.brandName}</strong>}</Link>
       </div>
       <button className="hp-hd-iconbtn hp-sidebar-desktop" onClick={onToggleCollapsed} aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"} aria-pressed={collapsed}>
         {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}</button>

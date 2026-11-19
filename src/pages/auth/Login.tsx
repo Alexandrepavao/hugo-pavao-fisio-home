@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation } from "react-router-dom";
 import { Loader2, Mail } from "lucide-react";
 import { supabase, backendConfigured } from "@/lib/supabase";
 import { useAuth } from "@/auth/AuthProvider";
+import { useOrg } from "@/org/OrgProvider";
 import AuthShell from "./AuthShell";
 import AuthField from "./AuthField";
 import AuthPasswordField from "./AuthPasswordField";
@@ -19,6 +20,7 @@ const Login = () => {
   const { session, loading } = useAuth();
   const location = useLocation();
   const from = safeInternalPath((location.state as { from?: string } | null)?.from);
+  const org = useOrg();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +61,7 @@ const Login = () => {
 
   return (
     <AuthShell
-      title={mode === "login" ? "Bem-vindo ao HP Group" : "Recuperar senha"}
+      title={mode === "login" ? `Bem-vindo ao ${org.brandName}` : "Recuperar senha"}
       subtitle={mode === "login" ? "Acesse o painel com o e-mail do seu convite." : "Informe seu e-mail para receber o link de recuperação."}
     >
       {!backendConfigured && (
