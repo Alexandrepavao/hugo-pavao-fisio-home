@@ -93,7 +93,8 @@ const OrgSettings = () => {
     <div>
       <PageHead eyebrow="Gestão" title="Organização" hint={`${org.brandName || "Organização"} · marca, consumo do plano e exportação dos seus dados.`} />
       <Tabs tabs={[["marca", "Marca"], ["uso", "Módulos e consumo"], ["export", "Exportação de dados"]]} value={tab} onChange={setTab} />
-      {tab === "marca" && <BrandTab />}{tab === "uso" && <UsageTab />}{tab === "export" && <ExportTab />}
+      {org.loading && <State loading />}
+      {!org.loading && tab === "marca" && <BrandTab key={org.brand?.version ?? 0} />}{!org.loading && tab === "uso" && <UsageTab />}{!org.loading && tab === "export" && <ExportTab />}
     </div>
   );
 };

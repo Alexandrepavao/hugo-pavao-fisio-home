@@ -25,7 +25,9 @@ const AuthShell = ({ title, subtitle, children }: { title: string; subtitle?: st
         >
           <div className="mb-6 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/95 p-2.5 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.6)]">
-              <img src={org.logoUrl ?? logo} alt={org.isDefaultBrand ? "HP Fisioterapia" : org.brandName} className="h-full w-full object-contain" />
+              {org.isDefaultBrand ? <img src={logo} alt="HP Fisioterapia" className="h-full w-full object-contain" />
+                : org.logoUrl ? <img src={org.logoUrl} alt={org.brandName} className="h-full w-full object-contain" />
+                : <span aria-label={org.brandName} role="img" className="text-xl font-bold text-primary">{org.brandName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("")}</span>}
             </div>
           </div>
 

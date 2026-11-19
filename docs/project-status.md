@@ -44,6 +44,15 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
+## Sessão mais recente (2026-11-19) — plataforma ERP white label multiempresa (1ª entrega: Fisioterapia) — **só Dev**
+
+> Pedido do usuário. Branch `feat/white-label-plataforma` (sobre `feat/apresentacao-jornada`). **Sem merge, produção, DNS público, contratação de serviços ou cobrança.** Arquitetura, isolamento e limitações em [`white-label-arquitetura.md`](white-label-arquitetura.md); [provisionamento](white-label-provisionamento.md) · [modelos](white-label-modelos.md) · [planos e consumo](white-label-planos-consumo.md) · [portabilidade](white-label-portabilidade.md).
+- **Implementado (Dev):** migrations **134–142** — plataforma separada da organização (`platform_admins`), vínculos (`org_memberships`), organização ativa por `x-org` **revalidada no banco**, papéis por organização, guarda de FK entre organizações (151 tabelas / 341 relações), módulos com bloqueio no servidor, modelos versionados (Fisioterapia v1), planos/assinaturas/limites, marca e endereços, **questionário A–I + motor de provisionamento idempotente e retomável**, Storage por organização, **exportação por organização** (zip com manifesto/SHA-256); Edge Functions `provisioning-invite`, `org-export` e `auth-email-hook` com marca; telas `/plataforma` (organizações, criar aplicativo, provisionamento, modelos, planos/consumo, auditoria), `/admin/organizacao` (marca, consumo, exportação), troca de organização e convites pendentes.
+- **Provado:** SQL `novos/N21` (77) + `N22` (7) → suíte `novos` **819 OK / 0 falha**; `release` **1766 OK / 0 falha**; E2E `N38` (7, API real) e `N39` (4, interface). **Clínica Alfa e Beta** isoladas; **Clínica Gama criada só pelo questionário** (login pelo endereço próprio com marca, módulos, jornada básica). Tempos: criar → disponível ≈ 0,5 s (interno 76 ms); fila sintética 12 pedidos/4 simultâneos = 819 ms; esperas externas **não medidas**.
+- **Achado importante:** o Dev estava **sem EXECUTE de `anon` em `hp_pre_request`** (derrubava toda chamada pública) → migration 142 + teste N22. **Conferir na produção antes de promover.**
+- **Pendente (humano):** `PUBLIC_SITE_URL` no Dev (e-mails/convites reais não exercitados — primeiro acesso do administrador foi simulado), remetente Resend, DNS/`base_domain` e verificação de posse, valores/limites dos planos, captação pública por organização (quiz/páginas/onboarding ainda da HP), revisão jurídica por cliente, acesso excepcional de suporte, teste de carga real. **Não declarar pronto para cem clientes.**
+- **Lembretes:** revogue o token do Supabase ao fim da rodada; **retome o projeto Risk Pro** (pausado desde 04/11).
+
 ## Sessão mais recente (2026-11-09) — módulo Marketing (campanhas, funil e atribuição; Meta Ads e Google Ads somente leitura) — **só Dev**
 
 > Pedido do usuário. Branch `feat/marketing-campanhas` (sobre `feat/portais-paciente-fisio`). **Sem merge, produção ou DNS.** Detalhes, fórmulas, modelo de atribuição e limitações em [`marketing-campanhas.md`](marketing-campanhas.md); conexão em [`marketing-conexao-meta-google.md`](marketing-conexao-meta-google.md).

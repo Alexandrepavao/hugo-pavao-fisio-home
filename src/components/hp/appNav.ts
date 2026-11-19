@@ -1,7 +1,7 @@
 import { Eye, FlaskConical, LineChart, BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
-import { APPS, appVisible, type AppId } from "./apps";
+import { APPS, APP_MODULE, appVisible, type AppId } from "./apps";
 import { CRM_NAV } from "@/pages/admin/crm/crmNav";
 
 // Cada aplicativo mostra SÓ a própria navegação. Só entram rotas e telas que existem de verdade (sem link para o que ainda não foi feito).
@@ -132,7 +132,7 @@ const STATIC_NAV: Record<Exclude<AppId, "hub">, FrameNavSection[]> = {
 /** Navegação do Hub: o início e os aplicativos (o menu de cada app só aparece depois de entrar nele). */
 export const HUB_NAV: FrameNavSection[] = [
   { items: [{ to: "/admin", label: "Início", icon: LayoutDashboard, end: true, keywords: "dashboard indicadores painel hub" }] },
-  { label: "Aplicativos", items: APPS.filter((a) => a.id !== "hub" && appVisible(a)).map((a) => ({ to: a.to, label: a.label, icon: a.icon, roles: a.roles, keywords: a.description })) },
+  { label: "Aplicativos", items: APPS.filter((a) => a.id !== "hub" && appVisible(a)).map((a) => ({ to: a.to, label: a.label, icon: a.icon, roles: a.roles, module: APP_MODULE[a.id], keywords: a.description })) },
 ];
 
 export const navForApp = (id: AppId): FrameNavSection[] => (id === "hub" ? HUB_NAV : STATIC_NAV[id]);

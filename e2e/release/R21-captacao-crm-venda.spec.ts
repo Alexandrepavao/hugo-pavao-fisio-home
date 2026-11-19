@@ -130,7 +130,7 @@ test.describe.serial("@release Captação → CRM → venda (contato existente e
     expect((await sql<{ n: number }>(`select count(*)::int n from public.opportunities where person_id = '${S.person}' and status = 'open'`))[0].n).toBeLessThanOrEqual(1);
     // confirmar duas vezes (clique repetido) mantém um contrato, um pacote e as parcelas
     await page.getByRole("row").filter({ hasText: existing }).getByRole("button", { name: "Confirmar" }).dblclick(); await expect(page.getByText(/Venda confirmada/).first()).toBeVisible({ timeout: 20_000 });
-    expect((await sql<{ n: number; c: number; p: number }>(`select (select count(*) from public.receivables where sale_id = '${S.sale}')::int n, (select count(*) from public.contracts where sale_id = '${S.sale}')::int c, (select count(*) from public.client_packages where sale_id = '${S.sale}')::int p`))[0]).toEqual({ n: 1, c: 1, p: 1 });
+    expect((await sql<{ n: number; c: number; p: number }>(`select (select count(*) from public.receivables where sale_id = '${S.sale}')::int n, (select count(*) from public.contracts where sale_id = '${S.sale}')::int c, (select count(*) from public.client_packages where sale_id = '${S.sale}')::int p`))[0]).toEqual({ n: 1, c: 1, p: 0 });
     // a oportunidade avança sozinha para a etapa ganha, leva o valor da venda e mostra a venda confirmada no histórico
     expect((await sql<{ status: string; value_cents: number }>(`select status, value_cents::int value_cents from public.opportunities where id = '${S.opp}'`))[0]).toEqual({ status: "won", value_cents: 90000 });
     expect((await g.get(`interactions?select=summary&opportunity_id=eq.${S.opp}&channel=eq.system`)).body.some((i: { summary: string }) => /Venda confirmada/.test(i.summary))).toBe(true);

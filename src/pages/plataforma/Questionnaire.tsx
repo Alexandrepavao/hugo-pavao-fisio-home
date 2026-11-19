@@ -60,6 +60,7 @@ const Questionnaire = () => {
   const segment = get(a, "company.segment") as string | undefined;
   const template = catalog.data?.templates.find((t) => t.segment_key === segment && t.status === "published");
   const defaults = template?.default_modules ?? [];
+  const modName = (k: string) => catalog.data?.modules.find((x) => x.key === k)?.name ?? k;
   const candidates = useMemo(() => (catalog.data?.modules ?? []).filter((x) => !x.core && x.status !== "planned" && (!x.segments.length || (segment && x.segments.includes(segment)))), [catalog.data, segment]);
 
   // sugestões condicionais (nunca ativam sozinhas: só destacam o que as respostas indicam)
@@ -175,7 +176,7 @@ const Questionnaire = () => {
                 <input type="checkbox" className="mt-1" checked={isDefault || selected.includes(x.key)} disabled={isDefault} onChange={(e) => set("modules", e.target.checked ? [...selected, x.key] : selected.filter((k) => k !== x.key))} />
                 <span><strong>{x.name}</strong>{isDefault && <span className="text-xs text-muted-foreground"> · incluído no modelo</span>}{x.status === "experimental" && <span className="hp-badge hp-badge-warning ml-2">experimental</span>}
                   {suggested.has(x.key) && !isDefault && !selected.includes(x.key) && <span className="hp-badge hp-badge-info ml-2">sugerido pelas suas respostas</span>}
-                  <span className="block text-xs text-muted-foreground">{x.description}{x.requires.filter((r) => r !== "core").length ? ` Requer: ${x.requires.filter((r) => r !== "core").join(", ")}.` : ""}</span></span></label>);
+                  <span className="block text-xs text-muted-foreground">{x.description}{x.requires.filter((r) => r !== "core").length ? ` Requer: ${x.requires.filter((r) => r !== "core").map(modName).join(", ")}.` : ""}</span></span></label>);
             })}</div>
             {!candidates.length && <p className="text-sm text-muted-foreground">Escolha o segmento na etapa A.</p>}
           </>}

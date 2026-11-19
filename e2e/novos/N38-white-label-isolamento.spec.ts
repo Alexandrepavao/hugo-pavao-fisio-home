@@ -16,6 +16,11 @@ test.describe.serial("@novo White label — isolamento e plataforma", () => {
 
   test("plataforma ≠ gestor de clínica; só admin da plataforma enxerga o painel", async () => {
     plat = await signIn(PLATFORM); hp = await signIn(MANAGER);
+    // reexecutável: desfaz o vínculo da conta da Alfa com a Beta criado por uma execução anterior (o teste de "duas organizações" o recria)
+    await sqlDev(`with b as (select id from public.organizations where slug = 'clinica-beta'), u as (select id from auth.users where email = '${ALFA.email}')
+      delete from public.role_assignments ra using b, u where ra.org_id = b.id and ra.user_id = u.id;
+      delete from public.org_memberships m using public.organizations o, auth.users u where o.slug = 'clinica-beta' and m.org_id = o.id and u.email = '${ALFA.email}' and m.user_id = u.id;
+      delete from public.invitations i using public.organizations o where o.slug = 'clinica-beta' and i.org_id = o.id and lower(i.email::text) = '${ALFA.email}';`);
     expect((await call(plat, "platform_whoami")).body.platform_admin).toBe(true);
     expect((await call(hp, "platform_whoami")).body.platform_admin).toBe(false);
     for (const fn of ["platform_orgs_list", "platform_catalog", "provisioning_list", "platform_audit_list"]) expect((await call(hp, fn)).status, `${fn} pelo gestor HP`).toBeGreaterThanOrEqual(400);
