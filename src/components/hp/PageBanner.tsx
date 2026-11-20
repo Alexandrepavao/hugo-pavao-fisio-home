@@ -11,7 +11,7 @@ export const DEFAULT_BANNER_BRAND: BannerBrand = { name: "HP Fisioterapia", logo
 const PageBanner = ({ app, meta, brand = DEFAULT_BANNER_BRAND }: { app: HpApp; meta: PageMeta; brand?: BannerBrand }) => {
   const hub = meta.variant === "hub";
   return (
-    <section className="hp-banner" data-variant={hub ? "hub" : "page"} data-testid="page-banner" aria-label={hub ? "Boas-vindas" : `${app.label}: ${meta.title}`}>
+    <section className="hp-banner" data-variant={hub ? "hub" : "page"} data-testid="page-banner" aria-labelledby="titulo-secao">
       <img src={brand.logoSrc} alt="" aria-hidden className="hp-banner-mark" data-mono={brand.monochrome ? "1" : undefined} />
       <div className="hp-banner-text">
         {!hub && <p className="hp-banner-eyebrow" data-testid="banner-app">{app.label}</p>}

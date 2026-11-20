@@ -100,7 +100,8 @@ const Dashboard = () => {
 
       <State loading={metrics.isLoading} error={metrics.error} />
       {metrics.data && patients.data && (
-        <section aria-label="Indicadores prioritários" className="mb-5">
+        <section aria-labelledby="hub-ind-titulo" className="mb-5">
+          <h2 id="hub-ind-titulo" className="sr-only">Indicadores prioritários</h2>
           <KpiGrid kind="hero">
             <Exec level="hero" icon={Wallet} label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" period={per} spark={sparkIn} onOpen={() => openDetail("receipts")} />
             <Exec level="hero" icon={Stethoscope} label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} unit="atendimentos" period={per} onOpen={() => openDetail("attended")} />

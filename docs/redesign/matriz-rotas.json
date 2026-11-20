@@ -4,9 +4,9 @@
   "app": "Início (Hub)",
   "slug": "hub",
   "h1": [
-   "Boa noite, Gestor!"
+   "Boa tarde, Gestor!"
   ],
-  "title": "Boa noite, Gestor!",
+  "title": "Boa tarde, Gestor!",
   "desc": "Sua operação em um só lugar.",
   "bannerH": 152,
   "switcher": "Início (Hub)",
@@ -14,7 +14,7 @@
   "h2": [
    "Visão da operação",
    "Pendências prioritárias",
-   "ResumoMais indicadores"
+   "AnáliseDistribuição geográfica"
   ],
   "forbidden": false,
   "hscroll1440": 0,
@@ -29,10 +29,10 @@
    "Visão geral"
   ],
   "title": "Visão geral",
-  "desc": "Pendências, situação do cadastro central (pessoas físicas e jurídicas) e análises.",
+  "desc": "Veja o que precisa de atenção e abra a tela certa para resolver.",
   "bannerH": 124,
   "switcher": "Gestão",
-  "active": "Dashboard",
+  "active": "Visão geral",
   "h2": [],
   "forbidden": false,
   "hscroll1440": 0,
@@ -44,11 +44,11 @@
   "app": "Gestão",
   "slug": "gestao-pendencias",
   "h1": [
-   "Pendências administrativas"
+   "Pendências"
   ],
-  "title": "Pendências administrativas",
-  "desc": "Registre o que precisa de ação, com responsável e prazo, e acompanhe até a resolução. Documentos, contratos e requisitos alimentam os indicadores do Dashboard.",
-  "bannerH": 146,
+  "title": "Pendências",
+  "desc": "O que precisa ser resolvido, quem é o responsável e até quando.",
+  "bannerH": 124,
   "switcher": "Gestão",
   "active": "Pendências",
   "h2": [],
@@ -65,8 +65,8 @@
    "Contratos"
   ],
   "title": "Contratos",
-  "desc": "Registre o que precisa de ação, com responsável e prazo, e acompanhe até a resolução. Documentos, contratos e requisitos alimentam os indicadores do Dashboard.",
-  "bannerH": 146,
+  "desc": "Contratos administrativos: do rascunho à assinatura registrada.",
+  "bannerH": 124,
   "switcher": "Gestão",
   "active": "Contratos",
   "h2": [],
@@ -191,8 +191,8 @@
    "Unidades"
   ],
   "title": "Unidades",
-  "desc": "Central de configurações do sistema, por categoria. Só o que já tem suporte real no backend aparece como gerenciável — o resto é uma pendência documentada, nunca uma tela que finge funcionar.",
-  "bannerH": 146,
+  "desc": "Central de configurações, por categoria. Só aparece como gerenciável o que já funciona.",
+  "bannerH": 124,
   "switcher": "Gestão",
   "active": "Unidades",
   "h2": [
@@ -210,9 +210,9 @@
   "app": "Gestão",
   "slug": "gestao-equipe",
   "h1": [
-   "Equipe e convites"
+   "Equipe e acessos"
   ],
-  "title": "Equipe e convites",
+  "title": "Equipe e acessos",
   "desc": "Papéis são atribuídos por escopo (organização ou unidade) e podem ser combinados. Acesso só nasce de convite para e-mail verificado; não há senha padrão.",
   "bannerH": 146,
   "switcher": "Gestão",
@@ -233,8 +233,8 @@
    "Produtos e serviços"
   ],
   "title": "Produtos e serviços",
-  "desc": "Central de configurações do sistema, por categoria. Só o que já tem suporte real no backend aparece como gerenciável — o resto é uma pendência documentada, nunca uma tela que finge funcionar.",
-  "bannerH": 146,
+  "desc": "Central de configurações, por categoria. Só aparece como gerenciável o que já funciona.",
+  "bannerH": 124,
   "switcher": "Gestão",
   "active": "Produtos e serviços",
   "h2": [
@@ -255,8 +255,8 @@
    "Configurações"
   ],
   "title": "Configurações",
-  "desc": "Central de configurações do sistema, por categoria. Só o que já tem suporte real no backend aparece como gerenciável — o resto é uma pendência documentada, nunca uma tela que finge funcionar.",
-  "bannerH": 146,
+  "desc": "Central de configurações, por categoria. Só aparece como gerenciável o que já funciona.",
+  "bannerH": 124,
   "switcher": "Gestão",
   "active": "Configurações",
   "h2": [
@@ -320,8 +320,9 @@
   "switcher": "Financeiro",
   "active": "Visão geral",
   "h2": [
-   "ResumoPor linha de negócio",
-   "AnáliseEvolução e composição"
+   "ResumoIndicadores prioritários",
+   "AtençãoAtenção",
+   "ResumoMais indicadores"
   ],
   "forbidden": false,
   "hscroll1440": 0,
@@ -340,11 +341,7 @@
   "bannerH": 146,
   "switcher": "Financeiro",
   "active": "Relatórios",
-  "h2": [
-   "ResumoEficiência do negócio",
-   "AtençãoSem base de dados",
-   "Por linha de negócio — Geral"
-  ],
+  "h2": [],
   "forbidden": false,
   "hscroll1440": 0,
   "hscroll390": 0,
@@ -459,7 +456,7 @@
   "switcher": "Financeiro",
   "active": "Conciliação",
   "h2": [
-   "Pendentes de conciliação (9)",
+   "Pendentes de conciliação (12)",
    "Conciliadas e ignoradas (últimas)",
    "Movimentos bancários por linha de negócio"
   ],
@@ -595,13 +592,13 @@
   "app": "CRM",
   "slug": "crm-dashboard",
   "h1": [
-   "Painel comercial"
+   "Visão geral"
   ],
-  "title": "Painel comercial",
+  "title": "Visão geral",
   "desc": "Resumo comercial. Toque em qualquer cartão para ver o detalhamento.",
   "bannerH": 124,
   "switcher": "CRM",
-  "active": "Dashboard",
+  "active": "Visão geral",
   "h2": [
    "ResumoOportunidades por tipo de lead",
    "ResumoIndicadores prioritários",
@@ -611,10 +608,16 @@
   "hscroll1440": 0,
   "hscroll390": 0,
   "errors": [
-   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1062:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795142117114:64:26)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Routes (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1256:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:5247:5)\n    at Provider (http://127.0.0.1:5181/.vite-cache/deps/chunk-T3KDSW7K.js?v=aa1a61e6:38:15)\n    at TooltipProvider (http://127.0.0.1:5181/.vite-cache/deps/@radix-ui_react-tooltip.js?v=cf26d287:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/.vite-cache/deps/@tanstack_react-query.js?v=21e85633:2934:3)\n    at App",
-   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1062:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795142117114:64:26)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Routes (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1256:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:5247:5)\n    at Provider (http://127.0.0.1:5181/.vite-cache/deps/chunk-T3KDSW7K.js?v=aa1a61e6:38:15)\n    at TooltipProvider (http://127.0.0.1:5181/.vite-cache/deps/@radix-ui_react-tooltip.js?v=cf26d287:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/.vite-cache/deps/@tanstack_react-query.js?v=21e85633:2934:3)\n    at App",
-   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1062:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795142117114:64:26)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Routes (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1256:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:5247:5)\n    at Provider (http://127.0.0.1:5181/.vite-cache/deps/chunk-T3KDSW7K.js?v=aa1a61e6:38:15)\n    at TooltipProvider (http://127.0.0.1:5181/.vite-cache/deps/@radix-ui_react-tooltip.js?v=cf26d287:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/.vite-cache/deps/@tanstack_react-query.js?v=21e85633:2934:3)\n    at App",
-   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1062:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Outlet (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795142117114:64:26)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4088:5)\n    at Routes (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1256:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/.vite-cache/deps/react-router-dom.js?v=ab08ff3a:5247:5)\n    at Provider (http://127.0.0.1:5181/.vite-cache/deps/chunk-T3KDSW7K.js?v=aa1a61e6:38:15)\n    at TooltipProvider (http://127.0.0.1:5181/.vite-cache/deps/@radix-ui_react-tooltip.js?v=cf26d287:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/.vite-cache/deps/@tanstack_react-query.js?v=21e85633:2934:3)\n    at App"
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1283:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1477:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App"
   ]
  },
  {
@@ -681,8 +684,8 @@
    "Pipeline"
   ],
   "title": "Pipeline",
-  "desc": "Um funil para cada tipo de lead. A mesma pessoa pode estar em mais de um funil ao mesmo tempo, e cada oportunidade anda sozinha. Arraste os cards entre etapas ou use o menu ⋯ (teclado: Espaço para pegar, setas para mover).",
-  "bannerH": 168,
+  "desc": "Um funil para cada tipo de lead. Arraste os cards entre etapas ou use o menu ⋯ de cada card.",
+  "bannerH": 124,
   "switcher": "CRM",
   "active": "Pipeline",
   "h2": [],
@@ -791,10 +794,10 @@
    "Relatórios"
   ],
   "title": "Relatórios",
-  "desc": "Indicadores calculados no servidor, no seu escopo de unidade. Cada cartão explica a fórmula; clique para abrir os registros.",
-  "bannerH": 146,
+  "desc": "Indicadores comerciais da sua unidade. Cada cartão explica o cálculo; clique para abrir os registros.",
+  "bannerH": 124,
   "switcher": "CRM",
-  "active": "Análises",
+  "active": "Relatórios",
   "h2": [
    "ResumoIndicadores do funil",
    "Conversão por funil",
@@ -1039,8 +1042,8 @@
    "Agenda"
   ],
   "title": "Agenda",
-  "desc": "Horários seguem o fuso de cada unidade. O banco impede sobreposição de profissional e de paciente, mesmo com requisições simultâneas.",
-  "bannerH": 146,
+  "desc": "Agende, confirme e acompanhe os atendimentos. Os horários seguem o fuso de cada unidade.",
+  "bannerH": 124,
   "switcher": "Operação",
   "active": "Agenda",
   "h2": [],
@@ -1072,11 +1075,11 @@
   "app": "Academy",
   "slug": "academy",
   "h1": [
-   "Cursos e mentorias"
+   "Cursos e alunos"
   ],
-  "title": "Cursos e mentorias",
-  "desc": "O acesso do aluno é verificado no servidor a cada consulta: liberar, expirar ou revogar tem efeito imediato (não é só esconder menu).",
-  "bannerH": 146,
+  "title": "Cursos e alunos",
+  "desc": "Gerencie cursos, mentorias e o acesso dos alunos: liberar, expirar ou revogar vale imediatamente.",
+  "bannerH": 124,
   "switcher": "Academy",
   "active": "Cursos e alunos",
   "h2": [],
@@ -1093,8 +1096,8 @@
    "Parceiros"
   ],
   "title": "Parceiros",
-  "desc": "A aprovação acontece no funil “Parceiros” (etapa Ativo). Corporativo e pesquisas: modelo pronto no banco; telas dedicadas ainda pendentes.",
-  "bannerH": 146,
+  "desc": "A aprovação de parceiros acontece no funil “Parceiros” (etapa Ativo).",
+  "bannerH": 124,
   "switcher": "Parceiros",
   "active": "Parceiros",
   "h2": [],

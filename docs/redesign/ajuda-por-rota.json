@@ -2,301 +2,804 @@
  {
   "path": "/admin",
   "titulo": "Início",
-  "passos": 3
+  "passos": 4,
+  "finalidade": "Resume a operação do período e aponta o que precisa de atenção, com atalho para cada aplicativo.",
+  "tarefa": "Ver o que está atrasado e abrir o aplicativo certo para resolver.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Indicadores do período",
+   "Visão da operação"
+  ]
  },
  {
   "path": "/admin/adm",
   "titulo": "Visão geral da Gestão",
-  "passos": 3
+  "passos": 5,
+  "finalidade": "Mostra o que no cadastro e na rotina administrativa precisa de atenção hoje e leva você até a tela onde resolver.",
+  "tarefa": "Identificar prioridades e abrir a tela certa (Pendências, Contratos, Documentos ou Planilha).",
+  "relacionadas": [
+   "Pendências",
+   "Contratos",
+   "Documentos",
+   "Planilha administrativa"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "O que precisa de atenção",
+   "Perguntas que os gráficos respondem",
+   "Análises por assunto"
+  ]
  },
  {
   "path": "/admin/adm/pendencias",
   "titulo": "Pendências",
-  "passos": 4
+  "passos": 4,
+  "finalidade": "Central de trabalho administrativo: o que precisa ser resolvido, quem é o responsável, até quando e qual é a próxima ação.",
+  "tarefa": "Resolver, atribuir ou abrir a origem de cada pendência.",
+  "relacionadas": [
+   "Visão geral da Gestão",
+   "Contratos",
+   "Documentos"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Registrar e exportar",
+   "A lista de trabalho"
+  ]
  },
  {
   "path": "/admin/adm/pendencias?aba=contratos",
   "titulo": "Contratos",
-  "passos": 3
+  "passos": 4,
+  "finalidade": "Prepara e acompanha os contratos administrativos de cadastros (prestação de serviço, parceria, termos). Não são as vendas nem os contratos de receita recorrente do Financeiro.",
+  "tarefa": "Registrar um contrato, enviá-lo para assinatura e registrar a assinatura.",
+  "relacionadas": [
+   "Pendências",
+   "Planilha administrativa",
+   "Vendas (Financeiro)"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Novo contrato",
+   "Estados e prazos"
+  ]
  },
  {
   "path": "/admin/adm/diretorio",
   "titulo": "Planilha administrativa",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Outra forma de ver os MESMOS cadastros de Pessoas e Empresas: uma tabela para consultar, filtrar, organizar colunas, importar e exportar vários cadastros de uma vez.",
+  "tarefa": "Localizar e organizar muitos cadastros; abrir um cadastro para editar.",
+  "relacionadas": [
+   "Pessoas",
+   "Empresas"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Ações da planilha",
+   "A tabela"
+  ]
  },
  {
   "path": "/admin/adm/diretorio?tipo=pj",
   "titulo": "Empresas",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Cadastro e relacionamento com pessoas jurídicas: empresas, estabelecimentos e parceiros B2B, com seus contatos, documentos, contratos e pendências.",
+  "tarefa": "Cadastrar uma empresa e acompanhar o que está ligado a ela.",
+  "relacionadas": [
+   "Contratos",
+   "Documentos"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Nova empresa",
+   "Empresas cadastradas"
+  ]
  },
  {
   "path": "/admin/pessoas",
   "titulo": "Pessoas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Cadastro central de pessoas e dos vínculos de cada uma (paciente, lead, parceiro, aluno, colaborador). Todo o sistema usa este cadastro.",
+  "tarefa": "Encontrar uma pessoa e ver as conexões autorizadas.",
+  "relacionadas": [
+   "Planilha administrativa",
+   "Contratos"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Cadastro e vínculos"
+  ]
  },
  {
   "path": "/admin/programas",
   "titulo": "Programas e ofertas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Programas de manutenção, retenção e renovação oferecidos aos pacientes.",
+  "tarefa": "Acompanhar quem está elegível para uma oferta.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Programas"
+  ]
  },
  {
   "path": "/admin/chamados",
   "titulo": "Chamados de pacientes",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Atendimento dos chamados abertos pelos pacientes, com prazo.",
+  "tarefa": "Responder dentro do prazo.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Chamados"
+  ]
  },
  {
   "path": "/admin/responsaveis",
   "titulo": "Responsáveis e cuidadores",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Vínculos de responsável legal, cuidador e representante de pessoas menores, idosas ou com representação.",
+  "tarefa": "Conferir e manter os vínculos autorizados.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Vínculos"
+  ]
  },
  {
   "path": "/admin/configuracoes?secao=org",
   "titulo": "Unidades",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Nome, cidade, UF e fuso das unidades da organização.",
+  "tarefa": "Cadastrar ou ajustar uma unidade.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Unidades"
+  ]
  },
  {
   "path": "/admin/equipe",
   "titulo": "Equipe e acessos",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Convites, papéis e vínculos por unidade de quem usa o sistema.",
+  "tarefa": "Convidar uma pessoa e definir o que ela pode fazer.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Equipe"
+  ]
  },
  {
   "path": "/admin/configuracoes?secao=operacao",
   "titulo": "Produtos e serviços",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Serviços (duração e preço) e produtos/pacotes (sessões e validade).",
+  "tarefa": "Cadastrar o que a organização vende e atende.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Serviços e produtos"
+  ]
  },
  {
   "path": "/admin/configuracoes",
   "titulo": "Configurações",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Central de configurações por categoria. Só aparece como gerenciável o que já funciona.",
+  "tarefa": "Abrir a categoria e ajustar.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Categorias"
+  ]
  },
  {
   "path": "/admin/ver-como",
   "titulo": "Ver como",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Permite ao gestor ver o sistema como outro perfil, somente leitura.",
+  "tarefa": "Conferir o que um perfil enxerga.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Visão de outro perfil"
+  ]
  },
  {
   "path": "/admin/auditoria",
   "titulo": "Auditoria",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Registro de quem fez o quê e quando: ações administrativas e eventos das automações.",
+  "tarefa": "Investigar uma alteração.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Duas visões",
+   "Registros"
+  ]
  },
  {
   "path": "/admin/financeiro",
   "titulo": "Visão geral do Financeiro",
-  "passos": 3
+  "passos": 5,
+  "finalidade": "Resumo financeiro do período: caixa, contas a receber e a pagar, e o que está vencido.",
+  "tarefa": "Ver como está o caixa e abrir a tela certa para agir.",
+  "relacionadas": [
+   "Contas a receber",
+   "Contas a pagar"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Números principais",
+   "Gráficos",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/relatorios",
   "titulo": "Relatórios do Financeiro",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Relatórios de eficiência e exportações do Financeiro.",
+  "tarefa": "Escolher o relatório e exportar.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/vendas?aba=vendas",
   "titulo": "Vendas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Registra e acompanha as vendas e seus contratos de receita.",
+  "tarefa": "Criar uma venda e confirmar; o recebimento é registrado em Contas a receber.",
+  "relacionadas": [
+   "Contas a receber"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/vendas?aba=recebiveis",
   "titulo": "Contas a receber",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Parcelas das vendas: o que vence, o que foi recebido e os estornos.",
+  "tarefa": "Registrar um recebimento ou estorno.",
+  "relacionadas": [
+   "Vendas"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/pagar",
   "titulo": "Contas a pagar",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Despesas e fornecedores: o que vence e o que foi pago.",
+  "tarefa": "Registrar uma conta e marcar o pagamento.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/cartoes",
   "titulo": "Cartões",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Cartões corporativos: faturas, limite e compras (uma compra é uma despesa).",
+  "tarefa": "Acompanhar a fatura e lançar compras.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros"
+  ]
  },
  {
   "path": "/admin/financeiro/fluxo-caixa",
   "titulo": "Fluxo de caixa",
-  "passos": 4
+  "passos": 4,
+  "finalidade": "Entradas e saídas realizadas e previstas por mês.",
+  "tarefa": "Ver a projeção do caixa.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Gráficos",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/conciliacao",
   "titulo": "Conciliação",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Confere o extrato do banco ou a fatura com os recebimentos e contas a pagar.",
+  "tarefa": "Conciliar cada linha do extrato.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/recorrencia",
   "titulo": "Recorrência",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Receita recorrente (mensalidades) e projeções.",
+  "tarefa": "Acompanhar a receita recorrente.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Gráficos"
+  ]
  },
  {
   "path": "/admin/financeiro/dre",
   "titulo": "DRE",
-  "passos": 2
+  "passos": 3,
+  "finalidade": "Resultado por competência (diferente do caixa).",
+  "tarefa": "Ler o resultado do período.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/comissoes",
   "titulo": "Comissões e repasses",
-  "passos": 2
+  "passos": 3,
+  "finalidade": "Regras de comissão e os lançamentos gerados a cada recebimento.",
+  "tarefa": "Autorizar e pagar comissões; criar regras.",
+  "relacionadas": [
+   "Preços e repasses"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Abas",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/financeiro/precos-repasses",
   "titulo": "Preços e repasses",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Valor das sessões e repasse ao fisioterapeuta por pacote.",
+  "tarefa": "Definir preço e regra de repasse.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Abas",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/contas-corporativas",
   "titulo": "Contas corporativas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Empresas conveniadas e seus relatórios.",
+  "tarefa": "Acompanhar uma conta corporativa.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/financeiro/config",
   "titulo": "Configurações do Financeiro",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Contas financeiras, categorias de despesa (com classificação na DRE) e centros de custo.",
+  "tarefa": "Cadastrar contas e categorias.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/crm",
   "titulo": "Visão geral do CRM",
-  "passos": 5
+  "passos": 5,
+  "finalidade": "Resumo comercial: leads, oportunidades e conversão.",
+  "tarefa": "Ver o que exige retorno e abrir os leads.",
+  "relacionadas": [
+   "Gestão de leads",
+   "Pipeline"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Números principais",
+   "Gráficos",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/crm/leads",
   "titulo": "Gestão de leads",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Fila de leads ainda na primeira etapa, por tipo de lead.",
+  "tarefa": "Atribuir responsável e dar o primeiro retorno.",
+  "relacionadas": [
+   "Pipeline"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/crm/contatos",
   "titulo": "Contatos",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Contatos do CRM.",
+  "tarefa": "Encontrar e abrir um contato.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/crm/listas",
   "titulo": "Listas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Listas de leads e contatos para ações em grupo.",
+  "tarefa": "Montar e usar uma lista.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/crm/oportunidades",
   "titulo": "Pipeline",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Um funil para cada tipo de lead; cada oportunidade anda sozinha entre as etapas.",
+  "tarefa": "Arrastar cards entre etapas ou usar o menu ⋯ do card.",
+  "relacionadas": [
+   "Gestão de leads"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/crm/tarefas",
   "titulo": "Tarefas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Tarefas comerciais atribuídas a você e à equipe.",
+  "tarefa": "Concluir as tarefas do dia.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/crm/metas",
   "titulo": "Minha meta",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Sua meta comercial e o quanto falta.",
+  "tarefa": "Acompanhar o ritmo.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/crm/metas/ritmo",
   "titulo": "Ritmo do dia",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Quanto falta fazer hoje para atingir a meta.",
+  "tarefa": "Planejar o dia.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/crm/metas/time",
   "titulo": "Time",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Metas e resultados do time comercial.",
+  "tarefa": "Comparar o desempenho do time.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/crm/conversas",
   "titulo": "Conversas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Mensagens dos leads e contatos, com a ficha do lead ao lado.",
+  "tarefa": "Responder e acompanhar conversas.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/crm/relatorios",
   "titulo": "Relatórios do CRM",
-  "passos": 2
+  "passos": 4,
+  "finalidade": "Indicadores comerciais da sua unidade; cada cartão explica o cálculo.",
+  "tarefa": "Analisar conversão e desempenho.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Números principais",
+   "Gráficos"
+  ]
  },
  {
   "path": "/admin/paginas",
   "titulo": "Páginas",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Páginas do site e formulários de captação.",
+  "tarefa": "Criar, editar e publicar uma página.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Ação principal",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/captacao-leads",
   "titulo": "Captação de leads",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Resultados do quiz de avaliação e de parceria e configuração do WhatsApp.",
+  "tarefa": "Ver de onde vêm os leads.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros"
+  ]
  },
  {
   "path": "/admin/pesquisas",
   "titulo": "Pesquisas",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Pesquisas de satisfação e NPS.",
+  "tarefa": "Acompanhar respostas.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/marketing",
   "titulo": "Visão geral do Marketing",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Investimento, leads e retorno das campanhas.",
+  "tarefa": "Ver o desempenho do período.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros"
+  ]
  },
  {
   "path": "/admin/marketing/analises",
   "titulo": "Análises",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Análises de qualidade, perdas e retorno por campanha, região e horário.",
+  "tarefa": "Entender o que funciona.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros"
+  ]
  },
  {
   "path": "/admin/marketing/campanhas",
   "titulo": "Campanhas",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Campanhas Meta e Google e sua classificação.",
+  "tarefa": "Classificar campanhas.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/marketing/anuncios",
   "titulo": "Anúncios e criativos",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Anúncios, conjuntos e criativos.",
+  "tarefa": "Comparar anúncios.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/marketing/funil",
   "titulo": "Funil e atribuição",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Funil e atribuição de leads às campanhas.",
+  "tarefa": "Ver onde os leads se perdem.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros"
+  ]
  },
  {
   "path": "/admin/marketing/leads",
   "titulo": "Leads e pontuação",
-  "passos": 2
+  "passos": 3,
+  "finalidade": "Leads com nota de priorização.",
+  "tarefa": "Priorizar os leads mais quentes.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/marketing/paineis",
   "titulo": "Painéis",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Painéis personalizados de indicadores.",
+  "tarefa": "Montar seu painel.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/marketing/integracoes",
   "titulo": "Integrações",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Conexões com Meta Ads e Google Ads e gastos manuais.",
+  "tarefa": "Conectar uma conta.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/marketing/configuracoes",
   "titulo": "Configurações do Marketing",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Janela de atribuição, frentes, finalidades e regras de UTM.",
+  "tarefa": "Ajustar regras.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/agenda",
   "titulo": "Agenda",
-  "passos": 4
+  "passos": 4,
+  "finalidade": "Agenda de atendimentos por unidade e profissional.",
+  "tarefa": "Agendar, confirmar e acompanhar atendimentos.",
+  "relacionadas": [
+   "Acompanhamento"
+  ],
+  "titulosPassos": [
+   "Onde você está",
+   "Abas",
+   "Filtros",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/acompanhamento",
   "titulo": "Acompanhamento de pacientes",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Pacientes com vínculo assistencial e o conteúdo liberado para eles.",
+  "tarefa": "Abrir um paciente e definir a jornada.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/academy",
   "titulo": "Cursos e alunos",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Cursos, mentorias, turmas, matrículas e acesso dos alunos.",
+  "tarefa": "Liberar ou revogar o acesso de um aluno.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Abas",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/parceiros",
   "titulo": "Parceiros",
-  "passos": 3
+  "passos": 3,
+  "finalidade": "Indicações, encaminhamentos e repasses de parceiros.",
+  "tarefa": "Acompanhar os parceiros ativos.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/meu-dia",
   "titulo": "Meu dia",
-  "passos": 4
+  "passos": 4,
+  "finalidade": "Suas tarefas, compromissos do CRM e agenda clínica em um só lugar.",
+  "tarefa": "Planejar e cumprir o dia.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Abas",
+   "Ação principal",
+   "Conteúdo"
+  ]
  },
  {
   "path": "/admin/meu-resumo",
   "titulo": "Meu resumo",
-  "passos": 4
+  "passos": 4,
+  "finalidade": "Seus atendimentos, faltas e repasses do período.",
+  "tarefa": "Conferir o seu desempenho.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Filtros",
+   "Números principais",
+   "Lista"
+  ]
  },
  {
   "path": "/admin/conta",
   "titulo": "Configurações da conta",
-  "passos": 2
+  "passos": 2,
+  "finalidade": "Seus dados de acesso e preferências.",
+  "tarefa": "Atualizar seus dados.",
+  "relacionadas": [],
+  "titulosPassos": [
+   "Onde você está",
+   "Conteúdo"
+  ]
  }
 ]

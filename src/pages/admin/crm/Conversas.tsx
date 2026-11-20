@@ -61,7 +61,7 @@ const Conversas = () => {
     <div>
       <div className={selected ? "hidden lg:block" : ""}><PageHead eyebrow="CRM · Comunicação" title="Conversas" hint="Mensagens dos leads e contatos, com a ficha do lead ao lado." /></div>
       <Msg m={msg} />
-      <div className={`hp-card overflow-hidden grid h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-15rem)] min-h-[30rem] ${showPanel ? "lg:grid-cols-[20rem_minmax(0,1fr)_20rem]" : "lg:grid-cols-[20rem_minmax(0,1fr)]"}`} data-testid="conversas">
+      <div className={`hp-card overflow-hidden grid h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-22rem)] min-h-[30rem] ${showPanel ? "lg:grid-cols-[20rem_minmax(0,1fr)_20rem]" : "lg:grid-cols-[20rem_minmax(0,1fr)]"}`} data-testid="conversas">
         <div className={`${selected ? "hidden lg:block" : "block"} min-h-0 h-full`}>
           <ConversationList items={items} loading={inbox.isLoading} error={!!inbox.error} scope={scope} onScope={setScope} status={status} onStatus={setStatus} q={q} onQ={setQ} selected={selected} onSelect={select} counts={{ unread: unread.data ?? 0 }} />
         </div>
