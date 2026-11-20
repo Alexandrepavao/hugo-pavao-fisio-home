@@ -9,6 +9,8 @@ import CommandMenu from "./CommandMenu";
 import HeaderBar, { AppTile } from "./HeaderBar";
 import PageBanner from "./PageBanner";
 import { PageMetaProvider, usePageMetaContext, type PageMeta } from "./pageMeta";
+import { HelpInvite, HelpProvider } from "./ajuda/ajuda";
+import ReturnLink from "./ReturnLink";
 import { APPS, appById, appVisible, type AppId } from "./apps";
 import { useAppTheme } from "./theme";
 import { usePfAccess } from "@/pages/admin/finance/personal/pf";
@@ -20,7 +22,7 @@ export interface FrameNavSection { label?: string; items: FrameNavItem[] }
  *  aplicativo atual (nunca a de outro aplicativo) — identidade do app com seletor, “Voltar ao Hub”, grupos, item ativo em destaque, recolhimento no desktop e
  *  gaveta no celular. Cada aplicativo só passa a própria navegação. */
 type FrameProps = { appId: AppId; nav: FrameNavSection[]; managerRoles?: AppRole[]; footer?: ReactNode; profileExtra?: ReactNode; children: ReactNode };
-const AppFrame = (props: FrameProps) => <PageMetaProvider><AppFrameInner {...props} /></PageMetaProvider>;
+const AppFrame = (props: FrameProps) => <PageMetaProvider><HelpProvider><AppFrameInner {...props} /></HelpProvider></PageMetaProvider>;
 
 const AppFrameInner = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_manager"], footer, profileExtra, children }: FrameProps) => {
   useAppTheme();
@@ -98,7 +100,7 @@ const AppFrameInner = ({ appId, nav, managerRoles = ["manager", "ops_admin", "un
         <div key={si} className="hp-sb-group">
           {s.label && <p className="hp-sb-group-label">{s.label}</p>}
           {s.items.map((i) => (
-            <Link key={i.to} to={i.to} onClick={onNavigate} title={compact ? i.label : undefined} aria-label={compact ? i.label : undefined} aria-current={activeItem === i ? "page" : undefined} className="hp-sb-link">
+            <Link key={i.to} to={i.to} onClick={onNavigate} title={i.label} aria-label={compact ? i.label : undefined} aria-current={activeItem === i ? "page" : undefined} className="hp-sb-link">
               <i.icon aria-hidden /><span className="hp-sb-text">{i.label}</span>
             </Link>
           ))}
@@ -132,7 +134,7 @@ const AppFrameInner = ({ appId, nav, managerRoles = ["manager", "ops_admin", "un
       </Sheet>
 
       <div className="hp-main">
-        <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao"><PageBanner app={app} meta={bannerMeta} />{children}</main>
+        <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao"><PageBanner app={app} meta={bannerMeta} /><ReturnLink /><HelpInvite />{children}</main>
       </div>
       <CommandMenu open={cmd} onOpenChange={setCmd} />
     </div>

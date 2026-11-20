@@ -50,7 +50,7 @@ const AdmDashboard = () => {
 
   return (
     <div>
-      <PageHead eyebrow="Administrativo" title="Visão geral" hint="Pendências, situação do cadastro central (pessoas físicas e jurídicas) e análises."
+      <PageHead eyebrow="Administrativo" title="Visão geral" hint="Veja o que precisa de atenção e abra a tela certa para resolver."
         actions={<PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onClear={() => { onClear(); setFilters({ owner: "", type: "", kind: "", status: "" }); }}
           extraCount={activeFilters} extraSummary={activeFilters > 0 ? `${activeFilters} filtro(s) da central` : undefined}
           extra={<div className="grid gap-3">
@@ -63,7 +63,7 @@ const AdmDashboard = () => {
       <State loading={dash.isLoading} error={dash.error} />
       <AdmCentral mapa={<AdmMapa unit={unit} />} from={range.from} to={range.to} unit={unit} unitName={unitName} filters={filters} onOpen={setSheet}
         hero={d && (
-          <LevelSection level="summary" title="Indicadores prioritários" label="Cadastro central" hint="Pessoas físicas e jurídicas do cadastro central; “novos” segue o período selecionado.">
+          <LevelSection level="summary" title="Situação do cadastro" label="Cadastro central" hint="Pessoas físicas e jurídicas do cadastro central. “Novos” segue o período escolhido.">
             <KpiGrid kind="hero">
               <StatCard level="hero" icon={Users} label="Total de cadastros" value={n(d.total.value ?? 0)} unit="cadastros" period="Hoje" basis={d.total.basis} onClick={() => open("total")} />
               <StatCard level="hero" icon={UserRound} label="Pessoas físicas" value={n(d.pf.value ?? 0)} unit="pessoas" period="Hoje" basis={d.pf.basis} onClick={() => open("pf")} />

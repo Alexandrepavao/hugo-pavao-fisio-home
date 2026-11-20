@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useHere } from "./central";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { errText, Msg, useMsg, btnGhost, btnPrimary } from "@/lib/ui";
@@ -21,7 +23,7 @@ const REP_LABEL: Record<string, string> = { legal_representative: "Representante
 /** Ficha de pessoa jurídica: edição completa via legal_entity_upsert (valida CNPJ e duplicidade no servidor).
  *  Representantes são sempre vínculos a pessoas físicas já cadastradas. */
 const LegalEntitySheet = ({ entityId, onClose, onChanged }: { entityId: string | null; onClose: () => void; onChanged: () => void }) => {
-  const qc = useQueryClient(); const [msg, m] = useMsg();
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const here = useHere();
   const [form, setForm] = useState<Partial<EntityDetail>>({});
   const [repSearch, setRepSearch] = useState(""); const [repRole, setRepRole] = useState(""); const [repType, setRepType] = useState("contact");
   const open = !!entityId;
@@ -65,6 +67,11 @@ const LegalEntitySheet = ({ entityId, onClose, onChanged }: { entityId: string |
           <SheetHeader className="px-5 pt-5 pb-3 border-b border-border text-left space-y-1.5">
             <SheetTitle className="text-[1.0625rem]">{form.legal_name ?? "Pessoa jurídica"}</SheetTitle>
             <SheetDescription>{form.trade_name ?? "Sem nome fantasia"}</SheetDescription>
+            <nav className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm" aria-label="Relacionados a este cadastro" data-testid="relacionados-cadastro">
+              <Link className="text-primary hover:underline" to={`/admin/adm/pendencias?aba=contratos&cadastro=${entityId}&voltar=${encodeURIComponent(here)}`}>Ver contratos vinculados</Link>
+              <Link className="text-primary hover:underline" to={`/admin/adm/pendencias?aba=pendencias&cadastro=${entityId}&voltar=${encodeURIComponent(here)}`}>Ver pendências</Link>
+              <Link className="text-primary hover:underline" to={`/admin/adm/pendencias?aba=documentos&cadastro=${entityId}&voltar=${encodeURIComponent(here)}`}>Ver documentos</Link>
+            </nav>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-5 py-5">
             <Msg m={msg} />

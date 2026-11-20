@@ -14,7 +14,7 @@ const STAT: Record<string, string> = { draft: "Rascunho", published: "Publicado"
 const AcademyAdmin = () => {
   const [tab, setTab] = useState("cursos");
   return (<div>
-    <PageHead eyebrow="HP Academy" title="Cursos e mentorias" hint="Gerencie cursos, mentorias e o acesso dos alunos: liberar, expirar ou revogar vale imediatamente." />
+    <PageHead eyebrow="HP Academy" title="Cursos e alunos" hint="Gerencie cursos, mentorias e o acesso dos alunos: liberar, expirar ou revogar vale imediatamente." />
     <Tabs tabs={[["cursos", "Cursos"], ["trilhas", "Trilhas"]]} value={tab} onChange={setTab} />
     {tab === "cursos" && <Courses />}
     {tab === "trilhas" && <Tracks />}

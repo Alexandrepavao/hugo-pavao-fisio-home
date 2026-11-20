@@ -36,7 +36,10 @@ test.describe.serial("@release Indicadores e detalhamentos (Administrativo, CRM,
     expect(await cardValue(page, /Total de cadastros/)).toBe(Number(srv.body.total.value).toLocaleString("pt-BR"));
     expect(await cardValue(page, /Pessoas físicas/)).toBe(Number(srv.body.pf.value).toLocaleString("pt-BR"));
     expect(await cardValue(page, /Pessoas jurídicas/)).toBe(Number(srv.body.pj.value).toLocaleString("pt-BR"));
-    for (const label of [/Total de cadastros/, /Pessoas físicas/, /Pessoas jurídicas/, /Cadastros incompletos/, /^Ativos/, /^Inativos/, /Novos no período/]) await openAndCompare(page, label);
+    for (const label of [/Total de cadastros/, /Pessoas físicas/, /Pessoas jurídicas/, /^Ativos/, /^Inativos/, /Novos no período/]) await openAndCompare(page, label);
+    // “Cadastros incompletos” (cartão de atenção) agora LEVA à Planilha já filtrada (mudança intencional), com o filtro visível e “Voltar”
+    await page.getByRole("button", { name: /^Cadastros incompletos/ }).first().click(); await expect(page).toHaveURL(/diretorio\?incompleto=1/);
+    await expect(page.getByRole("button", { name: /Filtros/ })).toContainText("1"); await expect(page.getByTestId("voltar-contexto")).toBeVisible(); await page.goBack(); await expect(page.getByRole("heading", { name: "Visão geral" })).toBeVisible();
     // PF + PJ = total (nada inventado nem duplicado)
     expect(Number(srv.body.pf.value) + Number(srv.body.pj.value)).toBe(Number(srv.body.total.value));
     // as seções de gráficos existem e dizem o que medem
@@ -56,7 +59,9 @@ test.describe.serial("@release Indicadores e detalhamentos (Administrativo, CRM,
     await openAndCompare(page, /Em aberto agora/);
     await openAndCompare(page, /Ganhas no período/);
     // cada cartão traz a fórmula/base (texto explicativo), inclusive o de conversão, que não abre registros em lista própria
-    await expect(page.getByText(/ganhas ÷ criadas|ganhas.*criadas/i).first()).toBeVisible();
+    // a fórmula saiu do corpo do cartão e fica em “Sobre este indicador” (a um clique/Enter, sem depender de hover)
+    await page.locator("li", { hasText: /Conversão/ }).getByRole("button", { name: "Sobre este indicador" }).first().click();
+    await expect(page.getByText(/ganhas ÷ criadas|ganhas.*criadas/i).first()).toBeVisible(); await page.keyboard.press("Escape");
     await page.getByRole("tab", { name: "Desempenho comercial" }).click();
     await expect(page.getByText("Por responsável")).toBeVisible();
     await expect(page.getByText("Por origem")).toBeVisible();

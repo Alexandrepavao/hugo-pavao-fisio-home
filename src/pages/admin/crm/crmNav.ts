@@ -9,7 +9,7 @@ export interface CrmNavSection { label: string; items: CrmNavItem[] }
 // Financeiro/Academy/outros apps (troca-se de app pelo seletor no cabeçalho, não por aqui).
 export const CRM_NAV: CrmNavSection[] = [
   { label: "Principal", items: [
-    { to: "/admin/crm", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/admin/crm", label: "Visão geral", icon: LayoutDashboard, end: true },
   ] },
   { label: "Comercial", items: [
     { to: "/admin/crm/leads", label: "Gestão de leads", icon: Users },
@@ -29,7 +29,7 @@ export const CRM_NAV: CrmNavSection[] = [
     { to: "/admin/crm/disparo", label: "Disparo de mensagens", icon: Send, feature: "crm_broadcast" },
   ] },
   { label: "Relatórios", items: [
-    { to: "/admin/crm/relatorios", label: "Análises", icon: BarChart3, end: true },
+    { to: "/admin/crm/relatorios", label: "Relatórios", icon: BarChart3, end: true },
     { to: "/admin/crm/relatorios/desempenho", label: "Desempenho comercial", icon: Users },
   ] },
   { label: "Administração", items: [

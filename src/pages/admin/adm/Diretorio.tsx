@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Columns3, Download, MoreHorizontal, Search, Upload } from "lucide-react";
@@ -70,6 +70,12 @@ const Diretorio = () => {
   const [page, setPage] = useState(0);
   const [openPerson, setOpenPerson] = useState<string | null>(null);
   const [openEntity, setOpenEntity] = useState<string | null>(null);
+  // link profundo: ?abrir=person:<id> | entity:<id> abre a ficha do cadastro pelo ID (vindo de Pendências, Contratos, Documentos…); o parâmetro sai da URL depois de abrir
+  useEffect(() => {
+    const m = /^(person|entity):([0-9a-f-]{36})$/i.exec(sp.get("abrir") ?? ""); if (!m) return;
+    if (m[1] === "person") setOpenPerson(m[2]); else setOpenEntity(m[2]);
+    const n = new URLSearchParams(sp); n.delete("abrir"); setSp(n, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [showNew, setShowNew] = useState(false);
   const [showCols, setShowCols] = useState(false);
   const [showPj, setShowPj] = useState(false);

@@ -5,15 +5,21 @@ import { fmtDate } from "@/lib/format";
 import { Badge, Msg, State, Table, Td, btnGhost, btnPrimary, confirmDialog, errText, useMsg } from "@/lib/ui";
 import { useUnits } from "../finance/shared";
 import SubjectSearch, { type Subject } from "./SubjectSearch";
-import { DOC_STATE, useAdmConfig } from "./central";
+import { DOC_STATE, subjectRoute, useAdmConfig, useCadastroFilter, useHere } from "./central";
+import { Link, useSearchParams } from "react-router-dom";
+const CadastroChip = ({ onClear, nome }: { onClear: () => void; nome?: string | null }) => (
+  <p className="hp-filter-chip" role="status" data-testid="filtro-cadastro">Filtrado por um cadastro{nome ? `: ${nome}` : ""}. <button type="button" className="hp-link-btn" onClick={onClear}>Remover filtro</button></p>
+);
+
 
 interface DocRow { doc_id?: string; subject_type: string; subject_id: string; subject_name: string; doc_type: string; title?: string; expires_on?: string | null; state: string }
 
 /** Documentos de cadastro (PF e PJ): registrar com validade, acompanhar vencidos/vencendo/sem validade e ver o que é exigido e está ausente. O arquivo é opcional nesta etapa. */
 const DocumentsTab = () => {
-  const qc = useQueryClient(); const [msg, m] = useMsg(); const cfg = useAdmConfig(); const units = useUnits();
-  const [state, setState] = useState(""); const [type, setType] = useState(""); const [unit, setUnit] = useState(""); const [showNew, setShowNew] = useState(false);
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const cfg = useAdmConfig(); const units = useUnits(); const cad = useCadastroFilter(); const here = useHere();
+  const [sp] = useSearchParams(); const [state, setState] = useState(["vencido", "vencendo", "valido", "sem_validade", "ausente"].includes(sp.get("situacao") ?? "") ? sp.get("situacao")! : ""); const [type, setType] = useState(""); const [unit, setUnit] = useState(""); const [showNew, setShowNew] = useState(false);
   const list = useQuery({ queryKey: ["adm-docs", unit, type, state], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("adm_documents_list", { p_unit: unit || null, p_type: type || null, p_state: state || null, p_limit: 300 }); if (error) throw error; return data as DocRow[]; } });
+  const docs = (list.data ?? []).filter((r) => !cad.id || r.subject_id === cad.id);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["adm-docs"] }); void qc.invalidateQueries({ queryKey: ["adm-central"] }); };
 
   const [kind, setKind] = useState<"person" | "legal_entity">("person"); const [subject, setSubject] = useState<Subject | null>(null); const [dt, setDt] = useState("");
@@ -36,11 +42,11 @@ const DocumentsTab = () => {
     <div className="grid gap-4">
       <Msg m={msg} />
       <p className="text-sm text-muted-foreground">Só o documento <b>mais recente de cada tipo</b> conta como vigente (renovar não deixa o antigo “vencido”). “Ausente” = documento exigido por um requisito (aba Requisitos) sem nenhum registro. Não registre informação de saúde aqui.</p>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3" data-tour="filtros">
         <div><label htmlFor="dc-state" className="block text-xs mb-1">Situação</label><select id="dc-state" className="!w-auto" value={state} onChange={(e) => setState(e.target.value)}><option value="">Todas</option>{Object.entries(DOC_STATE).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
         <div><label htmlFor="dc-type" className="block text-xs mb-1">Cadastro</label><select id="dc-type" className="!w-auto" value={type} onChange={(e) => setType(e.target.value)}><option value="">PF e PJ</option><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option></select></div>
         <div><label htmlFor="dc-unit" className="block text-xs mb-1">Unidade</label><select id="dc-unit" className="!w-auto" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-        <div className="ml-auto"><button type="button" className={btnPrimary} onClick={() => setShowNew((v) => !v)} aria-expanded={showNew}>Registrar documento</button></div>
+        <div className="ml-auto" data-tour="acoes"><button type="button" className={btnPrimary} onClick={() => setShowNew((v) => !v)} aria-expanded={showNew}>Registrar documento</button></div>
       </div>
       {showNew && (
         <form onSubmit={submit} className="hp-card p-4 grid gap-3 sm:grid-cols-2" aria-label="Registrar documento" noValidate>
@@ -53,12 +59,13 @@ const DocumentsTab = () => {
           <div className="grid grid-cols-2 gap-2"><div><label htmlFor="rd-iss" className="block text-xs mb-1">Emissão</label><input id="rd-iss" type="date" value={issued} onChange={(e) => setIssued(e.target.value)} /></div><div><label htmlFor="rd-exp" className="block text-xs mb-1">Validade</label><input id="rd-exp" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} /></div></div>
           <div className="sm:col-span-2"><button className={btnPrimary} disabled={busy}>{busy ? "Registrando…" : "Registrar"}</button></div>
         </form>)}
-      <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhum documento neste filtro." />
-      {list.data && list.data.length > 0 && (
+      {cad.id && <CadastroChip onClear={cad.clear} nome={list.data?.find((r) => r.subject_id === cad.id)?.subject_name} />}
+      <State loading={list.isLoading} error={list.error} empty={list.data !== undefined && docs.length === 0} emptyText="Nenhum documento neste filtro." />
+      {list.data && docs.length > 0 && (
         <Table head={["Cadastro", "Documento", "Validade", "Situação", ""]}>
-          {list.data.map((r, i) => (
+          {docs.map((r, i) => (
             <tr key={(r.doc_id ?? r.subject_id) + i}>
-              <Td><span className="font-medium">{r.subject_name}</span><span className="block text-xs text-muted-foreground">{r.subject_type === "pf" ? "Pessoa física" : r.subject_type === "pj" ? "Pessoa jurídica" : "Profissional"}</span></Td>
+              <Td><span className="font-medium">{r.subject_name}</span><span className="block text-xs text-muted-foreground">{r.subject_type === "pf" ? "Pessoa física" : r.subject_type === "pj" ? "Pessoa jurídica" : "Profissional"}</span>{(r.subject_type === "pf" || r.subject_type === "pj") && <span className="flex gap-3 text-xs"><Link className="text-primary hover:underline" to={subjectRoute(r.subject_type === "pf" ? "person" : "legal_entity", r.subject_name, r.subject_id, here)!}>Ver cadastro</Link><Link className="text-primary hover:underline" to={`/admin/adm/pendencias?aba=pendencias&cadastro=${r.subject_id}&voltar=${encodeURIComponent(here)}`}>Ver pendências</Link></span>}</Td>
               <Td>{r.doc_type}{r.title ? <span className="block text-xs text-muted-foreground">{r.title}</span> : null}</Td>
               <Td>{r.expires_on ? fmtDate(`${r.expires_on}T12:00:00Z`) : "—"}</Td>
               <Td><Badge tone={r.state === "vencido" || r.state === "ausente" ? "danger" : r.state === "vencendo" || r.state === "sem_validade" ? "warning" : "success"}>{DOC_STATE[r.state] ?? r.state}</Badge></Td>

@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Activity, AlertTriangle, ArrowRight, ChevronRight, Gauge, Inbox } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, ChevronRight, Gauge, Inbox, Info } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePageMetaContext, useRegisterPageMeta } from "@/components/hp/pageMeta";
 
@@ -104,10 +105,13 @@ export const Sparkline = ({ data }: { data: number[] }) => {
 
 /** Cartão de indicador: nome, número principal, unidade, período analisado, comparação (só com base real), descrição curta, tendência (só com série real) e, se clicável,
  *  abre o detalhamento. O número fica num <p class="tabular"> dentro do botão (contrato usado pelos testes de aceite). */
-export const StatCard = ({ label, value, unit, period, delta, basis, tone, unavailable, onClick, level = "summary", icon: Icon, spark, status }: {
+export const StatCard = ({ label, value, unit, period, delta, basis, tone, unavailable, onClick, level = "summary", icon: Icon, spark, status, action, caveat }: {
   label: string; value: ReactNode; unit?: string; period?: string; delta?: CardDelta | null; basis?: string; tone?: Tone; unavailable?: boolean; onClick?: () => void;
   level?: CardLevel; icon?: LucideIcon; spark?: number[]; /** rótulo curto de situação (ex.: “Crítico”, “Em dia”) */ status?: string;
+  /** ação concreta do cartão clicável (ex.: “Acompanhar contratos”); sem ela só aparece a seta */ action?: string;
+  /** aviso CURTO necessário para interpretar o número (fica visível); fórmula e critérios vão para “Sobre este indicador” */ caveat?: string;
 }) => {
+  const labelId = useId();
   const dataTone = tone === "danger" || tone === "warning" || tone === "success" ? tone : undefined;
   const valueTone = unavailable ? "text-muted-foreground" : "";
   const Ico = Icon ?? (level === "attention" ? AlertTriangle : undefined);
@@ -116,36 +120,50 @@ export const StatCard = ({ label, value, unit, period, delta, basis, tone, unava
   );
   const valueEl = (
     <div className="flex items-baseline gap-1.5 flex-wrap">
-      <p className={`hp-kpi-value tabular ${valueTone}`}>{value}</p>
+      <p className={`hp-kpi-value tabular ${valueTone}${unavailable ? " is-unavailable" : ""}`}>{value}</p>
       {unit && !unavailable && <span className="hp-kpi-unit">{unit}</span>}
     </div>
   );
   const body = level === "compact" ? (<>
     {Ico && <span aria-hidden className="hp-kpi-ico"><Ico /></span>}
-    <div className="hp-kpi-mid"><p className="hp-kpi-label">{label}</p>{deltaEl}</div>
+    <div className="hp-kpi-mid"><p className="hp-kpi-label" id={labelId}>{label}</p>{deltaEl}</div>
     <div className="text-right">{valueEl}{period && <span className="hp-kpi-period">{period}</span>}</div>
   </>) : (<>
     <div className="hp-kpi-head">
       {Ico && <span aria-hidden className="hp-kpi-ico"><Ico /></span>}
-      <p className="hp-kpi-label">{label}</p>
-      {period ? <span className="hp-kpi-period">{period}</span> : onClick && <ChevronRight aria-hidden className="hp-kpi-more" size={16} />}
+      <p className="hp-kpi-label" id={labelId}>{label}</p>
+      {period && <span className="hp-kpi-period">{period}</span>}{onClick && <ChevronRight aria-hidden className="hp-kpi-more" size={16} />}
     </div>
     <div className="hp-kpi-valuerow">
       <div className="hp-kpi-valuecol">{valueEl}{deltaEl}</div>
       {spark && <Sparkline data={spark} />}
     </div>
     {status && <p><span className="hp-kpi-status">{status}</span></p>}
-    {basis && <p className="hp-kpi-basis" title={basis}>{basis}</p>}
-    {onClick && <span aria-hidden className="hp-kpi-cta">Ver detalhes <ArrowRight size={13} /></span>}
+    {unavailable && basis && <p className="hp-kpi-reason">{basis.replace(/^indisponível:\s*/i, "")}</p>}
+    {caveat && <p className="hp-kpi-reason">{caveat}</p>}
+    {onClick && action && <span aria-hidden className="hp-kpi-cta">{action} <ArrowRight size={13} /></span>}
   </>);
+  // “Sobre este indicador”: fórmula, origem e critérios saem do cartão e ficam a um clique (ou Enter), sem depender de hover
+  const about = (basis || period) ? (
+    <Popover>
+      <PopoverTrigger asChild><button type="button" className="hp-kpi-info" aria-label="Sobre este indicador" aria-describedby={labelId}><Info size={14} aria-hidden /></button></PopoverTrigger>
+      <PopoverContent align="end" collisionPadding={12} className="w-80 text-sm">
+        <p className="font-semibold mb-1">Sobre este indicador</p>
+        <p className="text-muted-foreground mb-2">{label}</p>
+        {period && <p className="mb-1"><b>Período:</b> {period}</p>}
+        {basis && <p className="mb-1"><b>Como é calculado:</b> {basis}</p>}
+        {onClick && <p className="text-muted-foreground">Clique no cartão para abrir os registros que compõem este número.</p>}
+      </PopoverContent>
+    </Popover>) : null;
   const cls = `hp-kpi hp-kpi-${level} hp-card`;
-  if (!onClick) return <li className={`${cls} list-none`} data-tone={dataTone}>{body}</li>;
+  if (!onClick) return <li className={`${cls} list-none hp-kpi-has-info`} data-tone={dataTone}>{body}{about}</li>;
   return (
-    <li className="list-none">
+    <li className="list-none hp-kpi-li">
       <button type="button" onClick={onClick} data-tone={dataTone} title={level === "compact" ? basis : undefined}
         className={`${cls} group w-full text-left hover:border-[hsl(var(--kc)/.45)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all`}>
         {body}
       </button>
+      {about}
     </li>
   );
 };

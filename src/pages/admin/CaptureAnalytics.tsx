@@ -41,7 +41,7 @@ const CaptureAnalytics = ({ from, to, fromIso, toIso, unit }: { from: string; to
           <StatCard label="Respostas" value={n(d.responses.value)} basis={d.responses.basis} onClick={() => open("responses")} />
           <StatCard label="Pessoas distintas" value={n(d.people.value)} basis={d.people.basis} onClick={() => open("funnel", undefined, "captured")} />
           <StatCard label="Oportunidades distintas" value={n(d.opportunities.value)} basis={d.opportunities.basis} onClick={() => open("funnel", undefined, "opportunity")} />
-          <StatCard label="Cliques no WhatsApp" value={n(d.whatsapp_clicks.value)} basis={d.whatsapp_clicks.basis} onClick={() => open("whatsapp")} />
+          <StatCard label="Cliques no WhatsApp" value={n(d.whatsapp_clicks.value)} basis={d.whatsapp_clicks.basis} caveat="Clique não é mensagem enviada." onClick={() => open("whatsapp")} />
           <StatCard label="Quizzes iniciados" value={n(d.quiz.started)} basis="iniciados no período (todas as jornadas)" onClick={() => open("responses", "source", "quiz:atendimento")} />
           <StatCard label="Taxa de conclusão" value={pct(d.quiz.completion_rate_pct)} basis={`${d.quiz.basis}`} onClick={() => open("completed")} />
           <StatCard label="Taxa de abandono" value={pct(d.quiz.abandon_rate_pct)} basis={`${d.quiz.abandoned} abandonados · ${d.quiz.in_progress} em andamento (< 24 h)`} tone={(d.quiz.abandon_rate_pct ?? 0) > 50 ? "danger" : undefined} onClick={() => open("abandoned")} />

@@ -1,0 +1,302 @@
+[
+ {
+  "path": "/admin",
+  "titulo": "Início",
+  "passos": 3
+ },
+ {
+  "path": "/admin/adm",
+  "titulo": "Visão geral da Gestão",
+  "passos": 3
+ },
+ {
+  "path": "/admin/adm/pendencias",
+  "titulo": "Pendências",
+  "passos": 4
+ },
+ {
+  "path": "/admin/adm/pendencias?aba=contratos",
+  "titulo": "Contratos",
+  "passos": 3
+ },
+ {
+  "path": "/admin/adm/diretorio",
+  "titulo": "Planilha administrativa",
+  "passos": 3
+ },
+ {
+  "path": "/admin/adm/diretorio?tipo=pj",
+  "titulo": "Empresas",
+  "passos": 3
+ },
+ {
+  "path": "/admin/pessoas",
+  "titulo": "Pessoas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/programas",
+  "titulo": "Programas e ofertas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/chamados",
+  "titulo": "Chamados de pacientes",
+  "passos": 2
+ },
+ {
+  "path": "/admin/responsaveis",
+  "titulo": "Responsáveis e cuidadores",
+  "passos": 2
+ },
+ {
+  "path": "/admin/configuracoes?secao=org",
+  "titulo": "Unidades",
+  "passos": 2
+ },
+ {
+  "path": "/admin/equipe",
+  "titulo": "Equipe e acessos",
+  "passos": 2
+ },
+ {
+  "path": "/admin/configuracoes?secao=operacao",
+  "titulo": "Produtos e serviços",
+  "passos": 2
+ },
+ {
+  "path": "/admin/configuracoes",
+  "titulo": "Configurações",
+  "passos": 2
+ },
+ {
+  "path": "/admin/ver-como",
+  "titulo": "Ver como",
+  "passos": 2
+ },
+ {
+  "path": "/admin/auditoria",
+  "titulo": "Auditoria",
+  "passos": 3
+ },
+ {
+  "path": "/admin/financeiro",
+  "titulo": "Visão geral do Financeiro",
+  "passos": 3
+ },
+ {
+  "path": "/admin/financeiro/relatorios",
+  "titulo": "Relatórios do Financeiro",
+  "passos": 3
+ },
+ {
+  "path": "/admin/financeiro/vendas?aba=vendas",
+  "titulo": "Vendas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/financeiro/vendas?aba=recebiveis",
+  "titulo": "Contas a receber",
+  "passos": 2
+ },
+ {
+  "path": "/admin/financeiro/pagar",
+  "titulo": "Contas a pagar",
+  "passos": 3
+ },
+ {
+  "path": "/admin/financeiro/cartoes",
+  "titulo": "Cartões",
+  "passos": 2
+ },
+ {
+  "path": "/admin/financeiro/fluxo-caixa",
+  "titulo": "Fluxo de caixa",
+  "passos": 4
+ },
+ {
+  "path": "/admin/financeiro/conciliacao",
+  "titulo": "Conciliação",
+  "passos": 3
+ },
+ {
+  "path": "/admin/financeiro/recorrencia",
+  "titulo": "Recorrência",
+  "passos": 3
+ },
+ {
+  "path": "/admin/financeiro/dre",
+  "titulo": "DRE",
+  "passos": 2
+ },
+ {
+  "path": "/admin/financeiro/comissoes",
+  "titulo": "Comissões e repasses",
+  "passos": 2
+ },
+ {
+  "path": "/admin/financeiro/precos-repasses",
+  "titulo": "Preços e repasses",
+  "passos": 3
+ },
+ {
+  "path": "/admin/contas-corporativas",
+  "titulo": "Contas corporativas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/financeiro/config",
+  "titulo": "Configurações do Financeiro",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm",
+  "titulo": "Visão geral do CRM",
+  "passos": 5
+ },
+ {
+  "path": "/admin/crm/leads",
+  "titulo": "Gestão de leads",
+  "passos": 3
+ },
+ {
+  "path": "/admin/crm/contatos",
+  "titulo": "Contatos",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/listas",
+  "titulo": "Listas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/oportunidades",
+  "titulo": "Pipeline",
+  "passos": 3
+ },
+ {
+  "path": "/admin/crm/tarefas",
+  "titulo": "Tarefas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/metas",
+  "titulo": "Minha meta",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/metas/ritmo",
+  "titulo": "Ritmo do dia",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/metas/time",
+  "titulo": "Time",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/conversas",
+  "titulo": "Conversas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/crm/relatorios",
+  "titulo": "Relatórios do CRM",
+  "passos": 2
+ },
+ {
+  "path": "/admin/paginas",
+  "titulo": "Páginas",
+  "passos": 3
+ },
+ {
+  "path": "/admin/captacao-leads",
+  "titulo": "Captação de leads",
+  "passos": 2
+ },
+ {
+  "path": "/admin/pesquisas",
+  "titulo": "Pesquisas",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing",
+  "titulo": "Visão geral do Marketing",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing/analises",
+  "titulo": "Análises",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing/campanhas",
+  "titulo": "Campanhas",
+  "passos": 3
+ },
+ {
+  "path": "/admin/marketing/anuncios",
+  "titulo": "Anúncios e criativos",
+  "passos": 3
+ },
+ {
+  "path": "/admin/marketing/funil",
+  "titulo": "Funil e atribuição",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing/leads",
+  "titulo": "Leads e pontuação",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing/paineis",
+  "titulo": "Painéis",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing/integracoes",
+  "titulo": "Integrações",
+  "passos": 2
+ },
+ {
+  "path": "/admin/marketing/configuracoes",
+  "titulo": "Configurações do Marketing",
+  "passos": 2
+ },
+ {
+  "path": "/admin/agenda",
+  "titulo": "Agenda",
+  "passos": 4
+ },
+ {
+  "path": "/admin/acompanhamento",
+  "titulo": "Acompanhamento de pacientes",
+  "passos": 2
+ },
+ {
+  "path": "/admin/academy",
+  "titulo": "Cursos e alunos",
+  "passos": 3
+ },
+ {
+  "path": "/admin/parceiros",
+  "titulo": "Parceiros",
+  "passos": 3
+ },
+ {
+  "path": "/admin/meu-dia",
+  "titulo": "Meu dia",
+  "passos": 4
+ },
+ {
+  "path": "/admin/meu-resumo",
+  "titulo": "Meu resumo",
+  "passos": 4
+ },
+ {
+  "path": "/admin/conta",
+  "titulo": "Configurações da conta",
+  "passos": 2
+ }
+]
