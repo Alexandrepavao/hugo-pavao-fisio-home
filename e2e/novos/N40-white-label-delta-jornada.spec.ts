@@ -1,6 +1,6 @@
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { SUPABASE_URL, ANON, PASSWORD, signIn, useSession, type Session } from "../helpers";
 import { call, get, haveHarness, mkUser, PLATFORM, sqlDev } from "./helpers-wl";
 import { moveAppointment } from "../release/helpers-release";
@@ -23,11 +23,16 @@ const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", c
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 }, actionTimeout: 30_000, trace: "off" });   // vários contextos de navegador por teste: sem trace (os screenshots de falha continuam)
 test.describe.serial("@novo White label — jornada completa da Clínica Delta", () => {
+  test.afterEach(() => { try { save(); } catch { /* estado só para retomar depuração */ } });
   test.skip(!haveHarness, "precisa de SUPABASE_ACCESS_TOKEN e HP_QA_PASSWORD");
   test.setTimeout(240_000);
   let plat: Session; let reqId = ""; let orgId = ""; let slug = ""; let adminS: Session; const tempos: Record<string, unknown> = {}; const S: Record<string, string> = {};
 
+  // N40_RESUME=1 retoma de onde parou (estado da execução anterior em test-results/wl-delta-state.json): só para depurar a jornada sem recriar a Delta
+  const STATE = "test-results/wl-delta-state.json";
+  const save = () => writeFileSync(STATE, JSON.stringify({ reqId, orgId, slug, S, tempos }));
   test.beforeAll(async () => {
+    if (process.env.N40_RESUME && existsSync(STATE)) { const st = JSON.parse(readFileSync(STATE, "utf8")); reqId = st.reqId; orgId = st.orgId; slug = st.slug; Object.assign(S, st.S); Object.assign(tempos, st.tempos); plat = await signIn(PLATFORM); adminS = await signIn(ADMIN); return; }
     for (let i = 0; i < 3; i++) {   // remove a Delta da execução anterior e CONFERE que saiu (com o banco ocupado a primeira tentativa pode não pegar)
       execFileSync("node", ["supabase/tools/wl-limpar-orgs-teste.mjs", SUB], { stdio: "pipe" });
       if (!(await sqlDev<{ n: number }[]>(`select count(*)::int n from public.organizations where slug = '${SUB}'`))[0].n) break;
@@ -235,6 +240,9 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     const evt = await sqlDev<{ purpose: string; state: string }[]>(`select purpose, state from private.email_events where org_id = '${orgId}' and purpose like 'auth:%' order by created_at desc limit 3`); expect(evt.some((x) => x.state === "suppressed")).toBe(true);
     // SIMULADO: o paciente "abriu o link e definiu a senha" (confirmação + senha por SQL); o gatilho do banco vincula a conta ao convite aberto
     await sqlDev(`update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()), encrypted_password = crypt('${PASSWORD.replace(/'/g, "''")}', gen_salt('bf')), updated_at = now() where lower(email) = '${EMAILPAC}'`);
+    const vinculo = await sqlDev<{ conf: boolean; ua: number; mem: number; roles: number; inv: string }[]>(`select u.email_confirmed_at is not null conf, (select count(*)::int from public.user_accounts a where a.user_id = u.id) ua, (select count(*)::int from public.org_memberships m where m.user_id = u.id and m.org_id = '${orgId}') mem,
+      (select count(*)::int from public.role_assignments r where r.user_id = u.id and r.org_id = '${orgId}') roles, (select coalesce(string_agg(i.role::text || ':' || (i.accepted_at is not null)::text, ','), '-') from public.invitations i where lower(i.email::text) = lower(u.email) and i.org_id = '${orgId}') inv from auth.users u where lower(u.email) = '${EMAILPAC}'`);
+    expect(vinculo[0], `vínculo do paciente: ${JSON.stringify(vinculo)}`).toMatchObject({ conf: true, ua: 1, mem: 1, roles: 1 });
     const ctx = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const p = await ctx.newPage();
     await p.goto(`/empresa/${slug}/login`); await expect(p.getByRole("heading", { name: "Bem-vindo ao Delta Fisioterapia" })).toBeVisible({ timeout: 20_000 });
     await p.getByLabel("E-mail").fill(EMAILPAC); await p.getByLabel("Senha").fill(PASSWORD); await p.getByRole("button", { name: "Entrar" }).click();
@@ -314,6 +322,70 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     // portal do paciente (celular) mostra o acompanhamento ativo e o histórico
     const pcx = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const pa = await pcx.newPage(); await useSession(pcx, await signIn(EMAILPAC));
     await pa.goto("/paciente"); await expect(pa.getByTestId("patient-home")).toBeVisible({ timeout: 30_000 }); await expect(pa.getByTestId("jr-enrollment-pending")).toHaveCount(0); await shot(pa, "20-delta-portal-paciente-ativo-celular", true); await pcx.close();
+  });
+
+  test("10. financeiro e repasse: receita, caixa, repasse provisionado e repasse pago são coisas diferentes; valor positivo visível ao gestor e à fisioterapeuta, vindo da regra da Delta", async ({ page, context }) => {
+    await as(context, ADMIN);
+    const n = async (q: string) => (await sqlDev<{ v: number }[]>(q))[0].v;
+    // receita contratada (venda confirmada) × caixa (recebido líquido de estornos) × repasse provisionado/pago
+    const receita = await n(`select coalesce(sum(total_cents), 0)::int v from public.sales where org_id = '${orgId}' and status = 'confirmed'`);
+    const caixa = await n(`select coalesce(sum(case when kind = 'refund' then -amount_cents else amount_cents end), 0)::int v from public.payments where org_id = '${orgId}'`);
+    expect({ receita, caixa }).toEqual({ receita: 120000, caixa: 60000 });                                                          // contratado R$ 1.200,00; efetivamente recebido R$ 600,00
+    // gestor: lançamentos da regra (R$ 30,00, −R$ 12,00 e R$ 162,00); autoriza e paga o de R$ 162,00 pela tela (o de R$ 30,00 continua pendente e o negativo, estornado)
+    await page.goto("/admin/financeiro/comissoes"); const rule = "Repasse Delta — fisioterapeuta";
+    const r162 = page.getByRole("row").filter({ hasText: rule }).filter({ hasText: "R$ 162,00" }); await expect(r162).toHaveCount(1, { timeout: 30_000 });
+    await expect(r162).toContainText("30,00%"); await expect(r162).toContainText("Pendente"); await expect(page.getByRole("row").filter({ hasText: rule }).filter({ hasText: "R$ 30,00" }).first()).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: rule }).filter({ hasText: "12,00" }).first()).toBeVisible();      // estorno proporcional (negativo)
+    await shot(page, "21-delta-comissoes-pendentes");
+    await r162.getByRole("button", { name: "Autorizar" }).click(); await expect(r162).toContainText("Autorizada", { timeout: 20_000 });
+    await r162.getByRole("button", { name: "Marcar paga" }).click(); await expect(r162).toContainText("Paga", { timeout: 20_000 });
+    await shot(page, "22-delta-comissao-paga");
+    const sum = (await call(await signIn(FISIO), "my_professional_summary", { p_from: spDate(-30), p_to: spDate(1) }, orgId)).body.payouts;
+    expect(sum, JSON.stringify(sum)).toMatchObject({ visible: true, pending_cents: 3000, reversed_cents: -1200, paid_cents: 16200, net_cents: 18000 });   // pendente R$ 30,00 (aguarda autorização); estornado −R$ 12,00; pago R$ 162,00; líquido R$ 180,00 = 30% de R$ 600,00 recebidos
+    // fisioterapeuta: o próprio repasse, sem o nome do paciente
+    const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await useSession(pc, await signIn(FISIO));
+    await pp.goto("/admin/meu-resumo?periodo=mes"); await expect(pp.getByRole("heading", { name: "Meu resumo" }).first()).toBeVisible({ timeout: 40_000 });
+    const card = (label: string) => pp.getByRole("listitem").filter({ has: pp.getByText(label, { exact: true }) }).locator(".hp-kpi-value");
+    await expect(card("Repasses pagos")).toContainText("162,00"); await expect(card("Líquido do período")).toContainText("180,00");
+    await expect(pp.getByText(NOMEPAC)).toHaveCount(0); await shot(pp, "23-delta-meu-resumo-fisioterapeuta", true);
+    // a fisioterapeuta não autoriza nem paga o próprio repasse e não abre o Financeiro
+    const ids = await sqlDev<{ id: string }[]>(`select id::text from public.commission_entries where org_id = '${orgId}'`); const f = await signIn(FISIO);
+    for (const { id } of ids) expect((await call(f, "commission_set_status", { p_entry: id, p_status: "paid" }, orgId)).status).toBeGreaterThanOrEqual(400);
+    await pp.goto("/admin/financeiro/comissoes"); await expect(pp.getByRole("heading", { name: "Comissões e repasses" })).toHaveCount(0); await pc.close();
+    tempos.financeiro = { receita_contratada: brl(receita), caixa_liquido: brl(caixa), repasse_pendente: brl(sum.pending_cents), repasse_estornado: brl(sum.reversed_cents), repasse_pago: brl(sum.paid_cents), repasse_liquido: brl(sum.net_cents) };
+  });
+
+  test("11. isolamento em toda a jornada: leitura e escrita cruzadas (interface, API direta, x-org forjado, anônimo) — nada da Delta vaza e nada entra nela", async () => {
+    const outros = ["alfa.admin@example.test", "beta.admin@example.test", "qa.manager@hp-test.dev"]; const tabelas = ["people", "person_contacts", "opportunities", "appointments", "sales", "receivables", "payments", "commission_entries", "client_packages", "patient_enrollments", "evaluation_presentations", "services", "products", "professionals", "pages", "forms", "form_submissions", "financial_accounts", "availability_rules"];
+    for (const email of outros) {
+      const s = await signIn(email);
+      for (const t of tabelas) {   // sem x-org: só a organização do usuário; nenhuma linha da Delta
+        const r = await get(s, `${t}?select=org_id&org_id=eq.${orgId}&limit=1`); expect(r.status === 200 ? r.body : [], `${email} lê ${t} da Delta`).toEqual([]);
+        const f = await get(s, `${t}?select=org_id&limit=1`, orgId); expect([401, 403, 404].includes(f.status) || (f.status === 200 && f.body.length === 0), `${email} com x-org forjado lê ${t}: HTTP ${f.status}`).toBe(true);   // x-org da Delta sem vínculo: recusado
+      }
+      // escritas cruzadas
+      const w1 = await fetch(`${SUPABASE_URL}/rest/v1/services`, { method: "POST", headers: { apikey: ANON, authorization: `Bearer ${s.access_token}`, "content-type": "application/json", prefer: "return=representation" }, body: JSON.stringify({ org_id: orgId, name: `Intruso ${email}`, duration_min: 30, price_cents: 100 }) }); expect(w1.status, `${email} cria serviço na Delta`).toBeGreaterThanOrEqual(400);
+      const w2 = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${S.pkg}`, { method: "PATCH", headers: { apikey: ANON, authorization: `Bearer ${s.access_token}`, "content-type": "application/json", prefer: "return=representation" }, body: JSON.stringify({ price_cents: 1 }) }); const b2 = await w2.json().catch(() => []); expect(w2.status >= 400 || (Array.isArray(b2) && b2.length === 0), `${email} altera produto da Delta`).toBe(true);
+      const c1 = await call(s, "sale_confirm", { p_sale: S.sale }); expect(c1.status, `${email} confirma venda da Delta`).toBeGreaterThanOrEqual(400);
+      const c2 = await call(s, "set_appointment_status", { p_id: S.sess, p_status: "cancelled_by_clinic", p_reason: null }); expect(c2.status, `${email} muda atendimento da Delta`).toBeGreaterThanOrEqual(400);
+      const c3 = await call(s, "portal_access_state", { p_person: S.person }); expect(c3.status, `${email} lê acesso do paciente da Delta (achado do N40: corrigido na migration 147)`).toBeGreaterThanOrEqual(400);
+      const c4 = await call(s, "person_portal_access", { p_person: S.person, p_email: EMAILPAC }); expect(c4.status, `${email} convida paciente da Delta`).toBeGreaterThanOrEqual(400);
+    }
+    // a Delta não enxerga nada de fora
+    const d = await signIn(ADMIN); const ppl = await get(d, "people?select=full_name"); expect(ppl.body.every((x: { full_name: string }) => [NOMEPAC, NOMEFORM, "Dra. Fernanda Delta"].includes(x.full_name)), "pessoas da Delta são só as da Delta").toBe(true);
+    for (const t of ["opportunities", "appointments", "sales", "payments", "commission_entries"]) { const r = await sqlDev<{ n: number }[]>(`select count(*)::int n from public.${t} where org_id <> '${orgId}' and org_id in (select id from public.organizations where slug = 'hp-group')`); void r; }
+    expect((await get(d, "mkt_campaigns?select=id&limit=1")).status, "módulo Marketing não contratado: bloqueado no servidor").toBe(403);
+    const hp = (await get(d, "organizations?select=slug")).body.map((x: { slug: string }) => x.slug); expect(hp).toEqual([SUB]);
+    // anônimo: nada listável; formulário da Delta não serve para a HP (sem slug) nem para outra organização
+    expect((await get(null, "people?select=id&limit=1")).status).toBeGreaterThanOrEqual(400); expect((await get(null, "quiz_leads?select=id&limit=1")).status).toBeGreaterThanOrEqual(400);
+    const form = (await sqlDev<{ id: string }[]>(`select id::text from public.forms where org_id = '${orgId}' limit 1`))[0].id;
+    const semSlug = await call(null, "submit_public_form", { p_form_id: form, p_answers: { name: "Intruso Teste", email: "intruso.delta@example.test" }, p_utm: {}, p_honeypot: null, p_referrer: null }); expect(semSlug.status).toBeGreaterThanOrEqual(400);
+    const outraOrg = await call(null, "submit_public_form", { p_form_id: form, p_answers: { name: "Intruso Teste", email: "intruso.delta@example.test" }, p_utm: {}, p_honeypot: null, p_referrer: null, p_org_slug: "clinica-alfa" }); expect(outraOrg.status).toBeGreaterThanOrEqual(400);
+    expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.form_submissions where answers ->> 'email' = 'intruso.delta@example.test'`))[0].n).toBe(0);
+    // anon e pré-request explicitamente (migration 142 + 143)
+    const pre = await sqlDev<{ a: boolean; b: boolean; c: boolean; d: boolean }[]>(`select has_function_privilege('anon', 'public.hp_pre_request()', 'execute') a, has_function_privilege('authenticated', 'public.hp_pre_request()', 'execute') b, has_function_privilege('anon', 'public.org_public_by_slug(text)', 'execute') c, not has_function_privilege('anon', 'private.public_org(text)', 'execute') d`);
+    expect(pre[0]).toEqual({ a: true, b: true, c: true, d: true });
+    writeFileSync("test-results/wl-delta-tempos.json", JSON.stringify(tempos, null, 2)); console.log("DELTA", JSON.stringify(tempos));
   });
 });
 
