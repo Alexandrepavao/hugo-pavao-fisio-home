@@ -211,7 +211,7 @@ begin
   rep := rep || pg_temp.chk((select count(*) from public.units where org_id = alfa) = v_units_before and (select count(*) from public.org_modules where org_id = alfa) = v_orgmods_before and (select count(*) from private.manager_bootstrap_emails where org_id = alfa) = v_boot_before
     and (select count(*) from public.organizations where provisioning_request_id = v_req_a) = 1 and (select count(*) from public.pipelines where org_id = alfa) = 1, 'reexecutar o motor várias vezes não duplica unidades, módulos, funis nem convites');
   rep := rep || pg_temp.chk(jsonb_array_length(j2 -> 'steps') = 7 and (select bool_and(s ->> 'status' = 'done') from jsonb_array_elements(j2 -> 'steps') s) and (j2 ->> 'internal_ms')::numeric >= 0, 'as 7 etapas ficam registradas com tempo individual');
-  rep := rep || pg_temp.chk((j2 -> 'pending')::text like '%admin_invite%' and (j2 -> 'pending')::text like '%integration_email%' and (j2 -> 'pending')::text like '%services%', 'as pendências são explícitas: convite, integrações escolhidas (não conectadas) e serviços/preços');
+  rep := rep || pg_temp.chk((j2 -> 'pending')::text not like '%admin_invite%' and (j2 -> 'pending')::text like '%integration_email%' and (j2 -> 'pending')::text like '%services%', 'as pendências são explícitas: integrações escolhidas (não conectadas) e serviços/preços; o convite NÃO consta mais porque o administrador já confirmou o e-mail (migration 144 marca o aceite)');
   -- falha recuperável: o modelo fica indisponível → etapa falha → preserva o que já foi criado → retomada depois de corrigir
   update public.platform_templates set status = 'retired' where segment_key = 'fisioterapia' and version = 1;
   set local role authenticated; perform pg_temp.as_user(pa);
