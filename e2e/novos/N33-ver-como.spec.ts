@@ -36,7 +36,11 @@ test.describe.serial("@novos Ver como (gestor)", () => {
     const cur = await rpc(t, "view_as_current", {}, sid); expect(cur.status).toBe(200); expect(cur.body).toMatchObject({ kind: "physio", email: QA.fisio });
     expect((await rpc(t, "view_as_current")).body, "sem cabeçalho não há sessão em uso").toBeNull();
     const home = await rpc(t, "prof_home", {}, sid); expect(home.status, "prof_home responde como o fisioterapeuta: " + JSON.stringify(home.body)).toBe(200);
-    expect((await rpc(t, "prof_home")).status, "o gestor, sem o cabeçalho, não é fisioterapeuta").toBe(403);
+    // sem o cabeçalho o gestor NÃO é a fisioterapeuta vista: ou não é profissional (403) ou, se o cadastro do Dev lhe der um perfil profissional próprio (ex.: simulação de rota de 14/11),
+    // a resposta é a DELE, nunca a da fisioterapeuta de QA. (Antes a asserção exigia 403 e quebrava por causa desse dado compartilhado, sem relação com o recurso.)
+    const own = await rpc(t, "prof_home");
+    expect([200, 403], "sem cabeçalho").toContain(own.status);
+    if (own.status === 200) expect(JSON.stringify(own.body), "a resposta do gestor não é a da fisioterapeuta vista").not.toBe(JSON.stringify(home.body));
     const ins = await call(t, "people", { method: "POST", body: { org_id: "00000000-0000-0000-0000-000000000000", full_name: "Nao Deve Gravar" }, viewAs: sid }); expect(ins.status, "gravar falha").toBeGreaterThanOrEqual(400);
     expect(JSON.stringify(ins.body)).toMatch(/read-only|somente leitura|25006|permission|violates/i);
     const upd = await call(t, "people?full_name=eq.zzz-ninguem", { method: "PATCH", body: { full_name: "x" }, viewAs: sid }); expect(upd.status === 200 || upd.status >= 400, "update não chega a gravar").toBe(true);

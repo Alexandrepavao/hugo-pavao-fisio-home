@@ -54,3 +54,48 @@ Contagens de **uso**, não custo. Período mensal em `America/Sao_Paulo`.
 3. Definir franquias de serviços externos (rotas, e-mails) e como medir e-mails enviados (hoje sem rastreio).
 4. Integrar cobrança (provedor de pagamento) — **fora do escopo** desta etapa; nada contratado.
 5. Incluir os demais buckets por organização na métrica de armazenamento.
+
+## 6. Atualização de 20/11/2026 — migration 147 (planos, assinatura, limites e histórico)
+
+Testes: SQL **N25** (27 verificações) e E2E **N41** (plano QA pela interface + 8 requisições simultâneas). Continua **sem preço inventado e sem cobrança**.
+
+**O administrador da plataforma consegue** (`/plataforma ▸ Planos e consumo` e `Organizações ▸ Detalhes ▸ Plano e assinatura`):
+1. **Criar um plano** (chave `[a-z][a-z0-9_]`, ex.: `qa_teste`; nasce em *rascunho*, sem valores).
+2. **Definir módulos** incluídos (validados contra o catálogo) e **limites suportados**.
+3. **Associar uma organização** ao plano (`platform_subscription_set`): plano, estado (teste/ativa/suspensa/cancelada), imposição (*só avisar* × *bloquear novas*) e **exceções de limite** da própria organização.
+4. **Consultar consumo** (contagens atuais × limites) e o **histórico** de alterações de plano e de assinatura, com **valor anterior → novo** (`platform_history`).
+
+Plano incluir um módulo **não** habilita o módulo na organização (módulos continuam sendo escolhidos pela plataforma, com dependências).
+
+### Zero × ilimitado × não configurado
+
+| Em `limits` / `limits_override` | Significa | Estado exibido | Com imposição "bloquear novas" |
+|---|---|---|---|
+| chave **ausente** | **não configurado** (ninguém definiu) | `nao_configurado` | não bloqueia |
+| `null` explícito (campo "ilimitado") | **ilimitado** (definido de propósito) | `ilimitado` | não bloqueia |
+| número `0` | **zero** (nenhum) | `zero` (uso 0) / `acima` (uso > 0) | bloqueia **toda** criação nova |
+| número `n ≥ 1` | teto `n` | `ok` / `perto` (≥ 80 %) / `acima` | bloqueia a criação nova quando uso ≥ `n` |
+
+Exceção da organização **sobrepõe** o plano chave a chave (inclusive `null` = ilimitado). Valores aceitos: inteiros ≥ 0 ou `null`; chaves conhecidas (`max_staff_users`, `max_professionals`, `max_units`, `max_active_patients`, `storage_mb`, `external`). Decimal, negativo, texto e chave desconhecida são **recusados no servidor**.
+
+### Como cada consumo é contado (e o que é imposto)
+
+| Métrica | Contagem | Imposto? |
+|---|---|---|
+| `units` | unidades da organização com `active` verdadeiro/nulo | **sim** (trigger em `units`) |
+| `professionals` | linhas ativas em `professionals` | **sim** (trigger em `professionals`) |
+| `staff_users` | usuários **distintos** com vínculo ativo e ao menos um papel ativo de equipe (gestor, administrativo, gestor de unidade, comercial, financeiro, fisioterapeuta, professor, contador) | só **medido e avisado** |
+| `active_patients` | pessoas distintas com matrícula `active` | só medido e avisado |
+| `storage_bytes` | objetos dos buckets `accounting-private`, `org-brand`, `org-exports` na pasta da organização (outros buckets ainda **não** entram) | só medido |
+| `route_requests_month` | soma de `route_usage.calls` no mês (America/Sao_Paulo) | só medido |
+
+### Limite sob requisições simultâneas
+
+A contagem e a inserção são **serializadas por organização + métrica** (trava consultiva na transação): com limite de profissionais = 1 e **8 requisições simultâneas**, **1 passou e 7 receberam `P0011`** ("limite do plano atingido…"), 288 ms (N41, Dev). O bloqueio vale **só para criações novas**: dados existentes, **leitura, consumo, histórico e exportação continuam disponíveis**, e nada é apagado.
+
+### Plataforma × financeiro da clínica
+
+O plano/assinatura é cobrança do **produto**; vendas, recebíveis, DRE, comissões e repasses são da **clínica** (módulo financeiro). Associar plano não cria venda nem recebível (testado em N25/N41). Nenhuma integração de cobrança existe nem foi contratada.
+
+### Pendências (decisão humana)
+Valores e limites **reais** dos planos comerciais (continuam rascunho); decidir a imposição padrão de planos pagos; franquias de serviços externos; bloqueio de **usuários da equipe**/pacientes ativos (hoje só medidos); incluir os demais buckets na métrica de armazenamento.

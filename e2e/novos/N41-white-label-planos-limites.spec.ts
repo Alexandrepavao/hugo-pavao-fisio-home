@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { signIn, useSession, runId, type Session } from "../helpers";
-import { call, get, haveHarness, mkUser, PLATFORM, provision } from "./helpers-wl";
+import { answersOf, call, get, haveHarness, mkUser, PLATFORM, provision, sqlDev } from "./helpers-wl";
 
 // @novo — WHITE LABEL: planos, assinatura por organização, consumo, histórico e limites. Plano QA criado PELA INTERFACE da plataforma; organização criada pelo motor de provisionamento.
 // Prova: criar plano (sem preço), definir módulos e limites (não configurado × ilimitado × zero), associar a organização, consultar consumo e histórico, e o limite de NOVAS criações sob 8 requisições SIMULTÂNEAS
@@ -18,15 +18,16 @@ test.describe.serial("@novo White label — planos, assinatura, consumo e limite
 
   test.beforeAll(async () => {
     execFileSync("node", ["supabase/tools/wl-limpar-orgs-teste.mjs", "plano-"], { stdio: "pipe" }); plat = await signIn(PLATFORM);
+    await sqlDev(`delete from public.platform_plans where key like 'qa\_n41\_%' and not exists (select 1 from public.org_subscriptions s where s.plan_key = platform_plans.key)`);   // planos QA de execuções anteriores (só os próprios, sem assinatura)
     const p = await provision(plat, { name: `Clínica Plano ${runId}`, sub: SUB, email: GESTOR }); org = p.org_id; await mkUser(GESTOR); gestor = await signIn(GESTOR);   // conta do gestor SIMULADA (e-mail do convite não clicado)
     unit = (await get(gestor, "units?select=id&limit=1", org)).body[0].id;
   });
 
   test("1. plataforma cria o plano QA pela interface: rascunho, SEM preço; módulos e limites (vazio = não configurado, ilimitado, 0)", async ({ page, context }) => {
     await useSession(context, plat); await page.goto("/plataforma/planos");
-    await page.getByTestId("novo-plano-chave").fill(PLANO); await page.getByTestId("novo-plano-nome").fill("Plano QA N41"); await page.getByTestId("criar-plano").click();
+    await page.getByTestId("novo-plano-chave").fill(PLANO); await page.getByTestId("novo-plano-nome").fill(`Plano QA N41 ${runId}`); await page.getByTestId("criar-plano").click();
     await expect(page.getByText(/Plano criado em rascunho, sem preço/)).toBeVisible({ timeout: 20_000 });
-    const row = page.getByRole("row").filter({ hasText: "Plano QA N41" }); await expect(row).toBeVisible({ timeout: 20_000 }); await expect(row).toContainText("a definir");   // implantação e mensalidade
+    const row = page.getByRole("row").filter({ hasText: `Plano QA N41 ${runId}` }); await expect(row).toBeVisible({ timeout: 20_000 }); await expect(row).toContainText("a definir");   // implantação e mensalidade
     await page.getByLabel("Unidades", { exact: true }).fill("2"); await page.getByLabel("Profissionais", { exact: true }).fill("ilimitado"); await page.getByLabel("Usuários da equipe").fill("0");
     await page.getByLabel("Módulos incluídos").getByLabel(/CRM/i).check().catch(() => undefined);
     await page.getByRole("button", { name: "Salvar plano" }).click(); await expect(page.getByText(/Plano salvo/)).toBeVisible({ timeout: 20_000 });
@@ -77,5 +78,25 @@ test.describe.serial("@novo White label — planos, assinatura, consumo e limite
     expect((await get(gestor, "people?select=id&limit=1", org)).status).toBe(200); expect((await call(gestor, "org_usage", {}, org)).status).toBe(200);
     expect((await call(gestor, "org_export_request", {}, org)).status).toBeLessThan(300);
     writeFileSync("test-results/wl-planos-concorrencia.json", JSON.stringify({ ...m, requisicoes: 8, aceitas: ok.length, bloqueadas_por_limite: blocked.length }, null, 2));
+  });
+  test("4. concorrência controlada do PROVISIONAMENTO (dados fictícios, volume seguro): a mesma solicitação enviada 6 vezes ao mesmo tempo cria UMA organização; 6 solicitações diferentes em paralelo criam 6 isoladas", async () => {
+    const key = `q-conc-${runId}`; const sub = `plano-c${runId.slice(-5)}`;
+    const a = answersOf({ name: `Clínica Conc ${runId}`, sub, email: `conc.${runId}@example.test` });
+    expect((await call(plat, "provisioning_draft_save", { p_key: key, p_answers: a })).status).toBeLessThan(300);
+    const t0 = Date.now(); const same = await Promise.all([1, 2, 3, 4, 5, 6].map(() => call(plat, "provisioning_submit", { p_key: key }))); m.mesma_chave_ms = Date.now() - t0;
+    const okSame = same.filter((r) => r.status < 300); const orgsSame = new Set(okSame.map((r) => r.body.org_id));
+    expect(okSame.length, JSON.stringify(same.map((r) => [r.status, String(JSON.stringify(r.body)).slice(0, 90)]))).toBeGreaterThanOrEqual(1); expect(orgsSame.size, "uma única organização").toBe(1);
+    expect(Number((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.organizations where slug = '${sub}'`))[0].n)).toBe(1);
+    // seis solicitações DIFERENTES em paralelo: seis organizações, cada uma com a sua unidade e nenhuma referência cruzada
+    const t1 = Date.now(); const subs = [1, 2, 3, 4, 5, 6].map((i) => `plano-p${i}${runId.slice(-4)}`);
+    const diff = await Promise.all(subs.map((s, i) => provision(plat, { name: `Clínica Paralela ${i + 1} ${runId}`, sub: s, email: `par${i + 1}.${runId}@example.test` }, `q-par-${i}-${runId}`))); m.seis_diferentes_ms = Date.now() - t1;
+    expect(new Set(diff.map((d) => d.org_id)).size).toBe(6); expect(diff.every((d) => /available/.test(d.status))).toBe(true);
+    const cross = await sqlDev<{ n: number }[]>(`select count(*)::int n from public.units u join public.organizations o on o.id = u.org_id where o.slug = any(array[${subs.map((s) => `'${s}'`).join(",")}]) and u.name not like '%Sede%'`);
+    expect(Number(cross[0].n)).toBe(0);
+    for (const d of diff) expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.units where org_id = '${d.org_id}'`))[0].n).toBe(1);
+    // reenviar as seis: tudo reaproveitado, nada duplicado
+    const again = await Promise.all(subs.map((_, i) => call(plat, "provisioning_submit", { p_key: `q-par-${i}-${runId}` }))); expect(again.every((r) => r.status < 300 && r.body.reused === true)).toBe(true);
+    expect(Number((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.organizations where slug = any(array[${subs.map((s) => `'${s}'`).join(",")}])`))[0].n)).toBe(6);
+    writeFileSync("test-results/wl-provisionamento-concorrencia.json", JSON.stringify({ ...m }, null, 2));
   });
 });
