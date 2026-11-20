@@ -51,7 +51,7 @@ export const RequestDetailPage = () => {
         let text = "Não foi possível enviar o convite."; try { const body = await (error as { context?: Response }).context?.json(); if (body?.message) text = body.message; } catch { /* mantém o texto padrão */ }
         m.err(text);
       } else m.ok(data?.status === "sent" ? "Convite enviado ao administrador." : data?.status === "notified" ? "Aviso enviado: o administrador já tem conta e aceita o vínculo ao entrar." : `Resultado: ${data?.status}`);
-      await qc.invalidateQueries({ queryKey: ["plat-request", id] });
+      await qc.invalidateQueries({ queryKey: ["plat-request", id] }); await qc.invalidateQueries({ queryKey: ["plat-request-evidence", id] });
     } finally { setBusy(false); }
   };
   const ev = useQuery({ queryKey: ["plat-request-evidence", id], enabled: Boolean(d && ["available", "available_with_pending"].includes(d.status)), queryFn: () => prpc<Evidence>("provisioning_access_evidence", { p_id: id }), refetchInterval: 15000 });
@@ -60,6 +60,7 @@ export const RequestDetailPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("provisioning-invite", { body: { request_id: id, action } });
       if (error) { let text = "Não foi possível concluir."; try { const body = await (error as { context?: Response }).context?.json(); if (body?.message || body?.code) text = body.message ?? `Código: ${body.code}`; } catch { /* texto padrão */ } m.err(text); }
+      else if (data?.code === "key_cannot_read") m.err(data.message);
       else m.ok(action === "revoke" ? "Convite revogado: o e-mail do convite antigo não concede mais acesso." : `Entrega conferida no provedor (${(data?.events ?? []).length} e-mail(s)).`);
       await qc.invalidateQueries({ queryKey: ["plat-request", id] }); await qc.invalidateQueries({ queryKey: ["plat-request-evidence", id] });
     } finally { setBusy(false); }

@@ -42,19 +42,20 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "check_delivery") {
-    const key = env("RESEND_API_KEY");
+    const key = env("RESEND_READ_API_KEY") || env("RESEND_API_KEY");   // a chave de ENVIO costuma não consultar entrega (401): use RESEND_READ_API_KEY ou o webhook resend-webhook
     const evs = await svc.rpc("email_events_for_request", { p_request: id });
     if (!key) return json({ status: "failed", code: "email_not_configured" }, 503);
     const out: { purpose: string; delivery: string | null; checked: boolean; error?: string }[] = [];
     for (const e of (evs.data ?? []) as { id: string; purpose: string; state: string; provider_id: string | null; delivery: string | null }[]) {
       if (e.state !== "accepted" || !e.provider_id) continue;
       const r = await fetch(`https://api.resend.com/emails/${encodeURIComponent(e.provider_id)}`, { headers: { authorization: `Bearer ${key}` } });
-      if (!r.ok) { out.push({ purpose: e.purpose, delivery: e.delivery, checked: false, error: `resend_${r.status}` }); continue; }
+      if (!r.ok) { out.push({ purpose: e.purpose, delivery: e.delivery, checked: false, error: r.status === 401 || r.status === 403 ? "key_cannot_read" : `resend_${r.status}` }); continue; }
       const j = await r.json().catch(() => null) as { last_event?: string; created_at?: string } | null;
       await svc.rpc("email_event_delivery", { p_id: e.id, p_delivery: j?.last_event ?? "unknown", p_at: null });
       out.push({ purpose: e.purpose, delivery: j?.last_event ?? "unknown", checked: true });
     }
-    return json({ status: "checked", events: out });
+    const blocked = out.length > 0 && out.every((o) => o.error === "key_cannot_read");
+    return json({ status: "checked", events: out, ...(blocked ? { code: "key_cannot_read", message: "A chave de envio do Resend não permite consultar a entrega. A entrega é registrada pelo webhook (resend-webhook): configure-o no painel do Resend, ou defina RESEND_READ_API_KEY." } : {}) });
   }
 
   const prep = await svc.rpc("provisioning_invite_prepare", { p_id: id });
