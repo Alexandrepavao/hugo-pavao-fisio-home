@@ -17,7 +17,7 @@ const SUB = "delta-fisio";
 const NOMEPAC = "Paciente Delta Jornada"; const EMAILPAC = "delta.paciente@example.test"; const FONEPAC = "(11) 98877-6655"; const NOMEFORM = "Lead Formulário Delta"; const EMAILFORM = "delta.formulario@example.test";
 const shot = (page: Page, name: string, full = false) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: full });
 const advance = async (page: Page, to: number) => { await page.getByTestId("proximo").click(); await expect(page.getByTestId(`step-${to}`)).toBeVisible(); };
-const as = async (context: BrowserContext, email: string) => { const s = await signIn(email); await useSession(context, s); return s; };
+const entrarComo = async (context: BrowserContext, email: string) => { const s = await signIn(email); await useSession(context, s); return s; };
 const spDate = (days: number) => new Date(Date.now() + days * 864e5).toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100).replace(/\s/g, " ");
 
@@ -85,7 +85,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
 
   test("3. configuração operacional SÓ pelos fluxos normais: serviços, pacote, conta financeira, fisioterapeuta, acesso, disponibilidade e regra de repasse", async ({ page, context }) => {
     await mkUser(FISIO);   // SIMULADO: conta da fisioterapeuta já confirmada (o convite real dela segue o mesmo caminho do administrador)
-    await as(context, ADMIN); const t0 = Date.now();
+    await entrarComo(context, ADMIN); const t0 = Date.now();
     // serviços e pacote (Configurações)
     await page.goto("/admin/configuracoes");
     await page.getByText("Serviços (duração/preço do atendimento)").locator("xpath=ancestor::div[.//button[normalize-space()='Gerenciar']][1]").getByRole("button", { name: "Gerenciar" }).click();
@@ -123,7 +123,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("4. captação pública da Delta: WhatsApp próprio, página/formulário criados no editor e quiz — o lead entra UMA vez no CRM da Delta, com origem e campanha, e em nenhuma outra organização", async ({ page, context, browser }) => {
-    await as(context, ADMIN);
+    await entrarComo(context, ADMIN);
     // número de WhatsApp da Delta (Configurações ▸ Captação)
     await page.goto("/admin/configuracoes");
     await page.getByText("Número de WhatsApp por jornada").locator("xpath=ancestor::div[.//button[normalize-space()='Gerenciar']][1]").getByRole("button", { name: "Gerenciar" }).click();
@@ -179,7 +179,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("5. avaliação agendada pela agenda da Delta: o lead vira paciente PENDENTE (um só vínculo, mesma pessoa, sem duplicar cadastro nem oportunidade)", async ({ page, context }) => {
-    await as(context, ADMIN);
+    await entrarComo(context, ADMIN);
     S.day = spDate(2);
     await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day); await page.locator("#ap").selectOption(S.prof); await page.locator("#as").selectOption(S.svcEval);
     await page.locator("#apn").fill(NOMEPAC); await page.getByRole("button", { name: NOMEPAC, exact: true }).click();
@@ -202,7 +202,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("6. apresentação personalizada pela fisioterapeuta da Delta: captura, prévia real do portal e publicação — sem evidências nem dados da HP", async ({ page, context }) => {
-    await as(context, FISIO);
+    await entrarComo(context, FISIO);
     await page.goto(`/fisio/pacientes?pessoa=${S.person}`); await expect(page.getByTestId("presentation-entry")).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId("presentation-entry")).toContainText("Paciente pendente"); await expect(page.getByTestId("presentation-entry")).toContainText("não ativa o paciente");
     await page.getByTestId("open-presentation").click(); await expect(page.getByTestId("presentation-workspace")).toBeVisible({ timeout: 30_000 });
@@ -259,7 +259,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("8. venda e pagamento: 'Venda feita' NÃO ativa; parcela parcial NÃO ativa; estorno gera repasse negativo; 1ª parcela quitada ATIVA; reenvio, organização errada e estorno conforme as regras", async ({ page, context }) => {
-    await as(context, ADMIN); const g = adminS;
+    await entrarComo(context, ADMIN); const g = adminS;
     await page.goto("/admin/crm/oportunidades"); await page.getByText(NOMEPAC, { exact: true }).first().click(); await page.getByRole("link", { name: "Converter em venda" }).click();
     await expect(page).toHaveURL(/\/admin\/financeiro\/vendas\?venda=/); await expect(page.getByText("Venda originada de uma oportunidade")).toBeVisible();
     await page.locator("#pr").selectOption(S.pkg); await page.locator("#in").fill("2"); await page.locator("#fd").fill(spDate(0));
@@ -296,7 +296,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("9. sessão agendada e realizada pelos fluxos normais: consome UMA sessão só quando a fisioterapeuta registra o comparecimento", async ({ page, context }) => {
-    await as(context, ADMIN); S.day2 = spDate(3);
+    await entrarComo(context, ADMIN); S.day2 = spDate(3);
     await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day2); await page.locator("#ap").selectOption(S.prof); await page.locator("#as").selectOption(S.svcSess);
     await page.locator("#apn").fill(NOMEPAC); await page.getByRole("button", { name: NOMEPAC, exact: true }).click();
     const sel = page.locator("#ash"); await expect.poll(async () => (await sel.locator("option").count())).toBeGreaterThan(1);
@@ -325,7 +325,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("10. financeiro e repasse: receita, caixa, repasse provisionado e repasse pago são coisas diferentes; valor positivo visível ao gestor e à fisioterapeuta, vindo da regra da Delta", async ({ page, context }) => {
-    await as(context, ADMIN);
+    await entrarComo(context, ADMIN);
     const n = async (q: string) => (await sqlDev<{ v: number }[]>(q))[0].v;
     // receita contratada (venda confirmada) × caixa (recebido líquido de estornos) × repasse provisionado/pago
     const receita = await n(`select coalesce(sum(total_cents), 0)::int v from public.sales where org_id = '${orgId}' and status = 'confirmed'`);
@@ -368,7 +368,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
       const w2 = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${S.pkg}`, { method: "PATCH", headers: { apikey: ANON, authorization: `Bearer ${s.access_token}`, "content-type": "application/json", prefer: "return=representation" }, body: JSON.stringify({ price_cents: 1 }) }); const b2 = await w2.json().catch(() => []); expect(w2.status >= 400 || (Array.isArray(b2) && b2.length === 0), `${email} altera produto da Delta`).toBe(true);
       const c1 = await call(s, "sale_confirm", { p_sale: S.sale }); expect(c1.status, `${email} confirma venda da Delta`).toBeGreaterThanOrEqual(400);
       const c2 = await call(s, "set_appointment_status", { p_id: S.sess, p_status: "cancelled_by_clinic", p_reason: null }); expect(c2.status, `${email} muda atendimento da Delta`).toBeGreaterThanOrEqual(400);
-      const c3 = await call(s, "portal_access_state", { p_person: S.person }); expect(c3.status, `${email} lê acesso do paciente da Delta (achado do N40: corrigido na migration 147)`).toBeGreaterThanOrEqual(400);
+      const c3 = await call(s, "portal_access_state", { p_person: S.person }); expect(c3.status, `${email} lê acesso do paciente da Delta (achado do N40: corrigido na migration 148)`).toBeGreaterThanOrEqual(400);
       const c4 = await call(s, "person_portal_access", { p_person: S.person, p_email: EMAILPAC }); expect(c4.status, `${email} convida paciente da Delta`).toBeGreaterThanOrEqual(400);
     }
     // a Delta não enxerga nada de fora
