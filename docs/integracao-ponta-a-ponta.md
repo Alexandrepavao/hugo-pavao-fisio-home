@@ -29,6 +29,8 @@
 
 ## 3. Venda → pagamento → pacote → agenda → atendimento/cancelamento/falta → saldo de sessão
 
+> **Atualização 17/11/2026 (migration 131):** “venda feita” (confirmar a venda / oportunidade ganha) **não concede mais pacote, saldo nem o tipo paciente**: eles saem quando a **1ª parcela da própria venda está quitada**, e o vínculo pendente vira ativo. Ver `docs/jornada-avaliacao-apresentacao-pagamento.md` §7.
+
 | | |
 |---|---|
 | Apps envolvidos | Financeiro (venda, parcelas, recebimento) → Pacotes → Agenda → Portal do paciente/profissional |

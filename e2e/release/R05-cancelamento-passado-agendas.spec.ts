@@ -29,6 +29,10 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
     const product = (await rest(mgr, "POST", "products", { org_id: org, kind: "package", name: `Pacote R05 ${runId}`, price_cents: 10000, sessions_count: 4, validity_days: 90, consume_on_no_show: true, late_cancel_hours: 24, service_id: svc.E, active: true, access_rule: "on_first_payment" })).body[0].id as string;
     const sale = await g.rpc("sale_create", { p_person: person, p_unit: unit, p_opportunity: null, p_items: [{ product_id: product, qty: 1 }], p_discount_cents: 0, p_installments: 1, p_first_due: spDate(0) });
     expect(sale.status, JSON.stringify(sale.body)).toBe(200); expect((await g.rpc("sale_confirm", { p_sale: sale.body })).status).toBeLessThan(300);
+    // REGRA (migration 131): o pacote só sai com a 1ª parcela quitada — o recebimento (venda de 1 parcela) é registrado pelo financeiro
+    expect((await g.get(`client_packages?select=id&sale_id=eq.${sale.body}`)).body, "venda confirmada sem pagamento não cria pacote").toHaveLength(0);
+    const rec = (await g.get(`receivables?select=id,amount_cents&sale_id=eq.${sale.body}&installment_no=eq.1`)).body[0] as { id: string; amount_cents: number };
+    expect((await g.rpc("payment_record", { p_receivable: rec.id, p_amount_cents: rec.amount_cents, p_paid_at: new Date().toISOString(), p_method: "pix", p_account: null, p_idempotency_key: `r05-${runId}` })).status).toBeLessThan(300);
     S.pkg = (await g.get(`client_packages?select=id&sale_id=eq.${sale.body}`)).body[0].id; expect(await bal()).toBe(4);
     const slotsOf = async (day: string, k: string) => ((await g.rpc("available_slots", { p_professional: prof.id, p_unit: unit, p_service: svc[k], p_date: day })).body as { slot_start: string }[]).map((s) => s.slot_start);
     const book = async (k: string, start: string, pkg: string | null) => { const r = await g.rpc("book_appointment", { p_person: person, p_unit: unit, p_professional: prof.id, p_service: svc[k], p_start: start, p_package: pkg, p_opportunity: null }); expect(r.status, JSON.stringify(r.body)).toBe(200); return r.body as string; };

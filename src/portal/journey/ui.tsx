@@ -1,9 +1,9 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Area, CartesianGrid, ComposedChart, LabelList, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { Activity, BookOpen, CalendarDays, Check, ClipboardList, Dumbbell, Flag, LineChart, Map as MapIcon, Package, PlayCircle, Sparkles, Target, Video } from "lucide-react";
+import { Activity, BookOpen, CalendarDays, Check, ClipboardList, Dumbbell, ExternalLink, Flag, FlaskConical, Hourglass, LineChart, Map as MapIcon, Package, PlayCircle, Sparkles, Target, Video } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
-import { APPT_KIND_LABEL, EDU_TOPIC_LABEL, apptKind, nextAction, num, painSummary, sessionsSummary, stageStates, weekDays, type ApptItem, type ExerciseItem, type JourneyModel, type JourneyTab, type VideoItem } from "./model";
+import { APPT_KIND_LABEL, EDU_TOPIC_LABEL, apptKind, nextAction, num, painSummary, sessionsSummary, stageStates, weekDays, type ApptItem, type EvidenceItem, type ExerciseItem, type JourneyModel, type JourneyTab, type VideoItem } from "./model";
 import "./journey.css";
 
 /** O que muda entre o portal real e a demonstração: para onde os botões levam e o que os botões de ação fazem. Os componentes não sabem em qual dos dois estão. */
@@ -13,6 +13,7 @@ export interface JourneyActions {
   confirmAppt?: (a: ApptItem) => void; cancelAppt?: (a: ApptItem) => void;
   watch?: (v: { id: string; title: string; kind: "exercise" | "video" }) => void;
   markDone?: (e: ExerciseItem) => void;            // só na demonstração (estado local); no portal real o registro é feito na aba Exercícios
+  presentationHref?: string;                       // portal real: link para a apresentação liberada do paciente
 }
 const Ctx = createContext<JourneyActions>({});
 export const JourneyProvider = ({ value, children }: { value: JourneyActions; children: ReactNode }) => <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -222,6 +223,43 @@ export const EducationCard = ({ m }: { m: JourneyModel }) => (
   </section>
 );
 
+// ---------------------------------------------------------------- vínculo PENDENTE: o estado verdadeiro, sem cobrança nem culpa
+export const EnrollmentCard = ({ m }: { m: JourneyModel }) => {
+  const a = useJourney();
+  if (m.enrollment?.status !== "pending") return null;
+  const text = m.enrollment.payment === "awaiting"
+    ? "A contratação do acompanhamento foi registrada e estamos aguardando a confirmação do pagamento da primeira parcela. Assim que for confirmado, seu acompanhamento é ativado automaticamente e seu pacote de sessões aparece aqui."
+    : "Você já pode conhecer sua avaliação, seus objetivos e o plano proposto. O acompanhamento é ativado depois da contratação e da confirmação do pagamento — até lá nada é cobrado por esta tela e nenhum pacote aparece como contratado.";
+  return (
+    <section className="jr-card is-lilac jr-c12 jr-span-all" aria-label="Estado do seu acompanhamento" data-testid="jr-enrollment-pending">
+      <h2 className="jr-title"><Hourglass size={18} aria-hidden />Seu acompanhamento: pendente</h2>
+      <p>{text}</p>
+      <p className="jr-small jr-muted">Dúvidas sobre a contratação? Fale com a equipe — o plano clínico continua sendo definido pelo seu fisioterapeuta.</p>
+      {a.presentationHref && <div className="jr-row" style={{ marginTop: 8 }}><Link to={a.presentationHref} className="jr-btn" data-testid="jr-open-presentation"><Sparkles size={16} aria-hidden />Rever minha apresentação</Link></div>}
+    </section>
+  );
+};
+
+// ---------------------------------------------------------------- ciência por trás do acompanhamento: SÓ fichas aprovadas, com quem participou, comparação, resultados, seguimento e limites
+const EVIDENCE_FIELDS: [keyof EvidenceItem, string][] = [["population", "Quem participou"], ["comparison", "O que foi comparado"], ["benefits", "O que foi encontrado"], ["duration", "Duração do tratamento"], ["follow_up", "Período de seguimento"], ["limitations", "Limitações do estudo"]];
+export const EvidenceBlock = ({ e }: { e: EvidenceItem }) => (
+  <article className="jr-ph" style={{ borderStyle: "solid", display: "grid", gap: 6 }} data-testid="jr-evidence-item">
+    <b style={{ color: "hsl(var(--jr-navy))" }}>{e.title}</b>
+    <span className="jr-small jr-muted">{[e.authors, e.journal, e.year].filter(Boolean).join(" · ")}{e.design ? ` · ${e.design}` : ""}</span>
+    {EVIDENCE_FIELDS.map(([k, label]) => (e[k] ? <p key={k} className="jr-small"><b>{label}:</b> {String(e[k])}</p> : null))}
+    {e.relation && <p className="jr-small"><b>Relação com o seu plano:</b> {e.relation}</p>}
+    {e.differences && <p className="jr-small"><b>O que é diferente do seu caso:</b> {e.differences}</p>}
+    {(e.url || e.doi) && <a className="jr-small" href={e.url ?? `https://doi.org/${e.doi}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>Ver a fonte original<ExternalLink size={12} aria-hidden /></a>}
+  </article>
+);
+export const EvidenceCard = ({ m }: { m: JourneyModel }) => !m.evidence || m.evidence.length === 0 ? null : (
+  <section className="jr-card jr-c12 jr-span-all" aria-label="Ciência por trás do acompanhamento" data-testid="jr-evidence">
+    <h2 className="jr-title"><FlaskConical size={18} aria-hidden />A ciência por trás do seu acompanhamento</h2>
+    <div style={{ display: "grid", gap: 8 }}>{m.evidence.map((e) => <EvidenceBlock key={e.id} e={e} />)}</div>
+    <p className="jr-small jr-muted" style={{ marginTop: 8 }}>Estudos escolhidos e revisados pela equipe clínica. Resultados de grupos de pessoas não garantem o resultado individual e não substituem a avaliação do seu fisioterapeuta.</p>
+  </section>
+);
+
 // ---------------------------------------------------------------- programas/ofertas decididos pelo administrador (só com consentimento comercial)
 export const OffersCard = ({ m }: { m: JourneyModel }) => m.offers.length === 0 ? null : (
   <section className="jr-card is-amber jr-c12 jr-span-all" aria-label="Próximo passo para você" data-testid="jr-offers">
@@ -275,12 +313,13 @@ export const PatientDashboard = ({ m, now, onboarding }: { m: JourneyModel; now?
   <div className="jr" data-testid="patient-home" data-mode={m.mode}>
     <div className="jr-grid">
       {onboarding && <OnboardingStep>{onboarding}</OnboardingStep>}
+      <EnrollmentCard m={m} />
       <JourneyHero m={m} now={now} /><NextAppointmentCard m={m} />
       {m.hasData ? <JourneyTimeline m={m} /> : <StartState m={m} />}
       {m.hasData && <><PainChartCard m={m} /><FunctionalCard m={m} /></>}
       <ExerciseCards m={m} /><WeekCard m={m} now={now} />
       <ReassessmentCard m={m} /><OffersCard m={m} />
-      <SessionsCard m={m} /><EducationCard m={m} />
+      <SessionsCard m={m} /><EducationCard m={m} /><EvidenceCard m={m} />
     </div>
   </div>
 );
