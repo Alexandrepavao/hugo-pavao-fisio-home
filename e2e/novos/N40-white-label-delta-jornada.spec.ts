@@ -17,6 +17,7 @@ const NOMEPAC = "Paciente Delta Jornada"; const EMAILPAC = "delta.paciente@examp
 const shot = (page: Page, name: string, full = false) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: full });
 const advance = async (page: Page, to: number) => { await page.getByTestId("proximo").click(); await expect(page.getByTestId(`step-${to}`)).toBeVisible(); };
 const as = async (context: BrowserContext, email: string) => { const s = await signIn(email); await useSession(context, s); return s; };
+const spDate = (days: number) => new Date(Date.now() + days * 864e5).toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100).replace(/\s/g, " ");
 
 test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 }, actionTimeout: 30_000 });
@@ -162,6 +163,58 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     }
     const outras = await sqlDev<{ n: number }[]>(`select count(*)::int n from public.quiz_leads where email in ('${EMAILPAC}', '${EMAILFORM}') and org_id <> '${orgId}'`); expect(outras[0].n).toBe(0);
     tempos.captacao_leads = 2;
+  });
+
+  test("5. avaliação agendada pela agenda da Delta: o lead vira paciente PENDENTE (um só vínculo, mesma pessoa, sem duplicar cadastro nem oportunidade)", async ({ page, context }) => {
+    await as(context, ADMIN);
+    S.day = spDate(2);
+    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day); await page.locator("#ap").selectOption(S.prof); await page.locator("#as").selectOption(S.svcEval);
+    await page.locator("#apn").fill(NOMEPAC); await page.getByRole("button", { name: NOMEPAC, exact: true }).click();
+    const sel = page.locator("#ash"); await expect.poll(async () => (await sel.locator("option").count())).toBeGreaterThan(1);
+    const opts = await sel.locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter(Boolean)); await sel.selectOption(opts[0]);
+    await page.locator("#aop").selectOption(S.opp);
+    await page.getByRole("button", { name: "Agendar", exact: true }).click(); await expect(page.getByText("Agendamento criado.")).toBeVisible({ timeout: 20_000 });
+    await shot(page, "13-delta-avaliacao-agendada");
+    // o funil já reflete a avaliação agendada (agendar com a oportunidade move a etapa; a opção fica desabilitada no menu)
+    await page.goto("/admin/crm/oportunidades"); await expect(page.getByRole("region", { name: "Quadro do funil" })).toBeVisible();
+    await expect(page.getByRole("region", { name: /^Avaliação agendada/ }).getByText(NOMEPAC)).toBeVisible({ timeout: 20_000 }); await shot(page, "13b-delta-funil-avaliacao-agendada");
+    const e = await sqlDev<{ status: string; n: number; care: number; pessoas: number; opps: number }[]>(`select (select status from public.patient_enrollments where person_id = '${S.person}' limit 1) status, (select count(*)::int from public.patient_enrollments where person_id = '${S.person}') n,
+      (select count(*)::int from public.care_relationships where person_id = '${S.person}' and revoked_at is null) care, (select count(distinct p.id)::int from public.people p join public.person_contacts c on c.person_id = p.id where c.value = '${EMAILPAC}') pessoas,
+      (select count(*)::int from public.opportunities where person_id = '${S.person}') opps`);
+    expect(e[0]).toMatchObject({ status: "pending", n: 1, care: 1, pessoas: 1, opps: 1 });
+    S.enr = (await sqlDev<{ id: string }[]>(`select id::text from public.patient_enrollments where person_id = '${S.person}'`))[0].id;
+    S.appt = (await sqlDev<{ id: string }[]>(`select id::text from public.appointments where person_id = '${S.person}'`))[0].id;
+  });
+
+  test("6. apresentação personalizada pela fisioterapeuta da Delta: captura, prévia real do portal e publicação — sem evidências nem dados da HP", async ({ page, context }) => {
+    await as(context, FISIO);
+    await page.goto(`/fisio/pacientes?pessoa=${S.person}`); await expect(page.getByTestId("presentation-entry")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("presentation-entry")).toContainText("Paciente pendente"); await expect(page.getByTestId("presentation-entry")).toContainText("não ativa o paciente");
+    await page.getByTestId("open-presentation").click(); await expect(page.getByTestId("presentation-workspace")).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Traumato-Ortopédica" }).click();
+    await page.getByLabel("Queixa principal").fill("Dor no ombro direito ao levantar o braço"); await page.getByLabel("Há quanto tempo").fill("há 3 meses"); await page.getByLabel("Atividades que quer retomar").fill("Voltar a nadar");
+    await page.getByLabel("Limitações funcionais").fill("Não consigo pentear o cabelo"); await page.getByLabel("A condição é…").selectOption("hypothesis"); await page.getByLabel("Descrição").fill("Possível tendinopatia do manguito");
+    await page.getByLabel("Objetivo do paciente").fill("Voltar a nadar sem dor"); await page.getByLabel("Frequência (vezes por semana)").fill("2"); await page.getByLabel("Duração prevista (semanas)").fill("8");
+    await page.getByLabel("Rotina orientada").fill("Exercícios 3 vezes por semana em casa"); await page.getByTestId("pw-internal").fill("ANOTAÇÃO INTERNA DELTA: não aparece ao paciente");
+    await expect(page.getByTestId("pw-save-state")).toHaveAttribute("data-state", "saved", { timeout: 20_000 });
+    await page.getByLabel("Valor (0 a 10)").fill("7"); await page.getByTestId("pw-measure-add").click(); await expect(page.getByTestId("pw-measures")).toContainText("ponto de partida");
+    await shot(page, "14-delta-apresentacao-captura", true);
+    // biblioteca de evidências: a Delta NÃO herda as fichas da HP
+    await page.getByTestId("pw-tab-evidencias").click(); await expect(page.getByTestId("pw-evidence-panel")).toBeVisible(); await expect(page.getByTestId("pw-evidence-suggestion")).toHaveCount(0); await expect(page.getByTestId("pw-evidence-none")).toBeVisible();
+    // apresentação guiada e prévia REAL do portal
+    await page.getByTestId("pw-tab-apresentar").click(); await expect(page.getByTestId("pp-step-objetivo")).toContainText("Voltar a nadar sem dor");
+    for (let i = 0; i < 4; i++) await page.getByTestId("pp-next").click();
+    await expect(page.getByTestId("pp-plan")).toContainText("2x por semana");
+    await page.getByTestId("pp-next").click(); await page.getByTestId("pp-next").click();
+    const prev = page.getByTestId("portal-preview"); await expect(prev).toBeVisible({ timeout: 30_000 }); await expect(page.getByTestId("pv-banner")).toContainText("Prévia da área do paciente");
+    await expect(prev.getByTestId("jr-enrollment-pending")).toBeVisible({ timeout: 20_000 }); await expect(prev).not.toContainText("ANOTAÇÃO INTERNA"); await shot(page, "15-delta-previa-portal", true);
+    // publicar cria a versão 1; repetir não duplica
+    await page.getByTestId("pw-tab-publicar").click(); await page.getByTestId("pw-publish").click(); await page.getByRole("button", { name: "Publicar", exact: true }).click();
+    await expect(page.getByText("Versão 1 publicada")).toBeVisible({ timeout: 20_000 }); await expect(page.getByTestId("pw-publish")).toBeDisabled();
+    const n = await sqlDev<{ v: number; g: number }[]>(`select (select count(*)::int from public.presentation_versions pv join public.evaluation_presentations p on p.id = pv.presentation_id where p.enrollment_id = '${S.enr}') v, (select count(*)::int from public.patient_goals where person_id = '${S.person}') g`);
+    expect(n[0]).toEqual({ v: 1, g: 1 });
+    // a apresentação e a prévia NÃO misturam demonstração institucional com dado real: o rótulo de prévia/real vem da própria interface
+    const ev = await sqlDev<{ n: number }[]>(`select count(*)::int n from public.evidence_library where org_id = '${orgId}'`).catch(() => [{ n: 0 }]); expect(ev[0].n).toBe(0);
   });
 });
 
