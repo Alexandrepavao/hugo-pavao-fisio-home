@@ -124,24 +124,25 @@ export const StatCard = ({ label, value, unit, period, delta, basis, tone, unava
       {unit && !unavailable && <span className="hp-kpi-unit">{unit}</span>}
     </div>
   );
-  const body = level === "compact" ? (<>
-    {Ico && <span aria-hidden className="hp-kpi-ico"><Ico /></span>}
-    <div className="hp-kpi-mid"><p className="hp-kpi-label" id={labelId}>{label}</p>{deltaEl}</div>
-    <div className="text-right">{valueEl}{period && <span className="hp-kpi-period">{period}</span>}</div>
-  </>) : (<>
+  // UM padrão de cartão para TODOS os níveis (mesma estrutura e mesmo tamanho): cabeçalho (ícone, nome, período), valor, aviso curto e rodapé com situação + ação.
+  const body = (<>
     <div className="hp-kpi-head">
       {Ico && <span aria-hidden className="hp-kpi-ico"><Ico /></span>}
-      <p className="hp-kpi-label" id={labelId}>{label}</p>
+      <p className="hp-kpi-label" id={labelId} title={label}>{label}</p>
       {period && <span className="hp-kpi-period">{period}</span>}{onClick && <ChevronRight aria-hidden className="hp-kpi-more" size={16} />}
     </div>
     <div className="hp-kpi-valuerow">
       <div className="hp-kpi-valuecol">{valueEl}{deltaEl}</div>
       {spark && <Sparkline data={spark} />}
     </div>
-    {status && <p><span className="hp-kpi-status">{status}</span></p>}
     {unavailable && basis && <p className="hp-kpi-reason">{basis.replace(/^indisponível:\s*/i, "")}</p>}
     {caveat && <p className="hp-kpi-reason">{caveat}</p>}
-    {onClick && action && <span aria-hidden className="hp-kpi-cta">{action} <ArrowRight size={13} /></span>}
+    {(status || (onClick && action)) && (
+      <div className="hp-kpi-foot">
+        {status && <span className="hp-kpi-status">{status}</span>}
+        {onClick && action && <span aria-hidden className="hp-kpi-cta">{action} <ArrowRight size={13} /></span>}
+      </div>
+    )}
   </>);
   // “Sobre este indicador”: fórmula, origem e critérios saem do cartão e ficam a um clique (ou Enter), sem depender de hover
   const about = (basis || period) ? (
