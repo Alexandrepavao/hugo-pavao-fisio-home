@@ -6,8 +6,46 @@ import { ORG_STATUS, prpc, type Catalog, type OrgRow } from "./api";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
 import UsageView, { type UsageData } from "./UsageView";
+import { HistoryList, limText, type HistoryRow } from "./CatalogPlans";
 
 interface OrgModule { module_key: string; enabled: boolean; source: string }
+interface Sub { subscription: { plan_key: string; status: string; enforcement: string; limits_override: Record<string, unknown>; implementation_status: string; notes: string | null }; plan: { key: string; name: string; status: string } }
+
+/** Assinatura da organização no PLANO DA PLATAFORMA (não é o financeiro da clínica): plano, estado, imposição de novas criações e exceções de limite (vazio = usa o plano; "ilimitado"; 0). Com histórico. */
+const SubscriptionPanel = ({ orgId, plans, onSaved }: { orgId: string; plans: Catalog["plans"]; onSaved: () => void }) => {
+  const qc = useQueryClient(); const [msg, m] = useMsg(); const [busy, setBusy] = useState(false);
+  const sub = useQuery({ queryKey: ["plat-sub", orgId], queryFn: () => prpc<Sub | null>("platform_org_subscription", { p_org: orgId }) });
+  const hist = useQuery({ queryKey: ["plat-history", "subscription", orgId], queryFn: () => prpc<HistoryRow[]>("platform_history", { p_type: "subscription", p_id: orgId, p_limit: 20 }) });
+  const [f, setF] = useState<{ plan: string; status: string; enforcement: string; units: string; prof: string } | null>(null);
+  const cur = sub.data?.subscription;
+  const form = f ?? (cur ? { plan: cur.plan_key, status: cur.status, enforcement: cur.enforcement, units: limText(cur.limits_override, "max_units"), prof: limText(cur.limits_override, "max_professionals") } : { plan: "", status: "trial", enforcement: "warn", units: "", prof: "" });
+  const lim = (s: string): number | null | undefined => (s.trim() === "" ? undefined : /^ilimitad/i.test(s.trim()) ? null : Number(s));
+  const save = async () => {
+    setBusy(true);
+    try {
+      const override: Record<string, number | null> = {}; const u = lim(form.units), p = lim(form.prof); if (u !== undefined) override.max_units = u; if (p !== undefined) override.max_professionals = p;
+      await prpc("platform_subscription_set", { p_org: orgId, p_patch: { plan_key: form.plan, status: form.status, enforcement: form.enforcement, limits_override: override } });
+      m.ok("Assinatura salva. Nenhuma cobrança é gerada; o financeiro da clínica não é tocado."); setF(null); onSaved(); await qc.invalidateQueries({ queryKey: ["plat-sub", orgId] }); await qc.invalidateQueries({ queryKey: ["plat-history", "subscription", orgId] }); await qc.invalidateQueries({ queryKey: ["plat-orgs"] });
+    } catch (e) { m.err((e as Error).message); } finally { setBusy(false); }
+  };
+  const set = (k: keyof typeof form, v: string) => setF({ ...form, [k]: v });
+  return (
+    <section aria-label="Plano e assinatura" className="hp-card p-4 lg:col-span-2" data-testid="assinatura">
+      <h3 className="font-semibold text-foreground mb-1">Plano e assinatura</h3>
+      <p className="text-xs text-muted-foreground mb-3">Plano do <strong>produto</strong> (plataforma). Separado do financeiro da clínica: nada aqui cria venda, recebível ou cobrança.</p>
+      <Msg m={msg} /><State loading={sub.isLoading} error={sub.error} />
+      <div className="grid gap-3 sm:grid-cols-5 items-end">
+        <label className="text-sm"><span className="block text-xs text-muted-foreground mb-1">Plano</span><select className={inputCls} value={form.plan} onChange={(e) => set("plan", e.target.value)} data-testid="sub-plano"><option value="">Selecione…</option>{plans.map((p) => <option key={p.key} value={p.key}>{p.name} ({p.key}){p.status !== "active" ? ` · ${p.status === "draft" ? "rascunho" : p.status}` : ""}</option>)}</select></label>
+        <label className="text-sm"><span className="block text-xs text-muted-foreground mb-1">Estado</span><select className={inputCls} value={form.status} onChange={(e) => set("status", e.target.value)}>{[["trial", "teste"], ["active", "ativa"], ["suspended", "suspensa"], ["cancelled", "cancelada"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label className="text-sm"><span className="block text-xs text-muted-foreground mb-1">Novas criações acima do limite</span><select className={inputCls} value={form.enforcement} onChange={(e) => set("enforcement", e.target.value)} data-testid="sub-imposicao"><option value="warn">só avisar</option><option value="block_new">bloquear novas (unidades e profissionais)</option></select></label>
+        <label className="text-sm"><span className="block text-xs text-muted-foreground mb-1">Exceção: unidades</span><input className={inputCls} value={form.units} placeholder="usa o plano" onChange={(e) => set("units", e.target.value)} data-testid="sub-unidades" /></label>
+        <label className="text-sm"><span className="block text-xs text-muted-foreground mb-1">Exceção: profissionais</span><input className={inputCls} value={form.prof} placeholder="usa o plano" onChange={(e) => set("prof", e.target.value)} data-testid="sub-profissionais" /></label>
+      </div>
+      <div className="mt-3"><button className={btnPrimary} disabled={busy || !form.plan} onClick={() => void save()} data-testid="salvar-assinatura">Salvar assinatura</button></div>
+      <div className="mt-4"><HistoryList rows={hist.data} testid="sub-history" /></div>
+    </section>
+  );
+};
 
 const OrgDetail = ({ org, catalog }: { org: OrgRow; catalog: Catalog }) => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const [host, setHost] = useState(""); const [busy, setBusy] = useState(false);
@@ -53,6 +91,7 @@ const OrgDetail = ({ org, catalog }: { org: OrgRow; catalog: Catalog }) => {
         <State loading={usage.isLoading} error={usage.error} />
         {usage.data && <UsageView data={usage.data} />}
       </section>
+      <SubscriptionPanel orgId={org.id} plans={catalog.plans} onSaved={() => void qc.invalidateQueries({ queryKey: ["plat-usage", org.id] })} />
       <section aria-label="Endereços" className="hp-card p-4">
         <h3 className="font-semibold text-foreground mb-2">Endereços de acesso</h3>
         <p className="text-sm mb-2">{org.domains.length ? org.domains.join(", ") : "Nenhum endereço verificado."}</p>
