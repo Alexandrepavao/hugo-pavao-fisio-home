@@ -228,7 +228,7 @@ test.describe.serial("@release Central de pendências administrativas (desktop)"
     // telas: fisioterapeuta vê "Sem permissão"; comercial abre o dashboard (leitura)
     await loginAs(context, QA.fisio); await page.goto("/admin/adm"); await expect(page.getByRole("heading", { name: "Sem permissão" })).toBeVisible({ timeout: 20_000 });
     const ctx2 = await page.context().browser()!.newContext(); const p2 = await ctx2.newPage(); await loginAs(ctx2, QA.comercial); await p2.goto("/admin/adm");
-    await expect(p2.getByRole("heading", { name: "Prioridades administrativas" })).toBeVisible({ timeout: 40_000 }); await ctx2.close();
+    await expect(p2.getByRole("heading", { name: "O que precisa de atenção" })).toBeVisible({ timeout: 40_000 }); await ctx2.close();
   });
 
   test("limpeza: documento removido, contrato cancelado, contato e tipo de teste desfeitos", async () => {

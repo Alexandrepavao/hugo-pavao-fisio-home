@@ -6,7 +6,7 @@ Gerada por `e2e/novos/N50-redesign-cobertura.spec.ts` (varredura real, gestor QA
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | Início (Hub) | `/admin` | Hub: saudação + marca | Dashboard (AdminHome) | AdminLayout › AppFrame | Dashboard | Recomposta | OK (banner/h1/menu/1440/390) | revisada em 1440/1280/768/360, escuro e zoom 200% |
 | 2 | Gestão | `/admin/adm` | Gestão → Visão geral | AdmDashboard | AdminLayout › AppFrame | Dashboard | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
-| 3 | Gestão | `/admin/adm/pendencias` | Gestão → Pendências administrativas | AdmPendencias | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
+| 3 | Gestão | `/admin/adm/pendencias` | Gestão → Pendências | AdmPendencias | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 4 | Gestão | `/admin/adm/pendencias?aba=contratos` | Gestão → Contratos | AdmPendencias (aba Contratos) | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 5 | Gestão | `/admin/adm/diretorio` | Gestão → Planilha administrativa | Diretorio (Planilha administrativa) | AdminLayout › AppFrame | Listagem/planilha | Recomposta | OK (banner/h1/menu/1440/390) | revisada em 1440/1280/768/360, escuro e zoom 200% |
 | 6 | Gestão | `/admin/adm/diretorio?tipo=pj` | Gestão → Empresas | Diretorio (tipo=pj) | AdminLayout › AppFrame | Listagem/planilha | Recomposta | OK (banner/h1/menu/1440/390) | revisada em 1440/1280/768/360, escuro e zoom 200% |
@@ -15,7 +15,7 @@ Gerada por `e2e/novos/N50-redesign-cobertura.spec.ts` (varredura real, gestor QA
 | 9 | Gestão | `/admin/chamados` | Gestão → Chamados de pacientes | SupportAdmin | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 10 | Gestão | `/admin/responsaveis` | Gestão → Responsáveis e cuidadores | Representations | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 11 | Gestão | `/admin/configuracoes?secao=org` | Gestão → Unidades | SettingsHub (Unidades) | AdminLayout › AppFrame | Configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
-| 12 | Gestão | `/admin/equipe` | Gestão → Equipe e convites | Team | AdminLayout › AppFrame | Listagem/configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
+| 12 | Gestão | `/admin/equipe` | Gestão → Equipe e acessos | Team | AdminLayout › AppFrame | Listagem/configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 13 | Gestão | `/admin/configuracoes?secao=operacao` | Gestão → Produtos e serviços | SettingsHub (Produtos e serviços) | AdminLayout › AppFrame | Configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 14 | Gestão | `/admin/configuracoes` | Gestão → Configurações | SettingsHub | AdminLayout › AppFrame | Configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 15 | Gestão | `/admin/ver-como` | Gestão → Ver como | ViewAs | AdminLayout › AppFrame | Formulário/ferramenta | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
@@ -34,7 +34,7 @@ Gerada por `e2e/novos/N50-redesign-cobertura.spec.ts` (varredura real, gestor QA
 | 28 | Financeiro | `/admin/financeiro/precos-repasses` | Financeiro → Preços e repasses | PhysioPricing | AdminLayout › AppFrame | Configurações/listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 29 | Financeiro | `/admin/contas-corporativas` | Financeiro → Contas corporativas | CorporateAccounts | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 30 | Financeiro | `/admin/financeiro/config` | Financeiro → Configurações | FinanceSettings | AdminLayout › AppFrame | Configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
-| 31 | CRM | `/admin/crm` | CRM → Painel comercial | CrmDashboard | AdminLayout › AppFrame | Dashboard | Padrão compartilhado | OK (banner/h1/menu/1440/390) | aviso de chave duplicada já existente no CRM (R27/R32) |
+| 31 | CRM | `/admin/crm` | CRM → Visão geral | CrmDashboard | AdminLayout › AppFrame | Dashboard | Padrão compartilhado | OK (banner/h1/menu/1440/390) | aviso de chave duplicada já existente no CRM (R27/R32) |
 | 32 | CRM | `/admin/crm/leads` | CRM → Gestão de leads | CrmLeads | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 33 | CRM | `/admin/crm/contatos` | CRM → Contatos | CrmContacts | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 34 | CRM | `/admin/crm/listas` | CRM → Listas | CrmLists | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
@@ -59,7 +59,7 @@ Gerada por `e2e/novos/N50-redesign-cobertura.spec.ts` (varredura real, gestor QA
 | 53 | Marketing | `/admin/marketing/configuracoes` | Marketing → Configurações | MarketingSettings | AdminLayout › AppFrame | Configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 54 | Operação | `/admin/agenda` | Operação → Agenda | Agenda | AdminLayout › AppFrame | Calendário/agenda | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 55 | Operação | `/admin/acompanhamento` | Operação → Acompanhamento de pacientes | Care | AdminLayout › AppFrame | Listagem/detalhe | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
-| 56 | Academy | `/admin/academy` | Academy → Cursos e mentorias | AcademyAdmin | AdminLayout › AppFrame | Listagem/configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
+| 56 | Academy | `/admin/academy` | Academy → Cursos e alunos | AcademyAdmin | AdminLayout › AppFrame | Listagem/configurações | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 57 | Parceiros | `/admin/parceiros` | Parceiros → Parceiros | Partners | AdminLayout › AppFrame | Listagem | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 58 | Produtividade | `/admin/meu-dia` | Produtividade → Meu dia | Productivity | AdminLayout › AppFrame | Calendário/tarefas | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |
 | 59 | Produtividade | `/admin/meu-resumo` | Produtividade → Meu resumo | MySummary | AdminLayout › AppFrame | Relatório | Padrão compartilhado | OK (banner/h1/menu/1440/390) |  |

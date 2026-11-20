@@ -39,3 +39,6 @@ E2E_BASE_URL=http://127.0.0.1:5181 npx playwright test e2e/novos/N50-redesign-co
 ```
 
 Matriz de rotas: [`matriz-cobertura.md`](matriz-cobertura.md) (+ `matriz-rotas.json`). Capturas: `docs/redesign/telas/`.
+
+## Fase 2 — usabilidade e arquitetura da informação
+Padrão, responsabilidades da Gestão, onde estão os tutoriais e limitações: [`usabilidade.md`](usabilidade.md). Matriz por rota (60): [`matriz-usabilidade.md`](matriz-usabilidade.md). Resultados e triagem das falhas (com comparação na `main`): [`resultados-testes.md`](resultados-testes.md). Capturas antes/depois: `docs/redesign/baseline/` × `docs/redesign/depois/`; jornadas: `docs/redesign/usabilidade/`.
