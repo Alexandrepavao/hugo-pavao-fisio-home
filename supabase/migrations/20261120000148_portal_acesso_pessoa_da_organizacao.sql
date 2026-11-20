@@ -1,4 +1,4 @@
--- HP Group Hub — 147 Acesso ao portal: a pessoa precisa ser da organização de quem consulta/convida (Dev; white label).
+-- HP Group Hub — 148 Acesso ao portal: a pessoa precisa ser da organização de quem consulta/convida (Dev; white label).
 -- Achado do teste de isolamento da jornada da Delta (N40-11): `portal_access_state` e `person_portal_access` autorizavam pelo PAPEL (gestor da organização ativa) mas não conferiam que a
 -- pessoa-alvo é dessa organização — o gestor de uma organização lia o estado de acesso (e-mail mascarado, último envio, primeiro acesso) de paciente de OUTRA. Agora a pessoa é conferida.
 -- Varredura: demais funções públicas que recebem id de pessoa usam require_care/has_unit_role/sched_can_manage (já validam a organização desde a migration 134); estas duas eram as únicas que usavam
