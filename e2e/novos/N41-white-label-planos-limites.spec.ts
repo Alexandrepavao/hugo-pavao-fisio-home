@@ -18,7 +18,7 @@ test.describe.serial("@novo White label — planos, assinatura, consumo e limite
 
   test.beforeAll(async () => {
     execFileSync("node", ["supabase/tools/wl-limpar-orgs-teste.mjs", "plano-"], { stdio: "pipe" }); plat = await signIn(PLATFORM);
-    await sqlDev(`delete from public.platform_plans where key like 'qa\_n41\_%' and not exists (select 1 from public.org_subscriptions s where s.plan_key = platform_plans.key)`);   // planos QA de execuções anteriores (só os próprios, sem assinatura)
+    await sqlDev(`delete from public.platform_plans where starts_with(key, 'qa_n41_') and not exists (select 1 from public.org_subscriptions s where s.plan_key = platform_plans.key)`);   // planos QA de execuções anteriores (só os próprios, sem assinatura)
     const p = await provision(plat, { name: `Clínica Plano ${runId}`, sub: SUB, email: GESTOR }); org = p.org_id; await mkUser(GESTOR); gestor = await signIn(GESTOR);   // conta do gestor SIMULADA (e-mail do convite não clicado)
     unit = (await get(gestor, "units?select=id&limit=1", org)).body[0].id;
   });
