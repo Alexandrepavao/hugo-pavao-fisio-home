@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertTriangle, CalendarCheck, CalendarClock, ClipboardCheck, Copy, GraduationCap, Handshake, Package, Receipt, Smile, Stethoscope, Target, UserPlus, UserX, Wallet, ZapOff, CheckCircle2, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ChevronRight, CalendarCheck, CalendarClock, ClipboardCheck, Copy, GraduationCap, Handshake, Package, Receipt, Smile, Stethoscope, Target, UserPlus, UserX, Wallet, ZapOff, CheckCircle2, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { brl, fmtDate } from "@/lib/format";
-import { EmptyState, KpiGrid, LevelSection, State, StatCard, type CardLevel } from "@/lib/ui";
+import { EmptyState, KpiGrid, LevelSection, State, StatCard, Tabs, type CardLevel } from "@/lib/ui";
+import { useRegisterPageMeta } from "@/components/hp/pageMeta";
 import { AreaTrend, BarBlock } from "@/lib/IndicatorCharts";
 import { useAttention } from "@/components/hp/attention";
 import { makeDelta } from "@/lib/kpi";
 import { RANGE_LABEL } from "@/lib/period";
 import { CardDetailSheet, type CardDetailTrigger, type CardKind } from "@/lib/CardDetailSheet";
-import Greeting from "./Greeting";
+import { useGreetingText } from "./Greeting";
 import GeoSection from "./GeoSection";
 import { PeriodFilter } from "./finance/PeriodFilter";
 import { axisBrl, mfmt, presetRange, toExclusive, usePeriodFilterState, useUnits, type Metric } from "./finance/shared";
@@ -22,6 +23,8 @@ const ALERT_ICON: Record<string, LucideIcon> = { cobrancas_vencidas: Receipt, ta
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [opsTab, setOpsTab] = useState<"fin" | "com">("fin");
+  useRegisterPageMeta({ title: useGreetingText(), description: "Sua operação em um só lugar.", variant: "hub" });
   const attention = useAttention();
   const { preset, custom, unit, compare, onPreset, onFrom, onTo, onUnit, onCompare, onClear } = usePeriodFilterState();
   const { from, to } = preset === "personalizado" ? custom : presetRange(preset);
@@ -67,6 +70,7 @@ const Dashboard = () => {
 
   const per = RANGE_LABEL[preset];
   const alertsTotal = (alerts.data ?? []).reduce((a, x) => a + x.count, 0);
+  const alertsCats = (alerts.data ?? []).filter((x) => x.count > 0).length;
   const unitLabel = units.data?.find((u) => u.id === unit)?.name ?? "Todas as unidades";
   const [detail, setDetail] = useState<CardDetailTrigger | null>(null);
   const openDetail = (kind: CardKind) => setDetail({ kind, from: range.from, to: range.to, unit, unitLabel, prevFrom: prevRange.from, prevTo: prevRange.to });
@@ -81,35 +85,68 @@ const Dashboard = () => {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 mb-7">
-        <div className="min-w-0"><Greeting /><p className="text-muted-foreground text-[13.5px] max-w-2xl">Resumo da operação. Toque em qualquer cartão para ver o detalhamento.</p></div>
+      <div className="hp-toolbar hp-toolbar-end">
         <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
           onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare} onClear={onClear} />
       </div>
 
+      {alerts.data && alertsTotal > 0 && (
+        <div className="hp-attention-strip" role="status" data-testid="hub-atencao">
+          <AlertTriangle size={18} aria-hidden />
+          <span><strong>{alertsCats} {alertsCats === 1 ? "categoria" : "categorias"} com pendências</strong> · {alertsTotal.toLocaleString("pt-BR")} {alertsTotal === 1 ? "item" : "itens"} no total</span>
+          <Link to="/admin/adm/pendencias" className="hp-attention-link">Ver pendências <ChevronRight size={14} aria-hidden /></Link>
+        </div>
+      )}
+
       <State loading={metrics.isLoading} error={metrics.error} />
       {metrics.data && patients.data && (
-        <LevelSection level="summary" title="Indicadores prioritários" label="Visão executiva" hint="O essencial do período selecionado; o que é situação de hoje está marcado no cartão.">
+        <section aria-label="Indicadores prioritários" className="mb-5">
           <KpiGrid kind="hero">
             <Exec level="hero" icon={Wallet} label="Recebimentos" m={metrics.data.receipts_cents as Metric} prev={prevMetrics.data?.receipts_cents as Metric} kind="brl" period={per} spark={sparkIn} onOpen={() => openDetail("receipts")} />
             <Exec level="hero" icon={Stethoscope} label="Atendimentos realizados" m={metrics.data.attended as Metric} prev={prevMetrics.data?.attended as Metric} unit="atendimentos" period={per} onOpen={() => openDetail("attended")} />
             <Exec level="hero" icon={Target} label="Conversão comercial" m={metrics.data.win_rate as Metric} prev={prevMetrics.data?.win_rate as Metric} kind="pct" period={per} onOpen={() => openDetail("win_rate")} />
             <Exec level="hero" icon={UserPlus} label="Novos pacientes" value={patients.data.newPatients.toLocaleString("pt-BR")} unit="pacientes" period={per} onOpen={() => openDetail("new_patients")} />
           </KpiGrid>
-        </LevelSection>
+        </section>
       )}
 
-      {alerts.data && (
-        <LevelSection level="attention" title="Alertas e ações prioritárias" label="Alertas" hint={alertsTotal === 0 ? "Tudo em dia." : "Situação de hoje. Clique para ver os itens."}>
-          <KpiGrid kind="lg">
-            {alerts.data.map((a) => {
-              const dKind = ALERT_DETAIL[a.kind]; const danger = ALERT_DANGER.has(a.kind);
-              return <StatCard key={a.kind} level={a.count > 0 ? "attention" : "compact"} icon={a.count > 0 ? (ALERT_ICON[a.kind] ?? AlertTriangle) : CheckCircle2} label={a.label} value={a.count.toLocaleString("pt-BR")} unit={a.count === 1 ? "item" : "itens"} period="Hoje"
-                status={a.count > 0 ? (danger ? "Crítico" : "Atenção") : undefined} tone={a.count > 0 ? (danger ? "danger" : "warning") : "success"} onClick={() => (dKind ? openDetail(dKind) : navigate(a.link))} />;
-            })}
-          </KpiGrid>
-        </LevelSection>
-      )}
+      <div className="hp-hub-main">
+        <section className="hp-card hp-panel" aria-label="Visão da operação" data-testid="hub-visao">
+          <h2 className="hp-panel-title">Visão da operação</h2>
+          <Tabs tabs={[["fin", "Financeiro"], ["com", "Comercial"]]} value={opsTab} onChange={(v) => setOpsTab(v as "fin" | "com")} />
+          {opsTab === "fin" ? (
+            <AreaTrend title="Evolução financeira (6 meses)" hint="Entradas e saídas realizadas por mês." data={(cash.data ?? []) as never} xKey="mes" isEmpty={!(cash.data && cash.data.length > 0)} empty="Ainda não há movimentos financeiros suficientes para desenhar a evolução."
+              series={[{ key: "Entradas", label: "Entradas", color: "hsl(var(--success))" }, { key: "Saídas", label: "Saídas", color: "hsl(var(--destructive))" }]} format={(v) => brl(Math.round(v * 100))} yFormat={axisBrl} />
+          ) : (
+            <BarBlock title="Leads, avaliações e contratos (período)" hint="Do primeiro contato ao contrato, no período selecionado." data={(funnel.data ?? []).filter(() => funnel.data?.some((f) => f.n > 0)).map((f) => ({ etapa: f.etapa, Quantidade: f.n }))} xKey="etapa"
+              series={[{ key: "Quantidade", label: "Quantidade" }]} empty="Sem leads, avaliações ou contratos no período selecionado." />
+          )}
+        </section>
+
+        <section className="hp-card hp-panel" aria-label="Pendências prioritárias" data-testid="hub-pendencias">
+          <h2 className="hp-panel-title">Pendências prioritárias</h2>
+          {alerts.isLoading && <State loading />}
+          {alerts.data && alertsTotal === 0 && <EmptyState icon={CheckCircle2} title="Tudo em dia">Nenhuma pendência prioritária neste momento.</EmptyState>}
+          {alerts.data && alertsTotal > 0 && (
+            <ul className="hp-alert-list">
+              {[...alerts.data].filter((a) => a.count > 0).sort((x, y) => Number(ALERT_DANGER.has(y.kind)) - Number(ALERT_DANGER.has(x.kind)) || y.count - x.count).map((a) => {
+                const dKind = ALERT_DETAIL[a.kind]; const danger = ALERT_DANGER.has(a.kind); const Ico = ALERT_ICON[a.kind] ?? AlertTriangle;
+                return (
+                  <li key={a.kind}>
+                    <button type="button" className="hp-alert-row" onClick={() => (dKind ? openDetail(dKind) : navigate(a.link))}>
+                      <span className="hp-alert-ico" data-tone={danger ? "danger" : "warning"} aria-hidden><Ico size={15} /></span>
+                      <span className="hp-alert-label">{a.label}<span className="sr-only">{danger ? " (crítico)" : " (atenção)"}</span></span>
+                      <span className="hp-alert-count tabular">{a.count.toLocaleString("pt-BR")}</span>
+                      <ChevronRight size={15} aria-hidden className="hp-alert-chev" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {alerts.data && alertsTotal > 0 && <Link to="/admin/adm/pendencias" className="hp-panel-link">Ver todas as pendências <ChevronRight size={14} aria-hidden /></Link>}
+        </section>
+      </div>
 
       {metrics.data && patients.data && (
         <LevelSection level="summary" title="Mais indicadores" hint="Apoio à leitura: situação atual e números do período.">
@@ -126,18 +163,9 @@ const Dashboard = () => {
         </LevelSection>
       )}
 
-      <LevelSection level="analysis" title="Evolução e funil" hint="Gráficos com dados reais; sem movimento suficiente, o espaço explica o motivo em vez de inventar curva.">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <AreaTrend title="Evolução financeira (6 meses)" hint="Entradas e saídas realizadas por mês." data={(cash.data ?? []) as never} xKey="mes" isEmpty={!(cash.data && cash.data.length > 0)} empty="Ainda não há movimentos financeiros suficientes para traçar a evolução."
-            series={[{ key: "Entradas", label: "Entradas", color: "hsl(var(--success))" }, { key: "Saídas", label: "Saídas", color: "hsl(var(--destructive))" }]} format={(v) => brl(Math.round(v * 100))} yFormat={axisBrl} />
-          <BarBlock title="Leads, avaliações e contratos (período)" hint="Do primeiro contato ao contrato, no período selecionado." data={(funnel.data ?? []).filter(() => funnel.data?.some((f) => f.n > 0)).map((f) => ({ etapa: f.etapa, Quantidade: f.n }))} xKey="etapa"
-            series={[{ key: "Quantidade", label: "Quantidade" }]} empty="Sem leads, avaliações ou contratos no período selecionado." />
-        </div>
-      </LevelSection>
-
       <GeoSection unit={unit} />
 
-      <LevelSection level="summary" title="Minhas pendências" label="Pendências e atividades" hint="Tarefas comerciais e pendências administrativas atrasadas sob a sua responsabilidade.">
+      <LevelSection level="summary" title="Minhas atividades" label="Pendências e atividades" hint="Tarefas comerciais e pendências administrativas atrasadas sob a sua responsabilidade.">
         {attention.loading && <State loading />}
         {!attention.loading && attention.items.length === 0 && <EmptyState icon={CheckCircle2} title="Nada atrasado sob a sua responsabilidade">Quando uma tarefa ou pendência sua vencer, ela aparece aqui e no sino do cabeçalho.</EmptyState>}
         {attention.items.length > 0 && (

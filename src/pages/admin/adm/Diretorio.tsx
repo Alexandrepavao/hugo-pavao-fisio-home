@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Columns3, Download, Search, Upload } from "lucide-react";
+import { Columns3, Download, MoreHorizontal, Search, Upload } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/lib/supabase";
 import { download, fmtDate, toCsv } from "@/lib/format";
 import { Badge, errText, Msg, PageHead, State, StatCard, Tabs, btnGhost, btnPrimary, useMsg } from "@/lib/ui";
@@ -75,6 +77,7 @@ const Diretorio = () => {
   const [showCompany, setShowCompany] = useState(false);
   const [msg, m] = useMsg();
   const pageSize = 25;
+  const isMobile = useIsMobile();
 
   const units = useUnits();
   const indicators = useQuery({ queryKey: ["adm-indicators"], queryFn: async () => {
@@ -142,12 +145,25 @@ const Diretorio = () => {
 
   return (
     <div>
-      <PageHead eyebrow={type === "pj" ? "Cadastro" : "Administrativo"} title={type === "pj" ? "Empresas" : "Planilha administrativa"} hint={type === "pj" ? "Empresas e estabelecimentos para parcerias B2B (pessoa jurídica). Cada empresa pode ter vários contatos, que são pessoas do cadastro central." : "Interface sobre o cadastro central — pessoa física (people) e jurídica (legal_entities). Uma pessoa pode ter vários vínculos sem duplicar cadastro."}
+      <PageHead eyebrow={type === "pj" ? "Cadastro" : "Administrativo"} title={type === "pj" ? "Empresas" : "Planilha administrativa"} hint={type === "pj" ? "Empresas e estabelecimentos para parcerias B2B (pessoa jurídica). Cada empresa pode ter vários contatos, que são pessoas do cadastro central." : "Gerencie os cadastros de pessoas e empresas."}
         actions={<>
-          <button className={btnGhost} onClick={() => setShowCols(true)} disabled={!catalog.data || !view.data}><Columns3 size={15} />Colunas</button>
-          <button className={btnGhost} onClick={() => exportCsv.mutate()} disabled={exportCsv.isPending || !view.data}><Download size={15} />{exportCsv.isPending ? "Exportando…" : "Exportar CSV"}</button>
-          {canSensitive && <button className={btnGhost} onClick={() => setShowPj(true)}><Upload size={15} />Importar PJ (CSV)</button>}
-          {canSensitive && <button className={btnGhost} onClick={() => setShowPf(true)}><Upload size={15} />Importar PF (CSV)</button>}
+          {!isMobile && <>
+            <button className={btnGhost} onClick={() => setShowCols(true)} disabled={!catalog.data || !view.data}><Columns3 size={15} />Colunas</button>
+            <button className={btnGhost} onClick={() => exportCsv.mutate()} disabled={exportCsv.isPending || !view.data}><Download size={15} />{exportCsv.isPending ? "Exportando…" : "Exportar CSV"}</button>
+            {canSensitive && <button className={btnGhost} onClick={() => setShowPj(true)}><Upload size={15} />Importar PJ (CSV)</button>}
+            {canSensitive && <button className={btnGhost} onClick={() => setShowPf(true)}><Upload size={15} />Importar PF (CSV)</button>}
+          </>}
+          {isMobile && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild><button className={btnGhost} aria-label="Mais ações da planilha" data-testid="mais-acoes"><MoreHorizontal size={16} />Mais ações</button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem disabled={!catalog.data || !view.data} onSelect={() => setShowCols(true)}><Columns3 className="mr-2 h-4 w-4" aria-hidden />Colunas</DropdownMenuItem>
+                <DropdownMenuItem disabled={exportCsv.isPending || !view.data} onSelect={() => exportCsv.mutate()}><Download className="mr-2 h-4 w-4" aria-hidden />Exportar CSV</DropdownMenuItem>
+                {canSensitive && <DropdownMenuItem onSelect={() => setShowPj(true)}><Upload className="mr-2 h-4 w-4" aria-hidden />Importar PJ (CSV)</DropdownMenuItem>}
+                {canSensitive && <DropdownMenuItem onSelect={() => setShowPf(true)}><Upload className="mr-2 h-4 w-4" aria-hidden />Importar PF (CSV)</DropdownMenuItem>}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           {type === "pj" ? <button className={btnPrimary} data-testid="nova-empresa" onClick={() => setShowCompany(true)}>Nova empresa</button> : <button className={btnPrimary} onClick={() => setShowNew(true)}>Novo cadastro</button>}
         </>} />
       <Msg m={msg} />
@@ -158,7 +174,7 @@ const Diretorio = () => {
 
       <State loading={indicators.isLoading} error={indicators.error} />
       {indicators.data && (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 mb-6">
+        <ul className="hp-kpi-grid-5 mb-5" data-testid="adm-indicadores">
           <StatCard label="Total de cadastros" value={indicators.data.total.value.toLocaleString("pt-BR")} onClick={() => applyIndicatorFilter({ type: "" })} />
           <StatCard label="Pessoas físicas" value={indicators.data.pf.value.toLocaleString("pt-BR")} onClick={() => applyIndicatorFilter({ type: "pf" })} />
           <StatCard label="Pessoas jurídicas" value={indicators.data.pj.value.toLocaleString("pt-BR")} onClick={() => applyIndicatorFilter({ type: "pj" })} />
@@ -184,12 +200,12 @@ const Diretorio = () => {
       <State loading={dir_.isLoading || view.isLoading} error={dir_.error ?? view.error} empty={dir_.data?.rows.length === 0} emptyText={type === "pj" ? "Nenhuma empresa cadastrada com estes filtros. Use “Nova empresa” para cadastrar." : "Nenhum cadastro encontrado com estes filtros."} />
       {dir_.data && dir_.data.rows.length > 0 && view.data && (
         <>
-          <div className="hp-card overflow-x-auto">
-            <table className="w-full" data-testid="adm-table">
-              <thead><tr className="text-left text-xs font-semibold text-muted-foreground bg-muted/60 border-b border-border">
+          <div className="hp-card overflow-x-auto hp-table-wrap">
+            <table className="hp-table hp-table-compact" data-testid="adm-table">
+              <thead><tr className="text-left">
                 {cols.map((k) => {
                   const s = RENDER[k].sort;
-                  return <th key={k} scope="col" data-col={k} className="px-3 py-2.5">
+                  return <th key={k} scope="col" data-col={k} aria-sort={s && sort === s ? (dir === "asc" ? "ascending" : "descending") : undefined}>
                     {s ? <button className="flex items-center gap-1 font-semibold" onClick={() => toggleSort(s)}>{label(k)} {sort === s && (dir === "asc" ? "▲" : "▼")}</button> : label(k)}
                   </th>;
                 })}
@@ -198,9 +214,9 @@ const Diretorio = () => {
                 {dir_.data.rows.map((r) => (
                   <tr key={r.type + r.id}>
                     {cols.map((k) => (
-                      <td key={k} className="px-3 py-2.5 border-b border-border last:border-0 align-middle">
+                      <td key={k} data-col={k}>
                         {k === "name"
-                          ? <button className="font-medium text-left hover:underline" onClick={() => (r.type === "pf" ? setOpenPerson(r.id) : setOpenEntity(r.id))}>{r.name}</button>
+                          ? <button className="hp-cell-link" title={r.name} onClick={() => (r.type === "pf" ? setOpenPerson(r.id) : setOpenEntity(r.id))}>{r.name}</button>
                           : RENDER[k].cell(r)}
                       </td>))}
                   </tr>
@@ -208,8 +224,8 @@ const Diretorio = () => {
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
-            <span>{dir_.data.total} cadastro(s) — página {page + 1} de {totalPages}</span>
+          <div className="hp-pager">
+            <span aria-live="polite">{dir_.data.total.toLocaleString("pt-BR")} cadastro(s) — página {page + 1} de {totalPages}</span>
             <div className="flex gap-2">
               <button className={btnGhost + " hp-btn-sm"} disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>Anterior</button>
               <button className={btnGhost + " hp-btn-sm"} disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>Próxima</button>

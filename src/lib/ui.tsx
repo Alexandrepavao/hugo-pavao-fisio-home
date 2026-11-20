@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { LucideIcon } from "lucide-react";
 import { Activity, AlertTriangle, ArrowRight, ChevronRight, Gauge, Inbox } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { usePageMetaContext, useRegisterPageMeta } from "@/components/hp/pageMeta";
 
 // ---- classes compartilhadas (definidas em src/styles/app.css) ----
 export const inputCls = "hp-input";
@@ -10,7 +11,16 @@ export const btnGhost = "hp-btn hp-btn-outline";
 export const btnDanger = "hp-btn hp-btn-danger";
 export const btnLink = "text-accent hover:underline text-sm font-medium";
 
-export const PageHead = ({ eyebrow, title, hint, actions }: { eyebrow?: string; title: string; hint?: string; actions?: ReactNode }) => (
+/** Cabeçalho da página. Dentro da moldura dos aplicativos (AppFrame) o título e a descrição vão para o BANNER único (useRegisterPageMeta) e `actions` formam a toolbar logo abaixo dele;
+ *  fora da moldura (portais do paciente e do fisioterapeuta) continua o cabeçalho de sempre. */
+export const PageHead = ({ eyebrow, title, hint, actions }: { eyebrow?: string; title: string; hint?: string; actions?: ReactNode }) => {
+  const inFrame = usePageMetaContext() !== null;
+  useRegisterPageMeta({ title, description: hint });
+  if (inFrame) return actions ? <div className="hp-toolbar hp-toolbar-end" data-testid="page-toolbar">{actions}</div> : null;
+  return <LegacyPageHead eyebrow={eyebrow} title={title} hint={hint} actions={actions} />;
+};
+
+const LegacyPageHead = ({ eyebrow, title, hint, actions }: { eyebrow?: string; title: string; hint?: string; actions?: ReactNode }) => (
   <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 mb-7">
     <div className="min-w-0">
       {eyebrow && <p className="eyebrow mb-1.5" style={{ color: "hsl(var(--app-accent))" }}>{eyebrow}</p>}

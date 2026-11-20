@@ -91,7 +91,7 @@ const HeaderBar = ({ app, section, apps, collapsed, onToggleCollapsed, drawerOpe
           </DropdownMenuContent>
         </DropdownMenu>
         <ChevronRight size={14} aria-hidden className="hp-crumb-sep" />
-        <h1 className="hp-crumb-section" id="titulo-secao"><span className="sr-only">{app.label} · </span>{section}</h1>
+        <span className="hp-crumb-section" data-testid="crumb-section"><span className="sr-only">{app.label} · </span>{section}</span>
       </nav>
 
       <div style={{ flex: 1 }} />

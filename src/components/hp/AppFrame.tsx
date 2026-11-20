@@ -7,6 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { featureOn, type FeatureKey } from "@/lib/release";
 import CommandMenu from "./CommandMenu";
 import HeaderBar, { AppTile } from "./HeaderBar";
+import PageBanner from "./PageBanner";
+import { PageMetaProvider, usePageMetaContext, type PageMeta } from "./pageMeta";
 import { APPS, appById, appVisible, type AppId } from "./apps";
 import { useAppTheme } from "./theme";
 import { usePfAccess } from "@/pages/admin/finance/personal/pf";
@@ -17,9 +19,10 @@ export interface FrameNavSection { label?: string; items: FrameNavItem[] }
 /** Moldura única dos aplicativos: cabeçalho em largura total (marca HP, aplicativo ▸ seção, busca, notificações, tema, perfil) e, abaixo, a sidebar CONTEXTUAL do
  *  aplicativo atual (nunca a de outro aplicativo) — identidade do app com seletor, “Voltar ao Hub”, grupos, item ativo em destaque, recolhimento no desktop e
  *  gaveta no celular. Cada aplicativo só passa a própria navegação. */
-const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_manager"], footer, profileExtra, children }: {
-  appId: AppId; nav: FrameNavSection[]; managerRoles?: AppRole[]; footer?: ReactNode; profileExtra?: ReactNode; children: ReactNode;
-}) => {
+type FrameProps = { appId: AppId; nav: FrameNavSection[]; managerRoles?: AppRole[]; footer?: ReactNode; profileExtra?: ReactNode; children: ReactNode };
+const AppFrame = (props: FrameProps) => <PageMetaProvider><AppFrameInner {...props} /></PageMetaProvider>;
+
+const AppFrameInner = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_manager"], footer, profileExtra, children }: FrameProps) => {
   useAppTheme();
   const app = appById(appId);
   const { hasRole } = useAuth();
@@ -61,6 +64,11 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
   }, [flatItems, location.pathname, location.search, onAccount]);
   const apps = useMemo(() => APPS.filter((a) => appVisible(a) && (a.id === "hub" || !a.roles || hasRole(...a.roles))), [hasRole]);
   const isHub = appId === "hub";
+  // Banner único da página: o título declarado pela própria página (PageHead/useRegisterPageMeta) ou, sem declaração, o nome do item ativo do menu do aplicativo.
+  const declared = usePageMetaContext()?.meta ?? null;
+  // Item de menu que se distingue por parâmetro de URL (Vendas × Contas a receber, Contratos, Empresas, Unidades…): o banner leva o NOME DO ITEM aberto, mantendo a descrição declarada pela página.
+  const byParam = !onAccount && activeItem?.to.includes("?") ? activeItem.label : null;
+  const bannerMeta: PageMeta = declared ? { ...declared, title: byParam ?? declared.title } : { title: onAccount ? "Configurações" : activeItem?.label ?? app.label, variant: isHub && !onAccount && !activeItem ? "hub" : "page" };
 
   const Switcher = ({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) => (
     <DropdownMenu>
@@ -124,7 +132,7 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
       </Sheet>
 
       <div className="hp-main">
-        <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao">{children}</main>
+        <main id="conteudo" className="hp-content" tabIndex={-1} aria-labelledby="titulo-secao"><PageBanner app={app} meta={bannerMeta} />{children}</main>
       </div>
       <CommandMenu open={cmd} onOpenChange={setCmd} />
     </div>
