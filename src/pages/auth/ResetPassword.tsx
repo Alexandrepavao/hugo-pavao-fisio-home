@@ -1,3 +1,4 @@
+import { useOrgBase } from "@/org/useOrgBase";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -15,6 +16,7 @@ function readLinkError(): string | null {
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const ob = useOrgBase();
   const [phase, setPhase] = useState<Phase>("checking");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -48,7 +50,7 @@ const ResetPassword = () => {
       if (error) { setError(error.message.includes("same") ? "Escolha uma senha diferente da anterior." : "Não foi possível atualizar a senha. Solicite um novo link."); return; }
       setPhase("done");
       await supabase.auth.signOut(); // força o login com a nova senha (fluxo: link → nova senha → login)
-      setTimeout(() => navigate("/login", { replace: true }), 2500);
+      setTimeout(() => navigate(ob.to("/login"), { replace: true }), 2500);
     } catch {
       setError("Não foi possível conectar agora. Verifique sua internet e tente novamente.");
     } finally { setBusy(false); }
@@ -65,7 +67,7 @@ const ResetPassword = () => {
     return (
       <AuthShell title="Link inválido ou expirado" subtitle="Por segurança, cada link vale por tempo limitado e só pode ser usado uma vez — inclusive se já foi aberto antes.">
         <Link
-          to="/login"
+          to={ob.to("/login")}
           className="flex h-11 w-full items-center justify-center rounded-lg bg-accent text-[15px] font-medium text-accent-foreground transition-all hover:bg-accent/90"
         >
           Solicitar novo link

@@ -15,6 +15,7 @@ import RequireAuth from "./auth/RequireAuth";
 import { AskProvider } from "./lib/ui";
 import { OrgProvider } from "./org/OrgProvider";
 import { InvitationsPage } from "./org/OrgWidgets";
+const OrgScope = lazy(() => import("./org/OrgScope"));
 const PlatformLayout = lazy(() => import("./pages/plataforma/PlatformLayout"));
 const PlatformOrgs = lazy(() => import("./pages/plataforma/Organizations"));
 const PlatformCreate = lazy(() => import("./pages/plataforma/Questionnaire"));
@@ -183,6 +184,8 @@ const App = () => (
               <Route path="/apresentacao" element={<ApresentacaoPublic />} />
               <Route path="/apresentação" element={<Navigate to="/apresentacao" replace />} />
               <Route path="/apresentacao/avaliacao/:enrollmentId" element={g(["physio"], <PresentationWorkspace />)} />
+              {/* Organização pelo endereço (/empresa/<slug>/…): marca, login, captação pública e páginas DESSA organização; o servidor valida o slug e o vínculo. */}
+              <Route path="/empresa/:slug/*" element={<OrgScope />} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />

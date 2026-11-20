@@ -25,7 +25,8 @@ const AuthShell = ({ title, subtitle, children }: { title: string; subtitle?: st
         >
           <div className="mb-6 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/95 p-2.5 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.6)]">
-              {org.isDefaultBrand ? <img src={logo} alt="HP Fisioterapia" className="h-full w-full object-contain" />
+              {org.loading ? <span aria-hidden="true" data-testid="marca-carregando" className="h-full w-full" />   /* marca ainda sendo resolvida: nada de logo HP provisória */
+                : org.isDefaultBrand ? <img src={logo} alt="HP Fisioterapia" className="h-full w-full object-contain" />
                 : org.logoUrl ? <img src={org.logoUrl} alt={org.brandName} className="h-full w-full object-contain" />
                 : <span aria-label={org.brandName} role="img" className="text-xl font-bold text-primary">{org.brandName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("")}</span>}
             </div>
@@ -33,7 +34,7 @@ const AuthShell = ({ title, subtitle, children }: { title: string; subtitle?: st
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
             <div className="mb-6 text-center">
-              <p className="eyebrow mb-2 text-accent/90">{org.isDefaultBrand ? "HP Group Hub" : org.brandName}</p>
+              <p className="eyebrow mb-2 text-accent/90">{org.loading ? " " : org.isDefaultBrand ? "HP Group Hub" : org.brandName}</p>
               <h1 className="font-display text-2xl font-semibold text-white">{title}</h1>
               {subtitle && <p className="mt-2 text-[15px] text-white/60">{subtitle}</p>}
             </div>

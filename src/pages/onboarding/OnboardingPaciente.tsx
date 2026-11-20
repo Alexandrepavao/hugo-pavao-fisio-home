@@ -1,3 +1,5 @@
+import { useOrg } from "@/org/OrgProvider";
+import { publicOrgParam, withOrgBase } from "@/lib/orgScope";
 import { useRef, useState, type FormEvent } from "react";
 import { HeartPulse, Home, ShieldCheck, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -8,10 +10,10 @@ import {AccessFields, ContactAddressFields, DoneScreen, Field, FormError, Identi
 import { ONBOARDING_CONSENT_VERSION, usePageMeta, type Errors, type FormState } from "./shared";
 
 const STEPS = ["Seus dados", "Contato e endereço", "Emergência e saúde", "Acesso"];
-const HOW_FOUND = ["Indicação de amigo ou familiar", "Indicação de médico ou profissional de saúde", "Instagram / redes sociais", "Google / busca na internet", "Já sou paciente da HP", "Outro"];
-const CONSENT_TEXT = "Os dados informados (incluindo CPF e endereço) serão tratados pelo HP Group para o seu cadastro, o agendamento e o acompanhamento do atendimento, e ficam visíveis apenas para a equipe autorizada e para você. " +
+const howFound = (org: string | null) => ["Indicação de amigo ou familiar", "Indicação de médico ou profissional de saúde", "Instagram / redes sociais", "Google / busca na internet", org ? `Já sou paciente de ${org}` : "Já sou paciente da HP", "Outro"];
+const consentText = (org: string | null) => `Os dados informados (incluindo CPF e endereço) serão tratados por ${org ?? "HP Group"} para o seu cadastro, o agendamento e o acompanhamento do atendimento, e ficam visíveis apenas para a equipe autorizada e para você. ` +
   "Você pode pedir a correção ou a remoção dos seus dados a qualquer momento.";
-const HEALTH_TEXT = "O motivo do atendimento é dado de saúde: fica visível só para a equipe autorizada do HP Group e ajuda a preparar a sua avaliação. Não substitui uma avaliação clínica.";
+const healthText = (org: string | null) => `O motivo do atendimento é dado de saúde: fica visível só para a equipe autorizada de ${org ?? "HP Group"} e ajuda a preparar a sua avaliação. Não substitui uma avaliação clínica.`;
 const HIGHLIGHTS = ["Suas sessões: quantas já fez e quantas ainda faltam no seu pacote", "A sua evolução: dor, funcionalidade e bem-estar ao longo do tempo", "Agendar, confirmar ou cancelar atendimentos pelo próprio sistema",
   "Metas definidas com o seu fisioterapeuta e vídeos de exercícios liberados para você", "Seus dados e sua senha sempre sob o seu controle"];
 
@@ -20,7 +22,11 @@ const EMPTY: FormState = { full_name: "", preferred_name: "", birth_date: "", cp
 
 /** Cadastro do paciente: rota aberta. Cria o cadastro em Pessoas e o acesso ao portal (depois de confirmar o e-mail). */
 const OnboardingPaciente = () => {
-  usePageMeta("Cadastro de paciente | HP Fisioterapia");
+  const org = useOrg();
+  const orgSlug = publicOrgParam(org.scope.slug);   // endereço /empresa/<slug>/onboarding-paciente: o cadastro nasce na organização do endereço (o servidor recusa organização inativa ou sem CRM)
+  const orgName = orgSlug && org.brandName && !org.isDefaultBrand ? org.brandName : null;
+  const base = (p: string) => withOrgBase(orgSlug, p);
+  usePageMeta(`Cadastro de paciente | ${orgName ?? "HP Fisioterapia"}`);
   const [step, setStep] = useState(0); const [v, setV] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Errors>({}); const [consent, setConsent] = useState(false); const [health, setHealth] = useState(false);
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
@@ -65,20 +71,20 @@ const OnboardingPaciente = () => {
     if (step < STEPS.length - 1) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     setBusy(true);
     const data = { ...v, cpf: onlyDigits(v.cpf), password: undefined, password2: undefined };
-    const { data: res, error: rpcError } = await supabase.rpc("onboarding_submit_patient", { p_data: data, p_consent_version: ONBOARDING_CONSENT_VERSION, p_health_consent: health && !!v.main_complaint.trim(), p_honeypot: honeypot.current?.value ?? "" });
+    const { data: res, error: rpcError } = await supabase.rpc("onboarding_submit_patient", { p_data: data, p_consent_version: orgName ? `${ONBOARDING_CONSENT_VERSION}-org` : ONBOARDING_CONSENT_VERSION, p_health_consent: health && !!v.main_complaint.trim(), p_honeypot: honeypot.current?.value ?? "", p_org_slug: orgSlug });
     if (rpcError) {
       setBusy(false); const msg = rpcError.message;
       return setError(msg.includes("rate_limited") ? "Muitas tentativas. Aguarde alguns minutos e tente de novo." : /[a-záéíóúãõç]/i.test(msg) && !/violates|relation|column|syntax/i.test(msg) ? msg : "Não foi possível concluir o cadastro agora. Tente novamente em instantes.");
     }
     const email = ((res as { email?: string } | null)?.email ?? v.email).toLowerCase();
-    const { error: signError } = await supabase.auth.signUp({ email, password: v.password, options: { emailRedirectTo: `${window.location.origin}/app` } });
+    const { error: signError } = await supabase.auth.signUp({ email, password: v.password, options: { emailRedirectTo: `${window.location.origin}${base("/app")}` } });
     setBusy(false); setDone({ email, account: !signError });
   };
 
   const bullets = [{ icon: HeartPulse, text: "Leva cerca de 4 minutos." }, { icon: ShieldCheck, text: "Seus dados ficam protegidos e visíveis só para a equipe autorizada." }, { icon: TrendingUp, text: "Com o acesso você acompanha as suas sessões e a sua evolução." }, { icon: Home, text: "O endereço é para o atendimento em casa." }];
-  if (done) return <OnboardingFrame eyebrow="Paciente HP" title="Cadastro de paciente" intro="Seu cadastro foi recebido." bullets={bullets} step={STEPS.length - 1} steps={STEPS}><DoneScreen who="paciente" email={done.email} accountCreated={done.account} highlights={HIGHLIGHTS} /></OnboardingFrame>;
+  if (done) return <OnboardingFrame eyebrow={orgName ? `Paciente ${orgName}` : "Paciente HP"} title="Cadastro de paciente" intro="Seu cadastro foi recebido." bullets={bullets} step={STEPS.length - 1} steps={STEPS}><DoneScreen who="paciente" email={done.email} accountCreated={done.account} highlights={HIGHLIGHTS} /></OnboardingFrame>;
   return (
-    <OnboardingFrame eyebrow="Paciente HP" title="Vamos fazer o seu cadastro" intro="Com o cadastro você cria o seu login e passa a acompanhar as suas sessões, o quanto falta no seu pacote e a sua evolução." step={step} steps={STEPS} onBack={() => { setStep(step - 1); setError(null); }} bullets={bullets}>
+    <OnboardingFrame eyebrow={orgName ? `Paciente ${orgName}` : "Paciente HP"} title="Vamos fazer o seu cadastro" intro="Com o cadastro você cria o seu login e passa a acompanhar as suas sessões, o quanto falta no seu pacote e a sua evolução." step={step} steps={STEPS} onBack={() => { setStep(step - 1); setError(null); }} bullets={bullets}>
       <form onSubmit={submit} noValidate>
         <input type="text" name="website" ref={honeypot} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
         {step === 0 && <><StepTitle title="Seus dados" hint="Como constam no seu documento." /><IdentityFields v={v} set={set} errors={errors} /></>}
@@ -93,13 +99,13 @@ const OnboardingPaciente = () => {
             <Field id="ob-complaint" label="Motivo do atendimento (opcional)" className="sm:col-span-2" hint="Conte, em poucas palavras, o que você precisa tratar."><textarea id="ob-complaint" className="hp-input" rows={3} maxLength={800} value={v.main_complaint} onChange={(e) => set("main_complaint", e.target.value)} /></Field>
             {v.main_complaint.trim() && (
               <div className="sm:col-span-2 space-y-3">
-                <div className="border-l-2 border-accent bg-muted/50 px-5 py-4 flex gap-3"><ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" strokeWidth={1.75} /><p className="text-[13px] text-navy-700">{HEALTH_TEXT}</p></div>
+                <div className="border-l-2 border-accent bg-muted/50 px-5 py-4 flex gap-3"><ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" strokeWidth={1.75} /><p className="text-[13px] text-navy-700">{healthText(orgName)}</p></div>
                 <label className="flex items-start gap-3 text-[13px] text-navy-700 cursor-pointer"><input id="ob-health" type="checkbox" checked={health} onChange={(e) => { setHealth(e.target.checked); setErrors((x) => { const n = { ...x }; delete n.health; return n; }); }} className="mt-0.5 accent-accent" />Autorizo o uso desta informação de saúde nos termos acima.</label>
                 {errors.health && <p role="alert" className="text-[12px] text-red-600">{errors.health}</p>}
               </div>)}
-            <Field id="ob-how" label="Como conheceu a HP? (opcional)" className="sm:col-span-2"><select id="ob-how" className="hp-input" value={v.how_found} onChange={(e) => set("how_found", e.target.value)}><option value="">—</option>{HOW_FOUND.map((h) => <option key={h} value={h}>{h}</option>)}</select></Field>
+            <Field id="ob-how" label={`Como conheceu ${orgName ? orgName : "a HP"}? (opcional)`} className="sm:col-span-2"><select id="ob-how" className="hp-input" value={v.how_found} onChange={(e) => set("how_found", e.target.value)}><option value="">—</option>{howFound(orgName).map((h) => <option key={h} value={h}>{h}</option>)}</select></Field>
           </div></>)}
-        {step === 3 && (<><StepTitle title="Crie o seu acesso" /><AccessFields v={v} set={set} errors={errors} email={v.email} consentText={CONSENT_TEXT} consent={consent} setConsent={setConsent} /></>)}
+        {step === 3 && (<><StepTitle title="Crie o seu acesso" /><AccessFields v={v} set={set} errors={errors} email={v.email} consentText={consentText(orgName)} consent={consent} setConsent={setConsent} /></>)}
         <FormError text={error} />
         <NextButton busy={busy} last={step === STEPS.length - 1} label={step === STEPS.length - 1 ? "Concluir cadastro" : "Continuar"} />
       </form>

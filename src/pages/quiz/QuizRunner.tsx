@@ -1,3 +1,6 @@
+import { useOrg } from "@/org/OrgProvider";
+import ScopeHeader from "@/org/ScopeHeader";
+import { publicOrgParam } from "@/lib/orgScope";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Copy, Info, Loader2, MessageCircle, ShieldCheck, Users } from "lucide-react";
@@ -9,7 +12,7 @@ import { capitalOf } from "@/lib/capitals";
 import BairroZonaFields, { type WrapProps } from "@/components/hp/BairroZonaFields";
 import {
   CONTACT_CONSENT_TEXT, CONTACT_CONSENT_VERSION, HEALTH_CONSENT_TEXT, HEALTH_CONSENT_VERSION,
-  JOURNEY_LABEL, JOURNEY_QUESTIONS, MARKETING_CONSENT_TEXT, MARKETING_CONSENT_VERSION, UF_LIST, buildAtendimentoMessage,
+  JOURNEY_LABEL, JOURNEY_QUESTIONS, MARKETING_CONSENT_TEXT, MARKETING_CONSENT_VERSION, UF_LIST, buildAtendimentoMessage, quizTexts,
   buildParceriaMessage, isFullName, totalSteps, visibleQuestions, waLink, type AnswerMap, type Journey, type Question,
 } from "@/lib/quiz";
 
@@ -74,7 +77,11 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
   const currentQuestion: Question | undefined = questions.find((q) => q.key === qKey);
   const stepNumber = phase === "contact" ? 1 : phase === "location" || phase === "health-consent" ? 2 : phase === "question" ? 3 + qPos : total;
 
-  useEffect(() => { document.title = `${title} | HP Group`; }, [title]);
+  const org = useOrg();
+  const orgSlug = publicOrgParam(org.scope.slug);   // endereço de organização (/empresa/<slug>/avaliacao): lead, consentimento e WhatsApp são DELA; sem slug = HP
+  const orgName = orgSlug && org.brandName && !org.isDefaultBrand ? org.brandName : null;
+  const T = useMemo(() => quizTexts(orgName), [orgName]);
+  useEffect(() => { document.title = `${title} | ${orgName ?? "HP Group"}`; }, [title, orgName]);
 
   const utm = useMemo(() => {
     const o: Record<string, string> = {};
@@ -96,7 +103,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     try {
       const { data, error: rpcError } = await supabase.rpc("quiz_start", {
         p_journey: journey, p_name: name.trim(), p_email: email.trim(), p_phone: phone,
-        p_contact_consent_version: CONTACT_CONSENT_VERSION,
+        p_contact_consent_version: T.contactVersion, p_org_slug: orgSlug,
         p_origin_path: fromPage || pathname, p_page_slug: fromPage ? (fromPage.replace(/^\//, "") || "home") : pageSlug,
         p_referrer: document.referrer || null, p_utm: utm, p_honeypot: honeypotRef.current?.value || null,
       });
@@ -124,7 +131,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
   const acceptHealthConsent = async () => {
     if (!leadId) return; setBusy(true); setError(null);
     try {
-      const { error: rpcError } = await supabase.rpc("quiz_set_health_consent", { p_id: leadId, p_version: HEALTH_CONSENT_VERSION });
+      const { error: rpcError } = await supabase.rpc("quiz_set_health_consent", { p_id: leadId, p_version: T.healthVersion });
       if (rpcError) throw rpcError;
       setPhase("question");
     } catch (err) { setError(errText(err)); } finally { setBusy(false); }
@@ -174,11 +181,11 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
     if (!leadId) return; setBusy(true); setError(null); setPhase("sending");
     try {
       const { data, error: rpcError } = await supabase.rpc("quiz_complete", {
-        p_id: leadId, p_marketing_consent: marketingOk, p_marketing_consent_version: marketingOk ? MARKETING_CONSENT_VERSION : null,
+        p_id: leadId, p_marketing_consent: marketingOk, p_marketing_consent_version: marketingOk ? T.marketingVersion : null,
       });
       if (rpcError) throw rpcError;
       setProtocol(data.protocol); setFirstName(data.first_name);
-      const { data: num } = await supabase.rpc("quiz_whatsapp_number", { p_journey: journey, p_unit: null });
+      const { data: num } = await supabase.rpc("quiz_whatsapp_number", { p_journey: journey, p_unit: null, p_org_slug: orgSlug });
       setWaNumber(num ?? null);
       setPhase("done");
     } catch (err) { setError(errText(err)); setPhase("marketing"); } finally { setBusy(false); }
@@ -195,21 +202,21 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
            answers.impacto_qualidade_vida && `Impacto esperado na qualidade de vida: ${answers.impacto_qualidade_vida.value}/10`]
           .filter((x): x is string => Boolean(x))
         : [];
-      return buildAtendimentoMessage(f, interesse, includeHealth, healthLines, includeBudget, answers.faixa_investimento?.label ?? null);
+      return buildAtendimentoMessage(f, interesse, includeHealth, healthLines, includeBudget, answers.faixa_investimento?.label ?? null, orgName);
     }
     const objetivos = answers.objetivos_parceria?.label ?? null;
     const interesses = answers.interesses_desenvolvimento?.label ?? null;
     return buildParceriaMessage(f, answers.momento_profissional?.label ?? null, answers.situacao_registro?.label ?? null,
       answers.area_atuacao?.label ?? null, answers.modelo_atendimento?.label ?? null, objetivos, interesses,
       answers.interesse_programa_clinica?.label ?? null, answers.prazo_programa_clinica?.label ?? null, typeof answers.crefito?.value === "string" ? answers.crefito.value : null);
-  }, [protocol, firstName, name, email, phone, city, uf, journey, answers, includeHealth, includeBudget]);
+  }, [protocol, firstName, name, email, phone, city, uf, journey, answers, includeHealth, includeBudget, orgName]);
 
   const progressPct = Math.round((stepNumber / total) * 100);
   const stepKey = phase === "question" ? `q-${qKey}` : phase;
 
   return (
     <div className="min-h-screen">
-      <Header />
+      {orgSlug ? <ScopeHeader /> : <Header />}
       <main className="px-5 sm:px-8 py-10 lg:py-16">
         <div className="container-hp max-w-5xl">
           {phase === "done" && protocol ? (
@@ -264,7 +271,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
                           <input id="q-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="hp-input" placeholder="(11) 99999-9999" autoComplete="tel" required /></div>
                         <label className="flex items-start gap-3 text-[13px] text-navy-400 pt-1 cursor-pointer">
                           <input type="checkbox" checked={contactOk} onChange={(e) => setContactOk(e.target.checked)} className="mt-0.5 accent-accent" required />
-                          <span>{CONTACT_CONSENT_TEXT}</span>
+                          <span>{T.contactText}</span>
                         </label>
                       </div>
                       {error && <p role="alert" className="text-sm text-red-600 mt-4">{error}</p>}
@@ -301,7 +308,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
                       <h2 className="font-display text-2xl sm:text-3xl text-navy-900">Antes de continuar</h2>
                       <div className="mt-5 border-l-2 border-accent bg-muted/50 px-5 py-4 flex gap-3">
                         <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" aria-hidden="true" strokeWidth={1.75} />
-                        <p className="text-[14px] text-navy-700">{HEALTH_CONSENT_TEXT}</p>
+                        <p className="text-[14px] text-navy-700">{T.healthText}</p>
                       </div>
                       {error && <p role="alert" className="text-sm text-red-600 mt-4">{error}</p>}
                       <button type="button" onClick={acceptHealthConsent} disabled={busy} className={`${PRIMARY_BTN} mt-8`}>
@@ -325,7 +332,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
                       )}
                       <label className="flex items-start gap-3 text-[13px] text-navy-400 mt-6 cursor-pointer">
                         <input type="checkbox" checked={marketingOk} onChange={(e) => setMarketingOk(e.target.checked)} className="mt-0.5 accent-accent" />
-                        <span>{MARKETING_CONSENT_TEXT}</span>
+                        <span>{T.marketingText}</span>
                       </label>
                       {error && <p role="alert" className="text-sm text-red-600 mt-4">{error}</p>}
                       <button type="button" onClick={finish} disabled={busy} className={`${PRIMARY_BTN} mt-8`}>

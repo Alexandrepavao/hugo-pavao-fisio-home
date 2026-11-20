@@ -1,3 +1,5 @@
+import { ScopeEnter } from "@/org/ScopeParts";
+import { useOrgBase } from "@/org/useOrgBase";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { Loader2, Mail } from "lucide-react";
@@ -21,6 +23,7 @@ const Login = () => {
   const location = useLocation();
   const from = safeInternalPath((location.state as { from?: string } | null)?.from);
   const org = useOrg();
+  const ob = useOrgBase();   // dentro de /empresa/<slug> todos os destinos ficam na organização
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +33,7 @@ const Login = () => {
 
   useEffect(() => { setError(null); setInfo(null); }, [mode]);
 
-  if (!loading && session) return <Navigate to={from} replace />;
+  if (!loading && session) return ob.isScoped ? <ScopeEnter to={from} /> : <Navigate to={from} replace />;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -42,7 +45,7 @@ const Login = () => {
         if (error) setError("E-mail ou senha incorretos.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: `${window.location.origin}/redefinir-senha`,
+          redirectTo: `${window.location.origin}${ob.to("/redefinir-senha")}`,
         });
         if (!error) {
           // Mesma resposta exista ou não a conta (evita enumeração de usuários).
@@ -95,11 +98,11 @@ const Login = () => {
 
       <div className="mt-6 flex items-center justify-between text-sm">
         {mode === "login" ? (
-          <Link to="/primeiro-acesso" className="text-white/60 transition-colors hover:text-white">Primeiro acesso</Link>
+          <Link to={ob.to("/primeiro-acesso")} className="text-white/60 transition-colors hover:text-white">Primeiro acesso</Link>
         ) : (
           <button type="button" onClick={() => setMode("login")} className="text-white/60 transition-colors hover:text-white">Voltar ao login</button>
         )}
-        <Link to="/" className="text-white/40 transition-colors hover:text-white/70">Ir para o site</Link>
+        {ob.isScoped ? <span /> : <Link to="/" className="text-white/40 transition-colors hover:text-white/70">Ir para o site</Link>}
       </div>
     </AuthShell>
   );
