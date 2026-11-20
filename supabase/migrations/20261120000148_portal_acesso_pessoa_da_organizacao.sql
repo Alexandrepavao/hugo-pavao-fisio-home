@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION public.portal_access_state(p_person uuid)
 AS $function$
 declare v_org uuid := private.current_org(); v_email text; v_linked boolean; v_open record; v_last record; v_first timestamptz;
 begin
-  if not exists (select 1 from public.people where id = p_person and org_id = v_org) then raise exception 'sem permissão' using errcode = '42501'; end if;   -- a pessoa TEM de ser da organização de quem chama (papel de gestor numa organização não vale para pessoa de outra)
+  if exists (select 1 from public.people where id = p_person and org_id <> v_org) then raise exception 'sem permissão' using errcode = '42501'; end if;   -- pessoa de OUTRA organização é recusada (pessoa inexistente segue a mensagem original, "pessoa não encontrada") (papel de gestor numa organização não vale para pessoa de outra)
   if v_org is null or not (private.has_org_role(array['manager', 'ops_admin']::public.app_role[]) or private.has_care_relationship(p_person)) then raise exception 'sem permissão' using errcode = '42501'; end if;
   v_email := private.person_email(p_person);
   v_linked := exists (select 1 from public.user_accounts where person_id = p_person and status = 'active');
@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION public.person_portal_access(p_person uuid, p_email te
 AS $function$
 declare v_org uuid := private.current_org(); v_staff boolean := private.has_org_role(array['manager', 'ops_admin']::public.app_role[]);
 begin
-  if not exists (select 1 from public.people where id = p_person and org_id = v_org) then raise exception 'sem permissão' using errcode = '42501'; end if;   -- a pessoa TEM de ser da organização de quem chama (papel de gestor numa organização não vale para pessoa de outra)
+  if exists (select 1 from public.people where id = p_person and org_id <> v_org) then raise exception 'sem permissão' using errcode = '42501'; end if;   -- pessoa de OUTRA organização é recusada (pessoa inexistente segue a mensagem original, "pessoa não encontrada") (papel de gestor numa organização não vale para pessoa de outra)
   if v_org is null or not (v_staff or private.has_care_relationship(p_person)) then raise exception 'sem permissão' using errcode = '42501'; end if;
   -- quem não é da gestão (fisioterapeuta com vínculo) só convida um e-mail JÁ cadastrado da pessoa: nunca um endereço digitado na hora
   if not v_staff and not exists (select 1 from public.person_contacts c where c.person_id = p_person and c.type = 'email' and lower(btrim(c.value)) = lower(btrim(coalesce(p_email, '')))) then

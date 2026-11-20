@@ -21,7 +21,7 @@ $$;
 do $$
 declare
   rep text := ''; pa uuid := gen_random_uuid(); u_other uuid := gen_random_uuid(); u1 uuid := gen_random_uuid(); u_exist uuid := gen_random_uuid(); u_stale uuid := gen_random_uuid();
-  o1 uuid; o2 uuid; o3 uuid; r1 uuid; r2 uuid; r3 uuid; j jsonb; n int; v_inv uuid; v_ev uuid; ev jsonb;
+  o1 uuid; o2 uuid; o3 uuid; r1 uuid; r2 uuid; r3 uuid; j jsonb; n int; v_inv uuid; v_ev uuid; ev jsonb; v_pers uuid;
 begin
   insert into auth.users (id, aud, role, email, email_confirmed_at) values (pa, 'authenticated', 'authenticated', 'plataforma@n24.local', now()), (u_other, 'authenticated', 'authenticated', 'outro@n24.local', now()),
     (u_exist, 'authenticated', 'authenticated', 'ja.tem.conta@n24.local', now());
@@ -133,5 +133,11 @@ begin
   rep := rep || pg_temp.chk((select email_masked from private.email_events where id = v_ev) = 'j***@n24.local' and (select count(*) from private.email_events where email_masked like '%ja.tem.conta%') = 0, 'o evento guarda só o e-mail mascarado e o hash');
   set local role authenticated; perform pg_temp.as_user(pa); ev := public.provisioning_access_evidence(r2); reset role;
   rep := rep || pg_temp.chk(ev ->> 'mode' = 'new_user' and (ev ->> '4_link_used')::boolean and (ev ->> '5_password_set')::boolean = false and (ev -> '5_access' ->> 'membership')::boolean, 'conta nova: link usado e acesso, mas SEM senha cadastrada ainda → o nível 5 de senha continua falso (não declara sucesso)');
+  -- 9. gestor de uma organização não lê nem convida pessoa de OUTRA (achado do N40, migration 148)
+  insert into public.people (org_id, full_name) select o3, 'Pessoa da Três N24' returning id into v_pers;
+  set local role authenticated; perform pg_temp.as_user(u1, o1);
+  rep := rep || pg_temp.chk(pg_temp.err(format('select public.portal_access_state(%L)', v_pers)) like '42501%', 'gestor da organização 1 não lê o acesso ao portal de pessoa da organização 3');
+  rep := rep || pg_temp.chk(pg_temp.err(format('select public.person_portal_access(%L, %L)', v_pers, 'x@n24.local')) like '42501%', 'gestor da organização 1 não convida pessoa da organização 3');
+  reset role;
   raise exception 'RELATORIO_N24%', rep;
 end $$;
