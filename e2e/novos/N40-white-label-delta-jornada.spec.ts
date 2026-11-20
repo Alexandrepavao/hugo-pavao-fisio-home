@@ -1,7 +1,7 @@
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { SUPABASE_URL, ANON, PASSWORD, signIn, useSession, type Session } from "../helpers";
+import { SUPABASE_URL, ANON, PASSWORD, signIn, useSession as injetarSessao, type Session } from "../helpers";
 import { call, get, haveHarness, mkUser, PLATFORM, sqlDev } from "./helpers-wl";
 import { moveAppointment } from "../release/helpers-release";
 
@@ -17,7 +17,7 @@ const SUB = "delta-fisio";
 const NOMEPAC = "Paciente Delta Jornada"; const EMAILPAC = "delta.paciente@example.test"; const FONEPAC = "(11) 98877-6655"; const NOMEFORM = "Lead Formulário Delta"; const EMAILFORM = "delta.formulario@example.test";
 const shot = (page: Page, name: string, full = false) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: full });
 const advance = async (page: Page, to: number) => { await page.getByTestId("proximo").click(); await expect(page.getByTestId(`step-${to}`)).toBeVisible(); };
-const entrarComo = async (context: BrowserContext, email: string) => { const s = await signIn(email); await useSession(context, s); return s; };
+const entrarComo = async (context: BrowserContext, email: string) => { const s = await signIn(email); await injetarSessao(context, s); return s; };
 const spDate = (days: number) => new Date(Date.now() + days * 864e5).toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100).replace(/\s/g, " ");
 
@@ -42,7 +42,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
   });
 
   test("1. Delta criada SÓ pelo questionário (interface), com administrador e unidade; o convite do e-mail de teste é contido pela política de destinatários", async ({ page, context }) => {
-    await useSession(context, plat); await page.goto("/plataforma/criar");
+    await injetarSessao(context, plat); await page.goto("/plataforma/criar");
     await expect(page.getByTestId("step-0")).toBeVisible();
     await page.locator("#q-name").fill("Clínica Delta"); await page.locator("#q-seg").selectOption("fisioterapia");
     await page.locator("#q-rn").fill("Delta Administradora"); await page.locator("#q-re").fill(ADMIN); await page.locator("#q-city").fill("Curitiba"); await page.locator("#q-uf").fill("PR");
@@ -309,7 +309,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     const phys = await signIn(FISIO); const early = await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect(early.status).toBeGreaterThanOrEqual(400);
     // o tempo passa (Dev): a sessão ocorreu ontem; a fisioterapeuta registra o comparecimento pela interface
     const past = spDate(-1); await moveAppointment(S.sess, `${past}T10:00:00-03:00`);
-    const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await useSession(pc, phys);
+    const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await injetarSessao(pc, phys);
     await pp.goto("/admin/agenda"); await pp.locator("#pf-unit").selectOption(S.unit); await pp.locator("#pf-day").fill(past);
     // a agenda da fisioterapeuta não mostra o nome do paciente (a pessoa só é lida por funções com vínculo assistencial; mesmo comportamento da HP): a linha é achada pelo serviço e pelo dia
     await pp.getByRole("row").filter({ hasText: "Sessão Delta" }).filter({ hasText: "Agendado" }).getByRole("button", { name: "Compareceu" }).click(); await expect(pp.getByText("Status atualizado.")).toBeVisible({ timeout: 20_000 });
@@ -320,7 +320,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     // marcar de novo (retentativa) não consome outra sessão
     await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and reason = 'consume'`))[0].n).toBe(1);
     // portal do paciente (celular) mostra o acompanhamento ativo e o histórico
-    const pcx = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const pa = await pcx.newPage(); await useSession(pcx, await signIn(EMAILPAC));
+    const pcx = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const pa = await pcx.newPage(); await injetarSessao(pcx, await signIn(EMAILPAC));
     await pa.goto("/paciente"); await expect(pa.getByTestId("patient-home")).toBeVisible({ timeout: 30_000 }); await expect(pa.getByTestId("jr-enrollment-pending")).toHaveCount(0); await shot(pa, "20-delta-portal-paciente-ativo-celular", true); await pcx.close();
   });
 
@@ -343,7 +343,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     const sum = (await call(await signIn(FISIO), "my_professional_summary", { p_from: spDate(-30), p_to: spDate(1) }, orgId)).body.payouts;
     expect(sum, JSON.stringify(sum)).toMatchObject({ visible: true, pending_cents: 3000, reversed_cents: -1200, paid_cents: 16200, net_cents: 18000 });   // pendente R$ 30,00 (aguarda autorização); estornado −R$ 12,00; pago R$ 162,00; líquido R$ 180,00 = 30% de R$ 600,00 recebidos
     // fisioterapeuta: o próprio repasse, sem o nome do paciente
-    const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await useSession(pc, await signIn(FISIO));
+    const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await injetarSessao(pc, await signIn(FISIO));
     await pp.goto("/admin/meu-resumo?periodo=mes"); await expect(pp.getByRole("heading", { name: "Meu resumo" }).first()).toBeVisible({ timeout: 40_000 });
     const card = (label: string) => pp.getByRole("listitem").filter({ has: pp.getByText(label, { exact: true }) }).locator(".hp-kpi-value");
     await expect(card("Repasses pagos")).toContainText("162,00"); await expect(card("Líquido do período")).toContainText("180,00");
