@@ -1,5 +1,5 @@
 import { useOrg } from "@/org/OrgProvider";
-import ScopeHeader from "@/org/ScopeHeader";
+import ScopeHeader, { ScopeFooter } from "@/org/ScopeHeader";
 import { publicOrgParam } from "@/lib/orgScope";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
@@ -350,7 +350,7 @@ const QuizRunner = ({ journey, title, intro, pageSlug }: Props) => {
           )}
         </div>
       </main>
-      <Footer highlightJourney={journey} showCta={false} />
+      {orgSlug ? <ScopeFooter /> : <Footer highlightJourney={journey} showCta={false} />}
     </div>
   );
 };

@@ -13,4 +13,14 @@ const ScopeHeader = () => {
   );
 };
 
+/** Rodapé mínimo das páginas públicas de uma organização que NÃO é a HP: nome (e e-mail de suporte público, se houver); nunca endereço, redes ou CNPJ da HP. */
+export const ScopeFooter = () => {
+  const org = useOrg();
+  return (
+    <footer className="border-t border-border mt-10" data-testid="rodape-organizacao">
+      <div className="container-hp py-6 text-sm text-navy-400">© {new Date().getFullYear()} {org.brandName}{org.brand?.support_email ? ` · ${org.brand.support_email}` : ""}</div>
+    </footer>
+  );
+};
+
 export default ScopeHeader;

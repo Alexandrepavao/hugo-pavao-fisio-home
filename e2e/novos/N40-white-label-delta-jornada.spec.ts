@@ -13,7 +13,7 @@ import { call, get, haveHarness, mkUser, PLATFORM, sqlDev } from "./helpers-wl";
 const SHOTS = "docs/white-label/screenshots/delta"; mkdirSync(SHOTS, { recursive: true });
 const ADMIN = "delta.admin@example.test", FISIO = "delta.fisio@example.test", PACIENTE = "delta.paciente@example.test";
 const SUB = "delta-fisio";
-const NOMEPAC = "Paciente Delta Jornada";
+const NOMEPAC = "Paciente Delta Jornada"; const EMAILPAC = "delta.paciente@example.test"; const FONEPAC = "(11) 98877-6655"; const NOMEFORM = "Lead Formulário Delta"; const EMAILFORM = "delta.formulario@example.test";
 const shot = (page: Page, name: string, full = false) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: full });
 const advance = async (page: Page, to: number) => { await page.getByTestId("proximo").click(); await expect(page.getByTestId(`step-${to}`)).toBeVisible(); };
 const as = async (context: BrowserContext, email: string) => { const s = await signIn(email); await useSession(context, s); return s; };
@@ -106,6 +106,62 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     // nada da HP veio junto: nenhum serviço, produto ou profissional que não seja da Delta
     expect((await get(adminS, "services?select=name")).body.map((x: { name: string }) => x.name).sort()).toEqual(["Avaliação Delta", "Sessão Delta"]);
     expect((await get(adminS, "products?select=name")).body.map((x: { name: string }) => x.name)).toEqual(["Pacote Delta 8 sessões"]);
+  });
+
+  test("4. captação pública da Delta: WhatsApp próprio, página/formulário criados no editor e quiz — o lead entra UMA vez no CRM da Delta, com origem e campanha, e em nenhuma outra organização", async ({ page, context, browser }) => {
+    await as(context, ADMIN);
+    // número de WhatsApp da Delta (Configurações ▸ Captação)
+    await page.goto("/admin/configuracoes");
+    await page.getByText("Número de WhatsApp por jornada").locator("xpath=ancestor::div[.//button[normalize-space()='Gerenciar']][1]").getByRole("button", { name: "Gerenciar" }).click();
+    await page.locator("#wa-phone").fill("5541999990001"); await page.getByRole("button", { name: "Salvar número" }).click(); await expect(page.getByRole("cell", { name: "5541999990001" })).toBeVisible({ timeout: 20_000 });
+    // página com formulário criada e publicada NO EDITOR da Delta
+    S.pageSlug = "avaliacao-gratuita-delta";
+    await page.goto("/admin/paginas"); await page.getByRole("button", { name: "Nova página" }).click(); await page.getByLabel("Endereço (/…)").fill(S.pageSlug);
+    await expect(page.getByLabel("Funil de destino")).not.toHaveValue(""); await expect(page.getByLabel("Unidade")).not.toHaveValue("");
+    await page.getByRole("button", { name: "Criar e editar" }).click(); await expect(page).toHaveURL(/\/admin\/paginas\/[0-9a-f-]{36}$/);
+    await page.getByRole("button", { name: "Publicar", exact: true }).click(); await expect(page.getByText("Página publicada.")).toBeVisible({ timeout: 20_000 });
+    await shot(page, "08-delta-pagina-publicada-no-editor");
+    // visitante anônimo: formulário da página no endereço da Delta (marca e cabeçalho da Delta; nada da HP)
+    const v1 = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const p1 = await v1.newPage();
+    await p1.goto(`/empresa/${slug}/${S.pageSlug}?utm_source=instagram&utm_campaign=delta-form-e2e`);
+    await expect(p1.getByTestId("cabecalho-organizacao")).toContainText("Delta Fisioterapia"); await expect(p1.getByText(/HP Fisioterapia|HP Group|Hugo/)).toHaveCount(0);
+    await p1.getByRole("textbox", { name: /Nome completo/ }).fill(NOMEFORM); await p1.getByRole("textbox", { name: /WhatsApp/ }).fill("(41) 98888-1122"); await p1.getByRole("textbox", { name: "E-mail" }).fill(EMAILFORM);
+    await shot(p1, "09-delta-formulario-publico");
+    await p1.getByRole("button", { name: "Enviar" }).click(); await expect(p1.getByText(/Recebemos seus dados/)).toBeVisible({ timeout: 20_000 }); await v1.close();
+    // visitante anônimo: quiz de avaliação no endereço da Delta, com atribuição na URL
+    const v2 = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR" }); const p = await v2.newPage();
+    await p.goto(`/empresa/${slug}/avaliacao?utm_source=google&utm_medium=cpc&utm_campaign=delta-quiz-e2e`);
+    await expect(p.getByTestId("cabecalho-organizacao")).toContainText("Delta Fisioterapia"); await expect(p.getByText(/HP Group|HP Fisioterapia/)).toHaveCount(0);
+    await p.getByLabel("Nome completo").fill(NOMEPAC); await p.getByLabel("E-mail", { exact: true }).fill(EMAILPAC); await p.getByLabel("WhatsApp com DDD").fill(FONEPAC);
+    await expect(p.getByText(/em nome de Delta Fisioterapia/)).toBeVisible();   // o consentimento cita a organização do endereço, não a HP
+    await p.getByRole("checkbox").click(); await shot(p, "10-delta-quiz-contato"); await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByLabel("Cidade").fill("São Paulo"); await p.getByLabel("UF").selectOption("SP"); await p.getByLabel("Bairro").fill("Pinheiros"); await p.getByLabel("Zona de São Paulo").selectOption("oeste"); await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByRole("button", { name: "Concordo, continuar" }).click();
+    for (const label of ["dor ou desconforto", "deseja melhorar", "qualidade de vida melhoraria"]) { await expect(p.getByText(new RegExp(label))).toBeVisible(); await p.getByRole("radio", { name: "5" }).click(); await p.getByRole("button", { name: "Continuar" }).click(); }
+    await p.getByRole("radio", { name: "Realizar atividades diárias" }).click(); await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByRole("radio", { name: "Sim" }).click(); await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByRole("radio", { name: "Até R$ 250" }).click(); await p.getByRole("button", { name: "Continuar" }).click();
+    await p.getByRole("button", { name: "Concluir" }).click(); await expect(p.getByText(/Recebemos suas respostas/)).toBeVisible({ timeout: 30_000 });
+    await expect(p.getByRole("button", { name: /WhatsApp/ }).first()).toBeVisible();   // o número é o da Delta
+    await shot(p, "11-delta-quiz-concluido"); await v2.close();
+    // reenvio do mesmo contato (outro navegador): continua UM lead
+    const v3 = await browser.newContext(); const p3 = await v3.newPage(); await p3.goto(`/empresa/${slug}/avaliacao`);
+    await p3.getByLabel("Nome completo").fill(NOMEPAC); await p3.getByLabel("E-mail", { exact: true }).fill(EMAILPAC); await p3.getByLabel("WhatsApp com DDD").fill(FONEPAC); await p3.getByRole("checkbox").click(); await p3.getByRole("button", { name: "Continuar" }).click();
+    await expect(p3.getByText("Em qual cidade e estado")).toBeVisible(); await v3.close();
+    // banco: UM lead, UMA pessoa, UMA oportunidade — só na Delta; origem, campanha e consentimento preservados
+    const q = await sqlDev<{ org: string; n: number }[]>(`select p.org_id::text org, count(distinct p.id)::int n from public.people p join public.person_contacts c on c.person_id = p.id where c.value in ('${EMAILPAC}', '${EMAILFORM}') group by p.org_id`);
+    expect(q).toEqual([{ org: orgId, n: 2 }]);
+    const l = await sqlDev<{ org_id: string; contact_consent_version: string; utm: Record<string, string>; person_id: string; opportunity_id: string }[]>(`select org_id::text, contact_consent_version, utm, person_id::text, opportunity_id::text from public.quiz_leads where email = '${EMAILPAC}'`);
+    expect(l).toHaveLength(1); expect(l[0].org_id).toBe(orgId); expect(l[0].contact_consent_version).toBe("contact-v1-org"); expect(l[0].utm).toMatchObject({ utm_source: "google", utm_campaign: "delta-quiz-e2e" }); S.person = l[0].person_id; S.opp = l[0].opportunity_id;
+    const o = await sqlDev<{ source: string; campaign: string }[]>(`select source, campaign from public.opportunities where org_id = '${orgId}' order by created_at`);
+    expect(o.map((x) => x.source).sort()).toEqual([`page:${S.pageSlug}`, "quiz:atendimento"].sort()); expect(o.find((x) => x.source.startsWith("page:"))!.campaign).toBe("delta-form-e2e");
+    // CRM da Delta pela interface: cada lead aparece uma vez; nas outras organizações, nenhuma
+    await page.goto("/admin/crm/leads"); await expect(page.getByRole("row").filter({ hasText: NOMEPAC })).toHaveCount(1, { timeout: 30_000 }); await expect(page.getByRole("row").filter({ hasText: NOMEFORM })).toHaveCount(1); await shot(page, "12-delta-crm-leads");
+    for (const email of ["alfa.admin@example.test", "beta.admin@example.test", "qa.manager@hp-test.dev"]) {
+      const s = await signIn(email); const r = await get(s, `person_contacts?select=person_id&normalized=in.(${EMAILPAC},${EMAILFORM})`); expect(r.body, `${email} não enxerga os leads da Delta`).toEqual([]);
+    }
+    const outras = await sqlDev<{ n: number }[]>(`select count(*)::int n from public.quiz_leads where email in ('${EMAILPAC}', '${EMAILFORM}') and org_id <> '${orgId}'`); expect(outras[0].n).toBe(0);
+    tempos.captacao_leads = 2;
   });
 });
 
