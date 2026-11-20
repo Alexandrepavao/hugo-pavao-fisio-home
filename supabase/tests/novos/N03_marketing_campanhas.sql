@@ -19,7 +19,7 @@ declare
   pipe uuid; st_new uuid; st_q uuid; st_won uuid; st_lost uuid; svc_eval uuid; svc_sess uuid; prod_a uuid; prod_b uuid; prod_course uuid; prof uuid;
   conn_m uuid; conn_g uuid; acc_m uuid; acc_g uuid; acc_manual uuid; acc_other uuid; conn_other uuid; run1 uuid; run2 uuid; run3 uuid; camp_a uuid; camp_b uuid; camp_g uuid; camp_man uuid; camp_name uuid;
   front_f uuid; purp_p uuid; p1 uuid; p2 uuid; p3 uuid; p4 uuid; p5 uuid; o1 uuid; o2 uuid; o3 uuid; o4 uuid; o5 uuid; o_old uuid; s1 uuid; s2 uuid; s3 uuid; s4 uuid; s_old uuid; sale_c uuid; rec uuid; pay1 uuid; l1 uuid; l2 uuid;
-  front_other uuid; v_today date := current_date; t1 uuid; t2 uuid; i int; jr jsonb; r2 jsonb; v_ver0 int;
+  front_other uuid; v_today date := (now() at time zone 'America/Sao_Paulo')::date;   /* o app calcula o dia em America/Sao_Paulo; current_date (UTC) errava entre 21h e 24h BRT */ t1 uuid; t2 uuid; i int; jr jsonb; r2 jsonb; v_ver0 int;
 begin
   select id into v_org from public.organizations where slug = 'hp-group';
   insert into public.units (org_id, name, slug) values (v_org, 'Unidade A (N03)', 'n03-a') returning id into ua;
@@ -397,7 +397,7 @@ begin
   d := public.mkt_touches_relink(); rep := rep || pg_temp.chk(d ? 'linked_total', 'religar toques a campanhas importadas depois: ação explícita');
   for i in 1..11 loop
     d := public.mkt_indicator_detail((array['q_leads_no_origin','q_leads_organic','q_sales_unattributed','q_sales_person_link','q_paid_no_campaign','q_touch_name_link','q_campaigns_pending','q_sync_incomplete','q_stale','q_connections','q_overlap'])[i], v_today - 29, v_today, '{}'::jsonb);
-    rep := rep || pg_temp.chk(d ? 'items' and (d ->> 'total_items')::int = jsonb_array_length(d -> 'items'), 'detalhe de qualidade responde: ' || (array['leads sem origem','leads orgânicos','vendas sem atribuição','vendas por vínculo da pessoa','toques pagos sem campanha','toques por nome','campanhas pendentes','sync incompleta','dados desatualizados','conexões','sobreposição'])[i]);
+    rep := rep || pg_temp.chk(d ? 'items' and jsonb_array_length(d -> 'items') = least((d ->> 'total_items')::int, 200),   /* a lista devolve no máximo 200 itens (total_items é o total real); dados acumulados do Dev passam de 200 */ 'detalhe de qualidade responde: ' || (array['leads sem origem','leads orgânicos','vendas sem atribuição','vendas por vínculo da pessoa','toques pagos sem campanha','toques por nome','campanhas pendentes','sync incompleta','dados desatualizados','conexões','sobreposição'])[i]);
   end loop;
   d := public.mkt_quality(v_today - 29, v_today); rep := rep || pg_temp.chk(jsonb_array_length(d -> 'items') = 11, 'painel de qualidade com os 11 controles (origem, atribuição, classificação, sincronização, atualização, conexões, sobreposição)');
   t := pg_temp.err('select public.mkt_indicator_detail(''inventado'', current_date - 1, current_date)'); rep := rep || pg_temp.chk(t like '%indicador desconhecido%', 'indicador desconhecido é recusado');
