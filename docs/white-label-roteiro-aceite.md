@@ -42,7 +42,7 @@ Nível 3 (entrega confirmada) exige o webhook do Resend — veja o bloqueio em [
 ## E. Ordem de dependência de PRs e migrations
 
 1. **PR #38** (Jornada: avaliação → apresentação → pendente → pagamento; migrations 131–133) — base.
-2. **PR #39** (white label, rascunho, empilhado no #38): migrations **134 → 147** em ordem (134 fundação, 135 catálogo/planos, 136 provisionamento, 137 storage/exportação, 138 marca no e-mail, 139–141 catálogo/módulos/slug, **142 EXECUTE de anon no pré-request**, **143 captação pública por slug**, **144 ciclo do convite**, 145 slug `empresa` + `org_slug`, **146 webhook de entrega**, **147 planos/limites/histórico**).
+2. **PR #39** (white label, rascunho, empilhado no #38): migrations **134 → 148** em ordem (134 fundação, 135 catálogo/planos, 136 provisionamento, 137 storage/exportação, 138 marca no e-mail, 139–141 catálogo/módulos/slug, **142 EXECUTE de anon no pré-request**, **143 captação pública por slug**, **144 ciclo do convite**, 145 slug `empresa` + `org_slug`, **146 webhook de entrega**, **147 planos/limites/histórico**, **148 acesso ao portal só para pessoa da organização**).
 3. Funções Edge: `auth-email-hook` (`--sem-jwt`), `provisioning-invite`, `org-export`, `resend-webhook` (`--sem-jwt`), `patient-invite` (já no #38).
 4. Antes de promover qualquer coisa à produção: conferir `anon` com EXECUTE em `hp_pre_request` (142), definir `PUBLIC_SITE_URL`, `EMAIL_FROM` verificado e (opcional) `RESEND_WEBHOOK_SECRET`; **não** definir `EMAIL_ALLOWED_RECIPIENTS` em produção. Nada disso foi feito em produção.
 
