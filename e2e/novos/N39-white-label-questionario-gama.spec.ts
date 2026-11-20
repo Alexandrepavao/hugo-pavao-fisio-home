@@ -5,7 +5,7 @@ import { SUPABASE_URL, ANON, PASSWORD, signIn, runId, useSession, MANAGER, type 
 import { call, get, haveHarness, mkUser, PLATFORM } from "./helpers-wl";
 
 // @novo — WHITE LABEL pela INTERFACE: painel da plataforma, questionário A–I e a "Clínica Gama" criada SÓ pelo questionário (sem editar código, sem SQL manual, sem clonar repositório, sem novo projeto Supabase).
-// A conta do administrador da Gama é criada por SQL no Dev APENAS para simular a confirmação do e-mail do convite (o envio real exige PUBLIC_SITE_URL no Dev). Só Dev.
+// A conta do administrador da Gama é criada por SQL no Dev APENAS para simular a confirmação do e-mail do convite (o envio real é validado à parte e só vai ao endereço QA autorizado). Só Dev.
 const SHOTS = "docs/white-label/screenshots"; mkdirSync(SHOTS, { recursive: true });
 const SUB = `gama-${runId}`; const ADMIN = `gama.admin.${runId}@example.test`;
 const BASE = process.env.E2E_BASE_URL ?? "http://127.0.0.1:5180";
@@ -77,8 +77,8 @@ test.describe.serial("@novo White label — painel, questionário e Clínica Gam
     await expect(page.getByTestId("steps")).toContainText("Verificações"); await expect(page.getByTestId("pendencias")).toContainText("Cadastrar serviços e preços");
     tempos.interno_ms_exibido = (await page.getByTestId("internal-ms").innerText()).trim(); await shot(page, "14-gama-provisionada");
     await expect(page.getByTestId("enviar-convite")).toBeVisible();
-    // sem PUBLIC_SITE_URL no Dev o envio é recusado com mensagem clara e NADA é desfeito
-    await page.getByTestId("enviar-convite").click(); await expect(page.getByRole("alert").filter({ hasText: /PUBLIC_SITE_URL|configurado/i })).toBeVisible({ timeout: 20_000 });
+    // o e-mail do administrador (example.test) NÃO está na lista de destinatários autorizados do Dev (EMAIL_ALLOWED_RECIPIENTS): nada é enviado, a mensagem é clara e NADA é desfeito
+    await page.getByTestId("enviar-convite").click(); await expect(page.getByRole("alert").filter({ hasText: /autorizados|EMAIL_ALLOWED|PUBLIC_SITE_URL|configurado/i })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("request-state")).toContainText(/Disponível/); await expect(page.getByTestId("invite-state")).toContainText("Falha no envio");
     await shot(page, "15-gama-convite-sem-site-url");
   });

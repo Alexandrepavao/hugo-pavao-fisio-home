@@ -21,13 +21,20 @@ const as = async (context: BrowserContext, email: string) => { const s = await s
 const spDate = (days: number) => new Date(Date.now() + days * 864e5).toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100).replace(/\s/g, " ");
 
-test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 }, actionTimeout: 30_000 });
+test.use({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 }, actionTimeout: 30_000, trace: "off" });   // vários contextos de navegador por teste: sem trace (os screenshots de falha continuam)
 test.describe.serial("@novo White label — jornada completa da Clínica Delta", () => {
   test.skip(!haveHarness, "precisa de SUPABASE_ACCESS_TOKEN e HP_QA_PASSWORD");
   test.setTimeout(240_000);
   let plat: Session; let reqId = ""; let orgId = ""; let slug = ""; let adminS: Session; const tempos: Record<string, unknown> = {}; const S: Record<string, string> = {};
 
-  test.beforeAll(async () => { execFileSync("node", ["supabase/tools/wl-limpar-orgs-teste.mjs", SUB], { stdio: "pipe" }); plat = await signIn(PLATFORM); });
+  test.beforeAll(async () => {
+    for (let i = 0; i < 3; i++) {   // remove a Delta da execução anterior e CONFERE que saiu (com o banco ocupado a primeira tentativa pode não pegar)
+      execFileSync("node", ["supabase/tools/wl-limpar-orgs-teste.mjs", SUB], { stdio: "pipe" });
+      if (!(await sqlDev<{ n: number }[]>(`select count(*)::int n from public.organizations where slug = '${SUB}'`))[0].n) break;
+    }
+    expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.organizations where slug = '${SUB}'`))[0].n, "a Delta anterior foi removida").toBe(0);
+    plat = await signIn(PLATFORM);
+  });
 
   test("1. Delta criada SÓ pelo questionário (interface), com administrador e unidade; o convite do e-mail de teste é contido pela política de destinatários", async ({ page, context }) => {
     await useSession(context, plat); await page.goto("/plataforma/criar");
@@ -177,7 +184,9 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     await page.getByRole("button", { name: "Agendar", exact: true }).click(); await expect(page.getByText("Agendamento criado.")).toBeVisible({ timeout: 20_000 });
     await shot(page, "13-delta-avaliacao-agendada");
     // o funil já reflete a avaliação agendada (agendar com a oportunidade move a etapa; a opção fica desabilitada no menu)
-    await page.goto("/admin/crm/oportunidades"); await expect(page.getByRole("region", { name: "Quadro do funil" })).toBeVisible();
+    const errs: string[] = []; page.on("pageerror", (e) => errs.push(e.message)); page.on("console", (m) => { if (m.type() === "error") errs.push(m.text().slice(0, 200)); });
+    await page.goto("/admin/crm/oportunidades"); await page.waitForTimeout(1500); if (!(await page.getByRole("region", { name: "Quadro do funil" }).count())) console.log("FUNIL-ERROS", JSON.stringify(errs));
+    await expect(page.getByRole("region", { name: "Quadro do funil" })).toBeVisible();
     await expect(page.getByRole("region", { name: /^Avaliação agendada/ }).getByText(NOMEPAC)).toBeVisible({ timeout: 20_000 }); await shot(page, "13b-delta-funil-avaliacao-agendada");
     const e = await sqlDev<{ status: string; n: number; care: number; pessoas: number; opps: number }[]>(`select (select status from public.patient_enrollments where person_id = '${S.person}' limit 1) status, (select count(*)::int from public.patient_enrollments where person_id = '${S.person}') n,
       (select count(*)::int from public.care_relationships where person_id = '${S.person}' and revoked_at is null) care, (select count(distinct p.id)::int from public.people p join public.person_contacts c on c.person_id = p.id where c.value = '${EMAILPAC}') pessoas,
@@ -273,7 +282,7 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     // 1ª parcela QUITADA (restante de R$ 540,00): o paciente fica ATIVO e o pacote de 8 sessões é liberado; repasse líquido de R$ 180,00 (30% de R$ 600,00 recebidos)
     await page.reload(); await abaReceb(); await row("1/2").getByRole("button", { name: "Receber" }).click(); await expect(page.locator("#pa")).toHaveValue("540,00"); await page.getByRole("button", { name: "Registrar" }).click(); await expect(page.getByText("Recebimento registrado.")).toBeVisible({ timeout: 20_000 });
     await expect(async () => { s = await st(); expect(s).toMatchObject({ enr: "active", pk: 1, ent: 3, net: 18000 }); }).toPass({ timeout: 20_000 });
-    const pk = (await sqlDev<{ total: number; status: string }[]>(`select sessions_total total, status from public.client_packages where org_id = '${orgId}'`))[0]; expect(pk).toMatchObject({ total: 8 });
+    const pk = (await sqlDev<{ total: number; saldo: number }[]>(`select total_sessions total, (select coalesce(sum(delta), 0)::int from public.session_ledger l where l.client_package_id = c.id) saldo from public.client_packages c where org_id = '${orgId}'`))[0]; expect(pk).toMatchObject({ total: 8, saldo: 8 });
     await shot(page, "18-delta-pagamento-quitou-primeira-parcela");
     tempos.ativacao_apos_pagamento = "paciente pendente → ativo somente com a 1ª parcela quitada (parcial e estornada não ativam)";
   });
@@ -286,21 +295,22 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     const opts = await sel.locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter(Boolean)); await sel.selectOption(opts[0]);
     await page.locator("#apk").selectOption({ index: 1 }); await page.getByRole("button", { name: "Agendar", exact: true }).click(); await expect(page.getByText("Agendamento criado.")).toBeVisible({ timeout: 20_000 });
     S.sess = (await sqlDev<{ id: string }[]>(`select id::text from public.appointments where person_id = '${S.person}' and service_id = '${S.svcSess}'`))[0].id;
-    const used = async () => (await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and kind = 'consume'`).catch(() => [{ n: -1 }]))[0].n;
-    expect(await used(), "agendar não consome sessão").toBeLessThanOrEqual(0);
+    const used = async () => (await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and reason = 'consume'`))[0].n;
+    expect(await used(), "agendar não consome sessão").toBe(0);
     // antes do horário o servidor recusa o comparecimento (a presença NÃO é automática nem antecipada)
     const phys = await signIn(FISIO); const early = await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect(early.status).toBeGreaterThanOrEqual(400);
     // o tempo passa (Dev): a sessão ocorreu ontem; a fisioterapeuta registra o comparecimento pela interface
     const past = spDate(-1); await moveAppointment(S.sess, `${past}T10:00:00-03:00`);
     const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await useSession(pc, phys);
     await pp.goto("/admin/agenda"); await pp.locator("#pf-unit").selectOption(S.unit); await pp.locator("#pf-day").fill(past);
-    await pp.getByRole("row").filter({ hasText: NOMEPAC }).filter({ hasText: "Agendado" }).getByRole("button", { name: "Compareceu" }).click(); await expect(pp.getByText("Status atualizado.")).toBeVisible({ timeout: 20_000 });
+    // a agenda da fisioterapeuta não mostra o nome do paciente (a pessoa só é lida por funções com vínculo assistencial; mesmo comportamento da HP): a linha é achada pelo serviço e pelo dia
+    await pp.getByRole("row").filter({ hasText: "Sessão Delta" }).filter({ hasText: "Agendado" }).getByRole("button", { name: "Compareceu" }).click(); await expect(pp.getByText("Status atualizado.")).toBeVisible({ timeout: 20_000 });
     await shot(pp, "19-delta-sessao-realizada"); await pc.close();
-    const r = await sqlDev<{ st: string; consumed: number; remaining: number }[]>(`select (select status from public.appointments where id = '${S.sess}') st, (select count(*)::int from public.session_ledger where org_id = '${orgId}' and kind = 'consume') consumed,
-      (select sessions_total - sessions_used from public.client_packages where org_id = '${orgId}') remaining`);
+    const r = await sqlDev<{ st: string; consumed: number; remaining: number }[]>(`select (select status from public.appointments where id = '${S.sess}') st, (select count(*)::int from public.session_ledger where org_id = '${orgId}' and reason = 'consume') consumed,
+      (select coalesce(sum(delta), 0)::int from public.session_ledger where org_id = '${orgId}') remaining`);
     expect(r[0]).toMatchObject({ st: "attended", consumed: 1, remaining: 7 });
     // marcar de novo (retentativa) não consome outra sessão
-    await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and kind = 'consume'`))[0].n).toBe(1);
+    await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and reason = 'consume'`))[0].n).toBe(1);
     // portal do paciente (celular) mostra o acompanhamento ativo e o histórico
     const pcx = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const pa = await pcx.newPage(); await useSession(pcx, await signIn(EMAILPAC));
     await pa.goto("/paciente"); await expect(pa.getByTestId("patient-home")).toBeVisible({ timeout: 30_000 }); await expect(pa.getByTestId("jr-enrollment-pending")).toHaveCount(0); await shot(pa, "20-delta-portal-paciente-ativo-celular", true); await pcx.close();
