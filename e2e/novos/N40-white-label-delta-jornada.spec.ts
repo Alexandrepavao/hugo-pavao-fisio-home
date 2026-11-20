@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { SUPABASE_URL, ANON, PASSWORD, signIn, useSession, type Session } from "../helpers";
 import { call, get, haveHarness, mkUser, PLATFORM, sqlDev } from "./helpers-wl";
+import { moveAppointment } from "../release/helpers-release";
 
 // @novo — WHITE LABEL: a jornada COMPLETA da Clínica Delta (fictícia), criada SÓ pelo questionário e operada SÓ pelos fluxos normais do app:
 // questionário → convite → acesso pelo endereço da organização (/empresa/<slug>) → configuração (serviços, pacote, conta, fisioterapeuta, disponibilidade, regra de repasse) → captação pública (quiz)
@@ -215,6 +216,94 @@ test.describe.serial("@novo White label — jornada completa da Clínica Delta",
     expect(n[0]).toEqual({ v: 1, g: 1 });
     // a apresentação e a prévia NÃO misturam demonstração institucional com dado real: o rótulo de prévia/real vem da própria interface
     const ev = await sqlDev<{ n: number }[]>(`select count(*)::int n from public.evidence_library where org_id = '${orgId}'`).catch(() => [{ n: 0 }]); expect(ev[0].n).toBe(0);
+  });
+
+  test("7. paciente PENDENTE recebe o acesso ao portal (convite pelo servidor; clique no link e senha SIMULADOS), entra pelo endereço da Delta e vê só o que é dele", async ({ page, browser }) => {
+    const phys = await signIn(FISIO);
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/patient-invite`, { method: "POST", headers: { apikey: ANON, authorization: `Bearer ${phys.access_token}`, "content-type": "application/json" }, body: JSON.stringify({ person_id: S.person }) });
+    const inv = await r.json().catch(() => ({})); tempos.convite_paciente = { http: r.status, status: inv.status };
+    expect(["sent", "linked"], JSON.stringify(inv)).toContain(inv.status);   // "sent" = o Auth aceitou o pedido; o e-mail de teste (example.test) é contido pela política de destinatários (nada sai)
+    const evt = await sqlDev<{ purpose: string; state: string }[]>(`select purpose, state from private.email_events where org_id = '${orgId}' and purpose like 'auth:%' order by created_at desc limit 3`); expect(evt.some((x) => x.state === "suppressed")).toBe(true);
+    // SIMULADO: o paciente "abriu o link e definiu a senha" (confirmação + senha por SQL); o gatilho do banco vincula a conta ao convite aberto
+    await sqlDev(`update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()), encrypted_password = crypt('${PASSWORD.replace(/'/g, "''")}', gen_salt('bf')), updated_at = now() where lower(email) = '${EMAILPAC}'`);
+    const ctx = await browser.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const p = await ctx.newPage();
+    await p.goto(`/empresa/${slug}/login`); await expect(p.getByRole("heading", { name: "Bem-vindo ao Delta Fisioterapia" })).toBeVisible({ timeout: 20_000 });
+    await p.getByLabel("E-mail").fill(EMAILPAC); await p.getByLabel("Senha").fill(PASSWORD); await p.getByRole("button", { name: "Entrar" }).click();
+    await expect(p.getByTestId("tutorial-comecar")).toBeVisible({ timeout: 40_000 });   // primeiro login: tutorial (marca da Delta; sem Academy, que a Delta não contratou)
+    await expect(p.getByText("Academy")).toHaveCount(0); await expect(p.locator('img[alt="HP Fisioterapia"]')).toHaveCount(0); await shot(p, "16a-delta-tutorial-paciente-celular");
+    await p.getByTestId("tutorial-comecar").click(); await expect(p).toHaveURL(/\/paciente/, { timeout: 40_000 }); await expect(p.getByTestId("patient-home")).toBeVisible({ timeout: 30_000 });
+    await expect(p.getByTestId("jr-enrollment-pending")).toBeVisible({ timeout: 20_000 }); await expect(p.getByText("Voltar a nadar sem dor").first()).toBeVisible();
+    expect(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "sem rolagem horizontal no celular").toBe(true);
+    await shot(p, "16-delta-portal-paciente-pendente-celular", true);
+    // o paciente enxerga só a própria pessoa (nenhum outro paciente da Delta, nenhum da HP)
+    const ps = await signIn(EMAILPAC); const pe = await get(ps, "people?select=id,full_name"); expect(pe.body.map((x: { full_name: string }) => x.full_name)).toEqual([NOMEPAC]);
+    expect((await get(ps, "sales?select=id")).body).toEqual([]); expect((await get(ps, "commission_entries?select=id")).status === 200 ? (await get(ps, "commission_entries?select=id")).body : []).toEqual([]);
+    await ctx.close();
+  });
+
+  test("8. venda e pagamento: 'Venda feita' NÃO ativa; parcela parcial NÃO ativa; estorno gera repasse negativo; 1ª parcela quitada ATIVA; reenvio, organização errada e estorno conforme as regras", async ({ page, context }) => {
+    await as(context, ADMIN); const g = adminS;
+    await page.goto("/admin/crm/oportunidades"); await page.getByText(NOMEPAC, { exact: true }).first().click(); await page.getByRole("link", { name: "Converter em venda" }).click();
+    await expect(page).toHaveURL(/\/admin\/financeiro\/vendas\?venda=/); await expect(page.getByText("Venda originada de uma oportunidade")).toBeVisible();
+    await page.locator("#pr").selectOption(S.pkg); await page.locator("#in").fill("2"); await page.locator("#fd").fill(spDate(0));
+    await page.getByRole("button", { name: "Criar venda" }).click(); await expect(page.getByText(/Venda criada como pendente/)).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("row").filter({ hasText: NOMEPAC }).getByRole("button", { name: "Confirmar" }).click(); await expect(page.getByText(/Venda confirmada/)).toBeVisible({ timeout: 20_000 });
+    const st = async () => (await sqlDev<{ enr: string; pk: number; rec: number; pay: number; ent: number; net: number }[]>(`select (select status from public.patient_enrollments where person_id = '${S.person}') enr, (select count(*)::int from public.client_packages where org_id = '${orgId}') pk,
+      (select count(*)::int from public.receivables where org_id = '${orgId}') rec, (select count(*)::int from public.payments where org_id = '${orgId}') pay, (select count(*)::int from public.commission_entries where org_id = '${orgId}') ent,
+      (select coalesce(sum(amount_cents), 0)::int from public.commission_entries where org_id = '${orgId}') net`))[0];
+    S.sale = (await sqlDev<{ id: string }[]>(`select id::text from public.sales where person_id = '${S.person}'`))[0].id;
+    let s = await st(); expect(s).toMatchObject({ enr: "pending", pk: 0, rec: 2, pay: 0, ent: 0 });     // venda confirmada, nada recebido: continua pendente e sem pacote
+    await shot(page, "17-delta-venda-confirmada-sem-pagamento");
+    // pagamento PARCIAL de R$ 100,00 (duplo clique): um recebimento, um repasse de R$ 30,00; paciente segue pendente
+    const row = (n: string) => page.getByRole("row").filter({ hasText: NOMEPAC }).filter({ has: page.getByRole("cell", { name: n, exact: true }) });
+    const abaReceb = async () => { await page.getByRole("tab", { name: "Recebíveis e recebimentos" }).click(); };
+    await abaReceb(); await row("1/2").getByRole("button", { name: "Receber" }).click(); await page.locator("#pa").fill("100,00"); await page.getByRole("button", { name: "Registrar" }).dblclick(); await expect(page.getByText("Recebimento registrado.")).toBeVisible({ timeout: 20_000 });
+    s = await st(); expect(s).toMatchObject({ enr: "pending", pk: 0, pay: 1, ent: 1, net: 3000 });
+    // reenvio do MESMO evento (mesma chave de idempotência): nada muda
+    const rec1 = (await sqlDev<{ id: string; k: string }[]>(`select r.id::text, p.idempotency_key k from public.receivables r join public.payments p on p.receivable_id = r.id where r.sale_id = '${S.sale}' and r.installment_no = 1`))[0]; S.rec1 = rec1.id;
+    const again = await call(g, "payment_record", { p_receivable: rec1.id, p_amount_cents: 10000, p_paid_at: new Date().toISOString(), p_method: "pix", p_account: null, p_idempotency_key: rec1.k }, orgId);
+    expect(again.status, JSON.stringify(again.body)).toBeLessThan(300); s = await st(); expect(s).toMatchObject({ pay: 1, ent: 1, net: 3000, enr: "pending" });
+    // pagamento vinculado à organização ERRADA: a gestora da Alfa não registra recebimento da Delta; o gestor da HP também não
+    for (const email of ["alfa.admin@example.test", "qa.manager@hp-test.dev"]) { const o = await signIn(email); const x = await call(o, "payment_record", { p_receivable: rec1.id, p_amount_cents: 500, p_paid_at: new Date().toISOString(), p_method: "pix", p_account: null, p_idempotency_key: `errada-${email}` }); expect(x.status, `${email}: ${JSON.stringify(x.body)}`).toBeGreaterThanOrEqual(400); }
+    s = await st(); expect(s).toMatchObject({ pay: 1, ent: 1, net: 3000 });
+    // ESTORNO PARCIAL de R$ 40,00 (conforme a regra atual: lançamento negativo proporcional; o paciente continua pendente). Obs.: estornar o valor INTEIRO de uma parcela a marca como "estornada" e a tela não permite receber de novo (comportamento já existente, não alterado aqui).
+    await page.reload(); await abaReceb(); await page.getByRole("row").filter({ hasText: "Recebimento" }).filter({ hasText: "R$ 100,00" }).first().getByRole("button", { name: "Estornar" }).click();
+    await page.locator("#ask-input").fill("40,00"); await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click(); await page.locator("#ask-input").fill("Estorno de teste Delta"); await page.getByRole("dialog").getByRole("button", { name: "Estornar" }).click();
+    await expect(async () => { s = await st(); expect(s).toMatchObject({ ent: 2, net: 1800, enr: "pending", pk: 0 }); }).toPass({ timeout: 20_000 });
+    // 1ª parcela QUITADA (restante de R$ 540,00): o paciente fica ATIVO e o pacote de 8 sessões é liberado; repasse líquido de R$ 180,00 (30% de R$ 600,00 recebidos)
+    await page.reload(); await abaReceb(); await row("1/2").getByRole("button", { name: "Receber" }).click(); await expect(page.locator("#pa")).toHaveValue("540,00"); await page.getByRole("button", { name: "Registrar" }).click(); await expect(page.getByText("Recebimento registrado.")).toBeVisible({ timeout: 20_000 });
+    await expect(async () => { s = await st(); expect(s).toMatchObject({ enr: "active", pk: 1, ent: 3, net: 18000 }); }).toPass({ timeout: 20_000 });
+    const pk = (await sqlDev<{ total: number; status: string }[]>(`select sessions_total total, status from public.client_packages where org_id = '${orgId}'`))[0]; expect(pk).toMatchObject({ total: 8 });
+    await shot(page, "18-delta-pagamento-quitou-primeira-parcela");
+    tempos.ativacao_apos_pagamento = "paciente pendente → ativo somente com a 1ª parcela quitada (parcial e estornada não ativam)";
+  });
+
+  test("9. sessão agendada e realizada pelos fluxos normais: consome UMA sessão só quando a fisioterapeuta registra o comparecimento", async ({ page, context }) => {
+    await as(context, ADMIN); S.day2 = spDate(3);
+    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day2); await page.locator("#ap").selectOption(S.prof); await page.locator("#as").selectOption(S.svcSess);
+    await page.locator("#apn").fill(NOMEPAC); await page.getByRole("button", { name: NOMEPAC, exact: true }).click();
+    const sel = page.locator("#ash"); await expect.poll(async () => (await sel.locator("option").count())).toBeGreaterThan(1);
+    const opts = await sel.locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter(Boolean)); await sel.selectOption(opts[0]);
+    await page.locator("#apk").selectOption({ index: 1 }); await page.getByRole("button", { name: "Agendar", exact: true }).click(); await expect(page.getByText("Agendamento criado.")).toBeVisible({ timeout: 20_000 });
+    S.sess = (await sqlDev<{ id: string }[]>(`select id::text from public.appointments where person_id = '${S.person}' and service_id = '${S.svcSess}'`))[0].id;
+    const used = async () => (await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and kind = 'consume'`).catch(() => [{ n: -1 }]))[0].n;
+    expect(await used(), "agendar não consome sessão").toBeLessThanOrEqual(0);
+    // antes do horário o servidor recusa o comparecimento (a presença NÃO é automática nem antecipada)
+    const phys = await signIn(FISIO); const early = await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect(early.status).toBeGreaterThanOrEqual(400);
+    // o tempo passa (Dev): a sessão ocorreu ontem; a fisioterapeuta registra o comparecimento pela interface
+    const past = spDate(-1); await moveAppointment(S.sess, `${past}T10:00:00-03:00`);
+    const pc = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 1440, height: 900 } }); const pp = await pc.newPage(); await useSession(pc, phys);
+    await pp.goto("/admin/agenda"); await pp.locator("#pf-unit").selectOption(S.unit); await pp.locator("#pf-day").fill(past);
+    await pp.getByRole("row").filter({ hasText: NOMEPAC }).filter({ hasText: "Agendado" }).getByRole("button", { name: "Compareceu" }).click(); await expect(pp.getByText("Status atualizado.")).toBeVisible({ timeout: 20_000 });
+    await shot(pp, "19-delta-sessao-realizada"); await pc.close();
+    const r = await sqlDev<{ st: string; consumed: number; remaining: number }[]>(`select (select status from public.appointments where id = '${S.sess}') st, (select count(*)::int from public.session_ledger where org_id = '${orgId}' and kind = 'consume') consumed,
+      (select sessions_total - sessions_used from public.client_packages where org_id = '${orgId}') remaining`);
+    expect(r[0]).toMatchObject({ st: "attended", consumed: 1, remaining: 7 });
+    // marcar de novo (retentativa) não consome outra sessão
+    await call(phys, "set_appointment_status", { p_id: S.sess, p_status: "attended", p_reason: null }, orgId); expect((await sqlDev<{ n: number }[]>(`select count(*)::int n from public.session_ledger where org_id = '${orgId}' and kind = 'consume'`))[0].n).toBe(1);
+    // portal do paciente (celular) mostra o acompanhamento ativo e o histórico
+    const pcx = await page.context().browser()!.newContext({ timezoneId: "America/Sao_Paulo", locale: "pt-BR", viewport: { width: 390, height: 844 } }); const pa = await pcx.newPage(); await useSession(pcx, await signIn(EMAILPAC));
+    await pa.goto("/paciente"); await expect(pa.getByTestId("patient-home")).toBeVisible({ timeout: 30_000 }); await expect(pa.getByTestId("jr-enrollment-pending")).toHaveCount(0); await shot(pa, "20-delta-portal-paciente-ativo-celular", true); await pcx.close();
   });
 });
 

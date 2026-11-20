@@ -1,3 +1,4 @@
+import { useOrg } from "@/org/OrgProvider";
 import { Link, useNavigate } from "react-router-dom";
 import { BarChart3, CalendarDays, CheckCircle2, Eye, GraduationCap, Handshake, HeartPulse, KeyRound, LayoutDashboard, LineChart, Lock, PlayCircle, Settings, Sunrise, Target, Users, Wallet, type LucideIcon } from "lucide-react";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
@@ -41,12 +42,15 @@ const GROUPS: Group[] = [
   ] },
 ];
 
-const Tutorial = ({ g }: { g: Group }) => (
+const Tutorial = ({ g }: { g: Group }) => {
+  const org = useOrg();
+  const tips = g.tips.filter((t) => !t.to?.includes("academy") || org.moduleOn("academy"));   // sem o módulo contratado, o passo da Academy não aparece
+  return (
   <section className="mb-8" aria-labelledby={`tour-${g.role}`} data-testid={`tutorial-${g.role}`}>
     <h2 id={`tour-${g.role}`} className="text-lg font-semibold text-foreground">{g.heading}</h2>
     <p className="text-[13.5px] text-muted-foreground mt-1 mb-4 max-w-2xl">{g.intro}</p>
     <ol className="grid gap-3 sm:grid-cols-2">
-      {g.tips.map((t, i) => (
+      {tips.map((t, i) => (
         <li key={t.title} className="card-hp !p-4 flex gap-3">
           <span className="grid place-items-center h-9 w-9 shrink-0 rounded-lg bg-primary/10 text-primary"><t.icon size={18} aria-hidden /></span>
           <div className="min-w-0">
@@ -57,7 +61,8 @@ const Tutorial = ({ g }: { g: Group }) => (
         </li>))}
     </ol>
   </section>
-);
+  );
+};
 
 /** Tutorial do sistema por perfil: só o que a pessoa de fato acessa. Abre sozinho no primeiro login (exceto gestão) e fica disponível em "Tutorial". */
 const Welcome = () => {

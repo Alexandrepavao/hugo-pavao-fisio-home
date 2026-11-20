@@ -1,3 +1,4 @@
+import { useOrg } from "@/org/OrgProvider";
 import { CalendarDays, Dumbbell, Home, LineChart, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import AppShell, { type ShellItem, type ShellLink } from "./AppShell";
@@ -14,7 +15,8 @@ const ITEMS: ShellItem[] = [
 /** Portal do paciente (e de quem age em nome dele, quando houver vínculo verificado). */
 const PatientShell = () => {
   const { hasRole } = useAuth();
-  const links: ShellLink[] = [{ to: "/academy", label: "Academy" }];
+  const org = useOrg();
+  const links: ShellLink[] = org.moduleOn("academy") ? [{ to: "/academy", label: "Academy" }] : [];   // só aparece se a organização contratou o módulo
   if (hasRole("physio")) links.unshift({ to: "/fisio", label: "Portal do fisioterapeuta" });
   if (hasRole("manager", "ops_admin", "unit_manager", "sales", "finance", "teacher")) links.unshift({ to: "/admin", label: "Painel de gestão" });
   return <ActingProvider><AppShell brand="Meu acompanhamento" items={ITEMS} links={links} menuExtra={<ActingMenuItems />} banner={<ActingBanner />} /></ActingProvider>;
