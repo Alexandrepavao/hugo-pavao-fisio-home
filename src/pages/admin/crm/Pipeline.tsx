@@ -89,7 +89,7 @@ const Pipeline = () => {
 
   return (
     <div>
-      <PageHead eyebrow="CRM" title="Pipeline" hint="Um funil para cada tipo de lead. A mesma pessoa pode estar em mais de um funil ao mesmo tempo, e cada oportunidade anda sozinha. Arraste os cards entre etapas ou use o menu ⋯ (teclado: Espaço para pegar, setas para mover)."
+      <PageHead eyebrow="CRM" title="Pipeline" hint="Um funil para cada tipo de lead. Arraste os cards entre etapas ou use o menu ⋯ de cada card."
         actions={<button className="hp-btn hp-btn-primary" onClick={() => setShowNew(true)}><Plus size={16} aria-hidden />Nova oportunidade</button>} />
       <Msg m={msg} />
 

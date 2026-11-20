@@ -16,7 +16,7 @@ const PageBanner = ({ app, meta, brand = DEFAULT_BANNER_BRAND }: { app: HpApp; m
       <div className="hp-banner-text">
         {!hub && <p className="hp-banner-eyebrow" data-testid="banner-app">{app.label}</p>}
         <h1 id="titulo-secao" data-testid="banner-title">{meta.title}</h1>
-        {meta.description && <p className="hp-banner-desc" data-testid="banner-desc">{meta.description}</p>}
+        {meta.description && <p className="hp-banner-desc" data-testid="banner-desc" title={meta.description}>{meta.description}</p>}
       </div>
       <img src={brand.logoSrc} alt={brand.name} className="hp-banner-logo" data-mono={brand.monochrome ? "1" : undefined} />
     </section>
