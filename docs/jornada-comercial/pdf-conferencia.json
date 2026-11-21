@@ -8,7 +8,7 @@
   ],
   "ratio_ok": true,
   "fonts": {
-    "": 271
+    "": 269
   },
   "fonts_not_embedded": [],
   "images": 1,
@@ -30,7 +30,7 @@
   "demo_pages": 10,
   "tiny_text_pages": [],
   "font_types": {
-    "Type3": 271
+    "Type3": 269
   },
   "min_pt": {
     "1": 9.4,

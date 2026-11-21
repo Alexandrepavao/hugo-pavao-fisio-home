@@ -34,7 +34,6 @@ const Cover = ({ d, total }: { d: DeckData; total: number }) => {
     <section className="slide is-navy slide-cover" data-testid="slide-1" aria-label="Capa">
       {hp ? <img className="cover-photo" src={capaHp} alt="HP Fisio Group — Hugo Pavão, fisioterapeuta" data-testid="deck-capa" /> : <div className="cover-brand">{logo ? <img src={logo} alt={s.clinic.name} /> : <b>{s.clinic.name}</b>}</div>}
       <div className="cover-text">
-        <p className="t-eyebrow">PLANO DE CUIDADO PERSONALIZADO</p>
         <h1 className="t-title is-cover" data-testid="deck-title">Seu plano <em>de cuidado</em></h1>
         <p className="cover-name" data-testid="deck-patient">{s.patient.name}</p>
         <Glass tone="dark" className="cover-meta"><span>{s.professional ? <>Profissional: <b>{s.professional}</b></> : "Plano de cuidado"}</span><i aria-hidden />{short(s.evaluation_at ?? s.generated_at)}</Glass>
