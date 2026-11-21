@@ -27,6 +27,8 @@ const Evidences = lazy(() => import("./pages/admin/Evidences"));
 const ApresentacaoPublic = lazy(() => import("./pages/apresentacao/ApresentacaoPublic"));
 const PresentationWorkspace = lazy(() => import("./pages/apresentacao/PresentationWorkspace"));
 const PatientPresentation = lazy(() => import("./pages/apresentacao/PatientPresentation"));
+const PatientDeck = lazy(() => import("./pages/deck/DeckPanels").then((m) => ({ default: m.PatientDeck })));
+const DeckPage = lazy(() => import("./pages/deck/DeckPanels").then((m) => ({ default: m.DeckPage })));
 const DemoPresenter = lazy(() => import("./portal/journey/demo/DemoPresenter"));
 const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
@@ -171,6 +173,7 @@ const App = () => (
               <Route path="/apresentacao" element={<ApresentacaoPublic />} />
               <Route path="/apresentação" element={<Navigate to="/apresentacao" replace />} />
               <Route path="/apresentacao/avaliacao/:enrollmentId" element={g(["physio"], <PresentationWorkspace />)} />
+              <Route path="/apresentacao/proposta/:deckId" element={g(["physio", "manager", "ops_admin"], <DeckPage />)} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
@@ -276,6 +279,7 @@ const App = () => (
                 <Route path="mais" element={<PatientMore />} />
                 <Route path="chamados" element={<PatientTicketsPage />} />
                 <Route path="apresentacao" element={<PatientPresentation />} />
+                <Route path="proposta" element={<PatientDeck />} />
               </Route>
               {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
               <Route path="/fisio/apresentar" element={g(["physio"], <DemoPresenter />)} />
