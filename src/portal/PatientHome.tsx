@@ -52,7 +52,7 @@ const PatientHome = () => {
       <Msg m={msg} />
       {model && (
         <JourneyProvider value={{
-          hrefFor: (t) => PATIENT_HREF[t],
+          hrefFor: (t) => PATIENT_HREF[t], presentationHref: "/paciente/apresentacao",
           confirmAppt: (a) => { const r = raw(a.id); if (r) void act.confirm(r); },
           cancelAppt: (a) => { const r = raw(a.id); if (r) void act.cancel(r); },
           watch: (v) => { if (v.kind === "video") setVideo({ id: v.id, title: v.title }); },

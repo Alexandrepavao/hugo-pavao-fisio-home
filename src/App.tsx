@@ -23,6 +23,10 @@ const Overview = lazy(() => import("./pages/admin/Overview"));
 const People = lazy(() => import("./pages/admin/People"));
 const Audit = lazy(() => import("./pages/admin/Audit"));
 const ViewAs = lazy(() => import("./pages/admin/ViewAs"));
+const Evidences = lazy(() => import("./pages/admin/Evidences"));
+const ApresentacaoPublic = lazy(() => import("./pages/apresentacao/ApresentacaoPublic"));
+const PresentationWorkspace = lazy(() => import("./pages/apresentacao/PresentationWorkspace"));
+const PatientPresentation = lazy(() => import("./pages/apresentacao/PatientPresentation"));
 const DemoPresenter = lazy(() => import("./portal/journey/demo/DemoPresenter"));
 const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
@@ -163,6 +167,10 @@ const App = () => (
               <Route path="/seja-parceiro" element={<SejaParceiro />} />
               <Route path="/onboarding-fisio" element={<OnboardingFisio />} />
               <Route path="/onboarding-paciente" element={<OnboardingPaciente />} />
+              {/* Apresentação: /apresentacao é institucional/demonstrativa (sem dados pessoais); a PERSONALIZADA exige login + vínculo (fisioterapeuta com vínculo assistencial). */}
+              <Route path="/apresentacao" element={<ApresentacaoPublic />} />
+              <Route path="/apresentação" element={<Navigate to="/apresentacao" replace />} />
+              <Route path="/apresentacao/avaliacao/:enrollmentId" element={g(["physio"], <PresentationWorkspace />)} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
@@ -254,6 +262,7 @@ const App = () => (
                 <Route path="conta" element={<Account />} />
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
                 <Route path="ver-como" element={g(["manager"], <ViewAs />)} />
+                <Route path="evidencias" element={g(["manager", "ops_admin"], <Evidences />)} />
               </Route>
               <Route path="/boas-vindas" element={g(R.portal, <Welcome />)} />
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />
@@ -266,6 +275,7 @@ const App = () => (
                 <Route path="agenda" element={<PatientAgenda />} />
                 <Route path="mais" element={<PatientMore />} />
                 <Route path="chamados" element={<PatientTicketsPage />} />
+                <Route path="apresentacao" element={<PatientPresentation />} />
               </Route>
               {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
               <Route path="/fisio/apresentar" element={g(["physio"], <DemoPresenter />)} />

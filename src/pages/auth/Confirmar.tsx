@@ -30,7 +30,7 @@ const COPY: Record<TokenType, { title: string; subtitle: string; cta: string }> 
 
 // Depois de validado, cada tipo de token continua para o lugar certo da jornada.
 function destinationFor(type: TokenType): string {
-  if (type === "recovery") return "/redefinir-senha";
+  if (type === "recovery" || type === "invite") return "/redefinir-senha";   // convite: o paciente define a própria senha (nunca enviada por e-mail) e depois entra
   return "/app"; // signup/invite/email_change/magiclink/reauthentication: sessão criada, Landing.tsx decide por perfil
 }
 

@@ -35,6 +35,19 @@ export interface JourneyModel {
   checkinDue: boolean; needsBirthDate: boolean;
   /** true quando já existe alguma avaliação/registro clínico (dor, atividade, etapa, plano, treino): define se mostramos o acompanhamento ou o início de acompanhamento. */
   hasData: boolean;
+  /** Vínculo do paciente: pendente (antes do pagamento confirmado) ou ativo. Ausente na demonstração. */
+  enrollment?: { status: "pending" | "active" | "none"; payment: "no_contract" | "awaiting" | "confirmed" } | null;
+  /** Fichas científicas APROVADAS e liberadas ao paciente (versão publicada) — ou, na prévia da fisioterapeuta, as escolhidas para publicar. */
+  evidence?: EvidenceItem[];
+  /** Só na prévia da fisioterapeuta: o que o paciente está (ou estará) vendo. */
+  preview?: { kind: "draft" | "published"; version: number | null; unpublished: boolean } | null;
+}
+
+/** Ficha de estudo aprovada. Tudo vem da revisão clínica; nada é inventado nem resumido por IA. */
+export interface EvidenceItem {
+  id: string; title: string; authors: string | null; journal: string | null; year: number | null; doi: string | null; url: string | null; design: string | null;
+  population: string | null; comparison: string | null; benefits: string | null; duration: string | null; follow_up: string | null; limitations: string | null;
+  relation: string | null; differences: string | null;
 }
 
 // ---------------------------------------------------------------- derivações honestas

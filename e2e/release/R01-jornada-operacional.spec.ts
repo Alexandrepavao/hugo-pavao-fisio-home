@@ -155,7 +155,7 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     expect(errors).toEqual([]);
   });
 
-  test("4. converte em venda de pacote: contrato, parcelas e pacote de sessões", async ({ page, context }) => {
+  test("4. converte em venda de pacote: contrato e parcelas (o pacote de sessões só sai com a 1ª parcela quitada)", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page); const g = api(mgr);
     // caminho real do usuário: painel da oportunidade → "Converter em venda"
     await page.goto("/admin/crm/oportunidades");
@@ -173,13 +173,13 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     const recs = (await g.get(`receivables?select=id,installment_no,amount_cents,status&sale_id=eq.${S.sale}&order=installment_no`)).body as { id: string; amount_cents: number; status: string }[];
     expect(recs.map((r) => r.amount_cents)).toEqual([20000, 20000]); expect(recs.every((r) => r.status === "open")).toBe(true);
     S.rec1 = recs[0].id; S.rec2 = recs[1].id;
-    const pk = (await g.get(`client_packages?select=id,total_sessions,status&sale_id=eq.${S.sale}`)).body;
-    expect(pk).toHaveLength(1); expect(pk[0]).toMatchObject({ total_sessions: 4, status: "active" }); S.cp = pk[0].id;
+    // REGRA (migration 131): "venda feita" NÃO concede pacote nem saldo — eles saem quando a 1ª parcela da própria venda está quitada (ver teste 5)
+    expect((await g.get(`client_packages?select=id&sale_id=eq.${S.sale}`)).body, "venda confirmada sem pagamento não cria pacote").toHaveLength(0);
     expect((await g.get(`contracts?select=id&sale_id=eq.${S.sale}`)).body).toHaveLength(1);
     // confirmar de novo (clique repetido / retentativa) não duplica nada
     expect((await g.rpc("sale_confirm", { p_sale: S.sale })).status).toBeLessThan(500);
     expect((await g.get(`receivables?select=id&sale_id=eq.${S.sale}`)).body).toHaveLength(2);
-    expect((await g.get(`client_packages?select=id&sale_id=eq.${S.sale}`)).body).toHaveLength(1);
+    expect((await g.get(`client_packages?select=id&sale_id=eq.${S.sale}`)).body).toHaveLength(0);
     expect((await g.get(`interactions?select=summary&opportunity_id=eq.${S.opp}&channel=eq.system`)).body.some((i: { summary: string }) => /Venda confirmada/.test(i.summary))).toBe(true);
     expect(errors).toEqual([]);
   });
@@ -207,6 +207,9 @@ test.describe.serial("@release Jornada operacional (aceite)", () => {
     await expect(page.locator("#pa")).toHaveValue("100,00"); await page.getByRole("button", { name: "Registrar" }).click();
     await expect(page.getByText("Recebimento registrado.")).toBeVisible();
     expect(await recStatus(S.rec1)).toBe("paid");
+    // 1ª parcela quitada: agora sim o pacote e o saldo são liberados (UMA vez)
+    const pk = (await g.get(`client_packages?select=id,total_sessions,status&sale_id=eq.${S.sale}`)).body;
+    expect(pk).toHaveLength(1); expect(pk[0]).toMatchObject({ total_sessions: 4, status: "active" }); S.cp = pk[0].id;
     // estorno parcial pela interface: R$ 50,00 de um recebimento de R$ 100,00 → parcela volta a parcial
     await page.reload();
     await page.getByRole("row").filter({ hasText: "Recebimento" }).filter({ hasText: "R$ 100,00" }).first().getByRole("button", { name: "Estornar" }).click();

@@ -46,8 +46,10 @@ begin
   select count(*) into m from public.contracts where sale_id = s1; rep := rep || format(E'\n[%s] contrato criado uma vez (%s)', case when m = 1 then 'OK' else 'FALHA' end, m);
   reset role;
   select count(*) into m from public.domain_events where idempotency_key = 'sale.confirmed:' || s1; rep := rep || format(E'\n[%s] evento sale.confirmed único (%s)', case when m = 1 then 'OK' else 'FALHA' end, m);
-  select private.package_balance(id) into m from public.client_packages where sale_id = s1;
-  rep := rep || format(E'\n[%s] venda de pacote concede sessões no livro (saldo=%s)', case when m = 10 then 'OK' else 'FALHA' end, m);
+  -- REGRA (migration 131): "venda feita" NÃO concede pacote/saldo; as sessões entram quando a PRIMEIRA PARCELA da própria venda está quitada (ver abaixo e N18).
+  select count(*) into m from public.client_packages where sale_id = s1;
+  rep := rep || format(E'
+[%s] venda confirmada, ainda sem pagamento, NÃO concede sessões (pacotes=%s)', case when m = 0 then 'OK' else 'FALHA' end, m);
   select s.name into stage from public.opportunities o join public.pipeline_stages s on s.id = o.stage_id where o.id = opp;
   rep := rep || format(E'\n[%s] venda confirmada leva oportunidade a Contratou (%s)', case when stage = 'Contratou' then 'OK' else 'FALHA' end, stage);
   select id into r1 from public.receivables where sale_id = s1 and installment_no = 1; select id into r2 from public.receivables where sale_id = s1 and installment_no = 2;
@@ -67,6 +69,9 @@ begin
   pay2 := public.payment_record(r1, 20000, now(), 'pix', acct, 'k-3');
   select status into st from public.receivables where id = r1;
   rep := rep || format(E'\n[%s] parcela quitada fica paid (%s)', case when st = 'paid' then 'OK' else 'FALHA' end, st);
+  select private.package_balance(id) into m from public.client_packages where sale_id = s1;
+  rep := rep || format(E'
+[%s] com a primeira parcela quitada o pacote concede as sessões no livro (saldo=%s)', case when m = 10 then 'OK' else 'FALHA' end, m);
   select count(*) into m from public.commission_entries where sale_id = s1 and amount_cents > 0;
   select sum(amount_cents) into n from public.commission_entries where sale_id = s1;
   rep := rep || format(E'\n[%s] comissão de 10%% sobre o recebido (30000 -> %s)', case when n = 3000 then 'OK' else 'FALHA' end, n);
