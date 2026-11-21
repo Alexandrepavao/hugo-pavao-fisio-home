@@ -1,0 +1,42 @@
+/* E-book da apresentação: leitura em tela (A4 centrado) e impressão/PDF. Usa os tokens de tema da organização (--primary); sem verde fixo. */
+.eb { max-width: 820px; margin: 0 auto; background: hsl(var(--card)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); border-radius: 14px; padding: 36px 40px; display: grid; gap: 22px; font-size: 15px; line-height: 1.55; }
+.eb h1 { font-size: 28px; line-height: 1.2; margin: 6px 0 0; color: hsl(var(--primary)); }
+.eb h2 { font-size: 17px; margin: 0 0 8px; color: hsl(var(--primary)); }
+.eb-cover { display: grid; gap: 6px; padding-bottom: 18px; border-bottom: 3px solid hsl(var(--primary)); }
+.eb-brand { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.eb-brand img { height: 36px; width: auto; }
+.eb-mono { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 8px; border-radius: 8px; background: hsl(var(--primary) / .12); color: hsl(var(--primary)); font-weight: 800; }
+.eb-eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin: 10px 0 0; }
+.eb-sub { color: hsl(var(--muted-foreground)); margin: 0; font-size: 13px; }
+.eb-sec { display: grid; gap: 6px; break-inside: avoid; }
+.eb-sec p { margin: 0; }
+.eb-goal { padding: 12px 14px; border-radius: 12px; background: hsl(var(--primary) / .08); font-size: 17px; }
+.eb-who { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-right: 6px; }
+.eb-who.is-pro { color: hsl(var(--primary)); }
+.eb-k { font-weight: 700; }
+.eb-tbd { color: hsl(var(--muted-foreground)); font-style: italic; }
+.eb-plan { display: grid; margin: 0; }
+.eb-plan > div { display: grid; grid-template-columns: 170px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid hsl(var(--border)); }
+.eb-plan dt { font-weight: 700; }
+.eb-plan dd { margin: 0; }
+.eb-note { font-size: 12.5px; color: hsl(var(--muted-foreground)); }
+.eb-ev { margin: 0; padding-left: 20px; display: grid; gap: 4px; list-style: disc; }
+.eb-why { color: hsl(var(--muted-foreground)); }
+.eb-offer { padding: 16px; border-radius: 12px; border: 2px solid hsl(var(--primary) / .5); }
+.eb-price { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 17px; }
+.eb-price b { font-size: 30px; color: hsl(var(--primary)); }
+.eb-facts { margin: 4px 0; padding-left: 20px; list-style: disc; }
+.eb-steps { margin: 0; padding-left: 22px; display: grid; gap: 4px; list-style: decimal; }
+.eb-status { padding: 8px 12px; border-radius: 10px; background: hsl(var(--muted)); }
+.eb-status.is-confirmed { background: hsl(var(--primary) / .12); }
+.eb-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.eb-table th, .eb-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid hsl(var(--border)); }
+.eb-access { padding: 10px 12px; border-radius: 10px; background: hsl(var(--muted)); word-break: break-all; }
+.eb-foot { border-top: 1px solid hsl(var(--border)); padding-top: 12px; font-size: 12px; color: hsl(var(--muted-foreground)); }
+@media (max-width: 640px) { .eb { padding: 20px 16px; } .eb h1 { font-size: 22px; } .eb-plan > div { grid-template-columns: 1fr; gap: 0; } .eb-price { flex-direction: column; align-items: flex-start; } }
+@media print {
+  body * { visibility: hidden; }
+  .eb, .eb * { visibility: visible; }
+  .eb { position: absolute; inset: 0; max-width: none; border: 0; border-radius: 0; padding: 0; font-size: 12.5pt; }
+  @page { size: A4; margin: 16mm; }
+}

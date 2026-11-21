@@ -39,6 +39,7 @@ const Evidences = lazy(() => import("./pages/admin/Evidences"));
 const ApresentacaoPublic = lazy(() => import("./pages/apresentacao/ApresentacaoPublic"));
 const PresentationWorkspace = lazy(() => import("./pages/apresentacao/PresentationWorkspace"));
 const PatientPresentation = lazy(() => import("./pages/apresentacao/PatientPresentation"));
+const PatientEbook = lazy(() => import("./pages/apresentacao/EbookPanels").then((m) => ({ default: m.PatientEbook })));
 const DemoPresenter = lazy(() => import("./portal/journey/demo/DemoPresenter"));
 const Pages = lazy(() => import("./pages/admin/Pages"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
@@ -293,6 +294,7 @@ const App = () => (
                 <Route path="mais" element={<PatientMore />} />
                 <Route path="chamados" element={<PatientTicketsPage />} />
                 <Route path="apresentacao" element={<PatientPresentation />} />
+                <Route path="ebook" element={<PatientEbook />} />
               </Route>
               {/* Portal do fisioterapeuta: reaproveita as telas de agenda, acompanhamento, Meu dia e resumo dentro da casca própria. */}
               <Route path="/fisio/apresentar" element={g(["physio"], <DemoPresenter />)} />

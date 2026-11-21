@@ -1,0 +1,88 @@
+{
+  "run": "mwqnutvf",
+  "paciente_fictício": "Marina Costa N42 mwqnutvf",
+  "etapas": [
+    {
+      "etapa": "0. Configuração (gestão)",
+      "o_que_mudou": {
+        "servico_avaliacao": "Avaliação inicial HP N42 mwqnutvf",
+        "pacote": "Acompanhamento HP 8 sessões N42 mwqnutvf",
+        "valor_pacote": "R$ 1.760,00 / 8 sessões"
+      }
+    },
+    {
+      "etapa": "1. Lead preenche o cadastro (site)",
+      "o_que_mudou": {
+        "quiz_leads": 1,
+        "pessoas": 1,
+        "oportunidades_com_origem_e_campanha": 1
+      }
+    },
+    {
+      "etapa": "2. Admin recebe (gestor)",
+      "o_que_mudou": {
+        "crm_leads_fila": "1 linha",
+        "funil": "Novo contato",
+        "cadastro_central": "1 pessoa (tipo lead)",
+        "responsavel_automatico": true
+      }
+    },
+    {
+      "etapa": "3. Admin envia ao fisio (agenda)",
+      "o_que_mudou": {
+        "matricula": "pending",
+        "vinculo_assistencial": 1,
+        "funil": "Avaliação agendada",
+        "fisio_ve": "agenda do dia + ficha do paciente pendente"
+      }
+    },
+    {
+      "etapa": "4. Fisio atende e apresenta",
+      "o_que_mudou": {
+        "avaliacao": "realizada (presença registrada pela fisio)",
+        "apresentacao": "versão 1 publicada",
+        "meta_do_paciente": "criada a partir do objetivo",
+        "medida_inicial": "NPRS 7"
+      }
+    },
+    {
+      "etapa": "5. Fisio gera o e-book",
+      "o_que_mudou": {
+        "ebook_versao": 1,
+        "valor": "R$ 1.760,00 (8 sessões, 180 dias)",
+        "conteudo": "apresentação publicada + oferta + regra de pagamento + acesso ao app",
+        "pdf": "docs/jornada-comercial/ebook-acompanhamento-N42.pdf",
+        "repetir_sem_mudar": "não cria outra versão"
+      }
+    },
+    {
+      "etapa": "6. Paciente acessa o app",
+      "o_que_mudou": {
+        "conta": "vinculada ao convite (papel paciente)",
+        "ve": "apresentação, e-book com valores e situação do pagamento",
+        "outros_pacientes": "nenhum",
+        "celular": "sem rolagem horizontal"
+      }
+    },
+    {
+      "etapa": "7. Venda e pagamento",
+      "o_que_mudou": {
+        "venda_feita": "NÃO ativa",
+        "pagamento_parcial_R$_200": "NÃO ativa",
+        "primeira_parcela_quitada": "ATIVA e libera o pacote de 8 sessões",
+        "e_book_do_paciente": "mostra aguardando → confirmado e as parcelas"
+      }
+    },
+    {
+      "etapa": "8. Estado final nas áreas",
+      "o_que_mudou": {
+        "matricula": "active",
+        "pacotes": 1,
+        "vendas": 1,
+        "caixa_cents": 88000,
+        "ebooks": 1,
+        "metas": 1
+      }
+    }
+  ]
+}
