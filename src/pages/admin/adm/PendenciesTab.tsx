@@ -6,7 +6,7 @@ import { download, fmtDate, fmtDateTime, toCsv } from "@/lib/format";
 import { Badge, Msg, State, Table, Td, btnGhost, btnPrimary, errText, promptText, useMsg } from "@/lib/ui";
 import { useUnits } from "../finance/shared";
 import SubjectSearch, { type Subject } from "./SubjectSearch";
-import { HISTORY_LABEL, PEND_KIND, PEND_STATUS, subjectRoute, useAdmCentral, useAssignable, useCadastroFilter, useHere, usePendencies, type Pendency } from "./central";
+import { HISTORY_LABEL, PEND_KIND, PEND_STATUS, subjectRoute, useAssignable, useCadastroFilter, useHere, usePendencies, type Pendency } from "./central";
 import { KpiGrid, StatCard } from "@/lib/ui";
 import { AlertTriangle, CheckCircle2, ClipboardList } from "lucide-react";
 const CadastroChip = ({ onClear, nome }: { onClear: () => void; nome?: string | null }) => (
@@ -29,9 +29,13 @@ const PendenciesTab = () => {
   const cad = useCadastroFilter(); const here = useHere();
   const listAll = usePendencies(unit, { owner, type, kind: "", status: "" }, status === "all" ? "" : status, 300);
   const list = { ...listAll, data: cad.id ? listAll.data?.filter((p) => p.subject_id === cad.id) : listAll.data };
-  // cartões de recorte: contagens oficiais da central (mesma regra da Visão geral), no período dos últimos 30 dias para "concluídas"
-  const to30 = new Date(); const from30 = new Date(Date.now() - 30 * 864e5);
-  const central = useAdmCentral(from30.toISOString(), to30.toISOString(), unit, { owner, type, kind: "", status: "" });
+  // cartões de recorte: contados na MESMA fonte da lista abaixo (adm_pendency_list, consulta leve), no mesmo escopo de unidade/responsável/tipo — assim cartão e tabela nunca divergem.
+  // (limite de 500 por situação; acima disso o cartão mostra “500+”.) Concluídas = últimos 30 dias.
+  const scope = { owner, type, kind: "", status: "" };
+  const openQ = usePendencies(unit, scope, "open", 500); const overdueQ = usePendencies(unit, scope, "overdue", 500); const resolvedQ = usePendencies(unit, scope, "resolved", 500);
+  const since30 = Date.now() - 30 * 864e5;
+  const cnt = (n: number | undefined) => (n === undefined ? undefined : n >= 500 ? "500+" : n.toLocaleString("pt-BR"));
+  const nOpen = cnt(openQ.data?.length), nOver = cnt(overdueQ.data?.length), nRes = cnt(resolvedQ.data?.filter((p) => p.resolved_at && new Date(p.resolved_at).getTime() >= since30).length);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["adm-pendencies"] }); void qc.invalidateQueries({ queryKey: ["adm-central"] }); void qc.invalidateQueries({ queryKey: ["adm-pend-history"] }); };
   const call = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); if (error) m.err(errText(error)); else { m.ok(ok); refresh(); } };
 
@@ -62,11 +66,11 @@ const PendenciesTab = () => {
   return (
     <div className="grid gap-4">
       <Msg m={msg} />
-      {central.data && (
+      {nOpen !== undefined && nOver !== undefined && nRes !== undefined && (
         <KpiGrid kind="compact">
-          <StatCard level="compact" icon={ClipboardList} label="Abertas" value={central.data.kpis.pendencies.open.toLocaleString("pt-BR")} basis={central.data.kpis.pendencies.basis} onClick={() => setStatus("open")} />
-          <StatCard level="compact" icon={AlertTriangle} label="Atrasadas" value={central.data.kpis.pendencies.overdue.toLocaleString("pt-BR")} tone={central.data.kpis.pendencies.overdue > 0 ? "danger" : undefined} basis={central.data.kpis.pendencies.basis} onClick={() => setStatus("overdue")} />
-          <StatCard level="compact" icon={CheckCircle2} label="Concluídas" period="30 dias" value={central.data.kpis.pendencies.resolved_period.toLocaleString("pt-BR")} basis="Pendências concluídas nos últimos 30 dias." onClick={() => setStatus("resolved")} />
+          <StatCard level="compact" icon={ClipboardList} label="Abertas" value={nOpen} basis="Pendências ainda sem conclusão (abertas, inclusive atrasadas)." onClick={() => setStatus("open")} />
+          <StatCard level="compact" icon={AlertTriangle} label="Atrasadas" value={nOver} tone={overdueQ.data && overdueQ.data.length > 0 ? "danger" : undefined} basis="Pendências abertas com o prazo vencido." onClick={() => setStatus("overdue")} />
+          <StatCard level="compact" icon={CheckCircle2} label="Concluídas" period="30 dias" value={nRes} basis="Pendências concluídas nos últimos 30 dias." onClick={() => setStatus("resolved")} />
         </KpiGrid>
       )}
       {cad.id && <CadastroChip onClear={cad.clear} nome={list.data?.[0]?.subject_name} />}
