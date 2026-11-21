@@ -1,7 +1,8 @@
+import { useOrg } from "@/org/OrgProvider";
 import type { ReactNode } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { Download, LogOut, type LucideIcon } from "lucide-react";
-import logo from "@/assets/hp-logo.png";
+import BrandLogo from "@/org/BrandLogo";
 import { useAuth } from "@/auth/AuthProvider";
 import { useAppTheme } from "@/components/hp/theme";
 import { ROLE_LABEL } from "@/components/hp/nav";
@@ -15,6 +16,7 @@ export interface ShellLink { to: string; label: string }
  *  A autorização real continua nas rotas (RequireAuth), no RLS e nas funções do banco; a casca só organiza a navegação. */
 const AppShell = ({ brand, items, links = [], menuExtra, banner, children }: { brand: string; items: ShellItem[]; links?: ShellLink[]; menuExtra?: ReactNode; banner?: ReactNode; children?: ReactNode }) => {
   useAppTheme();
+  const org = useOrg();
   const { user, roles, signOut } = useAuth(); const pwa = usePwaInstall();
   const mobileItems = items.filter((i) => i.mobile !== false);
   const side = ({ isActive }: { isActive: boolean }) => `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`;
@@ -39,13 +41,13 @@ const AppShell = ({ brand, items, links = [], menuExtra, banner, children }: { b
     <div className="min-h-screen bg-background md:flex">
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2">Ir para o conteúdo</a>
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card md:flex" aria-label={`Menu ${brand}`}>
-        <div className="flex items-center gap-3 border-b border-border px-4 py-4"><Link to="/" aria-label="Site HP Fisioterapia"><img src={logo} alt="HP Fisioterapia" style={{ height: "2rem", width: "auto" }} /></Link><span className="text-sm font-semibold">{brand}</span></div>
+        <div className="flex items-center gap-3 border-b border-border px-4 py-4"><Link to={org.isDefaultBrand ? "/" : "/app"} aria-label={org.isDefaultBrand ? "Site HP Fisioterapia" : org.brandName}><BrandLogo height="2rem" /></Link><span className="text-sm font-semibold">{brand}</span></div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Seções">{items.map((i) => <NavLink key={i.to} to={i.to} end={i.end} className={side}><i.icon size={18} aria-hidden />{i.label}</NavLink>)}</nav>
         <div className="border-t border-border p-3"><Account className="w-full justify-start" /></div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-card px-4 md:hidden">
-          <Link to="/" aria-label="Site HP Fisioterapia"><img src={logo} alt="HP Fisioterapia" style={{ height: "1.5rem", width: "auto" }} /></Link>
+          <Link to={org.isDefaultBrand ? "/" : "/app"} aria-label={org.isDefaultBrand ? "Site HP Fisioterapia" : org.brandName}><BrandLogo height="1.5rem" /></Link>
           <span className="text-sm font-semibold">{brand}</span><span className="ml-auto"><Account /></span>
         </header>
         <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 pb-28 md:px-8 md:pb-10">{banner}{children ?? <Outlet />}</main>

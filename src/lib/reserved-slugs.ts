@@ -3,7 +3,7 @@
 export const RESERVED_SLUGS = [
   "admin", "login", "logout", "academy", "portal", "api", "redefinir-senha", "primeiro-acesso", "confirmar",
   "avaliacao", "seja-parceiro", "trabalhe-conosco", "paciente", "parceiro", "pesquisas", "auth", "assets", "static",
-  "favicon.png", "robots.txt", "sitemap.xml", ".netlify", "netlify", "supabase", "p", "preview",
+  "favicon.png", "robots.txt", "sitemap.xml", ".netlify", "netlify", "supabase", "p", "preview", "plataforma", "empresa",
 ] as const;
 
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

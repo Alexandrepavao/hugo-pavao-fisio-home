@@ -23,6 +23,8 @@ export const APPS: HpApp[] = [
   { id: "produtividade", label: "Produtividade", description: "Meu dia, tarefas, calendário e Google Calendar", to: "/admin/meu-dia", icon: Sunrise, accent: "42 80% 34%" },
 ];
 
+/** Aplicativo do menu → módulo da plataforma que o habilita (só para MOSTRAR/OCULTAR: o bloqueio real é feito no servidor). Aplicativo sem entrada = base comum, sempre visível. */
+export const APP_MODULE: Partial<Record<AppId, string>> = { fin: "financeiro", crm: "crm", marketing: "marketing", operacao: "agenda", academy: "academy", parceiros: "parceiros" };
 export const appVisible = (a: HpApp) => !a.feature || featureOn(a.feature);
 export const appById = (id: AppId): HpApp => APPS.find((a) => a.id === id) ?? APPS[0];
 

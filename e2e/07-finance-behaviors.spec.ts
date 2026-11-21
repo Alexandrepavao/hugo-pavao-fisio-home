@@ -119,7 +119,9 @@ test.describe.serial("Financeiro — comportamentos", () => {
     await page.getByRole("tab", { name: "Regras de comissão" }).click();
     await page.getByLabel("Nome da regra").fill(`Regra E2E ${runId}`);
     await page.getByLabel("Produto (opcional)").selectOption({ label: `Serviço E2E Fin ${runId}` });
-    await page.getByLabel("Beneficiário (opcional)").selectOption({ label: "QA Gestor" });
+    // o nome do beneficiário vem do cadastro da conta do gestor (não de um texto fixo no teste: o nome de exibição da conta QA é dado compartilhado do Dev)
+    const acc = (await g.get(`user_accounts?select=display_name&user_id=eq.${m.user.id}`)).body as { display_name: string }[]; expect(acc[0]?.display_name, "conta do gestor com nome de exibição").toBeTruthy();
+    await page.getByLabel("Beneficiário (opcional)").selectOption({ label: acc[0].display_name });
     await page.getByLabel("Percentual (%)").fill("10");
     await page.getByRole("button", { name: "Criar regra" }).click();
     await expect(page.getByText("Regra criada.")).toBeVisible();

@@ -1,3 +1,6 @@
+import { useOrg } from "@/org/OrgProvider";
+import ScopeHeader, { ScopeFooter } from "@/org/ScopeHeader";
+import { publicOrgParam } from "@/lib/orgScope";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, LogIn, MailCheck, ShieldCheck } from "lucide-react";
@@ -21,9 +24,11 @@ export const Field = ({ id, label, error, hint, children, className = "" }: { id
 /** Moldura das duas jornadas: texto de apoio à esquerda, etapas à direita (mesmo visual do quiz). */
 export const OnboardingFrame = ({ eyebrow, title, intro, bullets, step, steps, onBack, children }: {
   eyebrow: string; title: string; intro: string; bullets: { icon: typeof ShieldCheck; text: string }[]; step: number; steps: string[]; onBack?: () => void; children: ReactNode;
-}) => (
+}) => {
+  const scoped = Boolean(publicOrgParam(useOrg().scope.slug));   // endereço de organização: cabeçalho/rodapé da organização, nunca os da HP
+  return (
   <div className="min-h-screen">
-    <Header />
+    {scoped ? <ScopeHeader /> : <Header />}
     <main className="px-5 sm:px-8 py-10 lg:py-16">
       <div className="container-hp max-w-5xl">
         <div className="grid lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-8 lg:gap-14 items-start">
@@ -55,9 +60,10 @@ export const OnboardingFrame = ({ eyebrow, title, intro, bullets, step, steps, o
         </div>
       </div>
     </main>
-    <Footer showCta={false} />
+    {scoped ? <ScopeFooter /> : <Footer showCta={false} />}
   </div>
-);
+  );
+};
 
 export const StepTitle = ({ title, hint }: { title: string; hint?: string }) => (<>
   <h2 className="font-display text-2xl sm:text-3xl text-navy-900">{title}</h2>

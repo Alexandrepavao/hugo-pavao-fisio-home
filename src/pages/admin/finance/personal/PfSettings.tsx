@@ -24,7 +24,8 @@ const PfSettings = () => {
     <div>
       <PageHead eyebrow="Finanças pessoais" title="Configurações pessoais" hint="Preferências e categorias só suas. Funcionários, comercial, financeiro e outros gestores não veem nada disto." />
       <Msg m={msg} />
-      <form onSubmit={save} className="hp-card p-5 grid gap-4 max-w-2xl mb-8" data-testid="pf-config-form">
+      {!st.data && <State loading={st.isLoading} error={st.error} />}
+      {st.data && <form onSubmit={save} className="hp-card p-5 grid gap-4 max-w-2xl mb-8" data-testid="pf-config-form">
         <h2 className="text-base font-semibold">Preferências</h2>
         <State loading={st.isLoading} error={st.error} />
         <div className="grid gap-3 sm:grid-cols-2">
@@ -33,7 +34,7 @@ const PfSettings = () => {
         </div>
         <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={plan} onChange={(e) => setPlan(e.target.checked)} className="!w-4 !h-4 mt-0.5" /><span>Planejar o próximo mês com a renda recebida neste mês (a renda de um mês orienta o orçamento do seguinte).</span></label>
         <div><button className={btnPrimary}>Salvar preferências</button></div>
-      </form>
+      </form>}
 
       <section className="max-w-3xl">
         <div className="flex items-center justify-between gap-2 mb-2"><h2 className="text-base font-semibold">Categorias</h2><div className="flex gap-2"><button type="button" className={btnGhost + " hp-btn-sm"} onClick={() => setDlg({ edit: null, kind: "expense" })}><Plus size={13} aria-hidden />Despesa</button><button type="button" className={btnGhost + " hp-btn-sm"} onClick={() => setDlg({ edit: null, kind: "income" })}><Plus size={13} aria-hidden />Receita</button></div></div>

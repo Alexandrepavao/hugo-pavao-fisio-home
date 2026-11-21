@@ -2,16 +2,17 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronsUpDown, LayoutDashboard, Settings, type LucideIcon } from "lucide-react";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
+import { useOrg } from "@/org/OrgProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { featureOn, type FeatureKey } from "@/lib/release";
 import CommandMenu from "./CommandMenu";
 import HeaderBar, { AppTile } from "./HeaderBar";
-import { APPS, appById, appVisible, type AppId } from "./apps";
+import { APPS, APP_MODULE, appById, appVisible, type AppId } from "./apps";
 import { useAppTheme } from "./theme";
 import { usePfAccess } from "@/pages/admin/finance/personal/pf";
 
-export interface FrameNavItem { to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; roles?: AppRole[]; feature?: FeatureKey; keywords?: string; /** só para quem tem acesso individual às finanças pessoais (não depende de papel) */ pfOnly?: boolean }
+export interface FrameNavItem { /** módulo da plataforma que habilita o item (só visual; o servidor bloqueia) */ module?: string; to: string; label: string; icon: LucideIcon; end?: boolean; managerOnly?: boolean; roles?: AppRole[]; feature?: FeatureKey; keywords?: string; /** só para quem tem acesso individual às finanças pessoais (não depende de papel) */ pfOnly?: boolean }
 export interface FrameNavSection { label?: string; items: FrameNavItem[] }
 
 /** Moldura única dos aplicativos: cabeçalho em largura total (marca HP, aplicativo ▸ seção, busca, notificações, tema, perfil) e, abaixo, a sidebar CONTEXTUAL do
@@ -23,6 +24,7 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
   useAppTheme();
   const app = appById(appId);
   const { hasRole } = useAuth();
+  const { moduleOn } = useOrg();
   const location = useLocation();
   const storageKey = `hp-sb-collapsed-${appId}`;
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(storageKey) === "1"; } catch { return false; } });
@@ -38,8 +40,8 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const visible = (i: FrameNavItem) => (!i.managerOnly || isManagerLike) && (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature)) && (!i.pfOnly || pfAccess);
-  const sections = useMemo(() => nav.map((s) => ({ ...s, items: s.items.filter(visible) })).filter((s) => s.items.length), [nav, isManagerLike, hasRole, pfAccess]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visible = (i: FrameNavItem) => (!i.module || moduleOn(i.module)) && (!i.managerOnly || isManagerLike) && (!i.roles || hasRole(...i.roles)) && (!i.feature || featureOn(i.feature)) && (!i.pfOnly || pfAccess);
+  const sections = useMemo(() => nav.map((s) => ({ ...s, items: s.items.filter(visible) })).filter((s) => s.items.length), [nav, isManagerLike, hasRole, pfAccess, moduleOn]); // eslint-disable-line react-hooks/exhaustive-deps
   const flatItems = useMemo(() => nav.flatMap((s) => s.items), [nav]);
   // Item ativo = o que melhor casa com a URL (caminho e, quando o item tem parâmetros, os parâmetros: ex. Unidades × Configurações em /admin/configuracoes).
   const onAccount = location.pathname === "/admin/conta" || location.pathname.startsWith("/admin/conta/");
@@ -59,7 +61,7 @@ const AppFrame = ({ appId, nav, managerRoles = ["manager", "ops_admin", "unit_ma
     pool.sort((a, b) => b.len - a.len || b.keys - a.keys);
     return pool[0]?.i ?? flatItems[0];
   }, [flatItems, location.pathname, location.search, onAccount]);
-  const apps = useMemo(() => APPS.filter((a) => appVisible(a) && (a.id === "hub" || !a.roles || hasRole(...a.roles))), [hasRole]);
+  const apps = useMemo(() => APPS.filter((a) => appVisible(a) && (!APP_MODULE[a.id] || moduleOn(APP_MODULE[a.id]!)) && (a.id === "hub" || !a.roles || hasRole(...a.roles))), [hasRole, moduleOn]);
   const isHub = appId === "hub";
 
   const Switcher = ({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) => (

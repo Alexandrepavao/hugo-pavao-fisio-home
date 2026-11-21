@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import logo from "@/assets/hp-logo.png";
+import { useOrg } from "@/org/OrgProvider";
 
 const AuthShell = ({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) => {
   const prefersReducedMotion = useReducedMotion();
+  const org = useOrg();   // marca do ENDEREÇO (host verificado) ou da organização ativa; HP/sem marca = visual atual
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden overflow-y-auto bg-[#08111d] px-4 py-10 sm:px-6">
@@ -23,13 +25,16 @@ const AuthShell = ({ title, subtitle, children }: { title: string; subtitle?: st
         >
           <div className="mb-6 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/95 p-2.5 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.6)]">
-              <img src={logo} alt="HP Fisioterapia" className="h-full w-full object-contain" />
+              {org.loading ? <span aria-hidden="true" data-testid="marca-carregando" className="h-full w-full" />   /* marca ainda sendo resolvida: nada de logo HP provisória */
+                : org.isDefaultBrand ? <img src={logo} alt="HP Fisioterapia" className="h-full w-full object-contain" />
+                : org.logoUrl ? <img src={org.logoUrl} alt={org.brandName} className="h-full w-full object-contain" />
+                : <span aria-label={org.brandName} role="img" className="text-xl font-bold text-primary">{org.brandName.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("")}</span>}
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
             <div className="mb-6 text-center">
-              <p className="eyebrow mb-2 text-accent/90">HP Group Hub</p>
+              <p className="eyebrow mb-2 text-accent/90">{org.loading ? " " : org.isDefaultBrand ? "HP Group Hub" : org.brandName}</p>
               <h1 className="font-display text-2xl font-semibold text-white">{title}</h1>
               {subtitle && <p className="mt-2 text-[15px] text-white/60">{subtitle}</p>}
             </div>

@@ -33,9 +33,11 @@ begin
 
   -- listagem (gestor vê tudo)
   d := public.adm_directory('Empresa Teste Colunas N02', null, null, null, null, false, 'name', 'asc', 0, 25);
+  d := jsonb_set(d, '{rows}', coalesce((select jsonb_agg(r) from jsonb_array_elements(d->'rows') r where r->>'name' = 'Empresa Teste Colunas N02 Ltda'), '[]'::jsonb));   -- só a empresa DESTE teste: dados acumulados de outras execuções (ex.: 'Empresa R27…') não entram na conferência
   rep := rep || format(E'\n[%s] gestor: listagem devolve regime, inscrição estadual e e-mail financeiro e o CNPJ completo',
     case when d->'rows'->0->>'tax_regime' = 'Lucro Real' and d->'rows'->0->>'state_registration' = 'IE-998877' and d->'rows'->0->>'email_finance' = 'fin@n02.com' and d->'rows'->0->>'document' = '11222333000181' then 'OK' else 'FALHA: ' || d::text end);
   x := public.adm_export('Empresa Teste Colunas N02', null, null, null, null, false, array['name','document','tax_regime']);
+  x := jsonb_set(x, '{rows}', coalesce((select jsonb_agg(r) from jsonb_array_elements(x->'rows') r where r->>'name' = 'Empresa Teste Colunas N02 Ltda'), '[]'::jsonb));   -- só a empresa DESTE teste: dados acumulados de outras execuções (ex.: 'Empresa R27…') não entram na conferência
   rep := rep || format(E'\n[%s] gestor: exportação inclui regime e CNPJ completo', case when x->'rows'->0->>'tax_regime' = 'Lucro Real' and x->'rows'->0->>'document' = '11222333000181' and not (x->>'masked_document')::boolean then 'OK' else 'FALHA: ' || x::text end);
   reset role;
 
@@ -54,10 +56,12 @@ begin
   rep := rep || format(E'\n[%s] escrita direta na tabela de preferências é negada (só pelas RPCs)', case when ok then 'OK' else 'FALHA' end);
 
   d := public.adm_directory('Empresa Teste Colunas N02', null, null, null, null, false, 'name', 'asc', 0, 25);
+  d := jsonb_set(d, '{rows}', coalesce((select jsonb_agg(r) from jsonb_array_elements(d->'rows') r where r->>'name' = 'Empresa Teste Colunas N02 Ltda'), '[]'::jsonb));   -- só a empresa DESTE teste: dados acumulados de outras execuções (ex.: 'Empresa R27…') não entram na conferência
   rep := rep || format(E'\n[%s] gestor de unidade: listagem devolve campos sensíveis como null e documento mascarado',
     case when d->'rows'->0->>'name' is not null and d->'rows'->0->>'tax_regime' is null and d->'rows'->0->>'state_registration' is null and d->'rows'->0->>'email_finance' is null
          and d->'rows'->0->>'document' <> '11222333000181' and d->'rows'->0->>'document' like '%81' then 'OK' else 'FALHA: ' || d::text end);
   x := public.adm_export('Empresa Teste Colunas N02', null, null, null, null, false, array['name','document','tax_regime','state_registration']);
+  x := jsonb_set(x, '{rows}', coalesce((select jsonb_agg(r) from jsonb_array_elements(x->'rows') r where r->>'name' = 'Empresa Teste Colunas N02 Ltda'), '[]'::jsonb));   -- só a empresa DESTE teste: dados acumulados de outras execuções (ex.: 'Empresa R27…') não entram na conferência
   rep := rep || format(E'\n[%s] gestor de unidade: exportação NÃO contém colunas sensíveis e o documento sai mascarado',
     case when x->'columns' = '["name","document"]'::jsonb and not (x->'rows'->0 ? 'tax_regime') and (x->>'masked_document')::boolean and x->'rows'->0->>'document' <> '11222333000181' then 'OK' else 'FALHA: ' || x::text end);
   x := public.adm_view_reset();

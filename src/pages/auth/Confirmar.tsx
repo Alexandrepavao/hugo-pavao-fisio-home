@@ -1,3 +1,4 @@
+import { useOrgBase } from "@/org/useOrgBase";
 import { useState, type MouseEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -37,6 +38,7 @@ function destinationFor(type: TokenType): string {
 const Confirmar = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const ob = useOrgBase();   // o link do e-mail abre /empresa/<slug>/confirmar: tudo continua na mesma organização
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -48,7 +50,7 @@ const Confirmar = () => {
   if (!tokenHash || !type || failed) {
     return (
       <AuthShell title="Link inválido ou expirado" subtitle="Por segurança, cada link vale por tempo limitado e só pode ser usado uma vez — inclusive se já foi aberto antes.">
-        <Link to="/login" className="flex h-11 w-full items-center justify-center rounded-lg bg-accent text-[15px] font-medium text-accent-foreground transition-all hover:bg-accent/90">
+        <Link to={ob.to("/login")} className="flex h-11 w-full items-center justify-center rounded-lg bg-accent text-[15px] font-medium text-accent-foreground transition-all hover:bg-accent/90">
           Ir para o login
         </Link>
       </AuthShell>
@@ -64,7 +66,7 @@ const Confirmar = () => {
       // Limpa o token da URL visível assim que processado, sucesso ou falha.
       window.history.replaceState(null, "", window.location.pathname);
       if (error) { setFailed(true); return; }
-      navigate(destinationFor(type), { replace: true });
+      navigate(ob.to(destinationFor(type)), { replace: true });
     } catch {
       window.history.replaceState(null, "", window.location.pathname);
       setFailed(true);

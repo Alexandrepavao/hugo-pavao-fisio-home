@@ -104,7 +104,7 @@ const CrmDashboard = () => {
   // Desempenho por responsável — só quem gerencia enxerga (o backend já reforça isso; se um comercial comum
   // chamar com p_owner de outra pessoa, crm_effective_owner ignora e devolve só os próprios dados mesmo assim).
   const isManagerLike = !owner; // heurística de UI: sempre tenta buscar; se vier vazio/1 linha é porque o backend já limitou
-  const byRep = useQuery({ queryKey: ["crm-dash-by-rep", range.from, range.to, unit, pipeline], enabled: isManagerLike, queryFn: async () => {
+  const byRep = useQuery({ queryKey: ["crm-dash-by-rep", range.from, range.to, unit, pipeline, users.isSuccess], enabled: isManagerLike && users.isSuccess, queryFn: async () => {
     let q = supabase.from("opportunities").select("owner_user_id, status, value_cents, closed_at, created_at").gte("created_at", range.from);
     if (unit) q = q.eq("unit_id", unit); if (pipeline) q = q.eq("pipeline_id", pipeline);
     const { data, error } = await q; if (error) throw error;

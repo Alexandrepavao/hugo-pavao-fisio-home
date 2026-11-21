@@ -15,7 +15,7 @@ begin
   insert into public.services (org_id, name, duration_min) values (v_org, 'Sessão prod (teste)', 60) returning id into svc;
   insert into public.people (org_id, unit_id, full_name) values (v_org, v_ua, 'Paciente Prod') returning id into pa;
   insert into public.opportunities (org_id, unit_id, person_id, pipeline_id, stage_id, title)
-    select v_org, v_ua, pa, id, s.id, 'Opp prod' from public.pipelines pl join public.pipeline_stages s on s.pipeline_id = pl.id and s.position = 1 where pl.org_id = v_org and pl.kind = 'patients' returning id into opp;
+    select v_org, v_ua, pa, pl.id, s.id, 'Opp prod' from public.pipelines pl join public.pipeline_stages s on s.pipeline_id = pl.id and s.position = 1 where pl.org_id = v_org and pl.kind = 'patients' returning id into opp;
   insert into public.crm_tasks (org_id, unit_id, opportunity_id, person_id, assignee_user_id, kind, title, due_at) values (v_org, v_ua, opp, pa, u_a, 'follow_up', 'Ligar para paciente', now()) returning id into ct;
   insert into public.appointments (org_id, unit_id, professional_id, person_id, service_id, period, status) values (v_org, v_ua, prof, pa, svc, tstzrange(now() + interval '1 hour', now() + interval '2 hours'), 'scheduled') returning id into appt;
 

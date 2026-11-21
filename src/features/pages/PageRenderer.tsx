@@ -1,3 +1,5 @@
+import { useOrg } from "@/org/OrgProvider";
+import { publicOrgParam } from "@/lib/orgScope";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { resolveCtaHref, safeUrl, videoEmbed, type Block } from "./blocks";
@@ -28,6 +30,7 @@ export const utmFromLocation = (): Record<string, string> => {
 };
 
 const PublicFormBlock = ({ form, title, preview }: { form?: PublicForm; title: string; preview?: boolean }) => {
+  const org = useOrg();   // organização do ENDEREÇO (sem endereço de organização = HP, como sempre); o servidor recusa formulário de outra organização
   const [values, setValues] = useState<Record<string, string>>({});
   const [honey, setHoney] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -39,7 +42,7 @@ const PublicFormBlock = ({ form, title, preview }: { form?: PublicForm; title: s
     if (preview) return setMsg("Pré-visualização: o envio está desativado.");
     setState("sending"); setMsg("");
     const { data, error } = await supabase.rpc("submit_public_form", {
-      p_form_id: form.id, p_answers: values, p_utm: utmFromLocation(), p_honeypot: honey, p_referrer: document.referrer || null,
+      p_form_id: form.id, p_answers: values, p_utm: utmFromLocation(), p_honeypot: honey, p_referrer: document.referrer || null, p_org_slug: publicOrgParam(org.scope.slug),
     });
     if (error) {
       setState("error");
@@ -87,13 +90,15 @@ const PublicFormBlock = ({ form, title, preview }: { form?: PublicForm; title: s
 
 export const BlockView = ({ block, forms, preview, pageSlug }: { block: Block; forms: PublicForm[]; preview?: boolean; pageSlug?: string }) => {
   const b = block as Obj;
+  const orgView = useOrg();
+  const orgEyebrow = orgView.isDefaultBrand || !orgView.brandName ? "HP Fisioterapia" : orgView.brandName;
   switch (block.type) {
     case "hero": {
       return (
         <section className="section relative overflow-hidden">
           <div className="hero-glow" />
           <div className="container-hp relative max-w-3xl">
-            <p className="eyebrow mb-4">HP Fisioterapia</p>
+            <p className="eyebrow mb-4">{orgEyebrow}</p>
             <h1 className="text-4xl sm:text-5xl text-navy-900 mb-5">{s(b.title)}</h1>
             <p className="text-lg text-navy-400 mb-8 whitespace-pre-line">{s(b.subtitle)}</p>
             {s(b.cta_label) && <a href="#formulario" className="btn-primary">{s(b.cta_label)}</a>}

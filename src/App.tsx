@@ -13,6 +13,18 @@ import { AuthProvider, STAFF_ROLES, type AppRole } from "./auth/AuthProvider";
 import ViewAsBanner from "./components/hp/ViewAsBanner";
 import RequireAuth from "./auth/RequireAuth";
 import { AskProvider } from "./lib/ui";
+import { OrgProvider } from "./org/OrgProvider";
+import { InvitationsPage } from "./org/OrgWidgets";
+const OrgScope = lazy(() => import("./org/OrgScope"));
+const PlatformLayout = lazy(() => import("./pages/plataforma/PlatformLayout"));
+const PlatformOrgs = lazy(() => import("./pages/plataforma/Organizations"));
+const PlatformCreate = lazy(() => import("./pages/plataforma/Questionnaire"));
+const PlatformRequests = lazy(() => import("./pages/plataforma/Requests").then((m) => ({ default: m.RequestList })));
+const PlatformRequest = lazy(() => import("./pages/plataforma/Requests").then((m) => ({ default: m.RequestDetailPage })));
+const PlatformCatalog = lazy(() => import("./pages/plataforma/CatalogPlans").then((m) => ({ default: m.CatalogPage })));
+const PlatformPlans = lazy(() => import("./pages/plataforma/CatalogPlans").then((m) => ({ default: m.PlansPage })));
+const PlatformAuditPage = lazy(() => import("./pages/plataforma/CatalogPlans").then((m) => ({ default: m.PlatformAuditPage })));
+const OrgSettings = lazy(() => import("./pages/admin/OrgSettings"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const FirstAccess = lazy(() => import("./pages/auth/FirstAccess"));
@@ -157,6 +169,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <OrgProvider>
           <ViewAsBanner />
           <AskProvider>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-navy-400" role="status">Carregando…</div>}>
@@ -171,6 +184,8 @@ const App = () => (
               <Route path="/apresentacao" element={<ApresentacaoPublic />} />
               <Route path="/apresentação" element={<Navigate to="/apresentacao" replace />} />
               <Route path="/apresentacao/avaliacao/:enrollmentId" element={g(["physio"], <PresentationWorkspace />)} />
+              {/* Organização pelo endereço (/empresa/<slug>/…): marca, login, captação pública e páginas DESSA organização; o servidor valida o slug e o vínculo. */}
+              <Route path="/empresa/:slug/*" element={<OrgScope />} />
               <Route path="/login" element={<Login />} />
               <Route path="/primeiro-acesso" element={<FirstAccess />} />
               <Route path="/redefinir-senha" element={<ResetPassword />} />
@@ -187,6 +202,8 @@ const App = () => (
                 <Route path="produtividade/*" element={<AppAlias app="produtividade" />} />
                 <Route path="meu-dia" element={<Productivity />} />
                 <Route path="meu-resumo" element={<RequireAuth roles={["physio", "manager", "ops_admin", "unit_manager"]}><MySummary /></RequireAuth>} />
+                <Route path="organizacao" element={g(["manager", "ops_admin"], <OrgSettings />)} />
+                <Route path="convites" element={<InvitationsPage />} />
                 <Route path="status" element={<FeatureGate feature="system_status"><Overview /></FeatureGate>} />
                 <Route path="pessoas" element={g(R.people, <People />)} />
                 <Route path="paginas" element={g(R.pages, <Pages />)} />
@@ -288,6 +305,16 @@ const App = () => (
                 <Route path="treinos" element={<ExerciseLibraryPage />} />
                 <Route path="chamados" element={<SupportAdmin />} />
               </Route>
+              {/* Plataforma (operadora do produto): cada função do banco exige administrador da plataforma; o layout só decide o que mostrar. */}
+              <Route path="/plataforma" element={<PlatformLayout />}>
+                <Route index element={<PlatformOrgs />} />
+                <Route path="criar" element={<PlatformCreate />} />
+                <Route path="solicitacoes" element={<PlatformRequests />} />
+                <Route path="solicitacoes/:id" element={<PlatformRequest />} />
+                <Route path="modelos" element={<PlatformCatalog />} />
+                <Route path="planos" element={<PlatformPlans />} />
+                <Route path="auditoria" element={<PlatformAuditPage />} />
+              </Route>
               <Route path="/parceiro" element={g(["partner"], <Partner />)} />
               <Route path="/pesquisas" element={g(R.portal, <PortalResearch />)} />
               {/* Páginas do HP Pages: /:slug (slugs reservados são impedidos no editor e no banco). Manter APÓS as rotas fixas. */}
@@ -297,6 +324,7 @@ const App = () => (
             </Routes>
           </Suspense>
           </AskProvider>
+          </OrgProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

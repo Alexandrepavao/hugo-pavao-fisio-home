@@ -40,10 +40,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!s) { setRoles([]); setRolesLoading(false); return; }
     if (getViewAsSession()) { setRolesLoading(false); return; }   // em “ver como” os papéis são os da pessoa vista (vêm do servidor)
     setRolesLoading(true);
-    const { data, error } = await supabase
-      .from("role_assignments")
-      .select("role, unit_id, valid_from, valid_until, revoked_at")
-      .eq("user_id", s.user.id);
+    // Multiempresa: o papel vale por organização. A organização ativa é a que o BANCO confirma (vínculo do usuário); sem resposta, mantém o comportamento anterior.
+    const { data: mem } = await supabase.rpc("my_memberships");
+    const activeOrg = (mem as { active?: string | null } | null)?.active ?? null;
+    let q = supabase.from("role_assignments").select("role, unit_id, valid_from, valid_until, revoked_at").eq("user_id", s.user.id);
+    if (activeOrg) q = q.eq("org_id", activeOrg);
+    const { data, error } = await q;
     if (error) { setRoles([]); setRolesLoading(false); return; }
     const now = Date.now();
     setRoles(

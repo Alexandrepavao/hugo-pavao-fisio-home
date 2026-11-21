@@ -1,3 +1,4 @@
+import { useOrgBase } from "@/org/useOrgBase";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Loader2, Mail } from "lucide-react";
@@ -11,6 +12,9 @@ import AuthPasswordField from "./AuthPasswordField";
  * uma mensagem clara. O papel só é concedido no banco quando o e-mail VERIFICADO corresponde a um convite aberto (ou ao bootstrap de gestores).
  */
 const FirstAccess = () => {
+  const ob = useOrgBase();
+  const name = ob.isScoped && ob.brandName ? ob.brandName : null;   // texto cita a organização do endereço (HP: textos de sempre)
+  const toWho = name ? `a ${name}` : "à HP"; const withWho = name ?? "a HP";
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
@@ -31,12 +35,12 @@ const FirstAccess = () => {
         setError(stErr.message.includes("rate_limited") ? "Muitas tentativas. Aguarde alguns minutos." : stErr.message.includes("inválido") ? "Informe um e-mail válido." : "Não foi possível verificar o e-mail agora. Tente novamente em instantes.");
         return;
       }
-      if (status === "not_found") { setError("Este e-mail não está cadastrado no sistema. Use o e-mail que você informou à HP no cadastro, ou peça à HP para fazer o seu cadastro."); return; }
-      if (status === "registered_no_access") { setError("O seu cadastro existe, mas o acesso ainda não foi liberado. Fale com a HP para liberar o seu acesso."); return; }
+      if (status === "not_found") { setError(`Este e-mail não está cadastrado no sistema. Use o e-mail que você informou ${toWho} no cadastro, ou peça ${toWho} para fazer o seu cadastro.`); return; }
+      if (status === "registered_no_access") { setError(`O seu cadastro existe, mas o acesso ainda não foi liberado. Fale com ${withWho} para liberar o seu acesso.`); return; }
       if (status === "has_account") { setError("Este e-mail já tem acesso ao sistema. Entre com a sua senha ou use “Esqueci minha senha” na tela de login."); return; }
       if (pw.length < 10) { setError("Use ao menos 10 caracteres."); return; }
       if (pw !== pw2) { setError("As senhas não coincidem."); return; }
-      const { error } = await supabase.auth.signUp({ email: email.trim(), password: pw, options: { emailRedirectTo: `${window.location.origin}/app` } });
+      const { error } = await supabase.auth.signUp({ email: email.trim(), password: pw, options: { emailRedirectTo: `${window.location.origin}${ob.to("/app")}` } });
       if (error && error.status === 429) { setError("Muitas tentativas. Aguarde alguns minutos."); return; }
       setSent(true);
     } catch {
@@ -50,7 +54,7 @@ const FirstAccess = () => {
         Depois de confirmar o e-mail, entre com a senha que você acabou de criar.
       </p>
       <Link
-        to="/login"
+        to={ob.to("/login")}
         className="flex h-11 w-full items-center justify-center rounded-lg bg-accent text-[15px] font-medium text-accent-foreground transition-all hover:bg-accent/90"
       >
         Ir para o login
@@ -76,7 +80,7 @@ const FirstAccess = () => {
         </button>
       </form>
       <p className="mt-6 text-center text-sm">
-        <Link to="/login" className="text-white/60 transition-colors hover:text-white">Já tenho acesso</Link>
+        <Link to={ob.to("/login")} className="text-white/60 transition-colors hover:text-white">Já tenho acesso</Link>
       </p>
     </AuthShell>
   );

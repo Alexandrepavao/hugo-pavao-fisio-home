@@ -19,6 +19,18 @@ export const HEALTH_CONSENT_TEXT =
 export const MARKETING_CONSENT_VERSION = "marketing-v1";
 export const MARKETING_CONSENT_TEXT = "Aceito receber novidades e comunicações promocionais do HP Group por e-mail/WhatsApp.";
 
+/** Textos de consentimento e versões. Organização que NÃO é a HP: o controlador citado é ela (nome do aplicativo) e a versão guardada com o aceite é outra (`-org`), para nunca confundir
+ *  o texto aceito. Os textos por organização precisam de revisão jurídica própria (pendência registrada na documentação). */
+export const quizTexts = (orgName: string | null) => orgName ? {
+  contactVersion: "contact-v1-org", healthVersion: "health-v1-org", marketingVersion: "marketing-v1-org",
+  contactText: `Vamos usar seu nome, e-mail e WhatsApp para entender sua necessidade e entrar em contato em nome de ${orgName}. Você pode pedir a remoção dos seus dados a qualquer momento.`,
+  healthText: `As próximas perguntas são sobre sua dor e qualidade de vida. Essas respostas são tratadas como dado de saúde: ficam visíveis só para a equipe autorizada de ${orgName} e ajudam a entender melhor sua situação antes do contato — não substituem uma avaliação clínica.`,
+  marketingText: `Aceito receber novidades e comunicações promocionais de ${orgName} por e-mail/WhatsApp.`,
+} : {
+  contactVersion: CONTACT_CONSENT_VERSION, healthVersion: HEALTH_CONSENT_VERSION, marketingVersion: MARKETING_CONSENT_VERSION,
+  contactText: CONTACT_CONSENT_TEXT, healthText: HEALTH_CONSENT_TEXT, marketingText: MARKETING_CONSENT_TEXT,
+};
+
 export interface QuestionOption { value: string; label: string }
 export type AnswerMap = Record<string, { value: string | string[]; label: string; detalhe?: string }>;
 export interface Question {
@@ -178,7 +190,7 @@ export interface WhatsAppTemplateFields {
 const line = (label: string, value: string) => (value ? `${label}: ${value}` : null);
 
 export const buildAtendimentoMessage = (
-  f: WhatsAppTemplateFields, interesseLabel: string | null, includeHealth: boolean, healthLines: string[], includeBudget: boolean, budgetLabel: string | null,
+  f: WhatsAppTemplateFields, interesseLabel: string | null, includeHealth: boolean, healthLines: string[], includeBudget: boolean, budgetLabel: string | null, orgName: string | null = null,
 ): string => {
   const fields = [
     line("Nome", f.fullName), line("E-mail", f.email), line("WhatsApp", f.phone),
@@ -188,7 +200,7 @@ export const buildAtendimentoMessage = (
     includeBudget && budgetLabel ? line("Investimento considerado", budgetLabel) : null,
     line("Protocolo", f.protocol),
   ].filter((x): x is string => Boolean(x));
-  return "Olá! Preenchi a avaliação inicial no site do HP Group e gostaria de conhecer o acompanhamento.\n\n" + fields.join("\n");
+  return `Olá! Preenchi a avaliação inicial no site ${orgName ? `de ${orgName}` : "do HP Group"} e gostaria de conhecer o acompanhamento.\n\n` + fields.join("\n");
 };
 
 export const buildParceriaMessage = (
