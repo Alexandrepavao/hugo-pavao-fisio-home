@@ -1,3 +1,4 @@
+import { pickUnit } from "../helpers";
 // ACEITE da release v1 — cancelamento pelo paciente no portal (prazo e consumo de sessão), bloqueio de remarcar para o passado
 // (interface e servidor) e agendas de outros profissionais em "Meu dia" somente por permissão. Não depende de token de gestão do Dev.
 import { expect, test, type Page } from "@playwright/test";
@@ -74,7 +75,7 @@ test.describe.serial("@release Cancelamento pelo paciente, horário passado e ag
 
   test("remarcar para horário passado é recusado na interface e no servidor; futuro continua funcionando", async ({ page, context }) => {
     await loginAs(context, QA.manager); const errors = collectErrors(page); const g = api(await signIn(QA.manager));
-    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day);
+    await page.goto("/admin/agenda"); await pickUnit(page, S.unit); await page.locator("#pf-day").fill(S.day);
     const row = page.getByRole("row").filter({ hasText: svcName("F") }); await expect(row).toHaveCount(1);
     await row.getByRole("button", { name: "Remarcar" }).click(); await page.locator("#ask-input").fill(`${spDate(-1)} 10:00`); await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText(/Não é possível remarcar para um horário passado/)).toBeVisible();

@@ -78,7 +78,7 @@ const Reports = () => {
 
   return (
     <div>
-      <PageHead eyebrow="CRM" title="Relatórios" hint="Indicadores calculados no servidor, no seu escopo de unidade. Cada cartão explica a fórmula; clique para abrir os registros."
+      <PageHead eyebrow="CRM" title="Relatórios" hint="Indicadores comerciais da sua unidade. Cada cartão explica o cálculo; clique para abrir os registros."
         actions={<PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit}
           onClear={() => { onClear(); setOwner(""); setPipeline(""); setStalledDays(7); }} extraCount={(owner ? 1 : 0) + (pipeline ? 1 : 0) + (stalledDays !== 7 ? 1 : 0)} extra={filterExtra} />} />
       <Tabs tabs={[["analises", "Análises"], ["desempenho", "Desempenho comercial"]]} value={tab} onChange={(v) => navigate(v === "desempenho" ? "/admin/crm/relatorios/desempenho" : "/admin/crm/relatorios")} />

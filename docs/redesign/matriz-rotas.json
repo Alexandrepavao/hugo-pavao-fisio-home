@@ -1,0 +1,1175 @@
+[
+ {
+  "path": "/admin",
+  "app": "Início (Hub)",
+  "slug": "hub",
+  "h1": [
+   "Boa tarde, Gestor!"
+  ],
+  "title": "Boa tarde, Gestor!",
+  "desc": "Sua operação em um só lugar.",
+  "bannerH": 152,
+  "switcher": "Início (Hub)",
+  "active": "Início",
+  "h2": [
+   "Indicadores prioritários",
+   "Visão da operação",
+   "Pendências prioritárias"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/adm",
+  "app": "Gestão",
+  "slug": "gestao-dashboard",
+  "h1": [
+   "Visão geral"
+  ],
+  "title": "Visão geral",
+  "desc": "Veja o que precisa de atenção e abra a tela certa para resolver.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Visão geral",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/adm/pendencias",
+  "app": "Gestão",
+  "slug": "gestao-pendencias",
+  "h1": [
+   "Pendências"
+  ],
+  "title": "Pendências",
+  "desc": "O que precisa ser resolvido, quem é o responsável e até quando.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Pendências",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/adm/pendencias?aba=contratos",
+  "app": "Gestão",
+  "slug": "gestao-contratos",
+  "h1": [
+   "Contratos"
+  ],
+  "title": "Contratos",
+  "desc": "Contratos administrativos: do rascunho à assinatura registrada.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Contratos",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/adm/diretorio",
+  "app": "Gestão",
+  "slug": "gestao-planilha",
+  "h1": [
+   "Planilha administrativa"
+  ],
+  "title": "Planilha administrativa",
+  "desc": "Gerencie os cadastros de pessoas e empresas.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Planilha administrativa",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/adm/diretorio?tipo=pj",
+  "app": "Gestão",
+  "slug": "gestao-empresas",
+  "h1": [
+   "Empresas"
+  ],
+  "title": "Empresas",
+  "desc": "Empresas e estabelecimentos para parcerias B2B (pessoa jurídica). Cada empresa pode ter vários contatos, que são pessoas do cadastro central.",
+  "bannerH": 146,
+  "switcher": "Gestão",
+  "active": "Empresas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/pessoas",
+  "app": "Gestão",
+  "slug": "gestao-pessoas",
+  "h1": [
+   "Pessoas"
+  ],
+  "title": "Pessoas",
+  "desc": "Cadastro central de leads, pacientes, alunos e parceiros — independente de ter conta de acesso.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Pessoas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/programas",
+  "app": "Gestão",
+  "slug": "gestao-programas",
+  "h1": [
+   "Programas e ofertas"
+  ],
+  "title": "Programas e ofertas",
+  "desc": "Você decide o programa, o preço (pelo produto ligado) e a quem oferecer. Só recebem pacientes que aceitaram propostas. “Tenho interesse” apenas avisa a equipe: nenhuma venda ou cobrança é criada sozinha.",
+  "bannerH": 168,
+  "switcher": "Gestão",
+  "active": "Programas e ofertas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/chamados",
+  "app": "Gestão",
+  "slug": "gestao-chamados",
+  "h1": [
+   "Chamados de pacientes"
+  ],
+  "title": "Chamados de pacientes",
+  "desc": "Pacientes com pagamento confirmado abrem chamados pelo portal. Primeira resposta em até 24 horas.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Chamados de pacientes",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/responsaveis",
+  "app": "Gestão",
+  "slug": "gestao-responsaveis",
+  "h1": [
+   "Responsáveis e cuidadores"
+  ],
+  "title": "Responsáveis e cuidadores",
+  "desc": "Quem pode agir em nome de um paciente. O vínculo só vale depois de verificado pelo administrador, dentro da validade e sem suspensão. Responsável legal vale só enquanto o paciente é menor de 18 anos.",
+  "bannerH": 146,
+  "switcher": "Gestão",
+  "active": "Responsáveis e cuidadores",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/configuracoes?secao=org",
+  "app": "Gestão",
+  "slug": "gestao-unidades",
+  "h1": [
+   "Unidades"
+  ],
+  "title": "Unidades",
+  "desc": "Central de configurações, por categoria. Só aparece como gerenciável o que já funciona.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Unidades",
+  "h2": [
+   "Organização e unidades",
+   "Equipe e acessos",
+   "Operação"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/equipe",
+  "app": "Gestão",
+  "slug": "gestao-equipe",
+  "h1": [
+   "Equipe e acessos"
+  ],
+  "title": "Equipe e acessos",
+  "desc": "Papéis são atribuídos por escopo (organização ou unidade) e podem ser combinados. Acesso só nasce de convite para e-mail verificado; não há senha padrão.",
+  "bannerH": 146,
+  "switcher": "Gestão",
+  "active": "Equipe e acessos",
+  "h2": [
+   "Convites abertos",
+   "Pessoas com acesso"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/configuracoes?secao=operacao",
+  "app": "Gestão",
+  "slug": "gestao-produtos",
+  "h1": [
+   "Produtos e serviços"
+  ],
+  "title": "Produtos e serviços",
+  "desc": "Central de configurações, por categoria. Só aparece como gerenciável o que já funciona.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Produtos e serviços",
+  "h2": [
+   "Organização e unidades",
+   "Equipe e acessos",
+   "Operação"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/configuracoes",
+  "app": "Gestão",
+  "slug": "gestao-configuracoes",
+  "h1": [
+   "Configurações"
+  ],
+  "title": "Configurações",
+  "desc": "Central de configurações, por categoria. Só aparece como gerenciável o que já funciona.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Configurações",
+  "h2": [
+   "Organização e unidades",
+   "Equipe e acessos",
+   "Operação"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/ver-como",
+  "app": "Gestão",
+  "slug": "gestao-ver-como",
+  "h1": [
+   "Ver como"
+  ],
+  "title": "Ver como",
+  "desc": "Veja o app do fisioterapeuta ou do paciente exatamente como essa pessoa vê. Somente leitura: nada é gravado em nome dela. Cada sessão fica registrada.",
+  "bannerH": 146,
+  "switcher": "Gestão",
+  "active": "Ver como",
+  "h2": [
+   "Últimas sessões de “ver como”"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/auditoria",
+  "app": "Gestão",
+  "slug": "gestao-auditoria",
+  "h1": [
+   "Auditoria"
+  ],
+  "title": "Auditoria",
+  "desc": "Quem fez o quê e quando: ações administrativas e eventos das automações.",
+  "bannerH": 124,
+  "switcher": "Gestão",
+  "active": "Auditoria",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro",
+  "app": "Financeiro",
+  "slug": "fin-visao",
+  "h1": [
+   "Visão geral"
+  ],
+  "title": "Visão geral",
+  "desc": "Resumo financeiro do período. Cada cartão mostra a regra de cálculo — passe o mouse ou abra o detalhe para ver a origem exata.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Visão geral",
+  "h2": [
+   "ResumoIndicadores prioritários",
+   "AtençãoAtenção",
+   "ResumoMais indicadores"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/relatorios",
+  "app": "Financeiro",
+  "slug": "fin-relatorios",
+  "h1": [
+   "Relatórios"
+  ],
+  "title": "Relatórios",
+  "desc": "Eficiência do negócio: só indicadores com base cadastrada real. CAC/LTV ficam indisponíveis sem dados de investimento em mídia.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Relatórios",
+  "h2": [
+   "ResumoEficiência do negócio",
+   "AtençãoSem base de dados",
+   "Por linha de negócio — Geral"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/vendas?aba=vendas",
+  "app": "Financeiro",
+  "slug": "fin-vendas",
+  "h1": [
+   "Vendas"
+  ],
+  "title": "Vendas",
+  "desc": "Venda contratada, valor a receber e recebimento efetivo são conceitos separados. Valores em reais, calculados em centavos inteiros.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Vendas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/vendas?aba=recebiveis",
+  "app": "Financeiro",
+  "slug": "fin-receber",
+  "h1": [
+   "Contas a receber"
+  ],
+  "title": "Contas a receber",
+  "desc": "Venda contratada, valor a receber e recebimento efetivo são conceitos separados. Valores em reais, calculados em centavos inteiros.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Contas a receber",
+  "h2": [
+   "Últimos recebimentos e estornos"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/pagar",
+  "app": "Financeiro",
+  "slug": "fin-pagar",
+  "h1": [
+   "Contas a pagar"
+  ],
+  "title": "Contas a pagar",
+  "desc": "Obrigações, vencimentos e pagamentos. Marcar como paga registra a baixa, a competência e a classificação para a DRE.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Contas a pagar",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/cartoes",
+  "app": "Financeiro",
+  "slug": "fin-cartoes",
+  "h1": [
+   "Cartões"
+  ],
+  "title": "Cartões",
+  "desc": "Cartões corporativos: limite, gasto do ciclo e faturas. Número completo, CVV e dados de autenticação nunca são pedidos nem guardados.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Cartões",
+  "h2": [
+   "ResumoIndicadores prioritários",
+   "AtençãoAtenção",
+   "Cartões cadastrados"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/fluxo-caixa",
+  "app": "Financeiro",
+  "slug": "fin-fluxo",
+  "h1": [
+   "Fluxo de caixa"
+  ],
+  "title": "Fluxo de caixa",
+  "desc": "Realizado = pagamentos e despesas efetivos, pelo mês do pagamento. Previsto = parcelas contratadas e contas a pagar em aberto, pelo mês do vencimento (a projeção de mensalidades fica separada em Recorrência).",
+  "bannerH": 168,
+  "switcher": "Financeiro",
+  "active": "Fluxo de caixa",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/conciliacao",
+  "app": "Financeiro",
+  "slug": "fin-conciliacao",
+  "h1": [
+   "Conciliação"
+  ],
+  "title": "Conciliação",
+  "desc": "Importe o extrato e associe cada linha a um recebimento, conta a pagar ou fatura de cartão já paga. A conciliação nunca cria nem altera lançamento — só confirma o que já existe no sistema. O débito agregado da fatura do cartão se concilia com a fatura (não com cada compra).",
+  "bannerH": 168,
+  "switcher": "Financeiro",
+  "active": "Conciliação",
+  "h2": [
+   "Pendentes de conciliação (20)",
+   "Conciliadas e ignoradas (últimas)",
+   "Movimentos bancários por linha de negócio"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/recorrencia",
+  "app": "Financeiro",
+  "slug": "fin-recorrencia",
+  "h1": [
+   "Recorrência e forecast"
+  ],
+  "title": "Recorrência e forecast",
+  "desc": "MRR vem de contratos recorrentes explícitos (com vigência por data efetiva) — nunca de parcela de venda avulsa nem de pagamento recebido. ARR = MRR × 12.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Recorrência",
+  "h2": [
+   "MRR — últimos 12 meses",
+   "Ponte de movimentação do MRR",
+   "Por linha de negócio"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/dre",
+  "app": "Financeiro",
+  "slug": "fin-dre",
+  "h1": [
+   "Rentabilidade e DRE"
+  ],
+  "title": "Rentabilidade e DRE",
+  "desc": "Receita de caixa ≠ receita reconhecida. Quando faltar classificação, o lançamento aparece separado como 'sem classificação' — nunca vira despesa operacional por padrão, e o total consolidado não é travado por isso.",
+  "bannerH": 168,
+  "switcher": "Financeiro",
+  "active": "DRE",
+  "h2": [
+   "DRE por linha de negócio",
+   "Despesas por categoria",
+   "Margem por produto"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/comissoes",
+  "app": "Financeiro",
+  "slug": "fin-comissoes",
+  "h1": [
+   "Comissões e repasses"
+  ],
+  "title": "Comissões e repasses",
+  "desc": "Comissões são geradas automaticamente a cada recebimento, conforme as regras ativas; estornos geram lançamento negativo proporcional. A conferência abaixo recalcula cada lançamento e compara com a Visão geral.",
+  "bannerH": 168,
+  "switcher": "Financeiro",
+  "active": "Comissões e repasses",
+  "h2": [
+   "Conferência do período (01/11/2026 – 21/11/2026, pela data do recebimento)"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/precos-repasses",
+  "app": "Financeiro",
+  "slug": "fin-precos",
+  "h1": [
+   "Preços e repasses"
+  ],
+  "title": "Preços e repasses",
+  "desc": "O valor cadastrado é o valor final da venda. O repasse do fisioterapeuta é por sessão atendida, igual para todos, definido por produto e congelado em cada lançamento. Cada fisio recebe pelas sessões que atendeu; sessões pagas e não atendidas vão ao fisio responsável pelo pacote.",
+  "bannerH": 168,
+  "switcher": "Financeiro",
+  "active": "Preços e repasses",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/contas-corporativas",
+  "app": "Financeiro",
+  "slug": "fin-corporativas",
+  "h1": [
+   "Contas corporativas"
+  ],
+  "title": "Contas corporativas",
+  "desc": "Empresa cliente do HP que paga pelo atendimento de pessoas já cadastradas — nunca uma organização nova, nunca um cadastro duplicado de paciente.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Contas corporativas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/financeiro/config",
+  "app": "Financeiro",
+  "slug": "fin-config",
+  "h1": [
+   "Configurações"
+  ],
+  "title": "Configurações",
+  "desc": "Contas, categorias e centros de custo usados em vendas, recebimentos, contas a pagar, comissões e na DRE.",
+  "bannerH": 146,
+  "switcher": "Financeiro",
+  "active": "Configurações",
+  "h2": [
+   "Contas financeiras",
+   "Categorias de despesa",
+   "Centros de custo"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm",
+  "app": "CRM",
+  "slug": "crm-dashboard",
+  "h1": [
+   "Visão geral"
+  ],
+  "title": "Visão geral",
+  "desc": "Resumo comercial. Toque em qualquer cartão para ver o detalhamento.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Visão geral",
+  "h2": [
+   "ResumoOportunidades por tipo de lead",
+   "ResumoIndicadores prioritários",
+   "AtençãoAtenção"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": [
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App",
+   "Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s Sem responsável \n    at div\n    at section\n    at RankBars (http://127.0.0.1:5181/src/lib/IndicatorCharts.tsx:1003:122)\n    at div\n    at section\n    at LevelSection (http://127.0.0.1:5181/src/lib/ui.tsx:1192:167)\n    at div\n    at CrmDashboard (http://127.0.0.1:5181/src/pages/admin/crm/CrmDashboard.tsx:41:99)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Outlet (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4494:26)\n    at main\n    at div\n    at div\n    at AppFrameInner (http://127.0.0.1:5181/src/components/hp/AppFrame.tsx?t=1795282809039:79:26)\n    at HelpProvider (http://127.0.0.1:5181/src/components/hp/ajuda/ajuda.tsx:62:32)\n    at PageMetaProvider (http://127.0.0.1:5181/src/components/hp/pageMeta.tsx:24:36)\n    at AppFrame\n    at AdminLayout (http://127.0.0.1:5181/src/pages/admin/AdminLayout.tsx?t=1795282809039:105:26)\n    at RequireAuth (http://127.0.0.1:5181/src/auth/RequireAuth.tsx:25:111)\n    at RenderedRoute (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4088:5)\n    at Routes (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4558:5)\n    at Suspense\n    at AskProvider (http://127.0.0.1:5181/src/lib/ui.tsx:1386:31)\n    at AuthProvider (http://127.0.0.1:5181/src/auth/AuthProvider.tsx:26:32)\n    at Router (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:4501:15)\n    at BrowserRouter (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/react-router-dom.js?v=fa3b61a4:5247:5)\n    at Provider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/chunk-KJPNH6KY.js?v=fa3b61a4:48:15)\n    at TooltipProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@radix-ui_react-tooltip.js?v=fa3b61a4:56:5)\n    at QueryClientProvider (http://127.0.0.1:5181/@fs/D:/Claude/.vite-cache-redesign/deps/@tanstack_react-query.js?v=fa3b61a4:2934:3)\n    at App"
+  ]
+ },
+ {
+  "path": "/admin/crm/leads",
+  "app": "CRM",
+  "slug": "crm-leads",
+  "h1": [
+   "Gestão de leads"
+  ],
+  "title": "Gestão de leads",
+  "desc": "Fila de leads ainda na primeira etapa (sem qualificação/distribuição concluída). Para negociações já em andamento, veja o Pipeline.",
+  "bannerH": 146,
+  "switcher": "CRM",
+  "active": "Gestão de leads",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/contatos",
+  "app": "CRM",
+  "slug": "crm-contatos",
+  "h1": [
+   "Contatos"
+  ],
+  "title": "Contatos",
+  "desc": "Pessoas com pelo menos uma oportunidade — para cadastrar ou editar dados pessoais, use Pessoas.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Contatos",
+  "h2": [
+   "AnáliseDistribuição geográfica"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/listas",
+  "app": "CRM",
+  "slug": "crm-listas",
+  "h1": [
+   "Listas"
+  ],
+  "title": "Listas",
+  "desc": "Grupos estáticos para campanhas e segmentação, sempre com um tipo: paciente, fisioterapeuta (equipe), fisioterapeuta (HP Academy) ou empresa. Não substitui o cadastro central.",
+  "bannerH": 146,
+  "switcher": "CRM",
+  "active": "Listas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/oportunidades",
+  "app": "CRM",
+  "slug": "crm-pipeline",
+  "h1": [
+   "Pipeline"
+  ],
+  "title": "Pipeline",
+  "desc": "Um funil para cada tipo de lead. Arraste os cards entre etapas ou use o menu ⋯ de cada card.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Pipeline",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/tarefas",
+  "app": "CRM",
+  "slug": "crm-tarefas",
+  "h1": [
+   "Tarefas"
+  ],
+  "title": "Tarefas",
+  "desc": "Tarefas comerciais vinculadas a oportunidades e pessoas — para tarefas pessoais, veja Meu dia.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Tarefas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/metas",
+  "app": "CRM",
+  "slug": "crm-metas",
+  "h1": [
+   "Minha meta"
+  ],
+  "title": "Minha meta",
+  "desc": "Progresso do mês corrente. A meta é cadastrada pelo seu gestor.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Minha meta",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/metas/ritmo",
+  "app": "CRM",
+  "slug": "crm-ritmo",
+  "h1": [
+   "Ritmo do dia"
+  ],
+  "title": "Ritmo do dia",
+  "desc": "Quanto falta vender hoje para manter o ritmo necessário até o fim do mês, com base na sua meta.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Ritmo do dia",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/metas/time",
+  "app": "CRM",
+  "slug": "crm-time",
+  "h1": [
+   "Time"
+  ],
+  "title": "Time",
+  "desc": "Meta e progresso do mês corrente de cada vendedor.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Time",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/conversas",
+  "app": "CRM",
+  "slug": "crm-conversas",
+  "h1": [
+   "Conversas"
+  ],
+  "title": "Conversas",
+  "desc": "Mensagens dos leads e contatos, com a ficha do lead ao lado.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Conversas",
+  "h2": [
+   "Conversas"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/crm/relatorios",
+  "app": "CRM",
+  "slug": "crm-relatorios",
+  "h1": [
+   "Relatórios"
+  ],
+  "title": "Relatórios",
+  "desc": "Indicadores comerciais da sua unidade. Cada cartão explica o cálculo; clique para abrir os registros.",
+  "bannerH": 124,
+  "switcher": "CRM",
+  "active": "Relatórios",
+  "h2": [
+   "ResumoIndicadores do funil",
+   "Conversão por funil",
+   "AtençãoAtenção"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/paginas",
+  "app": "Pages",
+  "slug": "pages-paginas",
+  "h1": [
+   "Páginas"
+  ],
+  "title": "Páginas",
+  "desc": "Visitas e leads dos últimos 30 dias (por data da visita e do envio).",
+  "bannerH": 124,
+  "switcher": "Pages",
+  "active": "Páginas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/captacao-leads",
+  "app": "Pages",
+  "slug": "pages-captacao",
+  "h1": [
+   "Captação de leads"
+  ],
+  "title": "Captação de leads",
+  "desc": "Submissões dos quizzes de avaliação (paciente) e parceria (parceiro e HP Academy) — integradas automaticamente ao CRM. Respostas sobre saúde só aparecem para quem tem permissão de gestão.",
+  "bannerH": 146,
+  "switcher": "Pages",
+  "active": "Captação de leads",
+  "h2": [
+   "Onde estão os leads",
+   "Todas as captações"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/pesquisas",
+  "app": "Pages",
+  "slug": "pages-pesquisas",
+  "h1": [
+   "Pesquisas"
+  ],
+  "title": "Pesquisas",
+  "desc": "Perguntas próprias, público-alvo (pacientes/parceiros/alunos), identificada ou anônima. Editar uma pergunta depois de publicada nunca muda o significado das respostas já registradas — uma nova versão é congelada automaticamente.",
+  "bannerH": 168,
+  "switcher": "Pages",
+  "active": "Pesquisas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing",
+  "app": "Marketing",
+  "slug": "mkt-visao",
+  "h1": [
+   "Visão geral"
+  ],
+  "title": "Visão geral",
+  "desc": "Do anúncio ao protocolo vendido: investimento, leads, vendas e retorno, com a origem e a cobertura dos dados à vista.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Visão geral",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/analises",
+  "app": "Marketing",
+  "slug": "mkt-analises",
+  "h1": [
+   "Análises"
+  ],
+  "title": "Análises",
+  "desc": "Por que os números são o que são: tempo, perdas, qualidade das campanhas, região, horário e retorno por mês, sempre sobre os leads captados no período.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Análises",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/campanhas",
+  "app": "Marketing",
+  "slug": "mkt-campanhas",
+  "h1": [
+   "Campanhas"
+  ],
+  "title": "Campanhas",
+  "desc": "Campanhas importadas das plataformas. Novas campanhas ficam “Aguardando classificação”; nada é inferido pelo nome. Desligar o acompanhamento aqui não pausa nenhum anúncio.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Campanhas",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/anuncios",
+  "app": "Marketing",
+  "slug": "mkt-anuncios",
+  "h1": [
+   "Anúncios e criativos"
+  ],
+  "title": "Anúncios e criativos",
+  "desc": "Gerenciador de anúncios: a mídia da plataforma ao lado do que o Hub confirmou — leads, MQL, SAL, vendas e valores — em cada nível, com custos por etapa e janelas 7-3-1.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Anúncios e criativos",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/funil",
+  "app": "Marketing",
+  "slug": "mkt-funil",
+  "h1": [
+   "Funil e atribuição"
+  ],
+  "title": "Funil e atribuição",
+  "desc": "Como o Hub liga cada lead e cada venda a uma campanha: uma regra única, determinística e visível. Reportado pelas plataformas e confirmado no Hub nunca se misturam.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Funil e atribuição",
+  "h2": [
+   "ResumoMídia (plataformas)",
+   "ResumoCaptação e CRM",
+   "ResumoFisioterapia"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/leads",
+  "app": "Marketing",
+  "slug": "mkt-leads",
+  "h1": [
+   "Leads e pontuação"
+  ],
+  "title": "Leads e pontuação",
+  "desc": "Nota de 0 a 100 por lead, explicável fator a fator, para priorizar o atendimento. Usa só fatos operacionais — nunca dados de saúde.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Leads e pontuação",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/paineis",
+  "app": "Marketing",
+  "slug": "mkt-paineis",
+  "h1": [
+   "Painéis"
+  ],
+  "title": "Painéis",
+  "desc": "Monte painéis com os indicadores que importam para você. Os números são os mesmos das outras páginas, com o mesmo período e filtros.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Painéis",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/marketing/integracoes",
+  "app": "Marketing",
+  "slug": "mkt-integracoes",
+  "h1": [
+   "Integrações"
+  ],
+  "title": "Integrações",
+  "desc": "Conexão oficial e somente leitura com Meta Ads e Google Ads. O Hub nunca cria, pausa ou altera anúncios, e não envia dados de pacientes ou conversões às plataformas nesta fase.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Integrações",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": [
+   "Access to fetch at 'https://fsvtzowcwhvwtluwrhnb.supabase.co/functions/v1/marketing-ads/status' from origin 'http://127.0.0.1:5181' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value.",
+   "Access to fetch at 'https://fsvtzowcwhvwtluwrhnb.supabase.co/functions/v1/marketing-ads/status' from origin 'http://127.0.0.1:5181' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+  ]
+ },
+ {
+  "path": "/admin/marketing/configuracoes",
+  "app": "Marketing",
+  "slug": "mkt-config",
+  "h1": [
+   "Configurações"
+  ],
+  "title": "Configurações",
+  "desc": "Regras de atribuição, frentes e finalidades (livres por organização), e como marcar os links das campanhas.",
+  "bannerH": 146,
+  "switcher": "Marketing",
+  "active": "Configurações",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/agenda",
+  "app": "Operação",
+  "slug": "op-agenda",
+  "h1": [
+   "Agenda"
+  ],
+  "title": "Agenda",
+  "desc": "Agende, confirme e acompanhe os atendimentos. Os horários seguem o fuso de cada unidade.",
+  "bannerH": 124,
+  "switcher": "Operação",
+  "active": "Agenda",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/acompanhamento",
+  "app": "Operação",
+  "slug": "op-acompanhamento",
+  "h1": [
+   "Acompanhamento de pacientes"
+  ],
+  "title": "Acompanhamento de pacientes",
+  "desc": "Conteúdos individualizados são definidos e liberados por profissionais autorizados — o sistema não gera prescrição automática. Vínculos podem ser revogados a qualquer momento.",
+  "bannerH": 146,
+  "switcher": "Operação",
+  "active": "Acompanhamento",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/academy",
+  "app": "Academy",
+  "slug": "academy",
+  "h1": [
+   "Cursos e alunos"
+  ],
+  "title": "Cursos e alunos",
+  "desc": "Gerencie cursos, mentorias e o acesso dos alunos: liberar, expirar ou revogar vale imediatamente.",
+  "bannerH": 124,
+  "switcher": "Academy",
+  "active": "Cursos e alunos",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/parceiros",
+  "app": "Parceiros",
+  "slug": "parceiros",
+  "h1": [
+   "Parceiros"
+  ],
+  "title": "Parceiros",
+  "desc": "A aprovação de parceiros acontece no funil “Parceiros” (etapa Ativo).",
+  "bannerH": 124,
+  "switcher": "Parceiros",
+  "active": "Parceiros",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/meu-dia",
+  "app": "Produtividade",
+  "slug": "prod-meu-dia",
+  "h1": [
+   "Meu dia"
+  ],
+  "title": "Meu dia",
+  "desc": "Suas tarefas, os compromissos de CRM atribuídos a você e sua agenda clínica, em um só lugar — sem duplicar nada. Tarefas pessoais são privadas até que você as marque como visíveis à equipe.",
+  "bannerH": 146,
+  "switcher": "Produtividade",
+  "active": "Meu dia",
+  "h2": [
+   "sábado, 21 de novembro de 2026",
+   "Agenda clínica",
+   "Tarefas de CRM atribuídas"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/meu-resumo",
+  "app": "Produtividade",
+  "slug": "prod-meu-resumo",
+  "h1": [
+   "Meu resumo"
+  ],
+  "title": "Meu resumo",
+  "desc": "Seus atendimentos no período, separados por situação. Realizado, cancelamento e falta são coisas diferentes: nada é somado como “melhora”.",
+  "bannerH": 146,
+  "switcher": "Produtividade",
+  "active": "Meu resumo",
+  "h2": [
+   "ResumoAtendimentos do período",
+   "AnáliseRepasses"
+  ],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ },
+ {
+  "path": "/admin/conta",
+  "app": "Início (Hub)",
+  "slug": "conta",
+  "h1": [
+   "Configurações"
+  ],
+  "title": "Configurações",
+  "desc": "Seu nome, seus dados e a segurança do seu acesso.",
+  "bannerH": 124,
+  "switcher": "Início (Hub)",
+  "active": "Configurações",
+  "h2": [],
+  "forbidden": false,
+  "hscroll1440": 0,
+  "hscroll390": 0,
+  "errors": []
+ }
+]

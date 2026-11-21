@@ -1,3 +1,4 @@
+import { pickUnit } from "../helpers";
 // ACEITE da release v1 — confirmação antecipada independente (paciente e fisioterapeuta, nos respectivos portais), presença efetiva e consumo de sessão.
 // Três coisas separadas: confirmar (antes) ≠ comparecer/faltar (depois do horário) ≠ consumir sessão (política do pacote).
 // Exige SUPABASE_ACCESS_TOKEN (Dev): cria o pacote de teste e desloca horários ao passado (o sistema não deixa marcar falta antes do horário).
@@ -94,7 +95,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     await ctxP.close();
     // gestor: Agenda do dia
     await loginAs(context, QA.manager); const errors = collectErrors(page);
-    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(S.day);
+    await page.goto("/admin/agenda"); await pickUnit(page, S.unit); await page.locator("#pf-day").fill(S.day);
     const agA = page.getByRole("row").filter({ hasText: svcName("A") });
     await expect(agA.getByText("Paciente: ✓")).toBeVisible(); await expect(agA.getByText("Profissional: ✓")).toBeVisible();
     await expect(agA.getByRole("button", { name: "Registrar confirmação do paciente" })).toHaveCount(0);
@@ -117,7 +118,7 @@ test.describe.serial("@release Confirmação, presença e consumo de sessão", (
     const past = spDate(-1); const hh = 1 + (parseInt(runId, 36) % 20); const at = (h: number) => `${past}T${String(h).padStart(2, "0")}:00:00-03:00`;
     await moveAppointment(S.B, at(hh)); await moveAppointment(S.C, at(hh + 2));
     await loginAs(context, QA.manager); const errors = collectErrors(page);
-    await page.goto("/admin/agenda"); await page.locator("#pf-unit").selectOption(S.unit); await page.locator("#pf-day").fill(past);
+    await page.goto("/admin/agenda"); await pickUnit(page, S.unit); await page.locator("#pf-day").fill(past);
     const rowB = page.getByRole("row").filter({ hasText: svcName("B") });
     await rowB.getByRole("button", { name: "Faltou" }).click(); await expect(page.getByText("Status atualizado.")).toBeVisible();
     await expect(rowB.getByText("Faltou", { exact: true })).toBeVisible(); await expect(rowB.getByText("Consumida", { exact: true })).toBeVisible();

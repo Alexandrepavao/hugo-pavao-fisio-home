@@ -130,7 +130,7 @@ test.describe.serial("@release Filtro único: Agenda, Academy, Parceiros, Contas
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/agenda");
     await expect(page.locator("#pf-unit")).toBeVisible({ timeout: 40_000 }); await expect(page.locator("#pf-day")).toBeVisible();
-    await expect(page.locator("#pf-unit option", { hasText: "Todas as unidades" })).toHaveCount(0);       // a agenda exige uma unidade
+    await page.locator("#pf-unit").click(); await expect(page.locator('[role="option"][data-unit-id=""]')).toHaveCount(0); await page.keyboard.press("Escape");       // a agenda exige uma unidade
     await expect(page.getByRole("button", { name: /^Filtros/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Limpar filtros" })).toHaveCount(0);                    // nada ativo
     await expect(page.locator("#ap")).toBeVisible(); await expect(page.locator("#as")).toBeVisible();     // campos do agendamento, fora do filtro

@@ -25,7 +25,8 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/adm");
     const header = page.locator("header.hp-header");
-    await expect(header.getByRole("heading", { level: 1 })).toHaveText(/^Gestão · /, { timeout: 30_000 });
+    await expect(page.getByTestId("banner-app")).toHaveText("Gestão", { timeout: 30_000 }); await expect(page.getByRole("heading", { level: 1 })).toHaveText("Visão geral");   // um único h1: o do banner
+    await expect(header.getByTestId("crumb-section")).toContainText("Visão geral");
     await expect(header.getByRole("button", { name: "Buscar (Ctrl+K)" })).toBeVisible();
     await expect(header.getByRole("button", { name: /^Notificações/ })).toBeVisible();
     await expect(header.getByRole("button", { name: "Usar tema escuro" })).toBeVisible();
@@ -42,7 +43,7 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     // notificações: só itens reais do próprio usuário (lista ou “nada atrasado”)
     await header.getByRole("button", { name: /^Notificações/ }).click();
     await expect(page.getByText("Precisa da sua atenção")).toBeVisible();
-    await expect(page.getByText(/Nada atrasado sob a sua responsabilidade|atrasad/).first()).toBeVisible(); await page.keyboard.press("Escape");
+    const pop = page.locator("[data-radix-popper-content-wrapper]"); await expect(async () => { expect((await pop.locator("li").count()) > 0 || (await pop.getByText("Nada atrasado sob a sua responsabilidade").count()) > 0, "itens reais do usuário ou a mensagem de nada atrasado").toBe(true); }).toPass({ timeout: 20_000 }); await page.keyboard.press("Escape");
     // tema escuro persiste ao recarregar
     await header.getByRole("button", { name: "Usar tema escuro" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -78,6 +79,7 @@ test.describe.serial("@release Nova interface (desktop)", () => {
     await loginAs(context, QA.manager);
     for (const path of ["/admin", "/admin/adm", "/admin/crm", "/admin/financeiro"]) {
       await page.goto(path);
+      if (path === "/admin") { await expect(page.getByTestId("hub-visao")).toBeVisible({ timeout: 40_000 }); await expect(page.getByTestId("hub-pendencias")).toBeVisible(); continue; }   // Hub recomposto: visão da operação 60% + pendências prioritárias 40% (mudança intencional)
       for (const tag of ["Atenção", "Resumo", "Análise"]) await expect(page.locator(".hp-level-tag", { hasText: tag }).first()).toBeVisible({ timeout: 40_000 });
     }
     await page.goto("/admin/adm");
@@ -172,7 +174,7 @@ test.describe.serial("@release Nova interface (celular)", () => {
 
   test("celular: sem rolagem lateral no Hub, Administrativo, CRM e Financeiro; cabeçalho cabe; filtros em gaveta mostram o que está ativo", async ({ page, context }) => {
     await loginAs(context, QA.manager);
-    for (const [path, wait] of [["/admin", /Bom dia|Boa tarde|Boa noite/], ["/admin/adm", /Prioridades administrativas/], ["/admin/crm", /Painel comercial/], ["/admin/financeiro", /Visão geral/]] as const) {
+    for (const [path, wait] of [["/admin", /Bom dia|Boa tarde|Boa noite/], ["/admin/adm", /O que precisa de atenção/], ["/admin/crm", /Visão geral/], ["/admin/financeiro", /Visão geral/]] as const) {
       await page.goto(path); await expect(page.getByRole("heading", { name: wait }).first()).toBeVisible({ timeout: 40_000 });
       await page.waitForTimeout(1500);
       await noHScroll(page, path);

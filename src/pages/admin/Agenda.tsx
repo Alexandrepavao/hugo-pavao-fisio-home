@@ -27,7 +27,7 @@ const parsePeriod = (p: string): [string, string] => { const [a, b] = p.replace(
 const Agenda = () => {
   const [tab, setTab] = useState("dia");
   return (<div>
-    <PageHead eyebrow="Operação" title="Agenda" hint="Horários seguem o fuso de cada unidade. O banco impede sobreposição de profissional e de paciente, mesmo com requisições simultâneas." />
+    <PageHead eyebrow="Operação" title="Agenda" hint="Agende, confirme e acompanhe os atendimentos. Os horários seguem o fuso de cada unidade." />
     <Tabs tabs={[["dia", "Agenda do dia"], ["pacotes", "Pacotes e sessões"], ["espera", "Lista de espera"], ["prof", "Profissionais e disponibilidade"]]} value={tab} onChange={setTab} />
     {tab === "dia" && <Day />}{tab === "pacotes" && <Packages />}{tab === "espera" && <Waitlist />}{tab === "prof" && <ProfessionalsAdmin />}
   </div>);

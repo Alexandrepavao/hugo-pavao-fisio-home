@@ -33,7 +33,7 @@ const SettingsHub = () => {
   const [open, setOpen] = useState<string | null>(first && CATEGORIES.some((c) => c.key === first && c.status === "ready") ? first : null);
   return (
     <div>
-      <PageHead eyebrow="Sistema" title="Configurações" hint="Central de configurações do sistema, por categoria. Só o que já tem suporte real no backend aparece como gerenciável — o resto é uma pendência documentada, nunca uma tela que finge funcionar." />
+      <PageHead eyebrow="Sistema" title="Configurações" hint="Central de configurações, por categoria. Só aparece como gerenciável o que já funciona." />
       <ul className="grid gap-3">
         {CATEGORIES.filter((c) => c.status !== "pending" || featureOn("settings_pending_cards")).map((c) => (
           <li key={c.key} className="hp-card p-4">

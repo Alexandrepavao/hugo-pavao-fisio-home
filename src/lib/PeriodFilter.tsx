@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { RANGE_LABEL, RANGE_PRESETS, type RangePreset } from "@/lib/period";
 import { btnGhost, btnPrimary } from "@/lib/ui";
 import { lineFilterLabel, type LineFilter } from "@/pages/admin/finance/lineFilter";
+import { UnitSelect } from "@/components/hp/UnitSelect";
 
 export interface PeriodFilterProps {
   /** Omitir preset/from/to/onPreset/onFrom/onTo esconde a pílula de período (ex.: CRM, sem dimensão de data). */
@@ -111,7 +112,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
                 {showUnit && (
                   <div className="mt-3">
                     <label htmlFor="pf-unit-m" className="block text-xs text-muted-foreground mb-1">Unidade</label>
-                    <select id="pf-unit-m" value={unit} onChange={(e) => onUnit!(e.target.value)} className="w-full">{!unitRequired && <option value="">Todas</option>}{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
+                    <UnitSelect id="pf-unit-m" units={units!} value={unit ?? ""} onChange={onUnit!} required={unitRequired} />
                   </div>
                 )}
               </div>
@@ -151,10 +152,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
           )}
           {showMonth && <><label className="sr-only" htmlFor="pf-month">Mês</label><input id="pf-month" type="month" value={month} onChange={(e) => onMonth!(e.target.value)} className="hp-pill !w-auto" /></>}
           {showUnit && (<>
-            <label className="sr-only" htmlFor="pf-unit">Unidade</label>
-            <select id="pf-unit" value={unit} onChange={(e) => onUnit!(e.target.value)} className="!h-9 !w-auto max-w-[14rem] rounded-full !py-0 text-[13px] font-semibold shadow-sm" aria-label="Unidade">
-              {!unitRequired && <option value="">Todas as unidades</option>}{units!.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select>
+            <UnitSelect id="pf-unit" units={units!} value={unit ?? ""} onChange={onUnit!} required={unitRequired} />
           </>)}
 
           <PopoverTrigger asChild>

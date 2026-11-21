@@ -14,6 +14,15 @@ const central = async (s: Awaited<ReturnType<typeof signIn>>, extra: Record<stri
 const fmt = (v: unknown) => Number(v).toLocaleString("pt-BR");
 const cardBtn = (page: Page, label: string | RegExp) => page.getByRole("button", { name: label }).first();
 const cardValue = async (page: Page, label: string | RegExp) => (await cardBtn(page, label).locator("p.tabular").innerText()).trim();
+/** Cartões de atenção que agora LEVAM à tela filha já filtrada (em vez de abrir a gaveta): destino esperado de cada um. */
+const GO: Record<string, RegExp> = { overdue_pendencies: /aba=pendencias&status=overdue/, incomplete: /diretorio\?incompleto=1/, docs_expiring: /aba=documentos&situacao=vencendo/, contracts_awaiting: /aba=contratos&situacao=awaiting_signature/ };
+async function goAndBack(page: Page, label: string | RegExp, key: string) {
+  const shown = await cardValue(page, label); const from = page.url();
+  await cardBtn(page, label).click(); await expect(page).toHaveURL(GO[key]); await expect(page.getByTestId("voltar-contexto")).toBeVisible();   // destino filtrado + “Voltar”
+  await page.getByTestId("voltar-contexto").getByRole("link").click(); await expect(page).toHaveURL(from); await expect(cardBtn(page, label)).toBeVisible({ timeout: 40_000 });
+  expect(await cardValue(page, label)).toBe(shown);
+}
+const openGroup = async (page: Page, name: string) => { const r = page.getByRole("region", { name }); if (!(await r.evaluate((el) => (el as HTMLDetailsElement).open))) await r.locator("summary.hp-group-sum").click(); return r; };
 async function openAndCompare(page: Page, label: string | RegExp) {
   const shown = await cardValue(page, label); await cardBtn(page, label).click();
   const dlg = page.getByRole("dialog"); await expect(dlg).toBeVisible();
@@ -34,22 +43,22 @@ test.describe.serial("@release Central de pendências administrativas (desktop)"
     await api(s).rpc("adm_sync");                                                     // estabiliza as pendências automáticas antes de comparar
     const srv = await central(s);
     await page.goto("/admin/adm");
-    await expect(page.getByRole("heading", { name: "Prioridades administrativas" })).toBeVisible({ timeout: 40_000 });
+    await expect(page.getByRole("heading", { name: "O que precisa de atenção" })).toBeVisible({ timeout: 40_000 });
     await expectNoFatal(page);
     for (const [label, key] of CARDS) expect(await cardValue(page, label), `cartão ${key}`).toBe(fmt(srv.cards[key].value));
-    for (const [label] of CARDS) await openAndCompare(page, label);
+    for (const [label, key] of CARDS) { if (GO[key]) await goAndBack(page, label, key); else await openAndCompare(page, label); }
     // seções exigidas pela tarefa
-    for (const h of ["Indicadores complementares", "Lista de prioridades"]) await expect(page.getByRole("heading", { name: h })).toBeVisible();
+    for (const h of ["Detalhes por assunto", "Lista de prioridades"]) await expect(page.getByRole("heading", { name: h })).toBeVisible();
     for (const t of ["Evolução de pendências abertas e concluídas", "Tempo de resolução por tipo", "Pendências por responsável", "Pendências por unidade"]) await expect(page.getByText(t, { exact: true })).toBeVisible();
     // situação de hoje × período, explicados na tela
     await expect(page.getByText(/situação de hoje/i).first()).toBeVisible(); await expect(page.getByText("No período").first()).toBeVisible();
     // KPIs complementares: números da tela = servidor
-    const dup = page.getByRole("region", { name: "Possíveis duplicidades" });
+    const dup = await openGroup(page, "Possíveis duplicidades");
     await expect(dup.getByRole("button", { name: /Grupos para revisar/ }).locator("span.tabular")).toHaveText(fmt(srv.kpis.duplicates.groups));
-    const docs = page.getByRole("region", { name: "Documentos" });
+    const docs = await openGroup(page, "Documentos");
     await expect(docs.getByRole("button", { name: /^Vencidos/ }).locator("span.tabular")).toHaveText(fmt(srv.kpis.documents.expired));
     // contatos verificados e formato válido são indicadores SEPARADOS
-    const ct = page.getByRole("region", { name: "Contatos" });
+    const ct = await openGroup(page, "Contatos");
     await expect(ct.getByText("Com formato válido", { exact: true })).toBeVisible(); await expect(ct.getByText("Verificados (registro humano)", { exact: true })).toBeVisible();
     if (!srv.kpis.contacts.verified_available) await expect(ct.getByText(/indisponível/i).first()).toBeVisible();        // sem verificação registrada: motivo, não zero
     // os totais PF/PJ anteriores continuam
@@ -71,7 +80,9 @@ test.describe.serial("@release Central de pendências administrativas (desktop)"
     await expect(cardBtn(page, /^Pacientes aguardando agendamento/).locator("p.tabular")).toHaveText(fmt(pat.cards.patients_waiting.value));
     // o detalhe respeita o mesmo filtro
     await page.keyboard.press("Escape");
-    await openAndCompare(page, /^Cadastros incompletos/);
+    // o cartão leva à Planilha com o MESMO recorte (vínculo) e o “Voltar” restaura o filtro da Visão geral
+    await cardBtn(page, /^Cadastros incompletos/).click(); await expect(page).toHaveURL(/incompleto=1.*vinculo=patient/); await page.getByTestId("voltar-contexto").getByRole("link").click();
+    await expect(cardBtn(page, /^Cadastros incompletos/).locator("p.tabular")).toHaveText(fmt(pat.cards.incomplete.value), { timeout: 40_000 });
     await page.getByRole("button", { name: /^Filtros/ }).click(); await page.getByRole("button", { name: "Limpar", exact: true }).click();
     await expect(cardBtn(page, /^Cadastros incompletos/).locator("p.tabular")).toHaveText(fmt(base.cards.incomplete.value), { timeout: 30_000 });
   });
@@ -79,7 +90,7 @@ test.describe.serial("@release Central de pendências administrativas (desktop)"
   test("pendência pela tela: criar, atribuir, concluir, reabrir, cancelar — e o histórico registra tudo", async ({ page, context }) => {
     const mgr = await loginAs(context, QA.manager); const errors = collectErrors(page);
     await page.goto("/admin/adm/pendencias");
-    await expect(page.getByRole("heading", { name: "Pendências administrativas" })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: "Pendências", exact: true })).toBeVisible({ timeout: 30_000 });   // o título é o nome da aba aberta (menu: Pendências)
     await page.getByRole("button", { name: "Nova pendência" }).click();
     const form = page.getByRole("form", { name: "Nova pendência" });
     await form.getByLabel("Tipo", { exact: true }).selectOption("documento"); await form.getByLabel("Motivo", { exact: true }).fill(title);
@@ -217,7 +228,7 @@ test.describe.serial("@release Central de pendências administrativas (desktop)"
     // telas: fisioterapeuta vê "Sem permissão"; comercial abre o dashboard (leitura)
     await loginAs(context, QA.fisio); await page.goto("/admin/adm"); await expect(page.getByRole("heading", { name: "Sem permissão" })).toBeVisible({ timeout: 20_000 });
     const ctx2 = await page.context().browser()!.newContext(); const p2 = await ctx2.newPage(); await loginAs(ctx2, QA.comercial); await p2.goto("/admin/adm");
-    await expect(p2.getByRole("heading", { name: "Prioridades administrativas" })).toBeVisible({ timeout: 40_000 }); await ctx2.close();
+    await expect(p2.getByRole("heading", { name: "O que precisa de atenção" })).toBeVisible({ timeout: 40_000 }); await ctx2.close();
   });
 
   test("limpeza: documento removido, contrato cancelado, contato e tipo de teste desfeitos", async () => {
@@ -242,7 +253,7 @@ test.describe.serial("@release Central de pendências administrativas (celular)"
   test("dashboard no celular: sem rolagem lateral da página, cartões legíveis, filtro em gaveta e detalhe abre", async ({ page, context }) => {
     const s = await loginAs(context, QA.manager); await api(s).rpc("adm_sync"); const srv = await central(s); const pj = await central(s, { p_type: "pj" });
     await page.goto("/admin/adm");
-    await expect(page.getByRole("heading", { name: "Prioridades administrativas" })).toBeVisible({ timeout: 40_000 });
+    await expect(page.getByRole("heading", { name: "O que precisa de atenção" })).toBeVisible({ timeout: 40_000 });
     for (const [label, key] of CARDS) { await expect(cardBtn(page, label)).toBeVisible(); expect(await cardValue(page, label)).toBe(fmt(srv.cards[key].value)); }
     const w = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }));
     expect(w.sw, `a página não pode rolar na horizontal (${w.sw} > ${w.iw})`).toBeLessThanOrEqual(w.iw + 1);
@@ -252,7 +263,7 @@ test.describe.serial("@release Central de pendências administrativas (celular)"
     await page.locator("#adm-f-type").selectOption("pj"); await page.getByRole("button", { name: "Aplicar" }).click();
     await expect(cardBtn(page, /^Cadastros incompletos/).locator("p.tabular")).toHaveText(fmt(pj.cards.incomplete.value), { timeout: 30_000 });
     // detalhe em tela cheia
-    await openAndCompare(page, /^Cadastros incompletos/);
+    await goAndBack(page, /^Cadastros incompletos/, "incomplete");
     const w2 = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth })); expect(w2.sw).toBeLessThanOrEqual(w2.iw + 1);
   });
 

@@ -252,7 +252,7 @@ const MetricsPanel = ({ metrics, loading }: { metrics: Record<string, unknown> |
         <StatCard label="Convertidos em avaliação agendada" value={metrics.converted_to_scheduled_evaluation as number} />
         <StatCard label="Convertidos em parceiro aprovado" value={metrics.converted_to_approved_partner as number} />
         <StatCard label="Segmento Potencial Academy" value={metrics.academy_segment_count as number} />
-        <StatCard label="Cliques no WhatsApp" value={metrics.whatsapp_clicks as number} basis="Clique registrado — não confirma envio nem atendimento" />
+        <StatCard label="Cliques no WhatsApp" value={metrics.whatsapp_clicks as number} basis="Clique registrado — não confirma envio nem atendimento" caveat="Clique não é mensagem enviada." />
       </ul>
     )}
   </div>

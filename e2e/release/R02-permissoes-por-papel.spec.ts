@@ -60,8 +60,8 @@ test.describe("@release Permissões por papel", () => {
 
   // Dentro de cada aplicativo a sidebar é exclusiva dele, e o papel continua filtrando os itens (a rota e o banco seguem sendo a autorização de verdade).
   const SIDE: [string, string, string, string[], string[]][] = [
-    ["gestor", QA.manager, "/admin/adm", ["Dashboard", "Pendências", "Contratos", "Planilha administrativa", "Pessoas", "Unidades", "Equipe e acessos", "Produtos e serviços", "Configurações", "Auditoria"], ["Cartões", "Agenda", "Pipeline"]],
-    ["gestorUnidade", QA.gestorUnidade, "/admin/adm", ["Dashboard", "Pendências", "Contratos", "Planilha administrativa", "Pessoas"], ["Unidades", "Equipe e acessos", "Produtos e serviços", "Configurações", "Auditoria"]],
+    ["gestor", QA.manager, "/admin/adm", ["Visão geral", "Pendências", "Contratos", "Planilha administrativa", "Pessoas", "Unidades", "Equipe e acessos", "Produtos e serviços", "Configurações", "Auditoria"], ["Cartões", "Agenda", "Pipeline"]],
+    ["gestorUnidade", QA.gestorUnidade, "/admin/adm", ["Visão geral", "Pendências", "Contratos", "Planilha administrativa", "Pessoas"], ["Unidades", "Equipe e acessos", "Produtos e serviços", "Configurações", "Auditoria"]],
     ["comercial", QA.comercial, "/admin/paginas", ["Páginas", "Captação de leads"], ["Pesquisas"]],
     ["financeiro", QA.financeiro, "/admin/financeiro", ["Visão geral", "Vendas", "Contas a receber", "Contas a pagar", "Cartões", "Fluxo de caixa", "Conciliação", "Recorrência", "DRE", "Comissões e repasses", "Relatórios", "Contas corporativas", "Configurações"], ["Pessoas", "Pipeline", "Agenda"]],
     ["fisio", QA.fisio, "/admin/agenda", ["Agenda", "Acompanhamento"], ["Pessoas", "Contas a pagar", "Cartões"]],

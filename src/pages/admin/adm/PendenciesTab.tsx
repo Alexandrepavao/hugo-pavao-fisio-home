@@ -6,7 +6,13 @@ import { download, fmtDate, fmtDateTime, toCsv } from "@/lib/format";
 import { Badge, Msg, State, Table, Td, btnGhost, btnPrimary, errText, promptText, useMsg } from "@/lib/ui";
 import { useUnits } from "../finance/shared";
 import SubjectSearch, { type Subject } from "./SubjectSearch";
-import { HISTORY_LABEL, PEND_KIND, PEND_STATUS, subjectRoute, useAssignable, usePendencies, type Pendency } from "./central";
+import { HISTORY_LABEL, PEND_KIND, PEND_STATUS, subjectRoute, useAdmCentral, useAssignable, useCadastroFilter, useHere, usePendencies, type Pendency } from "./central";
+import { KpiGrid, StatCard } from "@/lib/ui";
+import { AlertTriangle, CheckCircle2, ClipboardList } from "lucide-react";
+const CadastroChip = ({ onClear, nome }: { onClear: () => void; nome?: string | null }) => (
+  <p className="hp-filter-chip" role="status" data-testid="filtro-cadastro">Filtrado por um cadastro{nome ? `: ${nome}` : ""}. <button type="button" className="hp-link-btn" onClick={onClear}>Remover filtro</button></p>
+);
+
 
 const History = ({ id }: { id: string }) => {
   const h = useQuery({ queryKey: ["adm-pend-history", id], queryFn: async () => { const { data, error } = await supabase.rpc("adm_pendency_history", { p_id: id }); if (error) throw error; return data as { at: string; action: string; note: string | null; actor: string }[]; } });
@@ -20,7 +26,12 @@ const PendenciesTab = () => {
   const [status, setStatus] = useState(sp.get("status") ?? "open"); const [unit, setUnit] = useState(""); const [owner, setOwner] = useState(""); const [type, setType] = useState("");
   const [showNew, setShowNew] = useState(false); const [openHist, setOpenHist] = useState<string | null>(null);
   const units = useUnits(); const assignable = useAssignable(unit || undefined);
-  const list = usePendencies(unit, { owner, type, kind: "", status: "" }, status === "all" ? "" : status, 300);
+  const cad = useCadastroFilter(); const here = useHere();
+  const listAll = usePendencies(unit, { owner, type, kind: "", status: "" }, status === "all" ? "" : status, 300);
+  const list = { ...listAll, data: cad.id ? listAll.data?.filter((p) => p.subject_id === cad.id) : listAll.data };
+  // cartões de recorte: contagens oficiais da central (mesma regra da Visão geral), no período dos últimos 30 dias para "concluídas"
+  const to30 = new Date(); const from30 = new Date(Date.now() - 30 * 864e5);
+  const central = useAdmCentral(from30.toISOString(), to30.toISOString(), unit, { owner, type, kind: "", status: "" });
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["adm-pendencies"] }); void qc.invalidateQueries({ queryKey: ["adm-central"] }); void qc.invalidateQueries({ queryKey: ["adm-pend-history"] }); };
   const call = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); if (error) m.err(errText(error)); else { m.ok(ok); refresh(); } };
 
@@ -51,12 +62,20 @@ const PendenciesTab = () => {
   return (
     <div className="grid gap-4">
       <Msg m={msg} />
-      <div className="flex flex-wrap items-end gap-3">
+      {central.data && (
+        <KpiGrid kind="compact">
+          <StatCard level="compact" icon={ClipboardList} label="Abertas" value={central.data.kpis.pendencies.open.toLocaleString("pt-BR")} basis={central.data.kpis.pendencies.basis} onClick={() => setStatus("open")} />
+          <StatCard level="compact" icon={AlertTriangle} label="Atrasadas" value={central.data.kpis.pendencies.overdue.toLocaleString("pt-BR")} tone={central.data.kpis.pendencies.overdue > 0 ? "danger" : undefined} basis={central.data.kpis.pendencies.basis} onClick={() => setStatus("overdue")} />
+          <StatCard level="compact" icon={CheckCircle2} label="Concluídas" period="30 dias" value={central.data.kpis.pendencies.resolved_period.toLocaleString("pt-BR")} basis="Pendências concluídas nos últimos 30 dias." onClick={() => setStatus("resolved")} />
+        </KpiGrid>
+      )}
+      {cad.id && <CadastroChip onClear={cad.clear} nome={list.data?.[0]?.subject_name} />}
+      <div className="flex flex-wrap items-end gap-3" data-tour="filtros">
         <div><label htmlFor="pd-status" className="block text-xs mb-1">Situação</label><select id="pd-status" className="!w-auto" value={status} onChange={(e) => setStatus(e.target.value)}><option value="open">Abertas</option><option value="overdue">Atrasadas</option><option value="resolved">Concluídas</option><option value="cancelled">Canceladas</option><option value="all">Todas</option></select></div>
         <div><label htmlFor="pd-unit" className="block text-xs mb-1">Unidade</label><select id="pd-unit" className="!w-auto" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
         <div><label htmlFor="pd-owner" className="block text-xs mb-1">Responsável</label><select id="pd-owner" className="!w-auto" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option>{assignable.data?.map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
         <div><label htmlFor="pd-type" className="block text-xs mb-1">Cadastro</label><select id="pd-type" className="!w-auto" value={type} onChange={(e) => setType(e.target.value)}><option value="">PF e PJ</option><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option></select></div>
-        <div className="ml-auto flex gap-2"><button type="button" className={btnGhost} onClick={exportCsv} disabled={!list.data?.length}>Exportar CSV</button><button type="button" className={btnPrimary} onClick={() => setShowNew((v) => !v)} aria-expanded={showNew}>Nova pendência</button></div>
+        <div className="ml-auto flex gap-2" data-tour="acoes"><button type="button" className={btnGhost} onClick={exportCsv} disabled={!list.data?.length}>Exportar CSV</button><button type="button" className={btnPrimary} onClick={() => setShowNew((v) => !v)} aria-expanded={showNew}>Nova pendência</button></div>
       </div>
       {showNew && (
         <form onSubmit={create} className="hp-card p-4 grid gap-3 sm:grid-cols-2" aria-label="Nova pendência" noValidate>
@@ -71,7 +90,7 @@ const PendenciesTab = () => {
       <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhuma pendência neste filtro." />
       {list.data && list.data.length > 0 && (
         <Table head={["Registro", "Motivo", "Responsável", "Prazo", "Situação", "Ações"]}>
-          {list.data.flatMap((p) => { const route = subjectRoute(p.subject_type, p.subject_name);
+          {list.data.flatMap((p) => { const route = subjectRoute(p.subject_type, p.subject_name, p.subject_id, here);
             return [
               <tr key={p.id}>
                 <Td><span className="font-medium">{p.subject_name ?? "—"}</span><span className="block text-xs text-muted-foreground">{PEND_KIND[p.kind] ?? p.kind}{p.unit_name ? ` · ${p.unit_name}` : ""}</span></Td>
@@ -82,7 +101,7 @@ const PendenciesTab = () => {
                 <Td><span className="flex flex-wrap gap-1.5">
                   {p.status === "open" && <><button type="button" className={`${btnGhost} hp-btn-sm`} onClick={() => resolve(p)}>Concluir</button><button type="button" className={`${btnGhost} hp-btn-sm`} onClick={() => assign(p)}>Responsável</button><button type="button" className={`${btnGhost} hp-btn-sm`} onClick={() => setDueDate(p)}>Prazo</button><button type="button" className={`${btnGhost} hp-btn-sm`} onClick={() => cancel(p)}>Cancelar</button></>}
                   {p.status === "resolved" && <button type="button" className={`${btnGhost} hp-btn-sm`} onClick={() => reopen(p)}>Reabrir</button>}
-                  {route && <Link className={`${btnGhost} hp-btn-sm`} to={route}>Abrir</Link>}
+                  {route && <Link className={`${btnGhost} hp-btn-sm`} to={route}>Abrir origem</Link>}
                   <button type="button" className={`${btnGhost} hp-btn-sm`} aria-expanded={openHist === p.id} onClick={() => setOpenHist(openHist === p.id ? null : p.id)}>Histórico</button></span></Td>
               </tr>,
               ...(openHist === p.id ? [<tr key={p.id + "-h"}><td colSpan={6} className="bg-muted/30"><History id={p.id} /></td></tr>] : []),

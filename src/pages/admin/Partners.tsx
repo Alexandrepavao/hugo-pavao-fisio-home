@@ -30,7 +30,7 @@ const Partners = () => {
   const OB: Record<string, string> = { contrato: "Contrato", formacao: "Formação", integracao: "Integração" };
 
   return (<div>
-    <PageHead eyebrow="Relacionamento" title="Parceiros" hint="A aprovação acontece no funil “Parceiros” (etapa Ativo). Corporativo e pesquisas: modelo pronto no banco; telas dedicadas ainda pendentes." />
+    <PageHead eyebrow="Relacionamento" title="Parceiros" hint="A aprovação de parceiros acontece no funil “Parceiros” (etapa Ativo)." />
     <Msg m={msg} /><Tabs tabs={[["parceiros", "Parceiros"], ["indicacoes", "Indicações"], ["repasses", "Repasses"]]} value={tab} onChange={changeTab} />
     {/* filtro único: busca visível; unidade (só em Repasses) visível; estado e parceiro dentro do botão Filtros */}
     <ListFilterBar search={{ id: "pf-q", label: "Buscar", placeholder: tab === "indicacoes" ? "Buscar por nome ou código…" : tab === "repasses" ? "Buscar por parceiro ou descrição…" : "Buscar parceiro…", value: q, onChange: setQ }}

@@ -1,36 +1,45 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, CalendarClock, ClipboardX, FileClock, FileSignature, UserCog } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDate } from "@/lib/format";
 import { Badge, KpiGrid, LevelSection, State, StatCard, Table, Td, btnGhost, errText, promptText, useMsg, Msg } from "@/lib/ui";
 import { BarBlock, Formula, LineBlock } from "@/lib/IndicatorCharts";
 import type { IndicatorTrigger } from "@/lib/IndicatorSheet";
-import { KIND_LABEL, PEND_KIND, fmtHours, subjectRoute, useAdmCentral, usePendencies, type Central, type Filters, type Metric } from "./central";
+import { KIND_LABEL, PEND_KIND, fmtHours, subjectRoute, useAdmCentral, useHere, usePendencies, type Central, type Filters, type Metric } from "./central";
 
 const n = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("pt-BR"));
 const pct = (v: number | null | undefined) => (v == null ? "—" : `${String(v).replace(".", ",")}%`);
 
 /** Grupo de números do mesmo assunto; cada linha com ação abre os registros que a compõem. `when` diferencia situação de HOJE de indicador calculado no PERÍODO. */
-const Group = ({ title, when, rows, note }: { title: string; when: "hoje" | "periodo"; rows: { label: string; value: ReactNode; onClick?: () => void; tone?: "danger" }[]; note?: string }) => (
-  <section className="hp-card p-4" aria-label={title}>
-    <div className="flex items-start justify-between gap-2"><h3 className="text-[0.9375rem] font-semibold">{title}</h3><Badge tone={when === "hoje" ? "neutral" : "info"}>{when === "hoje" ? "Situação de hoje" : "No período"}</Badge></div>
-    <ul className="mt-2 divide-y divide-border">
-      {rows.map((r) => (
-        <li key={r.label}>{r.onClick
-          ? <button type="button" onClick={r.onClick} className="w-full flex items-center justify-between gap-3 py-2 text-left text-sm hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span>{r.label}</span><span className={`tabular font-semibold ${r.tone === "danger" ? "text-destructive" : ""}`}>{r.value}</span></button>
-          : <div className="flex items-center justify-between gap-3 py-2 text-sm"><span>{r.label}</span><span className="tabular font-semibold">{r.value}</span></div>}</li>))}
-    </ul>
-    {note && <p className="text-[11px] leading-4 text-muted-foreground mt-2">{note}</p>}
-  </section>
-);
+const Group = ({ title, when, rows, note, headline }: { title: string; when: "hoje" | "periodo"; rows: { label: string; value: ReactNode; onClick?: () => void; tone?: "danger" }[]; note?: string; headline?: string }) => {
+  const atencao = rows.filter((r) => r.tone === "danger" && String(r.value) !== "0" && r.value !== "—").length;
+  return (
+    <details className="hp-card hp-group" role="region" aria-label={title} data-testid={`grupo-${title}`} open={atencao > 0 || undefined}>
+      <summary className="hp-group-sum">
+        <span className="hp-group-title">{title}</span>
+        <span className="hp-group-status" data-attn={atencao > 0 ? "1" : undefined}>{headline ?? (atencao > 0 ? `${atencao} ${atencao === 1 ? "item pede" : "itens pedem"} atenção` : "Sem alerta")}</span>
+        <Badge tone={when === "hoje" ? "neutral" : "info"}>{when === "hoje" ? "Hoje" : "No período"}</Badge>
+      </summary>
+      <ul className="mt-2 divide-y divide-border">
+        {rows.map((r) => (
+          <li key={r.label}>{r.onClick
+            ? <button type="button" onClick={r.onClick} className="w-full flex items-center justify-between gap-3 py-2 text-left text-sm hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span>{r.label}</span><span className={`tabular font-semibold ${r.tone === "danger" ? "text-destructive" : ""}`}>{r.value}</span></button>
+            : <div className="flex items-center justify-between gap-3 py-2 text-sm"><span>{r.label}</span><span className="tabular font-semibold">{r.value}</span></div>}</li>))}
+      </ul>
+      {note && <details className="hp-group-note"><summary>Sobre este indicador</summary><p>{note}</p></details>}
+    </details>
+  );
+};
 const Unavailable = ({ m }: { m: Metric }) => <span className="text-muted-foreground font-normal text-xs">indisponível — {m.basis.replace(/^indisponível:\s*/, "")}</span>;
 
 /** Central de pendências administrativas: cartões prioritários, indicadores complementares, gráficos e lista de prioridades. Base: adm_central / adm_central_detail (docs/indicadores-administrativo.md). */
 /** `cadastroResumo` e `cadastroAnalise` são os blocos do cadastro central (números e gráficos), encaixados nos níveis Resumo e Análise. `mapa` entra no nível Análise. */
 const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, hero, cadastroResumo, cadastroAnalise, mapa }: { from: string; to: string; unit: string; unitName: string; filters: Filters; onOpen: (t: IndicatorTrigger) => void; hero?: ReactNode; cadastroResumo?: ReactNode; cadastroAnalise?: ReactNode; mapa?: ReactNode }) => {
-  const q = useAdmCentral(from, to, unit, filters);
+  const q = useAdmCentral(from, to, unit, filters); const here = useHere(); const nav = useNavigate();
+  // cartões de atenção levam à tela filha com o filtro correspondente e um “Voltar” para esta visão (mesmo recorte)
+  const go = (to: string) => nav(`${to}${to.includes("?") ? "&" : "?"}voltar=${encodeURIComponent(here)}`);
   const prio = usePendencies(unit, filters, filters.status === "overdue" ? "overdue" : "open", 15);
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const d = q.data;
@@ -55,20 +64,36 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, hero, cadastroR
   return (
     <div>
       <Msg m={msg} />
-      {hero}
 
-      <LevelSection level="attention" title="Prioridades administrativas" hint="Situação de hoje (não muda com o período). Clique para abrir os registros.">
+      <LevelSection level="attention" title="O que precisa de atenção" hint="Situação de hoje: não muda com o período. Clique para ver os registros e resolver.">
         <KpiGrid kind="lg">
-          <StatCard level={lv(c.overdue_pendencies)} icon={AlertTriangle} status={st(c.overdue_pendencies, true)} label="Pendências administrativas vencidas" value={card(c.overdue_pendencies)} unit="pendências" period="Hoje" basis={c.overdue_pendencies.basis} tone={(c.overdue_pendencies.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("overdue_pendencies")} />
-          <StatCard level={lv(c.incomplete)} icon={ClipboardX} status={st(c.incomplete, true)} label="Cadastros incompletos" value={card(c.incomplete)} unit="cadastros" period="Hoje" basis={c.incomplete.basis} tone={(c.incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("incomplete")} />
-          <StatCard level={lv(c.docs_expiring)} icon={FileClock} status={st(c.docs_expiring, false)} label={`Documentos vencendo em ${d.settings.expiring_days} dias`} value={card(c.docs_expiring)} unit="documentos" period="Hoje" basis={c.docs_expiring.basis} tone={(c.docs_expiring.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("docs_expiring")} />
-          <StatCard level={lv(c.contracts_awaiting)} icon={FileSignature} status={st(c.contracts_awaiting, false)} label="Contratos aguardando assinatura" value={card(c.contracts_awaiting)} unit="contratos" period="Hoje" basis={c.contracts_awaiting.basis} tone={(c.contracts_awaiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("contracts_awaiting")} />
+          <StatCard level={lv(c.overdue_pendencies)} icon={AlertTriangle} status={st(c.overdue_pendencies, true)} label="Pendências administrativas vencidas" value={card(c.overdue_pendencies)} unit="pendências" period="Hoje" basis={c.overdue_pendencies.basis} tone={(c.overdue_pendencies.value ?? 0) > 0 ? "danger" : undefined} onClick={() => go("/admin/adm/pendencias?aba=pendencias&status=overdue")} action="Resolver pendências" />
+          <StatCard level={lv(c.incomplete)} icon={ClipboardX} status={st(c.incomplete, true)} label="Cadastros incompletos" value={card(c.incomplete)} unit="cadastros" period="Hoje" basis={c.incomplete.basis} tone={(c.incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => go(`/admin/adm/diretorio?incompleto=1${filters.type ? `&tipo=${filters.type}` : ""}${filters.kind ? `&vinculo=${filters.kind}` : ""}${unit ? `&unidade=${unit}` : ""}`)} action="Completar cadastros" />
+          <StatCard level={lv(c.docs_expiring)} icon={FileClock} status={st(c.docs_expiring, false)} label={`Documentos vencendo em ${d.settings.expiring_days} dias`} value={card(c.docs_expiring)} unit="documentos" period="Hoje" basis={c.docs_expiring.basis} tone={(c.docs_expiring.value ?? 0) > 0 ? "warning" : undefined} onClick={() => go("/admin/adm/pendencias?aba=documentos&situacao=vencendo")} action="Acompanhar documentos" />
+          <StatCard level={lv(c.contracts_awaiting)} icon={FileSignature} status={st(c.contracts_awaiting, false)} label="Contratos aguardando assinatura" value={card(c.contracts_awaiting)} unit="contratos" period="Hoje" basis={c.contracts_awaiting.basis} tone={(c.contracts_awaiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => go("/admin/adm/pendencias?aba=contratos&situacao=awaiting_signature")} action="Acompanhar contratos" />
           <StatCard level={lv(c.patients_waiting)} icon={CalendarClock} status={st(c.patients_waiting, false)} label="Pacientes aguardando agendamento" value={card(c.patients_waiting)} unit="pacientes" period="Hoje" basis={c.patients_waiting.basis} tone={(c.patients_waiting.value ?? 0) > 0 ? "warning" : undefined} onClick={() => open("patients_waiting")} />
           <StatCard level={lv(c.professionals_incomplete)} icon={UserCog} status={st(c.professionals_incomplete, true)} label="Profissionais com integração administrativa incompleta" value={card(c.professionals_incomplete)} unit="profissionais" period="Hoje" basis={c.professionals_incomplete.basis} tone={(c.professionals_incomplete.value ?? 0) > 0 ? "danger" : undefined} onClick={() => open("professionals_incomplete")} />
         </KpiGrid>
       </LevelSection>
 
-      <LevelSection level="summary" title="Indicadores complementares" hint="Totais e situação atual, por assunto.">
+      <LevelSection level="analysis" title="As pendências estão aumentando ou diminuindo?" hint="Evolução, tempos de resolução e o que falta nos cadastros. Clique numa barra para abrir os registros." label="Gráficos das pendências">
+        <div className="grid gap-4 lg:grid-cols-2">
+        <LineBlock title="Evolução de pendências abertas e concluídas" hint={d.evolution_basis} data={evo} xKey="semana" series={[{ key: "Abertas", label: "Abertas na semana" }, { key: "Concluídas", label: "Concluídas na semana" }, { key: "Em aberto ao fim", label: "Em aberto ao fim da semana" }]} empty="Ainda não há pendências registradas no período." />
+        <BarBlock title="Tempo de resolução por tipo" hint="Média e mediana, em horas, das pendências concluídas no período (por tipo)." data={k.resolution_by_kind.map((r) => ({ tipo: PEND_KIND[r.kind] ?? r.kind, "Média (h)": r.avg_hours, "Mediana (h)": r.median_hours }))} xKey="tipo"
+          series={[{ key: "Média (h)", label: "Média (h)" }, { key: "Mediana (h)", label: "Mediana (h)" }]} empty="Nenhuma pendência concluída no período — ainda não há base para calcular." />
+        <BarBlock title="Pendências por responsável" hint="Abertas, atrasadas e concluídas no período. Clique numa barra para ver as abertas do responsável." data={k.by_owner.map((r) => ({ nome: r.name, id: r.user_id, Abertas: r.open, Atrasadas: r.overdue, Concluídas: r.resolved }))} xKey="nome"
+          series={[{ key: "Abertas", label: "Abertas" }, { key: "Atrasadas", label: "Atrasadas", color: "hsl(var(--destructive))" }, { key: "Concluídas", label: "Concluídas", color: "hsl(var(--success))" }]}
+          onBarClick={(r) => { if (r.id) onOpen({ rpc: "adm_central_detail", title: `Pendências abertas de ${r.nome}`, params: { p_kind: "open_pendencies", p_value: null, p_from: from, p_to: to, p_unit: unit || null, p_owner: r.id, p_type: filters.type || null, p_kind_filter: filters.kind || null, p_status: null }, scope: unitName }); }} empty="Nenhuma pendência registrada." />
+        <BarBlock title="Pendências por unidade" hint="Abertas, atrasadas e concluídas no período." data={k.by_unit.map((r) => ({ unidade: r.name, Abertas: r.open, Atrasadas: r.overdue, Concluídas: r.resolved }))} xKey="unidade"
+          series={[{ key: "Abertas", label: "Abertas" }, { key: "Atrasadas", label: "Atrasadas", color: "hsl(var(--destructive))" }, { key: "Concluídas", label: "Concluídas", color: "hsl(var(--success))" }]} empty="Nenhuma pendência registrada." />
+          {cadastroAnalise}
+        </div>
+        {mapa}
+      </LevelSection>
+
+
+      {hero}
+      <LevelSection level="summary" title="Detalhes por assunto" hint="Abra o assunto que interessa: documentos, contratos, contatos, acessos, profissionais e agendamento.">
         {cadastroResumo}
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <section className="hp-card p-4 md:col-span-2 xl:col-span-2" aria-label="Cadastros completos">
@@ -130,21 +155,6 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, hero, cadastroR
         </div>
       </LevelSection>
 
-      <LevelSection level="analysis" title="Gráficos e evolução" hint="Evolução, tempos e distribuição; clique numa barra para abrir os registros." label="Gráficos das pendências">
-        <div className="grid gap-4 lg:grid-cols-2">
-        <LineBlock title="Evolução de pendências abertas e concluídas" hint={d.evolution_basis} data={evo} xKey="semana" series={[{ key: "Abertas", label: "Abertas na semana" }, { key: "Concluídas", label: "Concluídas na semana" }, { key: "Em aberto ao fim", label: "Em aberto ao fim da semana" }]} empty="Ainda não há pendências registradas no período." />
-        <BarBlock title="Tempo de resolução por tipo" hint="Média e mediana, em horas, das pendências concluídas no período (por tipo)." data={k.resolution_by_kind.map((r) => ({ tipo: PEND_KIND[r.kind] ?? r.kind, "Média (h)": r.avg_hours, "Mediana (h)": r.median_hours }))} xKey="tipo"
-          series={[{ key: "Média (h)", label: "Média (h)" }, { key: "Mediana (h)", label: "Mediana (h)" }]} empty="Nenhuma pendência concluída no período — ainda não há base para calcular." />
-        <BarBlock title="Pendências por responsável" hint="Abertas, atrasadas e concluídas no período. Clique numa barra para ver as abertas do responsável." data={k.by_owner.map((r) => ({ nome: r.name, id: r.user_id, Abertas: r.open, Atrasadas: r.overdue, Concluídas: r.resolved }))} xKey="nome"
-          series={[{ key: "Abertas", label: "Abertas" }, { key: "Atrasadas", label: "Atrasadas", color: "hsl(var(--destructive))" }, { key: "Concluídas", label: "Concluídas", color: "hsl(var(--success))" }]}
-          onBarClick={(r) => { if (r.id) onOpen({ rpc: "adm_central_detail", title: `Pendências abertas de ${r.nome}`, params: { p_kind: "open_pendencies", p_value: null, p_from: from, p_to: to, p_unit: unit || null, p_owner: r.id, p_type: filters.type || null, p_kind_filter: filters.kind || null, p_status: null }, scope: unitName }); }} empty="Nenhuma pendência registrada." />
-        <BarBlock title="Pendências por unidade" hint="Abertas, atrasadas e concluídas no período." data={k.by_unit.map((r) => ({ unidade: r.name, Abertas: r.open, Atrasadas: r.overdue, Concluídas: r.resolved }))} xKey="unidade"
-          series={[{ key: "Abertas", label: "Abertas" }, { key: "Atrasadas", label: "Atrasadas", color: "hsl(var(--destructive))" }, { key: "Concluídas", label: "Concluídas", color: "hsl(var(--success))" }]} empty="Nenhuma pendência registrada." />
-          {cadastroAnalise}
-        </div>
-        {mapa}
-      </LevelSection>
-
       <section aria-label="Lista de prioridades">
         <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
           <h2 className="text-xl">Lista de prioridades</h2>
@@ -153,7 +163,7 @@ const AdmCentral = ({ from, to, unit, unitName, filters, onOpen, hero, cadastroR
         <State loading={prio.isLoading} error={prio.error} empty={prio.data?.length === 0} emptyText="Nenhuma pendência aberta. Use “Gerenciar pendências” para registrar uma ou rode a sincronização para detectar problemas." />
         {prio.data && prio.data.length > 0 && (
           <Table head={["Registro", "Motivo", "Responsável", "Prazo", "Ação"]}>
-            {prio.data.map((p) => { const route = subjectRoute(p.subject_type, p.subject_name);
+            {prio.data.map((p) => { const route = subjectRoute(p.subject_type, p.subject_name, p.subject_id, here);
               return (<tr key={p.id}>
                 <Td><span className="font-medium">{p.subject_name ?? "—"}</span><span className="block text-xs text-muted-foreground">{PEND_KIND[p.kind] ?? p.kind}{p.unit_name ? ` · ${p.unit_name}` : ""}</span></Td>
                 <Td>{p.title}{p.origin === "auto" && <span className="block text-[11px] text-muted-foreground">detectada automaticamente</span>}</Td>

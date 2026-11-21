@@ -5,9 +5,14 @@ import { fmtDate, fmtDateTime } from "@/lib/format";
 import { Badge, Msg, State, Table, Td, btnGhost, btnPrimary, errText, promptText, useMsg } from "@/lib/ui";
 import { useUnits } from "../finance/shared";
 import SubjectSearch, { type Subject } from "./SubjectSearch";
-import { CONTRACT_KIND, CONTRACT_STATUS, HISTORY_LABEL, useAssignable } from "./central";
+import { CONTRACT_KIND, CONTRACT_STATUS, HISTORY_LABEL, subjectRoute, useAssignable, useCadastroFilter, useHere } from "./central";
+import { Link, useSearchParams } from "react-router-dom";
+const CadastroChip = ({ onClear, nome }: { onClear: () => void; nome?: string | null }) => (
+  <p className="hp-filter-chip" role="status" data-testid="filtro-cadastro">Filtrado por um cadastro{nome ? `: ${nome}` : ""}. <button type="button" className="hp-link-btn" onClick={onClear}>Remover filtro</button></p>
+);
 
-interface Row { id: string; kind: string; title: string; subject_type: string; subject_name: string | null; responsible: string | null; responsible_name: string | null; status: string; starts_on: string | null; ends_on: string | null; due_date: string | null; sent_at: string | null; signed_on: string | null; situation: string }
+
+interface Row { id: string; kind: string; title: string; subject_type: string; subject_id: string; subject_name: string | null; responsible: string | null; responsible_name: string | null; status: string; starts_on: string | null; ends_on: string | null; due_date: string | null; sent_at: string | null; signed_on: string | null; situation: string }
 const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const d = (v: string | null) => (v ? fmtDate(`${v}T12:00:00Z`) : "—");
 
@@ -20,9 +25,12 @@ const History = ({ id }: { id: string }) => {
 /** Contratos ADMINISTRATIVOS (não os de venda nem os de receita recorrente): rascunho → enviado para assinatura → assinatura REGISTRADA manualmente. Não é assinatura eletrônica. */
 const ContractsTab = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg(); const units = useUnits();
-  const [status, setStatus] = useState(""); const [unit, setUnit] = useState(""); const [owner, setOwner] = useState(""); const [showNew, setShowNew] = useState(false); const [openHist, setOpenHist] = useState<string | null>(null);
+  const [sp, setSp] = useSearchParams(); const cad = useCadastroFilter(); const here = useHere();
+  const oneId = /^[0-9a-f-]{36}$/i.test(sp.get("contrato") ?? "") ? sp.get("contrato")! : "";
+  const [status, setStatus] = useState(["draft", "awaiting_signature", "signed", "cancelled", "vigente", "a_vencer", "vencido"].includes(sp.get("situacao") ?? "") ? sp.get("situacao")! : ""); const [unit, setUnit] = useState(""); const [owner, setOwner] = useState(""); const [showNew, setShowNew] = useState(false); const [openHist, setOpenHist] = useState<string | null>(null);
   const assignable = useAssignable(unit || undefined);
   const list = useQuery({ queryKey: ["adm-contracts", unit, owner, status], retry: false, queryFn: async () => { const { data, error } = await supabase.rpc("adm_contracts_list", { p_unit: unit || null, p_owner: owner || null, p_type: null, p_status: status || null, p_limit: 300 }); if (error) throw error; return data as Row[]; } });
+  const rows = (list.data ?? []).filter((r) => (!oneId || r.id === oneId) && (!cad.id || r.subject_id === cad.id));
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["adm-contracts"] }); void qc.invalidateQueries({ queryKey: ["adm-central"] }); void qc.invalidateQueries({ queryKey: ["adm-contract-history"] }); };
   const call = async (fn: string, args: Record<string, unknown>, ok: string) => { const { error } = await supabase.rpc(fn, args); if (error) m.err(errText(error)); else { m.ok(ok); refresh(); } };
 
@@ -46,11 +54,11 @@ const ContractsTab = () => {
     <div className="grid gap-4">
       <Msg m={msg} />
       <p className="text-sm text-muted-foreground">Contrato administrativo do cadastro (prestação de serviço, parceria, termo…). <b>Registrar a assinatura é um registro manual</b> — não há assinatura eletrônica nesta versão. Contratos de venda e de receita recorrente continuam nas áreas deles.</p>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3" data-tour="filtros">
         <div><label htmlFor="ct-status" className="block text-xs mb-1">Situação</label><select id="ct-status" className="!w-auto" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todas</option>{Object.entries(CONTRACT_STATUS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
         <div><label htmlFor="ct-unit" className="block text-xs mb-1">Unidade</label><select id="ct-unit" className="!w-auto" value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">Todas</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
         <div><label htmlFor="ct-owner" className="block text-xs mb-1">Responsável</label><select id="ct-owner" className="!w-auto" value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Todos</option>{assignable.data?.map((u) => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}</select></div>
-        <div className="ml-auto"><button type="button" className={btnPrimary} onClick={() => setShowNew((v) => !v)} aria-expanded={showNew}>Novo contrato</button></div>
+        <div className="ml-auto" data-tour="acoes"><button type="button" className={btnPrimary} onClick={() => setShowNew((v) => !v)} aria-expanded={showNew}>Novo contrato</button></div>
       </div>
       {showNew && (
         <form onSubmit={create} className="hp-card p-4 grid gap-3 sm:grid-cols-2" aria-label="Novo contrato" noValidate>
@@ -62,13 +70,15 @@ const ContractsTab = () => {
           <div className="grid grid-cols-2 gap-2"><div><label htmlFor="nc-start" className="block text-xs mb-1">Início</label><input id="nc-start" type="date" value={starts} onChange={(e) => setStarts(e.target.value)} /></div><div><label htmlFor="nc-end" className="block text-xs mb-1">Término</label><input id="nc-end" type="date" value={ends} onChange={(e) => setEnds(e.target.value)} /></div></div>
           <div className="sm:col-span-2"><button className={btnPrimary} disabled={busy}>{busy ? "Registrando…" : "Registrar contrato"}</button></div>
         </form>)}
-      <State loading={list.isLoading} error={list.error} empty={list.data?.length === 0} emptyText="Nenhum contrato neste filtro." />
-      {list.data && list.data.length > 0 && (
+      {oneId && <p className="hp-filter-chip" role="status" data-testid="filtro-contrato">Mostrando um contrato específico. <button type="button" className="hp-link-btn" onClick={() => { const n = new URLSearchParams(sp); n.delete("contrato"); setSp(n, { replace: true }); }}>Ver todos os contratos</button></p>}
+      {cad.id && <CadastroChip onClear={cad.clear} nome={rows[0]?.subject_name} />}
+      <State loading={list.isLoading} error={list.error} empty={list.data !== undefined && rows.length === 0} emptyText={oneId || cad.id ? "Nenhum contrato encontrado com este filtro." : "Nenhum contrato neste filtro."} />
+      {list.data && rows.length > 0 && (
         <Table head={["Contrato", "Cadastro", "Responsável", "Datas", "Situação", "Ações"]}>
-          {list.data.flatMap((r) => [
+          {rows.flatMap((r) => [
             <tr key={r.id}>
               <Td><span className="font-medium">{r.title}</span><span className="block text-xs text-muted-foreground">{CONTRACT_KIND[r.kind] ?? r.kind}</span></Td>
-              <Td>{r.subject_name ?? "—"}<span className="block text-xs text-muted-foreground">{r.subject_type === "person" ? "Pessoa física" : "Pessoa jurídica"}</span></Td>
+              <Td>{r.subject_name ?? "—"}<span className="block text-xs text-muted-foreground">{r.subject_type === "person" ? "Pessoa física" : "Pessoa jurídica"}</span>{subjectRoute(r.subject_type, r.subject_name, r.subject_id, here) && <Link className="text-xs text-primary hover:underline" to={subjectRoute(r.subject_type, r.subject_name, r.subject_id, here)!}>Ver cadastro</Link>}</Td>
               <Td>{r.responsible_name ?? <span className="text-muted-foreground">Sem responsável</span>}</Td>
               <Td className="text-xs">Vigência: {d(r.starts_on)} a {d(r.ends_on)}{r.status === "awaiting_signature" && <span className="block">Assinar até {d(r.due_date)}</span>}{r.signed_on && <span className="block">Assinado em {d(r.signed_on)}</span>}</Td>
               <Td><Badge tone={r.situation === "vencido" ? "danger" : r.situation === "a_vencer" || r.status === "awaiting_signature" ? "warning" : r.status === "signed" ? "success" : "neutral"}>{CONTRACT_STATUS[r.situation] ?? r.situation}</Badge>
