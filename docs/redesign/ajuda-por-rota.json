@@ -16,7 +16,7 @@
  {
   "path": "/admin/adm",
   "titulo": "Visão geral da Gestão",
-  "passos": 4,
+  "passos": 5,
   "finalidade": "Mostra o que no cadastro e na rotina administrativa precisa de atenção hoje e leva você até a tela onde resolver.",
   "tarefa": "Identificar prioridades e abrir a tela certa (Pendências, Contratos, Documentos ou Planilha).",
   "relacionadas": [
@@ -28,6 +28,7 @@
   "titulosPassos": [
    "Onde você está",
    "Filtros",
+   "O que precisa de atenção",
    "Perguntas que os gráficos respondem",
    "Análises por assunto"
   ]
