@@ -1,6 +1,7 @@
 import { brl, fmtDate } from "@/lib/format";
 import { brandLogoUrl } from "@/lib/org";
 import type { PatientPayload } from "./api";
+import capaHp from "@/assets/ebook-capa-hp.jpg";
 import "./ebook.css";
 
 /** Instantâneo do e-book (migration 150). Tudo vem do servidor: a apresentação publicada, a oferta (produto da própria organização) e a marca. Nada fixo da HP no código. */
@@ -27,8 +28,9 @@ const EbookDocument = ({ data, accessUrl, patientView }: { data: EbookData; acce
   const rows: [string, string | null][] = [["Há quanto tempo", c.reported.symptom_duration], ["Limitações no dia a dia", c.reported.limitations], ["O que você quer retomar", c.reported.activities]];
   return (
     <article className="eb" data-testid="ebook-doc" aria-label="E-book do seu acompanhamento">
+      {s.clinic.is_default_brand && <img className="eb-hero" src={capaHp} alt="HP Fisio Group — Hugo Pavão, fisioterapeuta" data-testid="ebook-capa" />}   {/* capa só da HP; outras organizações abrem com a própria marca */}
       <header className="eb-cover">
-        <div className="eb-brand">{logo ? <img src={logo} alt={s.clinic.name} /> : <span className="eb-mono" role="img" aria-label={s.clinic.name}>{initials}</span>}<b>{s.clinic.name}</b></div>
+        {!s.clinic.is_default_brand && <div className="eb-brand">{logo ? <img src={logo} alt={s.clinic.name} /> : <span className="eb-mono" role="img" aria-label={s.clinic.name}>{initials}</span>}<b>{s.clinic.name}</b></div>}
         <p className="eb-eyebrow">Seu acompanhamento personalizado</p>
         <h1 data-testid="ebook-title">{s.patient.first_name}, este é o seu plano de cuidado</h1>
         <p className="eb-sub">Preparado por {s.professional ?? "seu fisioterapeuta"} a partir da sua avaliação · versão {data.version} · {short(data.created_at)}</p>
