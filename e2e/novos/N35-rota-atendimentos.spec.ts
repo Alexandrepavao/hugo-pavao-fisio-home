@@ -15,10 +15,11 @@ const shot = async (p: Page, name: string, full = false) => { if (process.env.MK
 const noOverflow = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
 const ORG = "268b67d7-faa3-43c2-bb91-0616c78e10d0", UNIT = "9ace3ebd-352c-4832-b488-904f6a708e22", PROF = "3b6e077e-bee8-437b-b4fe-e3c413cdd457", SVC = "3c2ac8b8-8322-4e04-85a2-c832c38d475c";
-const D1 = "2026-11-23", D2 = "2026-11-30";
+// datas fixas LONGE de "hoje": fixtures de outros specs (N34/N36) datam atendimentos em relação a hoje e deixam sobras para a mesma fisioterapeuta nos dias próximos (achado de 21/11).
+const D1 = "2027-02-01", D2 = "2027-02-08";
 const FIX = [["Rota Teste Carla", -23.5005, -46.6256, "exact", "09:00"], ["Rota Teste Bruno", -23.6021, -46.6659, "exact", "10:30"], ["Rota Teste Davi", -23.5402, -46.5767, "cep", "12:00"], ["Rota Teste Ana", -23.5667, -46.6917, "exact", "14:00"]] as const;
 
-/** Recria a fixture de forma determinística (mesmos pacientes/locais; atendimentos do dia 23/11 e do dia 30/11). Dados de TESTE no Dev. */
+/** Recria a fixture de forma determinística (mesmos pacientes/locais; atendimentos do dia 01/02/2027 e do dia 08/02/2027). Dados de TESTE no Dev. */
 async function reseed() {
   await devSql(`
     delete from public.appointments where professional_id = '${PROF}' and person_id in (select id from public.people where full_name like 'Rota Teste %');
@@ -34,7 +35,7 @@ async function reseed() {
           insert into public.appointments (org_id, unit_id, professional_id, person_id, service_id, period, status, service_mode, visit_lat, visit_lng, visit_precision)
             values ('${ORG}', '${UNIT}', '${PROF}', v_p, '${SVC}', tstzrange(('${D1} ' || r.hhmm || '-03')::timestamptz, ('${D1} ' || r.hhmm || '-03')::timestamptz + interval '30 minutes'), 'scheduled', 'home_visit', r.lat, r.lng, r.prec);
         end if;
-        if r.n in ('Rota Teste Eva', 'Rota Teste Carla') then   -- dia 30/11: Eva (Campinas) + Carla: pares SEM estimativa no cache (sem chave do provedor) + um remoto
+        if r.n in ('Rota Teste Eva', 'Rota Teste Carla') then   -- dia 08/02: Eva (Campinas) + Carla: pares SEM estimativa no cache (sem chave do provedor) + um remoto
           insert into public.appointments (org_id, unit_id, professional_id, person_id, service_id, period, status, service_mode, visit_lat, visit_lng, visit_precision)
             values ('${ORG}', '${UNIT}', '${PROF}', v_p, '${SVC}', tstzrange(('${D2} ' || case when r.n = 'Rota Teste Eva' then '11:00' else '09:00' end || '-03')::timestamptz, ('${D2} ' || case when r.n = 'Rota Teste Eva' then '11:00' else '09:00' end || '-03')::timestamptz + interval '30 minutes'), 'scheduled', 'home_visit', r.lat, r.lng, 'exact');
         end if;
