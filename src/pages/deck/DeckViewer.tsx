@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, FileDown, MonitorSmartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { btnGhost, btnPrimary } from "@/lib/ui";
@@ -31,16 +31,16 @@ const Explorer = ({ d, open, onClose }: { d: DeckData; open: boolean; onClose: (
 };
 
 /** Visualizador 16:9: um slide por vez na tela; TODOS os slides em páginas 16:9 na impressão/PDF (cópia fora da tela, com o mesmo layout). */
-const DeckViewer = ({ d: raw, ctx, onExport, startAtEnd }: { d: DeckData; ctx: Omit<SlideCtx, "model">; onExport?: () => void; startAtEnd?: boolean }) => {
+const DeckViewer = ({ d: raw, ctx, onExport, startAtEnd, presenter }: { d: DeckData; ctx: Omit<SlideCtx, "model">; onExport?: () => void; startAtEnd?: boolean; presenter?: boolean }) => {
   const d = useMemo(() => presentable(raw), [raw]); useEffect(() => { void ensureDeckFonts(); }, []);   /* nomes de demonstração sem identificadores técnicos; fontes carregadas antes de qualquer impressão */
   const keys = useMemo(() => slideKeys(d), [d]); const model = useMemo(() => deckModel(d.snapshot), [d]); const [i, setI] = useState(startAtEnd ? (keys.includes("next") ? keys.indexOf("next") : keys.length - 1) : 0); const [explore, setExplore] = useState(false);
   const box = useRef<HTMLDivElement>(null); const [scale, setScale] = useState(0.6); const [narrow, setNarrow] = useState(false);
-  useEffect(() => { const el = box.current; if (!el) return; const fit = () => { const w = el.clientWidth; setNarrow(w < 700); setScale(Math.min(1, Math.max(0.55, w / SLIDE_W))); };   /* celular em pé: leitura com rolagem lateral em vez de texto minúsculo */
-    const ro = new ResizeObserver(fit); ro.observe(el); fit(); return () => ro.disconnect(); }, []);
+  useEffect(() => { const el = box.current; if (!el) return; const fit = () => { if (presenter) { const w = el.parentElement?.clientWidth ?? el.clientWidth; setNarrow(false); setScale(Math.max(0.3, Math.min(w / SLIDE_W, (window.innerHeight - 120) / SLIDE_H))); return; } const w = el.clientWidth; setNarrow(w < 700); setScale(Math.min(1, Math.max(0.55, w / SLIDE_W))); };   /* celular em pé: leitura com rolagem lateral em vez de texto minúsculo */
+    const ro = new ResizeObserver(fit); ro.observe(el.parentElement ?? el); window.addEventListener("resize", fit); fit(); return () => { ro.disconnect(); window.removeEventListener("resize", fit); }; }, [presenter]);
   useEffect(() => { const h = (e: KeyboardEvent) => { if (e.key === "ArrowRight") setI((x) => Math.min(keys.length - 1, x + 1)); if (e.key === "ArrowLeft") setI((x) => Math.max(0, x - 1)); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, [keys.length]);
   const full: SlideCtx = { ...ctx, model };
   return (
-    <div className="deck deck-viewer" data-testid="deck-viewer">
+    <div className={`deck deck-viewer ${presenter ? "is-presenter" : ""}`} data-testid="deck-viewer">
       <div className="deck-nav print:hidden">
         <button type="button" className={btnGhost} onClick={() => setI((x) => Math.max(0, x - 1))} disabled={i === 0} aria-label="Slide anterior" data-testid="deck-prev"><ChevronLeft size={16} aria-hidden /></button>
         <span className="text-sm" data-testid="deck-counter">{i + 1} / {keys.length}</span>
@@ -50,7 +50,7 @@ const DeckViewer = ({ d: raw, ctx, onExport, startAtEnd }: { d: DeckData; ctx: O
         <button type="button" className={btnPrimary} onClick={() => { onExport?.(); void ensureDeckFonts().then(() => setTimeout(() => window.print(), 300)); }} data-testid="deck-export"><FileDown size={14} className="mr-1 inline" aria-hidden />Exportar PDF</button>
       </div>
       {narrow && <p className="text-xs text-muted-foreground print:hidden" data-testid="deck-rotate-hint">Dica: gire o celular para o lado e arraste para ver a página inteira.</p>}
-      <div className="deck-slide-box deck-view print:hidden" ref={box} style={{ height: SLIDE_H * scale, overflowX: narrow ? "auto" : "hidden" }} data-testid="deck-current">
+      <div className="deck-slide-box deck-view print:hidden" ref={box} style={{ height: SLIDE_H * scale, overflowX: narrow ? "auto" : "hidden", ...(presenter ? { width: SLIDE_W * scale, margin: "0 auto" } : {}) }} data-testid="deck-current">
         <div style={{ position: "absolute", left: 0, top: 0, width: SLIDE_W, height: SLIDE_H, transform: `scale(${scale})`, transformOrigin: "top left" }}>
           <DeckSlide key={keys[i]} k={keys[i]} d={d} n={i + 1} total={keys.length} ctx={full} />
         </div>

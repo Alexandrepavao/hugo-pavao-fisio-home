@@ -117,7 +117,10 @@ test.describe.serial("@novo HP Fisio — jornada comercial de ponta a ponta", ()
   test("5. o FISIO gera o RASCUNHO da apresentação PDF 16:9, revisa o que entra, escolhe a oferta e APROVA a versão (retrato imutável); exporta o PDF", async ({ page, context }) => {
     await entrar(context, QA.fisio); await page.goto(`/apresentacao/avaliacao/${S.enr}`); await page.getByTestId("pw-tab-deck").click(); await expect(page.getByTestId("pw-deck")).toBeVisible();
     await expect(page.getByTestId("pw-deck-versions")).toContainText("Nenhuma versão aprovada"); await shot(page, "19-fisio-pdf-gerar-rascunho");
-    await page.getByTestId("pw-deck-generate").click(); await expect(page.getByTestId("pw-deck-review")).toBeVisible({ timeout: 30_000 });
+    // botão único: puxa os dados da avaliação, gera o rascunho e abre a apresentação ao vivo em tela cheia (Esc volta à revisão)
+    await page.getByTestId("pw-deck-live").click(); await expect(page.getByTestId("deck-live")).toBeVisible({ timeout: 30_000 }); const ao = page.getByTestId("deck-live").getByTestId("deck-current"); await expect(ao.getByTestId("deck-title")).toBeVisible(); await expect(ao.getByTestId("deck-patient")).toContainText("Marina Costa");
+    await shot(page, "19b-fisio-apresentacao-ao-vivo-tela-cheia"); await page.keyboard.press("Escape"); await expect(page.getByTestId("deck-live")).toHaveCount(0);
+    await expect(page.getByTestId("pw-deck-review")).toBeVisible({ timeout: 30_000 });
     // revisão: a evidência não existe (nenhuma ficha aprovada escolhida) → a página não é criada; a oferta é opcional
     await expect(page.getByTestId("pw-deck-sel-evidence")).toBeDisabled(); await expect(page.getByTestId("pw-deck-sel-commercial")).toBeDisabled();
     await page.getByTestId("pw-deck-product").selectOption(S.pkg); await expect(page.getByTestId("pw-deck-sel-commercial")).toBeEnabled({ timeout: 20_000 }); await expect(page.getByTestId("pw-deck-sel-commercial")).toBeChecked();

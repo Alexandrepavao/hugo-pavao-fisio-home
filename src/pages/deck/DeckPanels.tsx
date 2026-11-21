@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, FileText, RefreshCw } from "lucide-react";
+import { CheckCircle2, FileText, Presentation, RefreshCw, X } from "lucide-react";
 import { brl, fmtDateTime } from "@/lib/format";
 import { btnGhost, btnPrimary, EmptyState, Msg, State, useMsg } from "@/lib/ui";
 import { apiText, deckApprove, deckExportLog, deckGet, deckGenerate, deckOptions, deckRead, deckUpdate, myDeck, myDeckRespond, type DeckOption } from "@/pages/apresentacao/api";
@@ -12,6 +12,23 @@ import { ensureDeckFonts } from "./fonts";
 /** Endereço do aplicativo para os links do PDF: origem desta página (nunca recebida do servidor ou digitada) + base da organização. A identificação da proposta é o id; o acesso exige login. */
 const useAppBase = () => window.location.origin;
 
+/** Modo de apresentação ao vivo: o fisioterapeuta mostra o documento ao paciente em tela cheia (Esc ou "Fechar" volta à revisão). Mostra o RASCUNHO gerado agora; o paciente só recebe a versão aprovada. */
+const LiveDeck = ({ d, appBase, onClose }: { d: import("./deckModel").DeckData; appBase: string; onClose: () => void }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current; void el?.requestFullscreen?.().catch(() => undefined);   // sem tela cheia (negada/indisponível): continua como camada que cobre a tela
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; const onFs = () => { if (!document.fullscreenElement) onClose(); };
+    window.addEventListener("keydown", onKey); document.addEventListener("fullscreenchange", onFs);
+    return () => { window.removeEventListener("keydown", onKey); document.removeEventListener("fullscreenchange", onFs); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
+  }, [onClose]);
+  return (
+    <div ref={ref} className="deck-live" role="dialog" aria-label="Apresentação ao vivo" data-testid="deck-live">
+      <button type="button" className="absolute right-3 top-3 z-10 rounded-full border border-white/40 p-2 text-white" onClick={onClose} aria-label="Fechar apresentação" data-testid="deck-live-close"><X size={18} aria-hidden /></button>
+      <DeckViewer d={d} presenter ctx={{ appBase, interactive: false }} />
+    </div>
+  );
+};
+
 /** Aba "6. Apresentação PDF": gerar rascunho → revisar (o que entra, oferta) → aprovar versão → visualizar → exportar. */
 export const DeckTab = ({ enrollmentId, publishedVersion }: { enrollmentId: string; publishedVersion: number }) => {
   const qc = useQueryClient(); const nav = useNavigate(); const [msg, m] = useMsg(); const appBase = useAppBase(); const [product, setProduct] = useState("");
@@ -20,6 +37,8 @@ export const DeckTab = ({ enrollmentId, publishedVersion }: { enrollmentId: stri
   const refresh = () => qc.invalidateQueries({ queryKey: ["deck", enrollmentId] });
   const wrap = (f: () => Promise<unknown>, ok: string) => async () => { try { await f(); m.ok(ok); await refresh(); } catch (e) { m.err(apiText(e)); } };
   const gen = useMutation({ mutationFn: () => deckGenerate(enrollmentId, product || null) });
+  const [live, setLive] = useState<import("./deckModel").DeckData | null>(null); const closeLive = useCallback(() => setLive(null), []);
+  const startLive = async () => { try { const d = await gen.mutateAsync(); await refresh(); setLive(d); } catch (e) { m.err(apiText(e)); } };   // puxa os dados atuais da avaliação, gera o rascunho com a seleção padrão e abre em tela cheia
   const draft = st.data?.draft ?? null;
   useEffect(() => { if (draft) setProduct(draft.offer?.product_id ?? ""); }, [draft?.id, draft?.offer?.product_id]); // eslint-disable-line react-hooks/exhaustive-deps
   const toggle = (k: keyof DeckSelection) => async () => { if (!draft) return; try { await deckUpdate(draft.id, { [k]: !draft.selection[k] }, undefined, false); await refresh(); } catch (e) { m.err(apiText(e)); } };
@@ -32,9 +51,11 @@ export const DeckTab = ({ enrollmentId, publishedVersion }: { enrollmentId: stri
         <p className="text-sm">Fluxo: <b>gerar rascunho</b> (retrato da avaliação e da apresentação publicada) → <b>revisar</b> (escolher o que entra e a oferta) → <b>aprovar versão</b> (fica congelada) → <b>visualizar</b> → <b>exportar PDF</b>. Anotações internas nunca entram; nada é enviado ao paciente sozinho.</p>
         {publishedVersion === 0 && <div className="pw-warn" data-testid="pw-deck-needs-publish">Publique a apresentação (aba 5) antes de gerar: o documento usa exatamente o que o paciente já pode ver.</div>}
         <Msg m={msg} /><State loading={st.isLoading} error={st.error ? new Error(apiText(st.error)) : undefined} />
+        <div className="flex flex-wrap items-center gap-2"><button type="button" className={btnPrimary} disabled={publishedVersion === 0 || gen.isPending} onClick={() => void startLive()} data-testid="pw-deck-live"><Presentation size={14} className="mr-1 inline" aria-hidden />Gerar apresentação para mostrar ao paciente</button><span className="text-xs text-muted-foreground">Usa os dados que você acabou de registrar, gera o rascunho e abre em tela cheia. Depois você revisa e aprova a versão que o paciente recebe.</span></div>
         {!draft && <div className="flex flex-wrap items-end gap-2"><button type="button" className={btnPrimary} disabled={publishedVersion === 0 || gen.isPending} onClick={() => void wrap(async () => { await gen.mutateAsync(); }, "Rascunho gerado a partir da avaliação.")()} data-testid="pw-deck-generate"><FileText size={14} className="mr-1 inline" aria-hidden />Gerar rascunho</button></div>}
       </div>
 
+      {live && <LiveDeck d={live} appBase={appBase} onClose={closeLive} />}
       {draft && (<>
         <div className="pw-card" data-testid="pw-deck-review">
           <h3 className="font-semibold">Revisão do rascunho <span className="text-xs font-normal text-muted-foreground">· dados de {fmtDateTime(draft.snapshot.generated_at)}</span></h3>
