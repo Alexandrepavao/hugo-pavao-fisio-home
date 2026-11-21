@@ -1,4 +1,4 @@
-import { EbookTab } from "./EbookPanels";
+import { DeckTab } from "@/pages/deck/DeckPanels";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,8 +14,8 @@ import PresentationSteps from "./PresentationSteps";
 import { AREAS, apiText, portalAccessState, sendPortalInvite, type InviteResult, evidencePick, evidenceSave, evidenceSuggest, evidenceUnpick, isConflict, presentationOpen, presentationPublish, presentationSave, type LibraryItem, type PresentationDraft } from "./api";
 import "./presentation.css";
 
-type Tab = "dados" | "avaliacao" | "evidencias" | "apresentar" | "publicar" | "ebook";
-const TABS: [Tab, string][] = [["dados", "1. Dados"], ["avaliacao", "2. Avaliação"], ["evidencias", "3. Evidências"], ["apresentar", "4. Apresentação"], ["publicar", "5. Publicar"], ["ebook", "6. E-book"]];
+type Tab = "dados" | "avaliacao" | "evidencias" | "apresentar" | "publicar" | "deck";
+const TABS: [Tab, string][] = [["dados", "1. Dados"], ["avaliacao", "2. Avaliação"], ["evidencias", "3. Evidências"], ["apresentar", "4. Apresentação"], ["publicar", "5. Publicar"], ["deck", "6. Apresentação PDF"]];
 type Form = Pick<PresentationDraft, "area_keys" | "complaint" | "symptom_duration" | "limitations" | "activities" | "condition_kind" | "condition_text" | "goal_title" | "goal_target_date" | "freq_per_week" | "duration_weeks" | "routine_text" | "reassessment_on" | "reassessment_criteria" | "internal_notes">;
 const FIELDS: (keyof Form)[] = ["area_keys", "complaint", "symptom_duration", "limitations", "activities", "condition_kind", "condition_text", "goal_title", "goal_target_date", "freq_per_week", "duration_weeks", "routine_text", "reassessment_on", "reassessment_criteria", "internal_notes"];
 const pick = (d: PresentationDraft): Form => Object.fromEntries(FIELDS.map((k) => [k, d[k] ?? (k === "area_keys" ? [] : null)])) as unknown as Form;
@@ -284,7 +284,7 @@ const PresentationWorkspace = () => {
             <div><button type="button" className={btnPrimary} disabled={!draft.can_publish || publishing || (draft.published_version > 0 && !draft.unpublished_changes)} onClick={() => void publish()} data-testid="pw-publish"><Send size={14} className="mr-1 inline" aria-hidden />Publicar apresentação</button></div>
           </div>)}
         {tab === "publicar" && <AccessCard person={draft.person_id} />}
-        {tab === "ebook" && <EbookTab enrollmentId={draft.enrollment_id} publishedVersion={draft.published_version} />}
+        {tab === "deck" && <DeckTab enrollmentId={draft.enrollment_id} publishedVersion={draft.published_version} />}
       </>)}
     </div>
   );

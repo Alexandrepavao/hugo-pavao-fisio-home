@@ -61,12 +61,19 @@ export const evidenceSave = (id: string | null, p: Record<string, unknown>) => c
 export const evidenceReview = (id: string, decision: "approve" | "retire" | "reject", sourceChecked: boolean, note: string | null) => call<void>("evidence_review", { p_id: id, p_decision: decision, p_source_checked: sourceChecked, p_note: note });
 export const myPresentation = () => call<MyPresentation>("my_presentation");
 
-/** E-book da apresentação (migration 150): instantâneo versionado com a oferta (produto da própria organização), a regra de pagamento e o acesso ao aplicativo. */
-export interface EbookOption { id: string; name: string; kind: string; price_cents: number; sessions_count: number | null; validity_days: number | null }
-export const ebookOptions = (enrollment: string) => call<EbookOption[]>("presentation_ebook_options", { p_enrollment: enrollment });
-export const ebookGenerate = (enrollment: string, product: string) => call<{ id: string; version: number; created: boolean }>("presentation_ebook_generate", { p_enrollment: enrollment, p_product: product });
-export const ebookGet = (enrollment: string) => call<import("./Ebook").EbookData>("presentation_ebook_get", { p_enrollment: enrollment });
-export const myEbook = () => call<import("./Ebook").EbookData>("my_ebook");
+/** Apresentação PDF 16:9 (migration 151): rascunho → revisão → versão aprovada (imutável) → exportação. O paciente só lê versão APROVADA. */
+export interface DeckOption { id: string; name: string; kind: string; price_cents: number; sessions_count: number | null; validity_days: number | null }
+type DeckModelTypes = typeof import("@/pages/deck/deckModel");
+export const deckOptions = (enrollment: string) => call<DeckOption[]>("deck_options", { p_enrollment: enrollment });
+export const deckGenerate = (enrollment: string, product: string | null) => call<import("@/pages/deck/deckModel").DeckData>("deck_draft_generate", { p_enrollment: enrollment, p_product: product });
+export const deckUpdate = (id: string, selection: Record<string, boolean> | null, product: string | undefined, clear: boolean) => call<import("@/pages/deck/deckModel").DeckData>("deck_draft_update", { p_id: id, p_selection: selection, p_product: product ?? null, p_clear_product: clear });
+export const deckApprove = (id: string) => call<import("@/pages/deck/deckModel").DeckData>("deck_approve", { p_id: id });
+export const deckGet = (enrollment: string) => call<import("@/pages/deck/deckModel").DeckState>("deck_get", { p_enrollment: enrollment });
+export const deckRead = (id: string) => call<import("@/pages/deck/deckModel").DeckData>("deck_read", { p_id: id });
+export const deckExportLog = (id: string) => call<void>("deck_export_log", { p_id: id });
+export const myDeck = () => call<import("@/pages/deck/deckModel").MyDeck>("my_deck");
+export const myDeckRespond = (deck: string, choice: "questions" | "start") => call<{ recorded: boolean; new: boolean }>("my_deck_respond", { p_deck: deck, p_choice: choice });
+export type { DeckModelTypes };
 
 export interface AccessState { has_email: boolean; email_masked: string | null; account: "none" | "invite_open" | "linked"; invite_expires_at: string | null; last_send: { at: string; outcome: "pending" | "accepted" | "failed" | "throttled"; error_code: string | null } | null; first_access_at: string | null; delivery_tracked: boolean }
 export const portalAccessState = (person: string) => call<AccessState>("portal_access_state", { p_person: person });

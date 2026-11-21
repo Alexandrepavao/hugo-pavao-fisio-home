@@ -1,12 +1,12 @@
 {
-  "run": "mwqoe291",
-  "paciente_fictício": "Marina Costa N42 mwqoe291",
+  "run": "mwqqk8my",
+  "paciente_fictício": "Marina Costa (exemplo) N42 mwqqk8my",
   "etapas": [
     {
       "etapa": "0. Configuração (gestão)",
       "o_que_mudou": {
-        "servico_avaliacao": "Avaliação inicial HP N42 mwqoe291",
-        "pacote": "Acompanhamento HP 8 sessões N42 mwqoe291",
+        "servico_avaliacao": "Avaliação inicial HP N42 mwqqk8my",
+        "pacote": "Acompanhamento HP 8 sessões N42 mwqqk8my",
         "valor_pacote": "R$ 1.760,00 / 8 sessões"
       }
     },
@@ -46,21 +46,22 @@
       }
     },
     {
-      "etapa": "5. Fisio gera o e-book",
+      "etapa": "5. Fisio gera, revisa e aprova a apresentação PDF",
       "o_que_mudou": {
-        "ebook_versao": 1,
-        "valor": "R$ 1.760,00 (8 sessões, 180 dias)",
-        "conteudo": "apresentação publicada + oferta + regra de pagamento + acesso ao app",
-        "pdf": "docs/jornada-comercial/ebook-acompanhamento-N42.pdf",
-        "repetir_sem_mudar": "não cria outra versão"
+        "versao_aprovada": 1,
+        "slides": 10,
+        "evidencias": "página omitida (nenhuma ficha aprovada)",
+        "valores": "R$ 1.760,00 incluídos por escolha do fisio",
+        "imutavel": "UPDATE/DELETE recusados pelo banco",
+        "pdf": "docs/jornada-comercial/apresentacao-demo-exemplo.pdf"
       }
     },
     {
-      "etapa": "6. Paciente acessa o app",
+      "etapa": "6. Paciente acessa o app e a proposta",
       "o_que_mudou": {
         "conta": "vinculada ao convite (papel paciente)",
-        "ve": "apresentação, e-book com valores e situação do pagamento",
-        "outros_pacientes": "nenhum",
+        "ve": "somente a versão aprovada",
+        "proximo_passo": "interesse registrado no CRM (tarefa + interação); venda/pagamento/ativação inalterados",
         "celular": "sem rolagem horizontal"
       }
     },
@@ -70,7 +71,7 @@
         "venda_feita": "NÃO ativa",
         "pagamento_parcial_R$_200": "NÃO ativa",
         "primeira_parcela_quitada": "ATIVA e libera o pacote de 8 sessões",
-        "e_book_do_paciente": "mostra aguardando → confirmado e as parcelas"
+        "apresentacao_do_paciente": "mostra aguardando → confirmado e as parcelas"
       }
     },
     {
@@ -80,7 +81,7 @@
         "pacotes": 1,
         "vendas": 1,
         "caixa_cents": 88000,
-        "ebooks": 1,
+        "versoes_aprovadas": 1,
         "metas": 1
       }
     }
