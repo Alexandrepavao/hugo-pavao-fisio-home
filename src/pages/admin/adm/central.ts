@@ -77,14 +77,14 @@ export const useFilters = () => {
 };
 
 export const useAdmCentral = (from: string, to: string, unit: string, f: Filters) => useQuery({
-  queryKey: ["adm-central", from, to, unit, f.owner, f.type, f.kind, f.status], retry: false,
+  queryKey: ["adm-central", from, to, unit, f.owner, f.type, f.kind, f.status], retry: 2, retryDelay: 1500,   // um estouro de tempo passageiro não pode deixar a tela presa em “falha ao carregar”
   queryFn: async () => {
     const { data, error } = await supabase.rpc("adm_central", { p_from: from, p_to: to, p_unit: unit || null, p_owner: f.owner || null, p_type: f.type || null, p_kind: f.kind || null, p_status: f.status || null });
     if (error) throw error; return data as Central;
   },
 });
 export const usePendencies = (unit: string, f: Filters, status: string, limit = 200) => useQuery({
-  queryKey: ["adm-pendencies", unit, f.owner, f.type, f.kind, status, limit], retry: false,
+  queryKey: ["adm-pendencies", unit, f.owner, f.type, f.kind, status, limit], retry: 2, retryDelay: 1500,
   queryFn: async () => {
     const { data, error } = await supabase.rpc("adm_pendency_list", { p_unit: unit || null, p_owner: f.owner || null, p_type: f.type || null, p_kind: f.kind || null, p_status: status || null, p_limit: limit });
     if (error) throw error; return data as Pendency[];
