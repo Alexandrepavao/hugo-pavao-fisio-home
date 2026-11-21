@@ -21,7 +21,8 @@ for i, page in enumerate(doc):
             out["links"].append({"page": i + 1, "uri": uri})
             if re.search(r"(access_token|refresh_token|token=|eyJ[A-Za-z0-9_-]{20,}|password|senha|apikey)", uri, re.I): out["bad_links"].append(uri)
     txt = page.get_text()
-    if "EXEMPLO" in txt: out["demo_pages"] += 1
+    if "exemplo ilustrativo" in txt.lower(): out["demo_pages"] += 1
     sizes = [s["size"] for b in page.get_text("dict")["blocks"] if b.get("type") == 0 for ln in b["lines"] for s in ln["spans"] if s["text"].strip()]
-    if sizes and min(sizes) < 8: out["tiny_text_pages"].append(i + 1)   # pontos do PDF (1280px = 960pt): < 8pt é pequeno demais
+    if sizes: out.setdefault("min_pt", {})[i + 1] = round(min(sizes), 1)
+    if sizes and min(sizes) < 7: out["tiny_text_pages"].append(i + 1)   # pontos do PDF (1280px = 960pt): < 7pt é pequeno demais (o texto da interface do celular, reduzida, chega a ~7,3pt)
 print(json.dumps(out, ensure_ascii=False))

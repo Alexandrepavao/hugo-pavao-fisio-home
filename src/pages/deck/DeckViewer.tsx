@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { btnGhost, btnPrimary } from "@/lib/ui";
 import { EducationCard, ExerciseCards, FunctionalCard, JourneyProvider, JourneyTimeline, NextAppointmentCard, PainChartCard, PatientDashboard, SessionsCard, WeekCard } from "@/portal/journey/ui";
 import type { JourneyTab } from "@/portal/journey/model";
-import { deckModel, type DeckData } from "./deckModel";
+import { deckModel, presentable, type DeckData } from "./deckModel";
+import { ensureDeckFonts } from "./fonts";
 import { DeckSlide, SLIDE_H, SLIDE_W, slideKeys, type SlideCtx } from "./Slides";
 import "./deck.css";
 
@@ -30,7 +31,8 @@ const Explorer = ({ d, open, onClose }: { d: DeckData; open: boolean; onClose: (
 };
 
 /** Visualizador 16:9: um slide por vez na tela; TODOS os slides em páginas 16:9 na impressão/PDF (cópia fora da tela, com o mesmo layout). */
-const DeckViewer = ({ d, ctx, onExport, startAtEnd }: { d: DeckData; ctx: Omit<SlideCtx, "model">; onExport?: () => void; startAtEnd?: boolean }) => {
+const DeckViewer = ({ d: raw, ctx, onExport, startAtEnd }: { d: DeckData; ctx: Omit<SlideCtx, "model">; onExport?: () => void; startAtEnd?: boolean }) => {
+  const d = useMemo(() => presentable(raw), [raw]); useEffect(() => { void ensureDeckFonts(); }, []);   /* nomes de demonstração sem identificadores técnicos; fontes carregadas antes de qualquer impressão */
   const keys = useMemo(() => slideKeys(d), [d]); const model = useMemo(() => deckModel(d.snapshot), [d]); const [i, setI] = useState(startAtEnd ? keys.length - 1 : 0); const [explore, setExplore] = useState(false);
   const box = useRef<HTMLDivElement>(null); const [scale, setScale] = useState(0.6); const [narrow, setNarrow] = useState(false);
   useEffect(() => { const el = box.current; if (!el) return; const fit = () => { const w = el.clientWidth; setNarrow(w < 700); setScale(Math.min(1, Math.max(0.55, w / SLIDE_W))); };   /* celular em pé: leitura com rolagem lateral em vez de texto minúsculo */
@@ -45,7 +47,7 @@ const DeckViewer = ({ d, ctx, onExport, startAtEnd }: { d: DeckData; ctx: Omit<S
         <button type="button" className={btnGhost} onClick={() => setI((x) => Math.min(keys.length - 1, x + 1))} disabled={i === keys.length - 1} aria-label="Próximo slide" data-testid="deck-next"><ChevronRight size={16} aria-hidden /></button>
         <span className="flex-1" />
         <button type="button" className={btnGhost} onClick={() => setExplore(true)} data-testid="deck-open-explorer"><MonitorSmartphone size={14} className="mr-1 inline" aria-hidden />Explorar a demonstração do aplicativo</button>
-        <button type="button" className={btnPrimary} onClick={() => { onExport?.(); setTimeout(() => window.print(), 50); }} data-testid="deck-export"><FileDown size={14} className="mr-1 inline" aria-hidden />Exportar PDF</button>
+        <button type="button" className={btnPrimary} onClick={() => { onExport?.(); void ensureDeckFonts().then(() => setTimeout(() => window.print(), 300)); }} data-testid="deck-export"><FileDown size={14} className="mr-1 inline" aria-hidden />Exportar PDF</button>
       </div>
       {narrow && <p className="text-xs text-muted-foreground print:hidden" data-testid="deck-rotate-hint">Dica: gire o celular para o lado e arraste para ver a página inteira.</p>}
       <div className="deck-slide-box deck-view print:hidden" ref={box} style={{ height: SLIDE_H * scale, overflowX: narrow ? "auto" : "hidden" }} data-testid="deck-current">

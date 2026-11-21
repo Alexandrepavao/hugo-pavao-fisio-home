@@ -7,6 +7,7 @@ import { btnGhost, btnPrimary, EmptyState, Msg, State, useMsg } from "@/lib/ui";
 import { apiText, deckApprove, deckExportLog, deckGet, deckGenerate, deckOptions, deckRead, deckUpdate, myDeck, myDeckRespond, type DeckOption } from "@/pages/apresentacao/api";
 import { SELECTION_LABEL, type DeckSelection } from "./deckModel";
 import DeckViewer from "./DeckViewer";
+import { ensureDeckFonts } from "./fonts";
 
 /** Endereço do aplicativo para os links do PDF: origem desta página (nunca recebida do servidor ou digitada) + base da organização. A identificação da proposta é o id; o acesso exige login. */
 const useAppBase = () => window.location.origin;
@@ -67,7 +68,7 @@ export const DeckTab = ({ enrollmentId, publishedVersion }: { enrollmentId: stri
 export const DeckPage = () => {
   const { deckId = "" } = useParams(); const appBase = useAppBase(); const [sp] = useSearchParams();
   const q = useQuery({ queryKey: ["deck-read", deckId], retry: false, queryFn: () => deckRead(deckId) });
-  useEffect(() => { if (q.data && sp.get("imprimir") === "1") { void deckExportLog(q.data.id).catch(() => undefined); const t = setTimeout(() => window.print(), 1200); return () => clearTimeout(t); } }, [q.data, sp]);
+  useEffect(() => { if (q.data && sp.get("imprimir") === "1") { void deckExportLog(q.data.id).catch(() => undefined); let t: ReturnType<typeof setTimeout> | undefined; void ensureDeckFonts().then(() => { t = setTimeout(() => window.print(), 1200); }); return () => clearTimeout(t); } }, [q.data, sp]);
   return (
     <div className="mx-auto max-w-6xl p-4" data-testid="deck-page">
       <div className="mb-2 print:hidden"><button type="button" className={btnGhost} onClick={() => history.back()}>← Voltar</button></div>
