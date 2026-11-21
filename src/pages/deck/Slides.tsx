@@ -3,6 +3,7 @@ import { ArrowRight, Check, HelpCircle, Repeat2, ShieldCheck } from "lucide-reac
 import { brl } from "@/lib/format";
 import { brandLogoUrl } from "@/lib/org";
 import capaHp from "@/assets/ebook-capa-hp.jpg";
+import encerramentoHp from "@/assets/ebook-encerramento-hp.png";
 import { ExerciseCards, FunctionalCard, JourneyProvider, JourneyTimeline, PainChartCard, PatientDashboard, WeekCard } from "@/portal/journey/ui";
 import type { JourneyModel } from "@/portal/journey/model";
 import { isScale10, type DeckData, type DeckSelection } from "./deckModel";
@@ -25,7 +26,9 @@ export interface SlideCtx {
 export const slideKeys = (d: DeckData): string[] => {
   const s = d.selection, ev = (d.snapshot.presentation.content.evidence ?? []).length > 0;
   const keys = ["cover"]; (["goals", "start", "path", "app", "videos", "evolution", "continuity"] as (keyof DeckSelection)[]).forEach((k) => { if (s[k]) keys.push(k); });
-  if (s.evidence && ev) keys.push("evidence"); if (s.plan) keys.push("plan"); if (s.next) keys.push("next"); return keys;
+  if (s.evidence && ev) keys.push("evidence"); if (s.plan) keys.push("plan"); if (s.next) keys.push("next");
+  if (d.snapshot.clinic.is_default_brand) keys.push("closing");   /* encerramento da marca HP: só para a marca padrão (arte fornecida) */
+  return keys;
 };
 
 const Cover = ({ d, total }: { d: DeckData; total: number }) => {
@@ -223,11 +226,19 @@ const Next = ({ d, n, total, ctx }: { d: DeckData; n: number; total: number; ctx
   );
 };
 
+/** Página final da marca HP: arte de encerramento fornecida (logotipo + assinatura). Não existe para outras organizações. */
+const Closing = ({ d, n, total }: { d: DeckData; n: number; total: number }) => (
+  <section className="slide is-navy slide-closing" data-testid={`slide-${n}`} aria-label="Encerramento">
+    <img className="closing-img" src={encerramentoHp} alt="HP Fisio Group — O cuidado que você precisa, no conforto da sua casa. Fisioterapia domiciliar com atendimento humanizado." data-testid="deck-closing" />
+    <PageFoot d={d} n={n} total={total} />
+  </section>
+);
+
 export const DeckSlide = ({ k, d, n, total, ctx }: { k: string; d: DeckData; n: number; total: number; ctx: SlideCtx }) => {
   switch (k) {
     case "cover": return <Cover d={d} total={total} />; case "goals": return <Goals d={d} n={n} total={total} />; case "start": return <Start d={d} n={n} total={total} />; case "path": return <Path d={d} n={n} total={total} />;
     case "app": return <AppHome d={d} n={n} total={total} ctx={ctx} />; case "videos": return <AppCare d={d} n={n} total={total} ctx={ctx} />; case "evolution": return <AppEvolution d={d} n={n} total={total} ctx={ctx} />;
-    case "continuity": return <Continuity d={d} n={n} total={total} />; case "evidence": return <Evidence d={d} n={n} total={total} />; case "plan": return <Plan d={d} n={n} total={total} />; case "next": return <Next d={d} n={n} total={total} ctx={ctx} />;
+    case "continuity": return <Continuity d={d} n={n} total={total} />; case "evidence": return <Evidence d={d} n={n} total={total} />; case "plan": return <Plan d={d} n={n} total={total} />; case "next": return <Next d={d} n={n} total={total} ctx={ctx} />; case "closing": return <Closing d={d} n={n} total={total} />;
     default: return null;
   }
 };

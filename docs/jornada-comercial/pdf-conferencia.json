@@ -1,5 +1,5 @@
 {
-  "pages": 10,
+  "pages": 11,
   "sizes": [
     [
       960,
@@ -8,10 +8,10 @@
   ],
   "ratio_ok": true,
   "fonts": {
-    "": 269
+    "": 274
   },
   "fonts_not_embedded": [],
-  "images": 1,
+  "images": 2,
   "links": [
     {
       "page": 6,
@@ -27,10 +27,10 @@
     }
   ],
   "bad_links": [],
-  "demo_pages": 10,
+  "demo_pages": 11,
   "tiny_text_pages": [],
   "font_types": {
-    "Type3": 269
+    "Type3": 274
   },
   "min_pt": {
     "1": 9.4,
@@ -42,6 +42,7 @@
     "7": 7.1,
     "8": 9.4,
     "9": 9.4,
-    "10": 9.4
+    "10": 9.4,
+    "11": 9.4
   }
 }

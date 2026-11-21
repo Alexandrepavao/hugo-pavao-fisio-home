@@ -33,7 +33,7 @@ const Explorer = ({ d, open, onClose }: { d: DeckData; open: boolean; onClose: (
 /** Visualizador 16:9: um slide por vez na tela; TODOS os slides em páginas 16:9 na impressão/PDF (cópia fora da tela, com o mesmo layout). */
 const DeckViewer = ({ d: raw, ctx, onExport, startAtEnd }: { d: DeckData; ctx: Omit<SlideCtx, "model">; onExport?: () => void; startAtEnd?: boolean }) => {
   const d = useMemo(() => presentable(raw), [raw]); useEffect(() => { void ensureDeckFonts(); }, []);   /* nomes de demonstração sem identificadores técnicos; fontes carregadas antes de qualquer impressão */
-  const keys = useMemo(() => slideKeys(d), [d]); const model = useMemo(() => deckModel(d.snapshot), [d]); const [i, setI] = useState(startAtEnd ? keys.length - 1 : 0); const [explore, setExplore] = useState(false);
+  const keys = useMemo(() => slideKeys(d), [d]); const model = useMemo(() => deckModel(d.snapshot), [d]); const [i, setI] = useState(startAtEnd ? (keys.includes("next") ? keys.indexOf("next") : keys.length - 1) : 0); const [explore, setExplore] = useState(false);
   const box = useRef<HTMLDivElement>(null); const [scale, setScale] = useState(0.6); const [narrow, setNarrow] = useState(false);
   useEffect(() => { const el = box.current; if (!el) return; const fit = () => { const w = el.clientWidth; setNarrow(w < 700); setScale(Math.min(1, Math.max(0.55, w / SLIDE_W))); };   /* celular em pé: leitura com rolagem lateral em vez de texto minúsculo */
     const ro = new ResizeObserver(fit); ro.observe(el); fit(); return () => ro.disconnect(); }, []);

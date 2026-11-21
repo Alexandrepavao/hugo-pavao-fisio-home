@@ -149,6 +149,9 @@ html[data-theme="dark"] .deck .jr { --jr-navy: 222 56% 21%; --jr-navy-2: 222 48%
 .after { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 14px; } .after li { display: flex; gap: 16px; align-items: center; }
 .is-navy .callout { background: #fff; color: var(--navy); border-color: var(--navy); box-shadow: none; }
 
+/* ------------------------------------------------------------------ encerramento (marca HP) */
+.closing-img { position: absolute; left: 80px; top: 150px; width: 1120px; height: 400px; object-fit: cover; border-radius: 28px; box-shadow: 0 30px 60px -24px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.18); }
+
 /* ------------------------------------------------------------------ visualizador */
 .deck-viewer { max-width: 1300px; margin: 0 auto; }
 .deck-nav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }

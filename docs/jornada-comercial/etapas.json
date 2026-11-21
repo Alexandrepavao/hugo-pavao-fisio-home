@@ -1,12 +1,12 @@
 {
-  "run": "mwqxb4r0",
-  "paciente_fictício": "Marina Costa (exemplo) N42 mwqxb4r0",
+  "run": "mwqxt3px",
+  "paciente_fictício": "Marina Costa (exemplo) N42 mwqxt3px",
   "etapas": [
     {
       "etapa": "0. Configuração (gestão)",
       "o_que_mudou": {
-        "servico_avaliacao": "Avaliação inicial HP N42 mwqxb4r0",
-        "pacote": "Acompanhamento HP 8 sessões N42 mwqxb4r0",
+        "servico_avaliacao": "Avaliação inicial HP N42 mwqxt3px",
+        "pacote": "Acompanhamento HP 8 sessões N42 mwqxt3px",
         "valor_pacote": "R$ 1.760,00 / 8 sessões"
       }
     },
@@ -49,7 +49,7 @@
       "etapa": "5. Fisio gera, revisa e aprova a apresentação PDF",
       "o_que_mudou": {
         "versao_aprovada": 1,
-        "slides": 10,
+        "slides": 11,
         "evidencias": "página omitida (nenhuma ficha aprovada)",
         "valores": "R$ 1.760,00 incluídos por escolha do fisio",
         "imutavel": "UPDATE/DELETE recusados pelo banco",
