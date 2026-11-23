@@ -134,14 +134,20 @@ html[data-theme="dark"] .deck .jr { --jr-navy: 222 56% 21%; --jr-navy-2: 222 48%
 .loop svg { width: 34px; height: 34px; } .loop-title { font: 500 28px/1.15 var(--deck-serif); }
 
 /* ------------------------------------------------------------------ evidências */
-.ev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; } .ev-card { display: grid; gap: 8px; align-content: start; padding: 20px 22px; font-size: 16px; line-height: 1.4; } .ev-title { font: 500 20px/1.25 var(--deck-serif); } .ev-card p { margin: 0; } .ev-card .t-label { display: block; margin-bottom: 2px; } .ev-card a { color: var(--navy); font-weight: 600; text-decoration: underline; }
+.ev-grid { display: grid; grid-template-columns: repeat(var(--n, 3), 1fr); gap: 20px; align-items: start; } .ev-grid.is-one .ev-card { column-count: 2; column-gap: 40px; display: block; } .ev-grid.is-one .ev-card > * { break-inside: avoid; margin-bottom: 8px; } .ev-card .ev-title, .ev-card > .t-cap { display: block; } .ev-card { display: grid; gap: 8px; align-content: start; padding: 20px 22px; font-size: 16px; line-height: 1.4; } .ev-title { font: 500 20px/1.25 var(--deck-serif); } .ev-card p { margin: 0; } .ev-card .t-label { display: block; margin-bottom: 2px; } .ev-card a { color: var(--navy); font-weight: 600; text-decoration: underline; }
 
 /* ------------------------------------------------------------------ plano */
 .plan-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; flex: none; align-items: stretch; }
-.plan-col { padding: 26px 32px; display: grid; gap: 8px; align-content: start; }
-.plan-col dl { margin: 0; } .plan-col dl > div { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid color-mix(in srgb, var(--navy) 12%, transparent); } .plan-col dd { margin: 0; }
+.plan-col { padding: 20px 28px; display: grid; gap: 6px; align-content: start; } .plan-col .t-body { font-size: 18px; line-height: 1.4; } .plan-col .t-sub-title { font-size: 25px; margin-bottom: 2px; }
+.plan-col dl { margin: 0; } .plan-col dl > div { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--navy) 12%, transparent); } .plan-col dd { margin: 0; }
 .plan-col ul { margin: 4px 0; padding-left: 22px; list-style: disc; display: grid; gap: 4px; }
-.price-line { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin: 0; } .price-line .t-num { font-size: 52px; }
+.price-line { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin: 0; } .price-line .t-num { font-size: 46px; } .plan-col .t-cap { font-size: 13.5px; line-height: 1.4; }
+
+/* condições, orçamento e casos */
+.cond-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; } .cond-list li { display: grid; gap: 2px; }
+.quote-list { font-size: 16px !important; line-height: 1.4 !important; gap: 2px !important; margin: 2px 0 !important; }
+.case-grid { display: grid; grid-template-columns: repeat(var(--n, 2), 1fr); gap: 24px; } .case-grid.is-one { grid-template-columns: minmax(0, 860px); } .case-card { display: grid; gap: 10px; align-content: start; padding: 22px 26px; } .case-card p { margin: 0; } .case-card .t-label { display: block; margin-bottom: 2px; }
+.case-measure { display: grid; gap: 4px; border-top: 1px solid color-mix(in srgb, var(--navy) 14%, transparent); padding-top: 10px; } .case-measure .metric-val { gap: 12px; } .case-measure .t-num { font-size: 42px; }
 
 /* ------------------------------------------------------------------ próximo passo */
 .cta-row { display: flex; gap: 22px; flex-wrap: wrap; } .pay-status { margin: 0; }

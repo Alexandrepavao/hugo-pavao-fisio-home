@@ -182,7 +182,7 @@ const QuizWhatsAppSettings = () => {
 interface ServiceRow { id: string; name: string; duration_min: number; price_cents: number; active: boolean }
 type ProductLine = "unclassified" | "physio" | "academy";
 const PRODUCT_LINE: Record<ProductLine, string> = { unclassified: "Não classificado", physio: "HP Fisioterapia", academy: "HP Academy" };
-interface ProductRow { id: string; kind: string; name: string; price_cents: number; sessions_count: number | null; validity_days: number | null; active: boolean }
+interface ProductRow { id: string; kind: string; name: string; price_cents: number; sessions_count: number | null; validity_days: number | null; active: boolean; max_discount_pct: number }
 const PRODUCT_KIND: Record<string, string> = { service: "Serviço avulso", course: "Curso", mentoring: "Mentoria", package: "Pacote", plan: "Plano/assinatura" };
 
 const OperationSettings = () => {
@@ -201,7 +201,7 @@ const OperationSettings = () => {
     if (error) return m.err(errText(error));
     m.ok(`“${p.name}” agora é ${PRODUCT_LINE[line]} (vale para todo o histórico do produto).`); void qc.invalidateQueries({ queryKey: ["settings-product-lines"] });
   };
-  const products = useQuery({ queryKey: ["settings-products"], queryFn: async () => (await supabase.from("products").select("id, kind, name, price_cents, sessions_count, validity_days, active").order("name")).data as ProductRow[] });
+  const products = useQuery({ queryKey: ["settings-products"], queryFn: async () => (await supabase.from("products").select("id, kind, name, price_cents, sessions_count, validity_days, active, max_discount_pct").order("name")).data as ProductRow[] });
 
   const createService = async (e: FormEvent) => {
     e.preventDefault();
@@ -236,6 +236,13 @@ const OperationSettings = () => {
     if (error) return m.err(errText(error));
     m.ok("Produto criado."); setPName(""); setPPrice(""); setPSessions(""); setPValidity(""); setPService("");
     void qc.invalidateQueries({ queryKey: ["settings-products"] });
+  };
+  /** Desconto máximo que as propostas (apresentação) podem aplicar a este produto; 0 = sem desconto. Política da gestão, não preço no código. */
+  const setMaxDiscount = async (p: ProductRow, raw: string) => {
+    const v = Number(raw.replace(",", ".")); if (!Number.isFinite(v) || v < 0 || v > 100) return m.err("Desconto máximo: de 0 a 100%.");
+    if (v === Number(p.max_discount_pct)) return;
+    const { error } = await supabase.from("products").update({ max_discount_pct: v }).eq("id", p.id); if (error) return m.err(errText(error));
+    m.ok("Desconto máximo atualizado."); void qc.invalidateQueries({ queryKey: ["settings-products"] });
   };
   const toggleProduct = async (p: ProductRow) => {
     const { error } = await supabase.from("products").update({ active: !p.active }).eq("id", p.id);
@@ -284,10 +291,11 @@ const OperationSettings = () => {
       <p className="text-xs text-muted-foreground mb-3">Regras finas de consumo (falta consome sessão, prazo de cancelamento tardio) usam os valores padrão do sistema ao criar por aqui; para ajustá-las num produto específico, use o banco diretamente — essa tela cobre o que é preenchido com mais frequência.</p>
       <State loading={products.isLoading} error={products.error} empty={products.data?.length === 0} emptyText="Nenhum produto cadastrado." />
       {products.data && products.data.length > 0 && (
-        <Table head={["Nome", "Tipo", "Preço", "Sessões", ...(productLines.data ? ["Linha de negócio"] : []), "Estado", ""]}>
+        <Table head={["Nome", "Tipo", "Preço", "Sessões", "Desconto máx. (%)", ...(productLines.data ? ["Linha de negócio"] : []), "Estado", ""]}>
           {products.data.map((p) => (
             <tr key={p.id}>
               <Td>{p.name}</Td><Td>{PRODUCT_KIND[p.kind] ?? p.kind}</Td><Td>{brl(p.price_cents)}</Td><Td>{p.sessions_count ?? "—"}</Td>
+              <Td><input type="number" min={0} max={100} step="0.5" className="!w-20" aria-label={`Desconto máximo autorizado de ${p.name}`} defaultValue={p.max_discount_pct} onBlur={(e) => setMaxDiscount(p, e.target.value)} data-testid="product-max-discount" /></Td>
               {productLines.data && <Td><select className="!w-auto" aria-label={`Linha de negócio de ${p.name}`} value={productLines.data[p.id] ?? "unclassified"} onChange={(e) => setProductLine(p, e.target.value as ProductLine)}>{(Object.keys(PRODUCT_LINE) as ProductLine[]).map((k) => <option key={k} value={k}>{PRODUCT_LINE[k]}</option>)}</select></Td>}
               <Td>{p.active ? "Ativo" : "Inativo"}</Td>
               <Td><button className={btnGhost + " hp-btn-sm"} onClick={() => toggleProduct(p)}>{p.active ? "Desativar" : "Ativar"}</button></Td>

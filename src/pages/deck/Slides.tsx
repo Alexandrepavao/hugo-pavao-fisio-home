@@ -5,7 +5,8 @@ import capaHp from "@/assets/ebook-capa-hp.jpg";
 import encerramentoHp from "@/assets/ebook-encerramento-hp.png";
 import { ExerciseCards, FunctionalCard, JourneyProvider, JourneyTimeline, PainChartCard, PatientDashboard, WeekCard } from "@/portal/journey/ui";
 import type { JourneyModel } from "@/portal/journey/model";
-import { deckLogoUrl, isScale10, type DeckData, type DeckSelection } from "./deckModel";
+import { PAY_METHOD_LABEL, deckLogoUrl, isScale10, type DeckData, type DeckSelection } from "./deckModel";
+import { STATUS_LABEL } from "@/pages/apresentacao/AssessmentParts";
 import { DEMO_TEXT, Glass, Legend, MeasureChart, Metric, Page, PageFoot, PageHead, Phone, SLIDE_H, SLIDE_W, Steps, short, type PhoneMark } from "./parts";
 import "@/portal/journey/journey.css";
 import "./deck.css";
@@ -25,7 +26,7 @@ export interface SlideCtx {
 export const slideKeys = (d: DeckData): string[] => {
   const s = d.selection, ev = (d.snapshot.presentation.content.evidence ?? []).length > 0;
   const keys = ["cover"]; (["goals", "start", "path", "app", "videos", "evolution", "continuity"] as (keyof DeckSelection)[]).forEach((k) => { if (s[k]) keys.push(k); });
-  if (s.evidence && ev) keys.push("evidence"); if (s.plan) keys.push("plan"); if (s.next) keys.push("next");
+  if (s.evidence && ev) keys.push("evidence"); if (s.cases && (d.snapshot.cases ?? []).length > 0) keys.push("cases"); if (s.plan) keys.push("plan"); if (s.next) keys.push("next");
   if (d.snapshot.clinic.is_default_brand) keys.push("closing");   /* encerramento da marca HP: só para a marca padrão (arte fornecida) */
   return keys;
 };
@@ -67,7 +68,11 @@ const Start = ({ d, n, total }: { d: DeckData; n: number; total: number }) => {
         <div className="start-text">
           <p className="t-label">Relatado por você</p><p className="start-big">{c.reported.complaint ?? "Sem relato registrado"}</p>
           {c.reported.symptom_duration && <p className="t-body"><b>Há quanto tempo:</b> {c.reported.symptom_duration}</p>}{c.reported.limitations && <p className="t-body"><b>Limitações:</b> {c.reported.limitations}</p>}
-          {c.assessed.condition_text && <><p className="t-label is-pro">{c.assessed.condition_kind === "hypothesis" ? "Hipótese em investigação (fisioterapeuta)" : "Avaliado pelo fisioterapeuta"}</p><p className="t-body">{c.assessed.condition_text}</p></>}
+          {(c.assessed.conditions ?? []).length > 0 ? <ul className="cond-list" data-testid="deck-conditions">{(c.assessed.conditions ?? []).map((k, i) => (
+            <li key={`${k.label}-${i}`}><span className="t-label is-pro">{k.status === "not_informed" ? STATUS_LABEL.not_informed : STATUS_LABEL[k.status]}{k.role === "principal" ? " · principal" : ""}</span>
+              <span className="t-body">{k.label ?? "Condição ainda não informada"}{k.subtype_label ? ` — ${k.subtype_label}` : ""}{k.body_region ? ` · ${k.body_region}` : ""}{k.laterality && k.laterality !== "na" ? ` · ${{ right: "lado direito", left: "lado esquerdo", bilateral: "bilateral" }[k.laterality] ?? ""}` : ""}{k.onset_text ? ` · há ${k.onset_text}` : ""}</span></li>))}</ul>
+            : c.assessed.condition_text && <><p className="t-label is-pro">{c.assessed.condition_kind === "hypothesis" ? "Hipótese em investigação (fisioterapeuta)" : "Avaliado pelo fisioterapeuta"}</p><p className="t-body">{c.assessed.condition_text}</p></>}
+          {(c.assessed.context ?? []).length > 0 && <p className="t-cap" data-testid="deck-context">Contexto: {(c.assessed.context ?? []).join(" · ")}</p>}
         </div>
         <div className="start-charts" data-testid="deck-measures">
           {ms.length === 0 && other.length === 0 ? <p className="t-sub">Nesta avaliação ainda não há medidas registradas. Elas aparecem aqui assim que o fisioterapeuta as coletar.</p> : null}
@@ -92,7 +97,7 @@ const Path = ({ d, n, total }: { d: DeckData; n: number; total: number }) => {
         <div className="facts" data-testid="deck-path-facts">
           <Metric label="Frequência" value={p.freq_per_week ? `${p.freq_per_week}x` : null} unit="por semana" />
           <Metric label="Duração inicial estimada" value={p.duration_weeks ?? null} unit="semanas" />
-          <Metric label="Sessões previstas" value={planned ?? null} unit="sessões" />
+          <Metric label="Sessões iniciais propostas" value={planned ?? null} unit="sessões" />
           <Metric label="Próxima reavaliação" value={p.reassessment_on ? short(p.reassessment_on) : null} />
         </div>
         <p className="t-cap page-note">Frequência, duração e sessões vêm do plano definido pelo seu fisioterapeuta e podem mudar a cada reavaliação. Este é um caminho de cuidado, não uma previsão de resultado.</p>
@@ -174,10 +179,31 @@ const Evidence = ({ d, n, total }: { d: DeckData; n: number; total: number }) =>
   const ev = (d.snapshot.presentation.content.evidence ?? []).slice(0, 3);
   return (
     <Page n={n} total={total} d={d} eyebrow="A CIÊNCIA POR TRÁS" title={<>O que a pesquisa <em>diz</em></>}>
-      <div className="page-body"><div className="ev-grid" data-testid="deck-evidence">{ev.map((e) => { const href = e.url ?? (e.doi ? `https://doi.org/${e.doi}` : null); return (
+      <div className="page-body"><div className={`ev-grid ${ev.length === 1 ? "is-one" : ""}`} style={{ ["--n" as string]: Math.max(1, ev.length) }} data-testid="deck-evidence">{ev.map((e) => { const href = e.url ?? (e.doi ? `https://doi.org/${e.doi}` : null); return (
         <Glass as="article" key={e.id} className="ev-card"><b className="ev-title">{e.title}</b><span className="t-cap">{[e.authors, e.journal, e.year].filter(Boolean).join(" · ")}</span>
-          {e.relation && <p><span className="t-label">Por que serve a você</span>{e.relation}</p>}{e.benefits && <p><span className="t-label">O que foi observado</span>{e.benefits}</p>}{e.limitations && <p><span className="t-label">Limites</span>{e.limitations}</p>}
+          {e.relation && <p><span className="t-label">Por que serve a você</span>{e.relation}</p>}{(e.intervention || e.outcome_measure || e.population) && <p><span className="t-label">O que o estudo avaliou</span>{[e.intervention, e.outcome_measure && `medida: ${e.outcome_measure}`, e.population && `participantes: ${e.population}`].filter(Boolean).join(" · ")}</p>}{e.benefits && <p><span className="t-label">Resultado observado no estudo</span>{e.benefits}</p>}{(e.duration || e.follow_up) && <p><span className="t-label">Período</span>{[e.duration, e.follow_up && `acompanhamento: ${e.follow_up}`].filter(Boolean).join(" · ")}</p>}{e.limitations && <p><span className="t-label">Limitações</span>{e.limitations}</p>}<p className="t-cap">Resultado de um estudo não é promessa de resultado individual.</p>
           {href && <a href={href}>Ver a referência</a>}</Glass>); })}</div></div>
+    </Page>
+  );
+};
+
+const fmtNum = (v: number) => String(Math.round(v * 100) / 100).replace(".", ",");
+const Cases = ({ d, n, total }: { d: DeckData; n: number; total: number }) => {
+  const cs = (d.snapshot.cases ?? []).slice(0, 2);
+  return (
+    <Page n={n} total={total} d={d} eyebrow="CASOS EDUCATIVOS" title={<>Exemplos que <em>ajudam a entender</em></>}>
+      <div className="page-body">
+        <div className={`case-grid ${cs.length === 1 ? "is-one" : ""}`} style={{ ["--n" as string]: Math.max(1, cs.length) }} data-testid="deck-cases">{cs.map((c) => (
+          <Glass as="article" key={c.id} className="case-card" testid="deck-case">
+            <b className="ev-title">{c.title}</b>
+            <p className="t-body"><span className="t-label">Situação inicial</span>{c.situation}</p>
+            <p className="t-body"><span className="t-label">Objetivo</span>{c.objective}</p>
+            <div className="case-measure"><span className="t-label">{c.measure_label}</span><span className="metric-val"><b className="t-num">{fmtNum(c.baseline)}</b><span className="t-unit">→</span><b className="t-num">{fmtNum(c.observed)}</b>{c.measure_unit && <span className="t-unit">{c.measure_unit}</span>}</span>
+              <span className="t-cap">em {c.interval_text}{c.sessions_done != null ? ` · ${c.sessions_done} sessões realizadas` : ""}</span></div>
+            <p className="t-cap"><b>Limites da comparação:</b> {c.limitations}</p>
+          </Glass>))}</div>
+        <p className="t-cap page-note">Casos educativos autorizados, sem dados que identifiquem a pessoa. Cada pessoa é diferente: este exemplo não é uma promessa de resultado para você.</p>
+      </div>
     </Page>
   );
 };
@@ -185,17 +211,26 @@ const Evidence = ({ d, n, total }: { d: DeckData; n: number; total: number }) =>
 const Plan = ({ d, n, total }: { d: DeckData; n: number; total: number }) => {
   const c = d.snapshot.presentation.content, p = c.plan, o = d.offer, show = d.selection.commercial && !!o; const planned = d.snapshot.planned_sessions;
   const Row = ({ k, v }: { k: string; v: ReactNode }) => <div><dt className="t-label">{k}</dt><dd className="t-body">{v}</dd></div>;
+  const total_c = o ? (o.total_cents ?? o.price_cents) : 0;
   return (
-    <Page n={n} total={total} d={d} eyebrow="PLANO PROPOSTO" title={<>O plano <em>proposto para você</em></>}>
+    <Page n={n} total={total} d={d} eyebrow="PLANO INICIAL PROPOSTO" title={<>O plano <em>inicial proposto</em></>}>
       <div className="page-body plan-grid">
         <Glass className="plan-col" testid="deck-plan-clinico"><h3 className="t-sub-title">Recomendação clínica</h3>
           <dl><Row k="Objetivo" v={c.goal?.title ?? "A definir"} /><Row k="Frequência" v={p.freq_per_week ? `${p.freq_per_week}x por semana` : "A definir"} /><Row k="Duração" v={p.duration_weeks ? `${p.duration_weeks} semanas` : "A definir"} />
-            <Row k="Sessões previstas" v={planned ?? "A definir"} /><Row k="Reavaliação" v={<>{p.reassessment_on ? short(p.reassessment_on) : "A definir"}{p.reassessment_criteria ? ` · ${p.reassessment_criteria}` : ""}</>} /><Row k="Rotina orientada" v={p.routine ?? "A definir"} /></dl>
-          <p className="t-cap">O que está incluído: acompanhamento conforme o plano, acesso à sua área do paciente e reavaliações no momento definido.</p></Glass>
+            <Row k="Sessões iniciais" v={planned ?? "A definir"} /><Row k="Cada sessão" v={p.session_minutes ? `${p.session_minutes} minutos` : "A definir"} /><Row k="Reavaliação" v={<>{p.reassessment_on ? short(p.reassessment_on) : "A definir"}{p.reassessment_criteria ? ` · ${p.reassessment_criteria}` : ""}</>} />
+            {p.approach && <Row k="Abordagem prevista" v={p.approach} />}<Row k="Rotina orientada" v={p.routine ?? "A definir"} /></dl>
+          <p className="t-cap">É um plano inicial: a quantidade de sessões e o ritmo são revistos com você a cada reavaliação.</p></Glass>
         <Glass tone="tint" className="plan-col is-commercial" testid="deck-plan-comercial"><h3 className="t-sub-title">Condições comerciais</h3>
-          {show && o ? <><p className="price-line"><span className="t-body">{o.name}</span><b className="t-num" data-testid="deck-preco">{brl(o.price_cents)}</b></p><ul className="t-body">{o.sessions_count ? <li>{o.sessions_count} sessões{o.per_session_cents ? ` · cerca de ${brl(o.per_session_cents)} por sessão` : ""}</li> : null}{o.validity_days ? <li>Validade de {o.validity_days} dias</li> : null}
-            {o.late_cancel_hours ? <li>Cancelamento com menos de {o.late_cancel_hours} h conta como sessão realizada</li> : null}{o.consume_on_no_show ? <li>Falta sem aviso consome uma sessão</li> : null}</ul>
-            <p className="t-cap">Valores vigentes em {short(o.quoted_at)}. Forma e parcelas são combinadas com a clínica. O pacote é uma condição comercial, não uma medida de recuperação. O acompanhamento só fica ativo com a 1ª parcela quitada.</p></>
+          {show && o ? <><p className="price-line"><span className="t-body">{o.name}{o.quantity && o.quantity > 1 ? ` × ${o.quantity}` : ""}</span><b className="t-num" data-testid="deck-preco">{brl(total_c)}</b></p>
+            <ul className="t-body quote-list" data-testid="deck-quote">
+              {o.discount_cents ? <li>Valor de tabela {brl(o.subtotal_cents ?? o.price_cents)} · desconto autorizado {brl(o.discount_cents)}</li> : null}
+              {o.sessions_covered ? <li>{o.sessions_covered} sessões{o.per_session_cents ? ` · cerca de ${brl(o.per_session_cents)} por sessão` : ""}</li> : o.sessions_count ? <li>{o.sessions_count} sessões</li> : null}
+              {o.installments && o.installments.length > 1 ? <li data-testid="deck-installments">{o.installments.length}x de {brl(o.installments[0].amount_cents)}{o.installments.some((x, i) => i > 0 && x.amount_cents !== o.installments![0].amount_cents) ? " (a 1ª parcela absorve a diferença)" : ""}{o.installments[0].due_date ? ` · 1º vencimento ${short(o.installments[0].due_date)}` : ""}</li> : <li data-testid="deck-installments">À vista{o.installments?.[0]?.due_date ? ` · vencimento ${short(o.installments[0].due_date)}` : ""}</li>}
+              {o.payment_methods && o.payment_methods.length > 0 ? <li data-testid="deck-methods">Formas de pagamento: {Object.keys(PAY_METHOD_LABEL).filter((k) => o.payment_methods!.includes(k)).map((k) => PAY_METHOD_LABEL[k]).join(", ")}</li> : null}
+              {o.valid_until ? <li data-testid="deck-valid">Proposta válida até {short(o.valid_until)}</li> : null}
+              {o.validity_days ? <li>Pacote válido por {o.validity_days} dias</li> : null}
+              {o.late_cancel_hours ? <li>Cancelamento com menos de {o.late_cancel_hours} h conta como sessão realizada</li> : null}{o.consume_on_no_show ? <li>Falta sem aviso consome uma sessão</li> : null}</ul>
+            <p className="t-cap">Valores vigentes em {short(o.quoted_at)}. O pacote é uma condição comercial, não uma medida de recuperação. O acompanhamento só fica ativo com a 1ª parcela quitada; aceitar ou ler esta proposta não equivale a pagamento.</p></>
             : <p className="t-sub">As condições comerciais serão apresentadas à parte, se você quiser seguir.</p>}</Glass>
       </div>
     </Page>
@@ -237,7 +272,7 @@ export const DeckSlide = ({ k, d, n, total, ctx }: { k: string; d: DeckData; n: 
   switch (k) {
     case "cover": return <Cover d={d} total={total} />; case "goals": return <Goals d={d} n={n} total={total} />; case "start": return <Start d={d} n={n} total={total} />; case "path": return <Path d={d} n={n} total={total} />;
     case "app": return <AppHome d={d} n={n} total={total} ctx={ctx} />; case "videos": return <AppCare d={d} n={n} total={total} ctx={ctx} />; case "evolution": return <AppEvolution d={d} n={n} total={total} ctx={ctx} />;
-    case "continuity": return <Continuity d={d} n={n} total={total} />; case "evidence": return <Evidence d={d} n={n} total={total} />; case "plan": return <Plan d={d} n={n} total={total} />; case "next": return <Next d={d} n={n} total={total} ctx={ctx} />; case "closing": return <Closing d={d} n={n} total={total} />;
+    case "continuity": return <Continuity d={d} n={n} total={total} />; case "evidence": return <Evidence d={d} n={n} total={total} />; case "cases": return <Cases d={d} n={n} total={total} />; case "plan": return <Plan d={d} n={n} total={total} />; case "next": return <Next d={d} n={n} total={total} ctx={ctx} />; case "closing": return <Closing d={d} n={n} total={total} />;
     default: return null;
   }
 };

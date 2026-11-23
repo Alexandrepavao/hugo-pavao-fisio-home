@@ -1,7 +1,7 @@
 import { buildJourneyModel, type RawJourney } from "@/portal/journey/live";
 import type { JourneyModel } from "@/portal/journey/model";
 import type { Series } from "@/portal/Evolution";
-import type { PatientPayload } from "@/pages/apresentacao/api";
+import type { CaseItem, PatientPayload } from "@/pages/apresentacao/api";
 
 /** Retrato aprovado (migration 151). Tudo vem do servidor; o PDF e a demonstração são desenhados SÓ a partir dele. */
 export interface DeckSnapshot {
@@ -9,10 +9,16 @@ export interface DeckSnapshot {
   patient: { name: string; first_name: string };
   professional: string | null; evaluation_at: string | null; enrollment_status: "pending" | "active";
   presentation: { version: number; content: PatientPayload };
-  measures: Series[]; planned_sessions: number | null; raw: Record<string, unknown>; generated_at: string;
+  measures: Series[]; planned_sessions: number | null; cases?: CaseItem[]; raw: Record<string, unknown>; generated_at: string;
 }
-export interface DeckOffer { product_id: string; name: string; price_cents: number; sessions_count: number | null; validity_days: number | null; per_session_cents: number | null; consume_on_no_show: boolean | null; late_cancel_hours: number | null; quoted_at: string }
-export type DeckSelection = Record<"goals" | "start" | "path" | "evolution" | "app" | "videos" | "continuity" | "evidence" | "plan" | "commercial" | "next", boolean>;
+export interface DeckInstallment { no: number; amount_cents: number; due_date: string | null }
+export interface DeckOffer {
+  product_id: string; name: string; price_cents: number; sessions_count: number | null; validity_days: number | null; per_session_cents: number | null; consume_on_no_show: boolean | null; late_cancel_hours: number | null; quoted_at: string;
+  /** Orçamento (migration 152) — documentos antigos não trazem estes campos. */
+  kind?: string; quantity?: number; quantity_source?: "auto" | "manual"; unit_price_cents?: number; subtotal_cents?: number; discount_cents?: number; discount_max_pct?: number; total_cents?: number;
+  installments_count?: number; first_due?: string | null; installments?: DeckInstallment[]; payment_methods?: string[]; valid_until?: string | null; sessions_covered?: number; plan_sessions?: number | null; plan_mismatch?: boolean; discount_adjusted?: boolean;
+}
+export type DeckSelection = Record<"goals" | "start" | "path" | "evolution" | "app" | "videos" | "continuity" | "evidence" | "cases" | "plan" | "commercial" | "next", boolean>;
 export interface DeckData { id: string; status: "draft" | "approved" | "superseded"; version: number | null; presentation_version: number; snapshot: DeckSnapshot; offer: DeckOffer | null; selection: DeckSelection; is_demo: boolean; content_hash: string | null; created_at: string; updated_at: string; approved_at: string | null }
 export interface DeckVersionRow { id: string; version: number; status: "approved" | "superseded"; approved_at: string; content_hash: string; is_demo: boolean }
 export interface DeckState { draft: DeckData | null; versions: DeckVersionRow[] }
@@ -20,7 +26,7 @@ export interface MyDeck { exists: boolean; deck?: DeckData; enrollment_status?: 
 
 export const SELECTION_LABEL: Record<keyof DeckSelection, string> = {
   goals: "Objetivos do paciente", start: "Ponto de partida (medidas registradas)", path: "Caminho do acompanhamento", evolution: "Evolução: celular e gráfico ampliado", app: "Aplicativo: tela inicial no celular",
-  videos: "Aplicativo: exercícios, vídeos e cuidado em casa", continuity: "Continuidade com propósito", evidence: "Evidências aprovadas", plan: "Plano proposto", commercial: "Valores e condições comerciais (dentro do plano proposto)", next: "Próximo passo",
+  videos: "Aplicativo: exercícios, vídeos e cuidado em casa", continuity: "Continuidade com propósito", evidence: "Evidências aprovadas", cases: "Casos educativos autorizados", plan: "Plano inicial proposto", commercial: "Valores e condições comerciais (dentro do plano proposto)", next: "Próximo passo",
 };
 
 /** Modelo do portal a partir do retrato: os MESMOS componentes do aplicativo real, alimentados por dados congelados. Parte ausente = “sem dados” (nunca inventada). */
@@ -55,3 +61,5 @@ export const deckLogoUrl = (path?: string | null) => {
   const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   return path && base ? `${base}/storage/v1/object/public/org-brand/${path.split("/").map(encodeURIComponent).join("/")}` : null;
 };
+
+export const PAY_METHOD_LABEL: Record<string, string> = { pix: "PIX", dinheiro: "Dinheiro", cartao: "Cartão", transferencia: "Transferência" };

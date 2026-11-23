@@ -11,14 +11,15 @@ import { JourneyProvider, PatientDashboard } from "@/portal/journey/ui";
 import { usePreviewJourney } from "@/portal/journey/live";
 import type { EvolutionData } from "@/portal/Evolution";
 import PresentationSteps from "./PresentationSteps";
-import { AREAS, apiText, portalAccessState, sendPortalInvite, type InviteResult, evidencePick, evidenceSave, evidenceSuggest, evidenceUnpick, isConflict, presentationOpen, presentationPublish, presentationSave, type LibraryItem, type PresentationDraft } from "./api";
+import { AREAS, apiText, conditionsCatalog, portalAccessState, sendPortalInvite, type InviteResult, evidencePick, evidenceSave, evidenceSuggest, evidenceUnpick, isConflict, presentationOpen, presentationPublish, presentationSave, type LibraryItem, type PresentationDraft } from "./api";
+import { CasesPanel, ConditionsEditor, ContextTags, LeadCard, PlanTemplatesBar } from "./AssessmentParts";
 import "./presentation.css";
 
 type Tab = "dados" | "avaliacao" | "evidencias" | "apresentar" | "publicar" | "deck";
 const TABS: [Tab, string][] = [["dados", "1. Dados"], ["avaliacao", "2. Avaliação"], ["evidencias", "3. Evidências"], ["apresentar", "4. Apresentação"], ["publicar", "5. Publicar"], ["deck", "6. Apresentação PDF"]];
-type Form = Pick<PresentationDraft, "area_keys" | "complaint" | "symptom_duration" | "limitations" | "activities" | "condition_kind" | "condition_text" | "goal_title" | "goal_target_date" | "freq_per_week" | "duration_weeks" | "routine_text" | "reassessment_on" | "reassessment_criteria" | "internal_notes">;
-const FIELDS: (keyof Form)[] = ["area_keys", "complaint", "symptom_duration", "limitations", "activities", "condition_kind", "condition_text", "goal_title", "goal_target_date", "freq_per_week", "duration_weeks", "routine_text", "reassessment_on", "reassessment_criteria", "internal_notes"];
-const pick = (d: PresentationDraft): Form => Object.fromEntries(FIELDS.map((k) => [k, d[k] ?? (k === "area_keys" ? [] : null)])) as unknown as Form;
+type Form = Pick<PresentationDraft, "area_keys" | "complaint" | "symptom_duration" | "limitations" | "activities" | "condition_kind" | "condition_text" | "goal_title" | "goal_target_date" | "freq_per_week" | "duration_weeks" | "routine_text" | "reassessment_on" | "reassessment_criteria" | "internal_notes" | "initial_sessions" | "session_minutes" | "approach_text" | "context_tags" | "conditions">;
+const FIELDS: (keyof Form)[] = ["area_keys", "complaint", "symptom_duration", "limitations", "activities", "condition_kind", "condition_text", "goal_title", "goal_target_date", "freq_per_week", "duration_weeks", "routine_text", "reassessment_on", "reassessment_criteria", "internal_notes", "initial_sessions", "session_minutes", "approach_text", "context_tags", "conditions"];
+const pick = (d: PresentationDraft): Form => Object.fromEntries(FIELDS.map((k) => [k, d[k] ?? ((k === "area_keys" || k === "context_tags" || k === "conditions") ? [] : null)])) as unknown as Form;
 
 /** Quem escreveu cada informação: o texto da tela diz, e o paciente vê a mesma separação. */
 const Tag = ({ k }: { k: "pac" | "prof" | "int" }) => <span className={`pw-tag is-${k}`}>{k === "pac" ? "Relatado pelo paciente" : k === "prof" ? "Avaliado/validado pelo profissional" : "Interno — nunca publicado"}</span>;
@@ -98,16 +99,19 @@ const EvidencePanel = ({ d, onDraft }: { d: PresentationDraft; onDraft: (x: Pres
 };
 
 const ProposeForm = ({ onDone }: { onDone: () => void }) => {
-  const [msg, m] = useMsg(); const [v, setV] = useState<Record<string, string>>({}); const [areas, setAreas] = useState<string[]>([]);
+  const [msg, m] = useMsg(); const [v, setV] = useState<Record<string, string>>({}); const [areas, setAreas] = useState<string[]>([]); const [ckeys, setCkeys] = useState<string[]>([]);
+  const catalog = useQuery({ queryKey: ["pw-cond-catalog"], retry: false, staleTime: 3_600_000, queryFn: conditionsCatalog });
   const set = (k: string) => (e: { target: { value: string } }) => setV((x) => ({ ...x, [k]: e.target.value }));
   const save = async () => {
-    try { await evidenceSave(null, { ...v, year: v.year ? Number(v.year) : null, area_keys: areas, conditions: (v.conditions ?? "").split(",").map((s) => s.trim()).filter(Boolean) }); onDone(); } catch (e) { m.err(apiText(e)); }
+    try { await evidenceSave(null, { ...v, year: v.year ? Number(v.year) : null, area_keys: areas, condition_keys: ckeys, conditions: (v.conditions ?? "").split(",").map((s) => s.trim()).filter(Boolean) }); onDone(); } catch (e) { m.err(apiText(e)); }
   };
   const F = ({ k, label, area }: { k: string; label: string; area?: boolean }) => <div className="pw-field"><label htmlFor={`pr-${k}`}>{label}</label>{area ? <textarea id={`pr-${k}`} className={inputCls} rows={2} value={v[k] ?? ""} onChange={set(k)} /> : <input id={`pr-${k}`} className={inputCls} value={v[k] ?? ""} onChange={set(k)} />}</div>;
   return (
     <div className="grid gap-3 mt-3" data-testid="pw-propose-form">
       <p className="pw-help">Preencha só com o que consta na fonte original. Não copie PDFs nem figuras (licença). Informe o DOI <b>ou</b> o link da fonte.</p><Msg m={msg} />
       <div className="pw-grid"><F k="title" label="Título do estudo" /><F k="authors" label="Autores" /><F k="journal" label="Revista" /><F k="year" label="Ano" /><F k="doi" label="DOI (ex.: 10.xxxx/yyyy)" /><F k="url" label="Link da fonte original" /><F k="study_design" label="Tipo de estudo" /></div>
+      <div className="pw-grid"><F k="intervention" label="Intervenção estudada" area /><F k="outcome_measure" label="Medida de resultado" /><F k="phase" label="Fase do quadro estudada (ex.: crônica)" /></div>
+      <div className="pw-field"><label htmlFor="pr-ckeys">Condições do cadastro às quais a ficha se aplica</label><select id="pr-ckeys" className={inputCls} multiple size={6} value={ckeys} onChange={(e) => setCkeys(Array.from(e.target.selectedOptions).map((o) => o.value))} data-testid="pw-propose-condkeys">{(catalog.data ?? []).map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}</select></div>
       <div className="pw-grid"><F k="population" label="Quem participou" area /><F k="comparison" label="O que foi comparado" area /><F k="benefits" label="Benefícios encontrados" area /><F k="duration" label="Duração do tratamento" /><F k="follow_up" label="Período de seguimento" /><F k="limitations" label="Limitações" area /><F k="conditions" label="Condições (separe por vírgula)" /></div>
       <div className="pw-areas" role="group" aria-label="Áreas">{AREAS.map((a) => <button key={a.key} type="button" className="pw-area" data-on={areas.includes(a.key)} aria-pressed={areas.includes(a.key)} onClick={() => setAreas((x) => (x.includes(a.key) ? x.filter((y) => y !== a.key) : [...x, a.key]))}>{a.label}</button>)}</div>
       <div><button type="button" className={btnPrimary} onClick={() => void save()} data-testid="pw-propose-send">Enviar para revisão clínica</button></div>
@@ -180,7 +184,7 @@ const PresentationWorkspace = () => {
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const reload = async () => { pending.current = {}; setForm(null); setSave("idle"); await qc.invalidateQueries({ queryKey: ["presentation", enrollmentId] }); };
   const refreshMeta = useCallback(async () => { await flush(); const r = await q.refetch(); if (r.data) { setDraft(r.data); rev.current = r.data.rev; } }, [flush, q]);
-  const goTab = async (t: Tab) => { await flush(); if (t !== tab && (t === "apresentar" || t === "publicar" || t === "evidencias")) { const r = await q.refetch(); if (r.data) { setDraft(r.data); rev.current = r.data.rev; } } setTab(t); };
+  const goTab = async (t: Tab) => { await flush(); if (t !== tab && (t === "apresentar" || t === "publicar" || t === "evidencias" || t === "deck")) { const r = await q.refetch(); if (r.data) { setDraft(r.data); rev.current = r.data.rev; } } setTab(t); };
 
   const publish = async () => {
     if (!draft) return; await flush();
@@ -223,6 +227,7 @@ const PresentationWorkspace = () => {
 
         {tab === "avaliacao" && (
           <div className="grid gap-3" data-testid="pw-avaliacao">
+            <LeadCard enrollmentId={draft.enrollment_id} />
             <div className="pw-card">
               <h2 className="font-semibold">Áreas da fisioterapia</h2>
               <p className="pw-help">Categorias de organização. Uma área <b>não é um diagnóstico</b> e não define tratamento nem quantidade de sessões.</p>
@@ -239,11 +244,9 @@ const PresentationWorkspace = () => {
             </div>
             <div className="pw-card">
               <h2 className="font-semibold">Avaliação do profissional <Tag k="prof" /></h2>
-              <div className="pw-grid">
-                <div className="pw-field"><label htmlFor="f-ck">A condição é…</label><select id="f-ck" className={inputCls} value={form.condition_kind ?? ""} onChange={(e) => change("condition_kind", (e.target.value || null) as Form["condition_kind"])}><option value="">—</option><option value="assessed">Condição avaliada</option><option value="hypothesis">Hipótese (ainda a confirmar)</option></select></div>
-                <div className="pw-field"><label htmlFor="f-ct">Descrição</label><input id="f-ct" className={inputCls} maxLength={500} value={form.condition_text ?? ""} onChange={(e) => change("condition_text", e.target.value)} /></div>
-              </div>
-              <p className="pw-help">Condição avaliada e hipótese são coisas diferentes: o paciente vê qual é qual. O paciente não aprova diagnóstico, prescrição nem plano.</p>
+              <ConditionsEditor areas={form.area_keys} complaint={form.complaint} rows={form.conditions ?? []} onChange={(r) => change("conditions", r as Form["conditions"])} />
+              <ContextTags value={form.context_tags ?? []} onChange={(v) => change("context_tags", v)} />
+              <p className="pw-help">Diagnóstico documentado, avaliação do profissional e hipótese são coisas diferentes: o paciente vê qual é qual. O paciente não aprova diagnóstico, prescrição nem plano.</p>
               <div className="pw-grid">
                 <div className="pw-field"><label htmlFor="f-goal">Objetivo do paciente</label><input id="f-goal" className={inputCls} maxLength={200} value={form.goal_title ?? ""} onChange={(e) => change("goal_title", e.target.value)} /></div>
                 <div className="pw-field"><label htmlFor="f-gd">Meta de data (opcional)</label><input id="f-gd" type="date" className={inputCls} value={form.goal_target_date ?? ""} onChange={(e) => change("goal_target_date", e.target.value)} /></div>
@@ -252,13 +255,18 @@ const PresentationWorkspace = () => {
             <MeasuresPanel person={draft.person_id} onChanged={() => void refreshMeta()} />
             <div className="pw-card">
               <h2 className="font-semibold">Plano proposto <Tag k="prof" /></h2>
-              <p className="pw-help">Só o que você registrar aparece ao paciente. Não há número padrão de sessões: o que ficar em branco aparece como “A definir com seu fisioterapeuta”.</p>
+              <p className="pw-help">Só o que você registrar aparece ao paciente, como “Plano inicial proposto”. Não há número padrão de sessões: o que ficar em branco aparece como “A definir com seu fisioterapeuta”.</p>
+              <PlanTemplatesBar current={{ freq_per_week: form.freq_per_week, duration_weeks: form.duration_weeks, initial_sessions: form.initial_sessions, session_minutes: form.session_minutes, routine_text: form.routine_text, approach_text: form.approach_text, reassessment_criteria: form.reassessment_criteria }}
+                onApply={(t) => { change("freq_per_week", t.freq_per_week); change("duration_weeks", t.duration_weeks); change("initial_sessions", t.initial_sessions); change("session_minutes", t.session_minutes); change("routine_text", t.routine_text); change("approach_text", t.approach_text); change("reassessment_criteria", t.reassessment_criteria); }} />
               <div className="pw-grid">
                 <div className="pw-field"><label htmlFor="f-fq">Frequência (vezes por semana)</label><input id="f-fq" type="number" min={1} max={14} className={inputCls} value={form.freq_per_week ?? ""} onChange={(e) => change("freq_per_week", (e.target.value === "" ? null : Number(e.target.value)) as Form["freq_per_week"])} /></div>
                 <div className="pw-field"><label htmlFor="f-wk">Duração prevista (semanas)</label><input id="f-wk" type="number" min={1} max={104} className={inputCls} value={form.duration_weeks ?? ""} onChange={(e) => change("duration_weeks", (e.target.value === "" ? null : Number(e.target.value)) as Form["duration_weeks"])} /></div>
+                <div className="pw-field"><label htmlFor="f-is">Sessões iniciais propostas</label><input id="f-is" type="number" min={1} max={200} className={inputCls} value={form.initial_sessions ?? ""} onChange={(e) => change("initial_sessions", (e.target.value === "" ? null : Number(e.target.value)) as Form["initial_sessions"])} data-testid="pw-initial-sessions" /></div>
+                <div className="pw-field"><label htmlFor="f-sm">Duração de cada sessão (minutos)</label><input id="f-sm" type="number" min={10} max={240} className={inputCls} value={form.session_minutes ?? ""} onChange={(e) => change("session_minutes", (e.target.value === "" ? null : Number(e.target.value)) as Form["session_minutes"])} data-testid="pw-session-minutes" /></div>
                 <div className="pw-field"><label htmlFor="f-ra">Próxima reavaliação</label><input id="f-ra" type="date" className={inputCls} value={form.reassessment_on ?? ""} onChange={(e) => change("reassessment_on", e.target.value)} /></div>
               </div>
               <div className="pw-field"><label htmlFor="f-rt">Rotina orientada</label><textarea id="f-rt" className={inputCls} rows={2} maxLength={2000} value={form.routine_text ?? ""} onChange={(e) => change("routine_text", e.target.value)} /></div>
+              <div className="pw-field"><label htmlFor="f-ap">Abordagem prevista (em linguagem simples)</label><textarea id="f-ap" className={inputCls} rows={2} maxLength={2000} value={form.approach_text ?? ""} onChange={(e) => change("approach_text", e.target.value)} data-testid="pw-approach" /></div>
               <div className="pw-field"><label htmlFor="f-rc">O que será reavaliado (critérios)</label><input id="f-rc" className={inputCls} maxLength={1000} value={form.reassessment_criteria ?? ""} onChange={(e) => change("reassessment_criteria", e.target.value)} /></div>
             </div>
             <div className="pw-card">
@@ -268,7 +276,7 @@ const PresentationWorkspace = () => {
             <div className="flex gap-2"><button type="button" className={btnPrimary} onClick={() => void goTab("evidencias")}>Continuar para as evidências</button></div>
           </div>)}
 
-        {tab === "evidencias" && <EvidencePanel d={draft} onDraft={(x) => { setDraft(x); rev.current = x.rev; }} />}
+        {tab === "evidencias" && <div className="grid gap-3"><EvidencePanel d={draft} onDraft={(x) => { setDraft(x); rev.current = x.rev; }} /><CasesPanel d={draft} onDraft={(x) => { setDraft(x); rev.current = x.rev; }} /></div>}
 
         {tab === "apresentar" && stepsContent && (
           <PresentationSteps content={stepsContent} model={pv.model} firstName={firstName} final={<PortalPreview d={draft} pv={pv} onRefresh={() => setPvVer((v) => v + 1)} />} />
@@ -284,7 +292,7 @@ const PresentationWorkspace = () => {
             <div><button type="button" className={btnPrimary} disabled={!draft.can_publish || publishing || (draft.published_version > 0 && !draft.unpublished_changes)} onClick={() => void publish()} data-testid="pw-publish"><Send size={14} className="mr-1 inline" aria-hidden />Publicar apresentação</button></div>
           </div>)}
         {tab === "publicar" && <AccessCard person={draft.person_id} />}
-        {tab === "deck" && <DeckTab enrollmentId={draft.enrollment_id} publishedVersion={draft.published_version} />}
+        {tab === "deck" && <DeckTab enrollmentId={draft.enrollment_id} presentationId={draft.id} publishedVersion={draft.published_version} unpublished={draft.unpublished_changes} canPublish={draft.can_publish} onPublished={() => void refreshMeta()} />}
       </>)}
     </div>
   );
