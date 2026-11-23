@@ -33,6 +33,7 @@ export const GESTAO_NAV: FrameNavSection[] = [
   { label: "Controle", items: [
     { to: "/admin/ver-como", label: "Ver como", icon: Eye, roles: ["manager"], keywords: "ver como fisioterapeuta paciente visão impersonar simular acesso app" },
     { to: "/admin/evidencias", label: "Evidências", icon: FlaskConical, roles: ["manager", "ops_admin"], keywords: "biblioteca científica artigos estudos revisão clínica apresentação avaliação" },
+    { to: "/admin/casos-educativos", label: "Casos educativos", icon: FlaskConical, roles: ["manager", "ops_admin"], keywords: "casos educativos depoimentos exemplos autorizados apresentação" },
     { to: "/admin/auditoria", label: "Auditoria", icon: ScrollText, roles: ["manager"], keywords: "log histórico" },
     { to: "/admin/status", label: "Estado dos módulos", icon: ListChecks, roles: ADMINS, feature: "system_status" },
   ] },
