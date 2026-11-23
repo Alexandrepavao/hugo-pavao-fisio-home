@@ -10,14 +10,20 @@ export const isValidCpf = (raw: string): boolean => {
   return calc(9) === Number(d[9]) && calc(10) === Number(d[10]);
 };
 
+/** CNPJ ALFANUMÉRICO (Receita, desde jul/2026): maiúsculas, só [0-9A-Z]. Os 12 primeiros caracteres podem ser letras; os 2 últimos (dígitos verificadores) são sempre números. */
+export const onlyCnpj = (s: string) => s.toUpperCase().replace(/[^0-9A-Z]/g, "");
+
+/** Dígito verificador oficial: valor do caractere = código ASCII − 48; pesos 2..9 da direita para a esquerda; módulo 11. Cobre também o CNPJ numérico antigo. */
 export const isValidCnpj = (raw: string): boolean => {
-  const d = onlyDigits(raw);
-  if (d.length !== 14 || allSame(d)) return false;
-  const calc = (len: number) => {
-    const w = len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-    const s = w.reduce((a, v, i) => a + v * Number(d[i]), 0); const r = s % 11; return r < 2 ? 0 : 11 - r;
+  const d = onlyCnpj(raw);
+  if (!/^[0-9A-Z]{12}[0-9]{2}$/.test(d) || /^(.)\1{13}$/.test(d)) return false;
+  const val = (c: string) => c.charCodeAt(0) - 48;
+  const dv = (len: number) => {
+    let s = 0, w = 2;
+    for (let i = len - 1; i >= 0; i--) { s += val(d[i]) * w; w = w === 9 ? 2 : w + 1; }
+    const r = s % 11; return r < 2 ? 0 : 11 - r;
   };
-  return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
+  return dv(12) === Number(d[12]) && dv(13) === Number(d[13]);
 };
 
 export const fmtCpf = (s: string) => {
@@ -26,7 +32,7 @@ export const fmtCpf = (s: string) => {
   return o;
 };
 export const fmtCnpj = (s: string) => {
-  const d = onlyDigits(s).slice(0, 14); let o = d.slice(0, 2);
+  const d = onlyCnpj(s).slice(0, 14); let o = d.slice(0, 2);
   if (d.length > 2) o += "." + d.slice(2, 5); if (d.length > 5) o += "." + d.slice(5, 8); if (d.length > 8) o += "/" + d.slice(8, 12); if (d.length > 12) o += "-" + d.slice(12);
   return o;
 };

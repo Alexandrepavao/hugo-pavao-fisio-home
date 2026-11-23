@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CalendarCheck, Loader2, ShieldCheck, Stethoscope, UserCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fmtCnpj, isValidCnpj, isValidCpf, isValidEmail, isValidPhone, MIN_PASSWORD, onlyDigits } from "@/lib/doc";
+import { fmtCnpj, isValidCnpj, isValidCpf, isValidEmail, isValidPhone, MIN_PASSWORD, onlyCnpj, onlyDigits } from "@/lib/doc";
 import { isFullName, UF_LIST } from "@/lib/quiz";
 import { CAPITALS, capitalOf, zoneWithCity } from "@/lib/capitals";
 import {AccessFields, ContactAddressFields, DoneScreen, Field, FormError, IdentityFields, NextButton, OnboardingFrame, StepTitle } from "./parts";
@@ -92,7 +92,7 @@ const OnboardingFisio = () => {
     if (Object.keys(e).length) return;
     if (step < STEPS.length - 1) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     setBusy(true);
-    const data = { ...v, cpf: onlyDigits(v.cpf), cnpj: v.work_as === "pj" ? onlyDigits(v.cnpj) : "", specialties: specs, service_zones: zones, password: undefined, password2: undefined };
+    const data = { ...v, cpf: onlyDigits(v.cpf), cnpj: v.work_as === "pj" ? onlyCnpj(v.cnpj) : "", specialties: specs, service_zones: zones, password: undefined, password2: undefined };
     const { data: res, error: rpcError } = await supabase.rpc("onboarding_submit_physio", { p_token: token, p_data: data, p_consent_version: ONBOARDING_CONSENT_VERSION, p_honeypot: honeypot.current?.value ?? "" });
     if (rpcError) {
       setBusy(false); const msg = rpcError.message;
