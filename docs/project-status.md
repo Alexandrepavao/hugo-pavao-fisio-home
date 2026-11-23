@@ -44,6 +44,17 @@ Legenda: ✅ feito · 🟡 parcial · ❌ não · 🔒 bloqueado (motivo na linh
 
 ---
 
+## Sessão mais recente (2026-11-23) — Prospecção B2B: Fase 0 (relatório) aprovada; Fases 0.5 e 1 feitas — **só Dev**, branch `feat/prospeccao-b2b` (sobre `feat/white-label-plataforma`), sem push
+
+> Relatório técnico completo (16 seções, aprovado em 23/11): [`prospeccao-b2b-fase0-relatorio.md`](prospeccao-b2b-fase0-relatorio.md). Cada fase seguinte tem gate de aprovação.
+- **Fase 0.5 — CNPJ alfanumérico (migration 150):** a Receita já emite CNPJ com letras (jul/2026); o ERP só aceitava dígitos. `private.normalize_cnpj` (maiúsculas, só `[0-9A-Z]`) e `private.is_valid_cnpj` pelo algoritmo oficial (valor = ASCII − 48); 5 funções passam pela normalização (`legal_entity_upsert`, `crm_company_create`, `onboarding_submit_physio`, `pj_import_analyze`, `adm_directory`). Front: `onlyCnpj`/`isValidCnpj`/`fmtCnpj` em `src/lib/doc.ts`. CNPJ numérico antigo continua válido. Mudança intencional: texto livre sem dígitos (ex.: "N/A") agora é recusado como inválido em vez de virar vazio.
+- **Fase 1 — módulo e navegação (migration 151):** `prospeccao_b2b` no catálogo (`experimental`, `enforcement none` por ora, depende do CRM, nenhuma organização recebe sozinha). App `Prospecção B2B` em `/admin/prospeccao/*` com sidebar própria e as 9 telas, **todas honestas** ("Em construção", em que fase chega, sem número/empresa/saldo inventado); bloqueio visual por módulo e por papel (a autorização real continua no banco). Nenhuma tabela de prospecção/carteira foi criada.
+- **Armadilha achada (importante):** o gatilho de evento `hp_guard_new_public_functions` **remove `anon`/`public` de TODA função pública (re)criada** (exceto `get_public_page`, `track_page_visit`, `submit_public_form`). Um `create or replace` sem `grant` derruba, em silêncio, acessos públicos: a migration 150 tirou o `anon` de `onboarding_submit_physio` (link público de cadastro da fisioterapeuta) — pego pelos testes SQL (3 "sem relatório") e corrigido no arquivo e no Dev. **Regra:** depois de qualquer `create or replace` de função pública, repetir os `revoke/grant` originais. N26 agora confere essas permissões.
+- **Testes:** SQL **N26** (18) · unitário `cnpjAlfanumerico.novo.test.ts` (5) · E2E **N42** (4: app visível só com módulo e papel; 9 telas; módulo desligado some; CNPJ alfanumérico pela API real) · regressão R02, R13 e R29 verdes · SQL novos+release **2700 OK / 0 FALHA** · vitest 188/188 (a suíte `google-sync-plan` segue falhando como arquivo, conhecida) · tsc, lint e build OK.
+- **Dev compartilhado:** o módulo foi habilitado na organização HP do Dev para conferência visual (dado de teste, não faz parte das migrations). Outras sessões aplicaram migrations 152–154 no Dev no mesmo dia.
+- **Próximo gate (aguarda aprovação):** Fase 2 — Data Platform da Receita (projeto/banco separado, custo mensal, piloto com 1 UF). Fases 3–10 no relatório.
+- **Lembretes:** revogue o token do Supabase ao fim da rodada; retome o projeto Risk Pro (pausado desde 04/11).
+
 ## Sessão mais recente (2026-11-20) — white label: ativação e operação de uma clínica (convite real, endereço por organização, captação, jornada Delta, planos) — **só Dev**
 
 > Continuação da 1ª entrega, mesma branch `feat/white-label-plataforma` (PR #39 em rascunho, empilhado no PR #38). **Sem merge, produção, DNS ou serviços.** Roteiro: [`white-label-roteiro-aceite.md`](white-label-roteiro-aceite.md).

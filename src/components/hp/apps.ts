@@ -1,8 +1,8 @@
-import { Briefcase, CalendarDays, FileText, GraduationCap, Grid2x2, Handshake, KanbanSquare, Megaphone, Sunrise, Wallet, type LucideIcon } from "lucide-react";
+import { Briefcase, CalendarDays, FileText, GraduationCap, Grid2x2, Handshake, KanbanSquare, Megaphone, SearchCheck, Sunrise, Wallet, type LucideIcon } from "lucide-react";
 import { featureOn, type FeatureKey } from "@/lib/release";
 import type { AppRole } from "@/auth/AuthProvider";
 
-export type AppId = "hub" | "gestao" | "fin" | "crm" | "pages" | "marketing" | "operacao" | "academy" | "parceiros" | "produtividade";
+export type AppId = "hub" | "gestao" | "fin" | "crm" | "pages" | "marketing" | "prospeccao" | "operacao" | "academy" | "parceiros" | "produtividade";
 export interface HpApp { id: AppId; label: string; description: string; to: string; icon: LucideIcon; /** cor de identidade do aplicativo (HSL sem hsl()) */ accent: string; roles?: AppRole[]; /** app escondido (seletor, Hub e menu) quando o recurso está desligado neste build */ feature?: FeatureKey }
 
 // Papéis só controlam o que APARECE (Hub e seletor); a autorização real continua nas rotas, no RLS e nas funções do banco. Um aplicativo nunca concede permissão.
@@ -17,6 +17,7 @@ export const APPS: HpApp[] = [
   { id: "crm", label: "CRM", description: "Leads, funil, tarefas e metas", to: "/admin/crm", icon: KanbanSquare, accent: "228 52% 44%", roles: PEOPLE },
   { id: "pages", label: "Pages", description: "Páginas, captação e pesquisas", to: "/admin/paginas", icon: FileText, accent: "184 58% 30%", roles: PEOPLE },
   { id: "marketing", label: "Marketing", description: "Campanhas, anúncios, funil e atribuição", to: "/admin/marketing", icon: Megaphone, accent: "219 62% 36%", roles: PEOPLE, feature: "marketing" },
+  { id: "prospeccao", label: "Prospecção B2B", description: "Pesquisa de empresas, créditos e envio ao CRM", to: "/admin/prospeccao", icon: SearchCheck, accent: "172 55% 28%", roles: PEOPLE },
   { id: "operacao", label: "Operação", description: "Agenda, atendimentos e acompanhamento", to: "/admin/agenda", icon: CalendarDays, accent: "28 78% 38%", roles: [...PEOPLE, "physio"] },
   { id: "academy", label: "Academy", description: "Administração de cursos e alunos", to: "/admin/academy", icon: GraduationCap, accent: "262 38% 44%", roles: ["manager", "ops_admin", "teacher"] },
   { id: "parceiros", label: "Parceiros", description: "Indicações, encaminhamentos e repasses", to: "/admin/parceiros", icon: Handshake, accent: "338 48% 40%", roles: FINANCE },
@@ -24,7 +25,7 @@ export const APPS: HpApp[] = [
 ];
 
 /** Aplicativo do menu → módulo da plataforma que o habilita (só para MOSTRAR/OCULTAR: o bloqueio real é feito no servidor). Aplicativo sem entrada = base comum, sempre visível. */
-export const APP_MODULE: Partial<Record<AppId, string>> = { fin: "financeiro", crm: "crm", marketing: "marketing", operacao: "agenda", academy: "academy", parceiros: "parceiros" };
+export const APP_MODULE: Partial<Record<AppId, string>> = { fin: "financeiro", crm: "crm", marketing: "marketing", prospeccao: "prospeccao_b2b", operacao: "agenda", academy: "academy", parceiros: "parceiros" };
 export const appVisible = (a: HpApp) => !a.feature || featureOn(a.feature);
 export const appById = (id: AppId): HpApp => APPS.find((a) => a.id === id) ?? APPS[0];
 
@@ -35,6 +36,7 @@ const PREFIXES: Record<Exclude<AppId, "hub">, string[]> = {
   crm: ["/admin/crm"],
   pages: ["/admin/paginas", "/admin/captacao-leads", "/admin/pesquisas"],
   marketing: ["/admin/marketing"],
+  prospeccao: ["/admin/prospeccao"],
   operacao: ["/admin/agenda", "/admin/acompanhamento"],
   academy: ["/admin/academy"],
   parceiros: ["/admin/parceiros"],

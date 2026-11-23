@@ -117,6 +117,7 @@ const Account = lazy(() => import("./pages/admin/Account"));
 const OnboardingFisio = lazy(() => import("./pages/onboarding/OnboardingFisio"));
 const OnboardingPaciente = lazy(() => import("./pages/onboarding/OnboardingPaciente"));
 const Welcome = lazy(() => import("./pages/portal/Welcome"));
+const ProspeccaoPage = lazy(() => import("./pages/admin/prospeccao/ProspeccaoPage"));
 const MarketingOverview = lazy(() => import("./pages/admin/marketing/MarketingOverview"));
 const MarketingAnalytics = lazy(() => import("./pages/admin/marketing/MarketingAnalytics"));
 const MarketingCampaigns = lazy(() => import("./pages/admin/marketing/MarketingCampaigns"));
@@ -262,6 +263,15 @@ const App = () => (
                 <Route path="pesquisas" element={g(R.research, <Research />)} />
                 <Route path="contas-corporativas" element={g(R.corporate, <CorporateAccounts />)} />
                 <Route path="captacao-leads" element={g(R.leads, <LeadCapture />)} />
+                <Route path="prospeccao" element={g(R.people, <ProspeccaoPage page="visao-geral" />)} />
+                <Route path="prospeccao/nova-pesquisa" element={g(R.people, <ProspeccaoPage page="nova-pesquisa" />)} />
+                <Route path="prospeccao/pesquisas" element={g(R.people, <ProspeccaoPage page="pesquisas" />)} />
+                <Route path="prospeccao/empresas" element={g(R.people, <ProspeccaoPage page="empresas" />)} />
+                <Route path="prospeccao/decisores" element={g(R.people, <ProspeccaoPage page="decisores" />)} />
+                <Route path="prospeccao/oportunidades-digitais" element={g(R.people, <ProspeccaoPage page="oportunidades" />)} />
+                <Route path="prospeccao/creditos" element={g(R.people, <ProspeccaoPage page="creditos" />)} />
+                <Route path="prospeccao/exportacoes" element={g(R.people, <ProspeccaoPage page="exportacoes" />)} />
+                <Route path="prospeccao/configuracoes" element={g(R.team, <ProspeccaoPage page="configuracoes" />)} />
                 <Route path="marketing" element={g(R.leads, <FeatureGate feature="marketing"><MarketingOverview /></FeatureGate>)} />
                 <Route path="marketing/analises" element={g(R.leads, <FeatureGate feature="marketing"><MarketingAnalytics /></FeatureGate>)} />
                 <Route path="marketing/campanhas" element={g(R.leads, <FeatureGate feature="marketing"><MarketingCampaigns /></FeatureGate>)} />

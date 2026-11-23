@@ -1,4 +1,4 @@
-import { Eye, FlaskConical, LineChart, BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
+import { SearchCheck, Eye, FlaskConical, LineChart, BarChart3, Building, Building2, CalendarDays, ClipboardCheck, ClipboardList, CreditCard, FileBarChart2, Filter, Gauge, LayoutGrid, FileSignature, FileText, GraduationCap, Handshake, HeartPulse, Image, Landmark, LayoutDashboard, ListChecks, Lock, Megaphone, MessageCircleQuestion, Package, Plug, Percent, Receipt, Repeat, ScrollText, Settings, ShieldCheck, ShoppingCart, Sunrise, Table2, Target, TrendingUp, LifeBuoy, Users, UsersRound, Wallet } from "lucide-react";
 import type { AppRole } from "@/auth/AuthProvider";
 import type { FrameNavSection } from "./AppFrame";
 import { APPS, APP_MODULE, appVisible, type AppId } from "./apps";
@@ -83,6 +83,21 @@ export const PAGES_NAV: FrameNavSection[] = [
   ] },
 ];
 
+/** Prospecção B2B (Fase 1: casca). As nove telas existem como rota própria; cada uma informa honestamente o que ainda não está disponível. */
+export const PROSPECCAO_NAV: FrameNavSection[] = [
+  { label: "Prospecção B2B", items: [
+    { to: "/admin/prospeccao", label: "Visão geral", icon: LayoutDashboard, end: true, keywords: "prospecção b2b créditos pesquisas empresas leads inteligência comercial" },
+    { to: "/admin/prospeccao/nova-pesquisa", label: "Nova pesquisa", icon: SearchCheck, keywords: "pesquisar empresas cnae cidade segmento filtros prévia" },
+    { to: "/admin/prospeccao/pesquisas", label: "Minhas pesquisas", icon: ClipboardList, keywords: "pesquisas salvas histórico" },
+    { to: "/admin/prospeccao/empresas", label: "Empresas adquiridas", icon: Building2, keywords: "empresas liberadas adquiridas cnpj" },
+    { to: "/admin/prospeccao/decisores", label: "Decisores e contatos", icon: Users, keywords: "sócios decisores contatos whatsapp e-mail qsa" },
+    { to: "/admin/prospeccao/oportunidades-digitais", label: "Oportunidades digitais", icon: Gauge, keywords: "sem site recém abertas presença digital" },
+    { to: "/admin/prospeccao/creditos", label: "Créditos", icon: CreditCard, keywords: "créditos saldo carteira compra pacotes extrato" },
+    { to: "/admin/prospeccao/exportacoes", label: "Exportações", icon: FileBarChart2, keywords: "exportar planilha csv" },
+    { to: "/admin/prospeccao/configuracoes", label: "Configurações do aplicativo", icon: Settings, roles: ADMINS, keywords: "validade enriquecimento limites provedores" },
+  ] },
+];
+
 export const MARKETING_NAV: FrameNavSection[] = [
   { label: "Marketing", items: [
     { to: "/admin/marketing", label: "Visão geral", icon: LayoutDashboard, end: true, keywords: "marketing campanhas investimento leads funil retorno dashboard" },
@@ -126,7 +141,7 @@ export const PRODUTIVIDADE_NAV: FrameNavSection[] = [
 ];
 
 const STATIC_NAV: Record<Exclude<AppId, "hub">, FrameNavSection[]> = {
-  gestao: GESTAO_NAV, fin: FIN_NAV, crm: CRM_NAV, pages: PAGES_NAV, marketing: MARKETING_NAV, operacao: OPERACAO_NAV, academy: ACADEMY_NAV, parceiros: PARCEIROS_NAV, produtividade: PRODUTIVIDADE_NAV,
+  gestao: GESTAO_NAV, fin: FIN_NAV, crm: CRM_NAV, pages: PAGES_NAV, marketing: MARKETING_NAV, prospeccao: PROSPECCAO_NAV, operacao: OPERACAO_NAV, academy: ACADEMY_NAV, parceiros: PARCEIROS_NAV, produtividade: PRODUTIVIDADE_NAV,
 };
 
 /** Navegação do Hub: o início e os aplicativos (o menu de cada app só aparece depois de entrar nele). */
