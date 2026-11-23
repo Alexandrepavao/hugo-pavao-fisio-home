@@ -36,6 +36,7 @@ const People = lazy(() => import("./pages/admin/People"));
 const Audit = lazy(() => import("./pages/admin/Audit"));
 const ViewAs = lazy(() => import("./pages/admin/ViewAs"));
 const Evidences = lazy(() => import("./pages/admin/Evidences"));
+const EducationalCases = lazy(() => import("./pages/admin/EducationalCases"));
 const ApresentacaoPublic = lazy(() => import("./pages/apresentacao/ApresentacaoPublic"));
 const PresentationWorkspace = lazy(() => import("./pages/apresentacao/PresentationWorkspace"));
 const PatientPresentation = lazy(() => import("./pages/apresentacao/PatientPresentation"));
@@ -283,6 +284,7 @@ const App = () => (
                 <Route path="auditoria" element={g(["manager"], <Audit />)} />
                 <Route path="ver-como" element={g(["manager"], <ViewAs />)} />
                 <Route path="evidencias" element={g(["manager", "ops_admin"], <Evidences />)} />
+                <Route path="casos-educativos" element={g(["manager", "ops_admin"], <EducationalCases />)} />
               </Route>
               <Route path="/boas-vindas" element={g(R.portal, <Welcome />)} />
               <Route path="/academy" element={g(R.portal, <AcademyHome />)} />

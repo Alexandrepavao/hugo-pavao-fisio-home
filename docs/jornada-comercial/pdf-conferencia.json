@@ -1,5 +1,5 @@
 {
-  "pages": 11,
+  "pages": 13,
   "sizes": [
     [
       960,
@@ -8,7 +8,8 @@
   ],
   "ratio_ok": true,
   "fonts": {
-    "": 274
+    "": 333,
+    "TBAAAA+SegoeUI-Semibold": 1
   },
   "fonts_not_embedded": [],
   "images": 2,
@@ -18,19 +19,26 @@
       "uri": "http://127.0.0.1:5190/paciente/treinos"
     },
     {
-      "page": 10,
+      "page": 9,
+      "uri": "https://doi.org/10.9999/n42.mwtqh150"
+    },
+    {
+      "page": 12,
       "uri": "http://127.0.0.1:5190/paciente/proposta?acao=duvidas"
     },
     {
-      "page": 10,
+      "page": 12,
       "uri": "http://127.0.0.1:5190/paciente/proposta?acao=iniciar"
     }
   ],
   "bad_links": [],
-  "demo_pages": 11,
+  "demo_pages": 13,
   "tiny_text_pages": [],
+  "percent_pages": [],
+  "text_all": "Seu plano \nSeu plano de cuidado\nde cuidado\nMarina Costa\nMarina Costa\nProfissional: Fisioterapeuta de exemplo\n20/04/2026\nExemplo ilustrativo · paciente fictício\n1 / 13\n\nO que você quer voltar a fazer\nS E U S  O B J E T I V O S\n“Voltar a nadar sem dor”\nOBJETIVO DEFINIDO COM SEU FISIOTERAPEUTA\n“Voltar a nadar”\nRELATADO POR VOCÊ\nNada aqui foi inventado: são as palavras registradas na sua avaliação.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n2 / 13\n\nOnde você está hoje\nDor no ombro direito\nao levantar o braço\nHá quanto tempo: há 3 meses\nLimitações: Não consigo pentear o cabelo\nAVALIADO PELO FISIOTERAPEUTA · PRINCIPAL\nTendinopatia/lesão do manguito rotador —\nTendinopatia · lado direito · há 3 meses\nEM INVESTIGAÇÃO\nCervicalgia (dor cervical)\nP O N T O  D E  P A R T I D A\nRELATADO POR VOCÊ\nContexto: Cuidador(a) presente\n7\n0\n2\n4\n6\n8\n10\nDOR (0 A 10)\nEXEMPLO\nde 10\navaliação inicial em 23/11/2026\nregistrado pelo fisioterapeuta\nAvaliação inicial\nQuanto menor, menos dor. Escala de 0 (sem dor) a 10 (a pior\ndor imaginável).\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n3 / 13\n\nUm caminho que se ajusta a você\nC A M I N H O  D O  A C O M P A N H A M E N T O\nAvaliar\nEntendemos o seu ponto\nde partida.\nCuidar\nSessões e orientações\npara o seu dia a dia.\nReavaliar\nOlhamos juntos o\nque mudou.\nAjustar\nO plano é revisto\ncom você.\nAutonomia\nAlta quando indicada pelo\nfisioterapeuta.\npode se repetir a cada reavaliação\n2x\nFREQUÊNCIA\npor semana\n8\nDURAÇÃO INICIAL\nESTIMADA\nsemanas\n8\nSESSÕES INICIAIS\nPROPOSTAS\nsessões\nA definir\nPRÓXIMA REAVALIAÇÃO\nApós revisão do plano\nFrequência, duração e sessões vêm do plano definido pelo seu fisioterapeuta e podem mudar a cada reavaliação. Este é um caminho de\ncuidado, não uma previsão de resultado.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n4 / 13\n1\n2\n3\n4\n5\n\nSeu cuidado, sempre por perto\n1\nO seu objetivo, definido com o seu fisioterapeuta.\n2\nA sua próxima consulta, quando houver.\n3\nO acompanhamento: em que etapa do cuidado você está.\nS E U  A P L I C A T I V O\nEsta é a tela inicial que você encontra ao entrar, com os\nseus dados.\nNo aplicativo, o acompanhamento aparece como pendente até a confirmação da 1ª\nparcela. Nada é cobrado por esta tela.\nOlá, Marina\nSeu objetivo definido com seu\nfisioterapeuta\nMEU OBJETIVO\nVoltar a nadar sem\ndor\nSiga o plano combinado\nPróxima consulta\nNenhuma consulta marcada\nQuando houver uma consulta, a data e o\nprofissional aparecem aqui.\nMinha jornada de recuperação\nAs etapas ainda não foram\ndefinidas\nSeu fisioterapeuta vai definir as etapas\ndo seu acompanhamento. Elas só\navançam quando ele registrar, nunca\npor número de sessões.\nO QUE FAZER AGORA\nSem pendências por agora. Seu\nfisioterapeuta ajusta o plano a cada\nreavaliação.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n5 / 13\n1\n2\n3\n\nOrientações para o seu dia a dia\n1\nOs exercícios que o seu fisioterapeuta liberar para você.\n2\nA sua semana: consultas e os treinos que você informar.\nAbrir Treinos no aplicativo\nC U I D A D O  E M  C A S A\nO seu fisioterapeuta escolhe e libera os exercícios e vídeos para o seu\ncaso. Você os encontra em Treinos e registra o que fez.\nAinda não há exercícios nem vídeos liberados para você: eles aparecem aqui\nquando o seu fisioterapeuta os definir. No PDF, o botão abre o aplicativo; o vídeo\nnão toca dentro do PDF.\nMinha rotina de exercícios\nNenhum exercício liberado\nSeu fisioterapeuta libera a rotina de\nexercícios em casa depois da avaliação.\nNada é prescrito automaticamente.\nMinha semana\nSeg\n23\nTer\n24\nQua\n25\nQui\n26\nSex\n27\nSáb\n28\nDom\n29\nAgendado\nRealizado\nCancelado/falta\nTreino informado por você\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n6 / 13\n1\n2\n\nVocê acompanha. Nós ajustamos.\n1\nO gráfico da sua dor, com a data de cada registro.\n2\nAs atividades que você quer retomar.\nHoje existe só o ponto de partida. Depois das próximas avaliações\na linha de evolução aparece aqui e no seu aplicativo, com a data de\ncada registro. Nenhuma curva futura é desenhada.\nA C O M P A N H A N D O  A  E V O L U Ç Ã O\n7\n0\n2\n4\n6\n8\n10\nDOR (0 A 10)\nEXEMPLO\nde 10\navaliação inicial em 23/11/2026\nregistrado pelo fisioterapeuta\nAvaliação inicial\nQuanto menor, menos dor. Escala de 0 (sem dor) a 10 (a pior dor imaginável).\nMeta definida pelo profissional (separada dos resultados): Voltar a nadar sem dor\nComo minha dor mudou\nEscala de 0 a 10: 0 = sem dor · 10 = pior dor\nimaginável\nHá 1 registro (7 em 23 de nov). A linha\nde evolução aparece a partir do\nsegundo registro.\nSão relatos registrados por você e por seu\nfisioterapeuta. Não são uma previsão de\nrecuperação.\nAtividades que quero retomar\nSuas atividades aparecem aqui\nQuando seu fisioterapeuta cadastrar e\navaliar uma atividade do seu objetivo\n(por exemplo, caminhar ou subir\nescadas), você acompanha a evolução\ndela.\nMinha jornada de recuperação\n23 de nov\n0\n2\n4\n6\n8\n10\n7\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n7 / 13\n1\n2\n\nCuidar também é acompanhar\nC O N T I N U I D A D E  C O M  P R O P Ó S I T O\nAcompanhamento\nSessões com o seu\nfisioterapeuta.\nPrática orientada\nO que você faz no seu dia a\ndia.\nReavaliação\nOlhamos juntos o que mudou e\najustamos.\nCada parte reforça a outra. A reavaliação diz se o plano continua o\nmesmo, muda ou chega a um ponto de autonomia.\nNinguém promete resultado: o plano é revisto com você a cada reavaliação.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n8 / 13\n\nO que a pesquisa diz\nA  C I Ê N C I A  P O R  T R Á S\nExercício terapêutico na tendinopatia do manguito\nrotador (estudo de exemplo)\nEstudo com pessoas que também têm dor no ombro por\ntendinopatia; serve como contexto, não como promessa.\nExercícios de fortalecimento supervisionados · medida: Dor (0 a 10)\ne função do ombro · participantes: Adultos com tendinopatia do\nmanguito (exemplo)\nRedução média da dor no grupo de exercício (exemplo)\n12 semanas · acompanhamento: 6 meses\nAmostra pequena (exemplo); resultado médio, não individual.\nVer a referência\nAutores de exemplo · Revista de exemplo · 2024\nPOR QUE SERVE A VOCÊ\nO QUE O ESTUDO AVALIOU\nRESULTADO OBSERVADO NO ESTUDO\nPERÍODO\nLIMITAÇÕES\nResultado de um estudo não é promessa de resultado individual.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n9 / 13\n\nExemplos que ajudam a entender\nC A S O S  E D U C A T I V O S\nRetorno à natação após tendinopatia (caso de exemplo)\nDor ao elevar o braço e dificuldade para nadar há alguns meses.\nVoltar a nadar com conforto\n7\n3\nSITUAÇÃO INICIAL\nOBJETIVO\nDOR AO ELEVAR O BRAÇO (0 A 10)\n→\npontos\nem 8 semanas · 14 sessões realizadas\nLimites da comparação: Resultado de um caso isolado, com condições próprias; não permite prever o resultado\nde outra pessoa.\nCasos educativos autorizados, sem dados que identifiquem a pessoa. Cada pessoa é diferente: este exemplo não é uma promessa de\nresultado para você.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n10 / 13\n\nO plano inicial proposto\nP L A N O  I N I C I A L  P R O P O S T O\nRecomendação clínica\nVoltar a nadar sem dor\n2x por semana\n8 semanas\n8\n50 minutos\nA definir\nFortalecimento progressivo do ombro e\norientações de rotina em casa\nExercícios 3 vezes por semana em casa\nOBJETIVO\nFREQUÊNCIA\nDURAÇÃO\nSESSÕES INICIAIS\nCADA SESSÃO\nREAVALIAÇÃO\nABORDAGEM\nPREVISTA\nROTINA\nORIENTADA\nÉ um plano inicial: a quantidade de sessões e o ritmo são revistos com você a\ncada reavaliação.\nCondições comerciais\nAcompanhamento HP 8 sessões\nR$ 1.660,00\nValor de tabela R$ 1.760,00 · desconto autorizado R$\n100,00\n8 sessões · cerca de R$ 207,50 por sessão\n2x de R$ 830,00 · 1º vencimento 23/12/2026\nFormas de pagamento: PIX, Cartão\nProposta válida até 08/12/2026\nPacote válido por 180 dias\nCancelamento com menos de 24 h conta como\nsessão realizada\nFalta sem aviso consome uma sessão\nValores vigentes em 23/11/2026. O pacote é uma condição\ncomercial, não uma medida de recuperação. O acompanhamento\nsó fica ativo com a 1ª parcela quitada; aceitar ou ler esta proposta\nnão equivale a pagamento.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n11 / 13\n\nQual é o seu próximo passo?\nEsclarecer dúvidas sobre meu plano\nQuero iniciar meu acompanhamento\n1\nVocê escolhe uma das opções acima.\n2\nA equipe recebe o pedido e fala com você.\n3\nO acompanhamento só é ativado depois que a 1ª parcela estiver confirmada.\nP R Ó X I M O  P A S S O\nVocê decide o ritmo. Nada é contratado ao abrir ou baixar\neste documento.\nAcesso por login no aplicativo, com identificação segura da proposta; o PDF não guarda senha nem chave.\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n12 / 13\n\nHP FISIOTERAPIA\nExemplo ilustrativo · paciente fictício\n13 / 13\n\n",
   "font_types": {
-    "Type3": 274
+    "Type3": 333,
+    "Type0": 1
   },
   "min_pt": {
     "1": 9.4,
@@ -43,6 +51,8 @@
     "8": 9.4,
     "9": 9.4,
     "10": 9.4,
-    "11": 9.4
+    "11": 9.4,
+    "12": 9.4,
+    "13": 9.4
   }
 }

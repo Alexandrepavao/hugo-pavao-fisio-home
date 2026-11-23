@@ -1,12 +1,12 @@
 {
-  "run": "mwqy75n0",
-  "paciente_fictício": "Marina Costa (exemplo) N42 mwqy75n0",
+  "run": "mwtqh150",
+  "paciente_fictício": "Marina Costa (exemplo) N42 mwtqh150",
   "etapas": [
     {
       "etapa": "0. Configuração (gestão)",
       "o_que_mudou": {
-        "servico_avaliacao": "Avaliação inicial HP N42 mwqy75n0",
-        "pacote": "Acompanhamento HP 8 sessões N42 mwqy75n0",
+        "servico_avaliacao": "Avaliação inicial HP N42 mwtqh150",
+        "pacote": "Acompanhamento HP 8 sessões N42 mwtqh150",
         "valor_pacote": "R$ 1.760,00 / 8 sessões"
       }
     },
@@ -42,17 +42,31 @@
         "avaliacao": "realizada (presença registrada pela fisio)",
         "apresentacao": "versão 1 publicada",
         "meta_do_paciente": "criada a partir do objetivo",
-        "medida_inicial": "NPRS 7"
+        "medida_inicial": "NPRS 7",
+        "condicoes": "principal (subtipo Tendinopatia, lado direito) + associada em investigação sem subtipo",
+        "plano_inicial": "8 sessões de 50 min"
       }
     },
     {
-      "etapa": "5. Fisio gera, revisa e aprova a apresentação PDF",
+      "etapa": "5. Fisio gera, revisa e aprova a apresentação PDF (versão 1)",
       "o_que_mudou": {
         "versao_aprovada": 1,
-        "slides": 11,
-        "evidencias": "página omitida (nenhuma ficha aprovada)",
+        "paginas": 11,
+        "evidencias_e_casos": "páginas omitidas (nenhum estudo nem caso autorizado)",
         "valores": "R$ 1.760,00 incluídos por escolha do fisio",
-        "imutavel": "UPDATE/DELETE recusados pelo banco",
+        "imutavel": "UPDATE/DELETE recusados pelo banco"
+      }
+    },
+    {
+      "etapa": "5b. Evidência por condição, caso educativo, plano alterado e orçamento",
+      "o_que_mudou": {
+        "versao_aprovada": 2,
+        "paginas": 13,
+        "evidencia": "sugerida pela condição do cadastro e confirmada pela fisio",
+        "caso_educativo": "aprovado pela gestão com autorização específica (documento e data)",
+        "recalculo": "serviço por sessão: 12 sessões = R$ 2.640,00; desconto acima de 10% recusado",
+        "orcamento_final": "pacote R$ 1.760,00 − R$ 100,00 = R$ 1.660,00 em 2x de R$ 830,00 (PIX e cartão)",
+        "sem_duplicacao": "nenhuma venda, recebível, pessoa, oportunidade ou matrícula criados pelo orçamento",
         "pdf": "docs/jornada-comercial/apresentacao-demo-exemplo.pdf"
       }
     },
@@ -81,7 +95,7 @@
         "pacotes": 1,
         "vendas": 1,
         "caixa_cents": 88000,
-        "versoes_aprovadas": 1,
+        "versoes_aprovadas": 2,
         "metas": 1
       }
     }
