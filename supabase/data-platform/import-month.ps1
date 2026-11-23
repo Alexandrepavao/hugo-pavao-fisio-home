@@ -11,11 +11,18 @@ $ErrorActionPreference = "Stop"
 New-Item -ItemType Directory -Force $Work | Out-Null
 function Psql([string]$sql) { & $PsqlBin -h 127.0.0.1 -p $Port -U postgres -d $Database -v ON_ERROR_STOP=1 -X -q -t -A -c $sql; if ($LASTEXITCODE -ne 0) { throw "psql falhou: $sql" } }
 function PsqlFile([string]$path) { & $PsqlBin -h 127.0.0.1 -p $Port -U postgres -d $Database -v ON_ERROR_STOP=1 -X -q -f $path; if ($LASTEXITCODE -ne 0) { throw "psql falhou: $path" } }
-function CountRows([string]$path) {
-  $buf = New-Object byte[] (8MB); $n = 0L; $last = 10; $fs = [System.IO.File]::OpenRead($path)
-  try { while (($r = $fs.Read($buf, 0, $buf.Length)) -gt 0) { for ($i = 0; $i -lt $r; $i++) { if ($buf[$i] -eq 10) { $n++ } }; $last = $buf[$r - 1] } } finally { $fs.Dispose() }
-  if ($last -ne 10) { $n++ }; return $n
+if (-not ("LineCounter" -as [type])) {
+  Add-Type -TypeDefinition @"
+public static class LineCounter {
+  public static long Count(string path) {
+    long n = 0; int last = 10; byte[] buf = new byte[8 << 20];
+    using (var fs = System.IO.File.OpenRead(path)) { int r; while ((r = fs.Read(buf, 0, buf.Length)) > 0) { for (int i = 0; i < r; i++) { if (buf[i] == 10) n++; } last = buf[r - 1]; } }
+    if (last != 10) n++; return n;
+  }
 }
+"@
+}
+function CountRows([string]$path) { return [int64][LineCounter]::Count($path) }
 $kinds = @{ empresas = "empresas"; estabelecimentos = "estabelecimentos"; socios = "socios"; simples = "simples"; cnaes = "cnaes"; municipios = "municipios"; naturezas = "naturezas"; qualificacoes = "qualificacoes"; paises = "paises"; motivos = "motivos" }
 if ($Truncate) { Psql "truncate stage.empresas, stage.estabelecimentos, stage.socios, stage.simples, stage.cnaes, stage.municipios, stage.naturezas, stage.qualificacoes, stage.paises, stage.motivos" }
 $month = if ($SourceMonth) { $SourceMonth } else { (Get-Date -Format "yyyy-MM") + "-01" }
