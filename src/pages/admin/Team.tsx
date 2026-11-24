@@ -11,6 +11,7 @@ const ORG_WIDE = ["manager", "ops_admin", "member", "partner"];
 const Team = () => {
   const qc = useQueryClient(); const [msg, m] = useMsg();
   const [email, setEmail] = useState(""); const [role, setRole] = useState("sales"); const [unit, setUnit] = useState("");
+  const [fisioUser, setFisioUser] = useState(""); const [fisioUnit, setFisioUnit] = useState("");
   const team = useQuery({ queryKey: ["team"], queryFn: async () => { const { data, error } = await supabase.rpc("list_team"); if (error) throw error; return data as Member[]; } });
   const units = useQuery({ queryKey: ["units"], queryFn: async () => (await supabase.from("units").select("id, name").eq("active", true)).data ?? [] });
   const invites = useQuery({ queryKey: ["invites"], queryFn: async () => (await supabase.from("invitations").select("id, email, role, expires_at, accepted_at, revoked_at").is("accepted_at", null).is("revoked_at", null).order("created_at", { ascending: false })).data ?? [] });
@@ -43,6 +44,24 @@ const Team = () => {
       : `Convite registrado, mas o envio automático do e-mail não está disponível agora. Peça à pessoa para acessar “Primeiro acesso” com ${emailTrim} e confirmar o e-mail.`);
   };
   const revokeRole = async (id: string) => { if (!(await confirmDialog("Revogar este papel?", "O efeito é imediato: a pessoa perde o acesso vinculado a este papel.", "Revogar", true))) return; const { error } = await supabase.from("role_assignments").update({ revoked_at: new Date().toISOString() }).eq("id", id); if (error) m.err(errText(error)); else { m.ok("Papel revogado."); void qc.invalidateQueries({ queryKey: ["team"] }); } };
+  /** Quem já tem acesso (ex.: gestor) passa a atender também como fisioterapeuta. Reaproveita a regra já testada da gestão de profissionais: cria (ou reaproveita) o cadastro de profissional, ligado à conta,
+   *  e `professional_grant_access` dá o papel de fisioterapeuta na unidade. Sem o cadastro de profissional o portal do fisioterapeuta nem abre. A avaliação de cada paciente continua exigindo o vínculo assistencial. */
+  const makePhysio = async (e: FormEvent) => {
+    e.preventDefault(); const who = team.data?.find((x) => x.user_id === fisioUser);
+    if (!who) return m.err("Escolha a pessoa."); if (!fisioUnit) return m.err("Selecione a unidade onde ela atende.");
+    if (who.roles.some((r) => r.role === "physio" && (r.unit_id === fisioUnit || r.unit_id === null))) return m.err(`${who.display_name} já é fisioterapeuta nesta unidade.`);
+    if (!(await confirmDialog(`Liberar ${who.display_name} também como fisioterapeuta?`, "A pessoa passa a ter, além do papel atual, o portal do fisioterapeuta (agenda, pacientes e avaliação). Para avaliar um paciente ainda é preciso o vínculo assistencial com ele, e cada acesso fica registrado.", "Liberar"))) return;
+    try {
+      const { data: org } = await supabase.from("organizations").select("id").single();
+      const have = (await supabase.from("professionals").select("id, professional_units(unit_id)").eq("user_id", fisioUser).limit(1)).data?.[0] as { id: string; professional_units: { unit_id: string }[] } | undefined;
+      let id = have?.id;
+      if (!id) { const ins = await supabase.from("professionals").insert({ org_id: org?.id, display_name: who.display_name, active: true }).select("id").single(); if (ins.error) throw ins.error; id = ins.data.id as string; }
+      if (!have?.professional_units?.some((u) => u.unit_id === fisioUnit)) { const pu = await supabase.from("professional_units").insert({ professional_id: id, unit_id: fisioUnit }); if (pu.error) throw pu.error; }
+      const r = await supabase.rpc("professional_grant_access", { p_professional: id, p_email: who.email }); if (r.error) throw r.error;
+      m.ok(`${who.display_name} agora também é fisioterapeuta. Falta só o vínculo com cada paciente que ela(e) vai atender (Acompanhamento de pacientes → Vínculos assistenciais) e, para a agenda, a disponibilidade em Profissionais.`);
+      setFisioUser(""); void qc.invalidateQueries({ queryKey: ["team"] });
+    } catch (er) { m.err(errText(er)); }
+  };
   const revokeInvite = async (id: string) => { const { error } = await supabase.from("invitations").update({ revoked_at: new Date().toISOString() }).eq("id", id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["invites"] }); };
   const rename = async (u: Member) => { const n = await promptText("Nome de exibição", "Nome", { defaultValue: u.display_name }); if (!n) return; const { error } = await supabase.from("user_accounts").update({ display_name: n }).eq("user_id", u.user_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["team"] }); };
   const toggle = async (u: Member) => { const { error } = await supabase.from("user_accounts").update({ status: u.status === "active" ? "suspended" : "active" }).eq("user_id", u.user_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["team"] }); };
@@ -56,6 +75,11 @@ const Team = () => {
       <div><label htmlFor="iu" className="block text-xs mb-1">Unidade {ORG_WIDE.includes(role) ? "(não se aplica)" : ""}</label><select id="iu" disabled={ORG_WIDE.includes(role)}   value={unit} onChange={(e) => setUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
       <button className="hp-btn hp-btn-primary sm:w-fit">Convidar</button></form>
     {invites.data && invites.data.length > 0 && <section className="mb-8"><h2 className="text-xl mb-2">Convites abertos</h2><Table head={["E-mail", "Papel", "Expira em", ""]}>{invites.data.map((i) => <tr key={i.id}><Td>{i.email}</Td><Td>{ROLES[i.role]}</Td><Td>{fmtDate(i.expires_at)}</Td><Td><button className={btnDanger + " hp-btn-sm"} onClick={() => revokeInvite(i.id)}>Revogar</button></Td></tr>)}</Table></section>}
+    {team.data && team.data.length > 0 && <form onSubmit={makePhysio} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-3 items-end" noValidate data-testid="team-make-physio">
+      <div className="sm:col-span-3"><h2 className="text-base font-semibold">Gestor (ou outra pessoa da equipe) que também atende como fisioterapeuta</h2><p className="text-sm text-muted-foreground">A pessoa continua com o papel que já tem e ganha o portal do fisioterapeuta, onde faz a avaliação e monta o plano dos pacientes com quem tem vínculo.</p></div>
+      <div><label htmlFor="fp" className="block text-xs mb-1">Pessoa</label><select id="fp" value={fisioUser} onChange={(e) => setFisioUser(e.target.value)}><option value="">…</option>{team.data.filter((u) => u.status === "active").map((u) => <option key={u.user_id} value={u.user_id}>{u.display_name} ({u.email})</option>)}</select></div>
+      <div><label htmlFor="fu" className="block text-xs mb-1">Unidade onde atende</label><select id="fu" value={fisioUnit} onChange={(e) => setFisioUnit(e.target.value)}><option value="">…</option>{units.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+      <button className="hp-btn hp-btn-primary sm:w-fit" data-testid="team-make-physio-btn">Liberar como fisioterapeuta</button></form>}
     <h2 className="text-xl mb-2">Pessoas com acesso</h2>
     <State loading={team.isLoading} error={team.error} empty={team.data?.length === 0} emptyText="Ninguém com acesso." />
     {team.data && team.data.length > 0 && <Table head={["Pessoa", "Papéis", "Estado", ""]}>{team.data.map((u) => <tr key={u.user_id}><Td><strong>{u.display_name}</strong><br /><span className="text-sm text-muted-foreground">{u.email}</span></Td>
