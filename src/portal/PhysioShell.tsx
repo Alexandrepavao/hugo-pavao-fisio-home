@@ -17,6 +17,7 @@ const PhysioShell = () => {
   const { hasRole } = useAuth();
   const links: ShellLink[] = [{ to: "/admin", label: "Painel completo (gestão)" }];
   if (hasRole("member")) links.push({ to: "/paciente", label: "Meu acompanhamento (como paciente)" });
-  return <AppShell brand="Portal do fisioterapeuta" items={ITEMS} links={links} />;
+  const gestao = hasRole("manager", "ops_admin", "unit_manager");   // quem também é gestão vê o atalho sempre, na barra lateral
+  return <AppShell brand="Portal do fisioterapeuta" items={ITEMS} links={links} switchLink={gestao ? { to: "/admin", label: "Alterar para a gestão", testId: "go-gestao" } : undefined} />;
 };
 export default PhysioShell;

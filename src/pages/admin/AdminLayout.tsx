@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { HeartPulse, Stethoscope } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AppFrame from "@/components/hp/AppFrame";
@@ -11,10 +11,9 @@ import { navForApp } from "@/components/hp/appNav";
  *  Só aparece para quem de fato tem o papel de paciente, então nunca leva a um "Sem permissão". */
 const HubFoot = () => {
   const { hasRole } = useAuth();
-  if (!hasRole("member") && !hasRole("physio")) return null;
+  if (!hasRole("member")) return null;
   return (
     <div className="hp-sb-foot">
-      {hasRole("physio") && <Link to="/fisio" className="hp-sb-link" data-testid="go-fisio"><Stethoscope aria-hidden /><span className="hp-sb-text">Portal do fisioterapeuta</span></Link>}
       {hasRole("member") && <Link to="/paciente" className="hp-sb-link"><HeartPulse aria-hidden /><span className="hp-sb-text">Área do paciente</span></Link>}
     </div>
   );
