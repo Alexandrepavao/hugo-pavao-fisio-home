@@ -30,7 +30,7 @@ const PatientPresentation = () => {
         <PresentationSteps content={d.content} model={model} firstName={(d.person_name ?? "").split(" ")[0]} final={
           <div className="grid gap-3" data-testid="pp-final-patient">
             <p>Tudo o que você viu aqui fica na sua área do paciente: objetivo, plano, evolução, agenda e exercícios — com data e autoria de cada registro.</p>
-            <div><Link to="/paciente" className="jr-btn" data-testid="pp-open-portal">Abrir minha área do paciente<ArrowRight size={16} aria-hidden /></Link></div>
+            <div className="flex flex-wrap gap-2"><Link to="/paciente" className="jr-btn" data-testid="pp-open-portal">Abrir minha área do paciente<ArrowRight size={16} aria-hidden /></Link><Link to="/paciente/proposta" className="jr-btn" data-testid="pp-open-deck">Ver o meu plano de cuidado (apresentação)</Link></div>
           </div>} />
       </>)}
     </div>

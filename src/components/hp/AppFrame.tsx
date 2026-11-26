@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronsUpDown, LayoutDashboard, Settings, type LucideIcon } from "lucide-react";
+import { ChevronsUpDown, LayoutDashboard, Settings, Stethoscope, type LucideIcon } from "lucide-react";
 import { useAuth, type AppRole } from "@/auth/AuthProvider";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -90,6 +90,12 @@ const AppFrameInner = ({ appId, nav, managerRoles = ["manager", "ops_admin", "un
 
   const SidebarBody = ({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) => (<>
     <Switcher compact={compact} onNavigate={onNavigate} />
+    {isManagerLike && hasRole("physio") && (   /* gestão que também atende como fisioterapeuta: atalho sempre visível, em qualquer aplicativo */
+      <div className="hp-sb-back">
+        <Link to="/fisio" className="hp-sb-link" onClick={onNavigate} title={compact ? "Alterar para a área de fisio" : undefined} aria-label="Alterar para a área de fisio" data-testid="go-fisio"
+          style={{ background: "color-mix(in srgb, var(--app-accent, #1d4ed8) 12%, transparent)", fontWeight: 600 }}><Stethoscope aria-hidden /><span className="hp-sb-text">Alterar para a área de fisio</span></Link>
+      </div>
+    )}
     {!isHub && (
       <div className="hp-sb-back">
         <Link to="/admin" className="hp-sb-link" onClick={onNavigate} title={compact ? "Voltar ao Hub" : undefined} aria-label="Voltar ao Hub"><LayoutDashboard aria-hidden /><span className="hp-sb-text">Voltar ao Hub</span></Link>

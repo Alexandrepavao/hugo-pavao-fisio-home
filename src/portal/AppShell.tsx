@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Download, LogOut, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Download, LogOut, type LucideIcon } from "lucide-react";
 import logo from "@/assets/hp-logo.png";
 import { useAuth } from "@/auth/AuthProvider";
 import { useAppTheme } from "@/components/hp/theme";
@@ -13,7 +13,7 @@ export interface ShellLink { to: string; label: string }
 
 /** Casca única dos portais: barra INFERIOR no celular (como um app) e barra LATERAL no computador. O conteúdo vem das rotas filhas (Outlet).
  *  A autorização real continua nas rotas (RequireAuth), no RLS e nas funções do banco; a casca só organiza a navegação. */
-const AppShell = ({ brand, items, links = [], menuExtra, banner, children }: { brand: string; items: ShellItem[]; links?: ShellLink[]; menuExtra?: ReactNode; banner?: ReactNode; children?: ReactNode }) => {
+const AppShell = ({ brand, items, links = [], menuExtra, banner, switchLink, children }: { brand: string; items: ShellItem[]; links?: ShellLink[]; menuExtra?: ReactNode; banner?: ReactNode; /** atalho sempre visível na barra lateral (ex.: gestão que também é fisioterapeuta) */ switchLink?: ShellLink & { testId?: string }; children?: ReactNode }) => {
   useAppTheme();
   const { user, roles, signOut } = useAuth(); const pwa = usePwaInstall();
   const mobileItems = items.filter((i) => i.mobile !== false);
@@ -41,6 +41,7 @@ const AppShell = ({ brand, items, links = [], menuExtra, banner, children }: { b
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card md:flex" aria-label={`Menu ${brand}`}>
         <div className="flex items-center gap-3 border-b border-border px-4 py-4"><Link to="/" aria-label="Site HP Fisioterapia"><img src={logo} alt="HP Fisioterapia" style={{ height: "2rem", width: "auto" }} /></Link><span className="text-sm font-semibold">{brand}</span></div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Seções">{items.map((i) => <NavLink key={i.to} to={i.to} end={i.end} className={side}><i.icon size={18} aria-hidden />{i.label}</NavLink>)}</nav>
+        {switchLink && <div className="border-t border-border p-3 pb-0"><Link to={switchLink.to} data-testid={switchLink.testId} className="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15"><ArrowLeftRight size={18} aria-hidden />{switchLink.label}</Link></div>}
         <div className="border-t border-border p-3"><Account className="w-full justify-start" /></div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">

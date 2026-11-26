@@ -14,7 +14,7 @@ const HubFoot = () => {
   if (!hasRole("member")) return null;
   return (
     <div className="hp-sb-foot">
-      <Link to="/paciente" className="hp-sb-link"><HeartPulse aria-hidden /><span className="hp-sb-text">Área do paciente</span></Link>
+      {hasRole("member") && <Link to="/paciente" className="hp-sb-link"><HeartPulse aria-hidden /><span className="hp-sb-text">Área do paciente</span></Link>}
     </div>
   );
 };
@@ -30,6 +30,7 @@ const AdminLayout = () => {
     <AppFrame appId={appId} nav={nav} footer={appId === "hub" ? <HubFoot /> : undefined}
       profileExtra={<>
         {appId === "hub" && <DropdownMenuItem asChild><Link to="/academy">Academy (portal do aluno)</Link></DropdownMenuItem>}
+        {appId === "hub" && hasRole("physio") && <DropdownMenuItem asChild><Link to="/fisio" data-testid="menu-go-fisio">Portal do fisioterapeuta</Link></DropdownMenuItem>}
         {appId === "hub" && hasRole("member") && <DropdownMenuItem asChild><Link to="/paciente">Área do paciente</Link></DropdownMenuItem>}
       </>}>
       <Outlet />

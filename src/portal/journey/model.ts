@@ -48,6 +48,8 @@ export interface EvidenceItem {
   id: string; title: string; authors: string | null; journal: string | null; year: number | null; doi: string | null; url: string | null; design: string | null;
   population: string | null; comparison: string | null; benefits: string | null; duration: string | null; follow_up: string | null; limitations: string | null;
   relation: string | null; differences: string | null;
+  /** O que o estudo avaliou (intervenção e medida de resultado) — opcionais. */
+  intervention?: string | null; outcome_measure?: string | null; phase?: string | null;
 }
 
 // ---------------------------------------------------------------- derivações honestas

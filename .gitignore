@@ -37,3 +37,6 @@ playwright/.cache
 
 # Rota: copiado no deploy
 supabase/functions/route-planner/route-core.ts
+
+# capturas e PDF gerados pelo teste N42 (jornada comercial)
+docs/jornada-comercial/
