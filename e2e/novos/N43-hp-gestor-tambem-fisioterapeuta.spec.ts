@@ -59,7 +59,9 @@ test.describe.serial("@novo HP — gestor que também é fisioterapeuta", () => 
     await p.goto("/admin"); await expect(p.getByTestId("go-fisio")).toBeVisible({ timeout: 30_000 });
     await p.getByTestId("go-fisio").click(); await expect(p).toHaveURL(/\/fisio/); await expect(p.getByRole("heading", { name: "Portal do fisioterapeuta" })).toBeVisible({ timeout: 30_000 });
     await expect(p.getByText(/Sem permissão ou falha ao carregar/)).toHaveCount(0, { timeout: 30_000 });   // o início do portal abre (exige o cadastro de profissional ligado à conta)
-    await p.getByTestId("portal-conta").first().click(); await p.getByRole("menuitem", { name: "Painel completo (gestão)" }).click(); await expect(p).toHaveURL(/\/admin/); await c.close();
+    await expect(p.getByTestId("go-gestao")).toContainText("Alterar para a gestão");   // atalho sempre visível na barra lateral do portal
+    await p.getByTestId("go-gestao").click(); await expect(p).toHaveURL(/\/admin/);
+    await expect(p.getByTestId("go-fisio")).toContainText("Alterar para a área de fisio"); await c.close();
   });
 
   test("4. com o papel, mas SEM vínculo com o paciente: o conteúdo clínico continua recusado", async () => {
