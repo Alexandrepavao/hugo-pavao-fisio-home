@@ -43,7 +43,8 @@ const pillCls = "hp-pill";
 export const PeriodFilter = (props: PeriodFilterProps) => {
   const { preset, from, to, onPreset, onFrom, onTo, compare, onCompare, unit, units, onUnit, onClear, extra, extraCount = 0, extraSummary, line, onLine, month, onMonth, day, onDay, unitRequired = false, defaultPreset = "mes" } = props;
   const showPeriod = preset !== undefined && from !== undefined && to !== undefined && !!onPreset && !!onFrom && !!onTo;
-  const showUnit = units !== undefined && !!onUnit;
+  // o seletor de unidades aparece SEMPRE que a tela o pede (onUnit); enquanto a lista não chega fica desabilitado em “Carregando unidades…” (sem sumir nem “pular” a tela)
+  const showUnit = !!onUnit; const unitsLoading = units === undefined;
   const showLine = !!onLine; const lineActive = showLine && !!line && line !== "geral";
   const showMonth = month !== undefined && !!onMonth;
   const showDay = day !== undefined && !!onDay;
@@ -59,7 +60,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
   // "ativo" = diferente do padrão da tela (mês atual, todas as unidades, sem comparação, sem filtros específicos)
   const totalActive = extraCount + (compare ? 1 : 0) + (showUnit && !unitRequired && unit ? 1 : 0) + (showPeriod && preset !== defaultPreset ? 1 : 0) + (lineActive ? 1 : 0);
   const periodLabel = showPeriod ? RANGE_LABEL[preset!] : "";
-  const unitLabel = showUnit ? (units!.find((u) => u.id === unit)?.name ?? "Todas as unidades") : "";
+  const unitLabel = showUnit ? ((units ?? []).find((u) => u.id === unit)?.name ?? "Todas as unidades") : "";
   const activeChips = [showPeriod && preset !== defaultPreset ? `Período: ${periodLabel}` : "", showUnit && !unitRequired && unit ? `Unidade: ${unitLabel}` : "", lineActive ? `Linha: ${lineFilterLabel(line!)}` : "", compare ? "Comparando com o período anterior" : "", ...(extraSummary ? extraSummary.split(" · ") : [])].filter(Boolean);
   const rangeText = showPeriod ? `${new Date(from! + "T12:00:00Z").toLocaleDateString("pt-BR")} – ${new Date(to! + "T12:00:00Z").toLocaleDateString("pt-BR")}` : "";
 
@@ -112,7 +113,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
                 {showUnit && (
                   <div className="mt-3">
                     <label htmlFor="pf-unit-m" className="block text-xs text-muted-foreground mb-1">Unidade</label>
-                    <UnitSelect id="pf-unit-m" units={units!} value={unit ?? ""} onChange={onUnit!} required={unitRequired} />
+                    <UnitSelect id="pf-unit-m" units={units ?? []} loading={unitsLoading} value={unit ?? ""} onChange={onUnit!} required={unitRequired} />
                   </div>
                 )}
               </div>
@@ -152,7 +153,7 @@ export const PeriodFilter = (props: PeriodFilterProps) => {
           )}
           {showMonth && <><label className="sr-only" htmlFor="pf-month">Mês</label><input id="pf-month" type="month" value={month} onChange={(e) => onMonth!(e.target.value)} className="hp-pill !w-auto" /></>}
           {showUnit && (<>
-            <UnitSelect id="pf-unit" units={units!} value={unit ?? ""} onChange={onUnit!} required={unitRequired} />
+            <UnitSelect id="pf-unit" units={units ?? []} loading={unitsLoading} value={unit ?? ""} onChange={onUnit!} required={unitRequired} />
           </>)}
 
           <PopoverTrigger asChild>

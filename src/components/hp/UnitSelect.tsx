@@ -6,12 +6,12 @@ const ALL = "__todas__";
 /** Seletor de unidades acessível (Radix Select): teclado completo (setas, Enter, Esc, digitação), foco devolvido ao botão ao fechar, menu em portal que se reposiciona e rola por dentro,
  *  nome longo com reticências no botão e quebra de linha no menu. As unidades vêm de quem usa (fonte de dados atual, já filtrada por organização e permissão). Vazio = "Todas as unidades"
  *  (mesmo significado de antes), a menos que `required` (Agenda: precisa de uma unidade). */
-export const UnitSelect = ({ id = "pf-unit", units, value, onChange, required = false, allLabel = "Todas as unidades", label = "Unidade", disabled }: {
-  id?: string; units: { id: string; name: string }[]; value: string; onChange: (v: string) => void; required?: boolean; allLabel?: string; label?: string; disabled?: boolean;
+export const UnitSelect = ({ id = "pf-unit", units, value, onChange, required = false, allLabel = "Todas as unidades", label = "Unidade", disabled, loading = false }: {
+  id?: string; units: { id: string; name: string }[]; value: string; onChange: (v: string) => void; required?: boolean; allLabel?: string; label?: string; disabled?: boolean; /** lista de unidades ainda carregando: campo visível, desabilitado */ loading?: boolean;
 }) => {
-  const current = units.find((u) => u.id === value)?.name ?? (required ? "Selecione a unidade" : allLabel);
+  const current = loading ? "Carregando unidades…" : (units.find((u) => u.id === value)?.name ?? (required ? "Selecione a unidade" : allLabel));
   return (
-    <S.Root value={value || (required ? "" : ALL)} onValueChange={(v) => onChange(v === ALL ? "" : v)} disabled={disabled}>
+    <S.Root value={value || (required ? "" : ALL)} onValueChange={(v) => onChange(v === ALL ? "" : v)} disabled={disabled || loading}>
       <S.Trigger id={id} className="hp-unit-trigger" aria-label={`${label}: ${current}`} title={current}>
         <S.Value placeholder="Selecione a unidade">{current}</S.Value>
         <S.Icon asChild><ChevronDown size={15} aria-hidden /></S.Icon>
