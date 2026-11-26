@@ -40,10 +40,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!s) { setRoles([]); setRolesLoading(false); return; }
     if (getViewAsSession()) { setRolesLoading(false); return; }   // em “ver como” os papéis são os da pessoa vista (vêm do servidor)
     setRolesLoading(true);
-    const { data, error } = await supabase
-      .from("role_assignments")
-      .select("role, unit_id, valid_from, valid_until, revoked_at")
-      .eq("user_id", s.user.id);
+    // Falha passageira da consulta (ex.: estouro de tempo do banco) NÃO pode virar “sem papel / acesso não liberado”: até 3 tentativas antes de concluir que não há papéis.
+    let data: { role: string; unit_id: string | null; valid_from: string; valid_until: string | null; revoked_at: string | null }[] | null = null; let error: unknown = null;
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+      const r = await supabase.from("role_assignments").select("role, unit_id, valid_from, valid_until, revoked_at").eq("user_id", s.user.id);
+      data = r.data as typeof data; error = r.error; if (!error) break;
+      await new Promise((res) => setTimeout(res, 800 * (tentativa + 1)));
+    }
     if (error) { setRoles([]); setRolesLoading(false); return; }
     const now = Date.now();
     setRoles(

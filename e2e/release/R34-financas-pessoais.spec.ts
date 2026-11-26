@@ -168,7 +168,7 @@ test.describe.serial("@release Finanças pessoais", () => {
 
   test("orçamento por categoria e custo de vida: as perguntas, 12 meses e fonte dos números", async ({ page }) => {
     await login(page); const errors = collectErrors(page);
-    await page.goto("/admin/financeiro/pessoal/orcamento"); await expect(page.getByRole("heading", { name: "Orçamento e custo de vida", level: 2 })).toBeVisible({ timeout: 30_000 });
+    await page.goto("/admin/financeiro/pessoal/orcamento"); await expect(page.getByRole("heading", { name: "Orçamento e custo de vida", level: 1 })).toBeVisible({ timeout: 30_000 });
     for (const q of ["Quanto custa manter meu padrão de vida por mês?", "Quanto está comprometido nos próximos meses?", "Quanto já gastei e quanto ainda está previsto?", "Quanto preciso receber por mês para cobrir meu orçamento?"]) await expect(page.getByText(q)).toBeVisible();
     await expect(page.getByTestId("pf-custo-mes")).toHaveCount(12); await expect(page.getByText("De onde vêm os números")).toBeVisible();
     await page.screenshot({ path: shot("custo-de-vida") });
@@ -202,7 +202,7 @@ test.describe.serial("@release Finanças pessoais", () => {
     // a sugestão exige vencimento até 10 dias da data da linha: aproxima o dentista da data do extrato (reagendar preserva a original), para o teste valer em qualquer dia do mês
     const dentId = ((await own().get("pf_entries?select=id&description=eq.Dentista%20QA")).body as { id: string }[])[0].id;
     expect((await own().rpc("pf_entry_update", { p_ref: { entry_id: dentId }, p_scope: "this", p_patch: { due_date: today } })).status).toBe(200);
-    await page.goto("/admin/financeiro/pessoal/importacao"); await expect(page.getByRole("heading", { name: "Importação e conciliação", level: 2 })).toBeVisible({ timeout: 30_000 });
+    await page.goto("/admin/financeiro/pessoal/importacao"); await expect(page.getByRole("heading", { name: "Importação e conciliação", level: 1 })).toBeVisible({ timeout: 30_000 });
     await page.getByLabel("Conta pessoal do extrato").selectOption({ label: "Conta QA" }); await page.getByLabel(/cole o conteúdo do CSV/).fill(csv); await expect(page.getByTestId("pf-import-mapeamento")).toBeVisible();
     await page.getByRole("button", { name: /Gerar prévia/ }).click(); await expect(page.getByTestId("pf-import-contagem")).toContainText("nova(s)", { timeout: 20_000 });
     const linhas = page.getByTestId("pf-import-linha"); await expect(linhas).toHaveCount(4);

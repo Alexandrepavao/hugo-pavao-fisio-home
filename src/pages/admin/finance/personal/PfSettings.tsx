@@ -28,11 +28,11 @@ const PfSettings = () => {
         <h2 className="text-base font-semibold">Preferências</h2>
         <State loading={st.isLoading} error={st.error} />
         <div className="grid gap-3 sm:grid-cols-2">
-          <div><label htmlFor="cf-days" className="block text-xs mb-1">Lembrar vencimentos com antecedência de (dias)</label><input id="cf-days" type="number" min={0} max={30} value={days} onChange={(e) => setDays(e.target.value)} /><p className="text-[11px] text-muted-foreground mt-1">Cada ocorrência é lembrada uma única vez; os lembretes ficam só dentro do app.</p></div>
-          <div><label htmlFor="cf-months" className="block text-xs mb-1">Meta de cobertura da reserva (meses)</label><input id="cf-months" type="number" min={0} max={60} step="0.5" value={months} onChange={(e) => setMonths(e.target.value)} /></div>
+          <div><label htmlFor="cf-days" className="block text-xs mb-1">Lembrar vencimentos com antecedência de (dias)</label><input id="cf-days" type="number" min={0} max={30} disabled={st.isLoading} value={days} onChange={(e) => setDays(e.target.value)} /><p className="text-[11px] text-muted-foreground mt-1">Cada ocorrência é lembrada uma única vez; os lembretes ficam só dentro do app.</p></div>
+          <div><label htmlFor="cf-months" className="block text-xs mb-1">Meta de cobertura da reserva (meses)</label><input id="cf-months" type="number" min={0} max={60} step="0.5" disabled={st.isLoading} value={months} onChange={(e) => setMonths(e.target.value)} /></div>
         </div>
-        <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={plan} onChange={(e) => setPlan(e.target.checked)} className="!w-4 !h-4 mt-0.5" /><span>Planejar o próximo mês com a renda recebida neste mês (a renda de um mês orienta o orçamento do seguinte).</span></label>
-        <div><button className={btnPrimary}>Salvar preferências</button></div>
+        <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={plan} disabled={st.isLoading} onChange={(e) => setPlan(e.target.checked)} className="!w-4 !h-4 mt-0.5" /><span>Planejar o próximo mês com a renda recebida neste mês (a renda de um mês orienta o orçamento do seguinte).</span></label>
+        <div><button className={btnPrimary} disabled={st.isLoading}>Salvar preferências</button></div>
       </form>
 
       <section className="max-w-3xl">

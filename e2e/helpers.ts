@@ -36,3 +36,10 @@ export async function noConsoleErrors(page: Page, fn: () => Promise<void>) {
   page.on("console", (m) => { if (m.type() === "error" && !/favicon|ERR_BLOCKED|Failed to load resource/.test(m.text())) errors.push(m.text()); });
   await fn(); return errors;
 }
+
+/** Escolhe a unidade no seletor acessível do filtro (#pf-unit é um botão com lista, não um <select>): abre, clica na opção da unidade (por id; "" = Todas) e confere o fechamento. */
+export async function pickUnit(page: Page, unitId: string) {
+  await page.locator("#pf-unit").click();
+  await page.locator(`[role="option"][data-unit-id="${unitId}"]`).click();
+  await page.locator("#pf-unit[aria-expanded='false']").waitFor();
+}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { validateSlug } from "@/lib/reserved-slugs";
 import { TEMPLATES } from "@/features/pages/blocks";
+import { PageHead } from "@/lib/ui";
 
 interface PageRow { id: string; slug: string; title: string; status: string; publish_at: string | null; unpublish_at: string | null; updated_at: string }
 interface Metric { page_id: string; visits: number; leads: number }
@@ -34,11 +35,8 @@ const Pages = () => {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <div><p className="eyebrow mb-2">HP Pages</p><h1 className="text-3xl text-foreground">Páginas</h1>
-          <p className="text-muted-foreground text-sm mt-1">Visitas e leads dos últimos 30 dias (por data da visita e do envio).</p></div>
-        <button onClick={() => setShowNew(!showNew)} className="hp-btn hp-btn-primary">{showNew ? "Fechar" : "Nova página"}</button>
-      </div>
+      <PageHead eyebrow="HP Pages" title="Páginas" hint="Visitas e leads dos últimos 30 dias (por data da visita e do envio)."
+        actions={<button onClick={() => setShowNew(!showNew)} className="hp-btn hp-btn-primary">{showNew ? "Fechar" : "Nova página"}</button>} />
       {showNew && <NewPage />}
       {state === "loading" && <p role="status" className="text-muted-foreground">Carregando…</p>}
       {state === "error" && <p role="alert" className="text-destructive">Sem permissão ou falha ao carregar.</p>}

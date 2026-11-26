@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fmtDateTime } from "@/lib/format";
-import { btnPrimary, errText, Msg, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
+import { btnPrimary, errText, Msg, PageHead, State, Table, Tabs, Td, useMsg } from "@/lib/ui";
 
 interface Entry {
   id: number; action: string; entity_type: string; entity_id: string | null;
@@ -15,8 +15,7 @@ const Audit = () => {
   const [tab, setTab] = useState("auditoria");
   return (
     <div>
-      <p className="eyebrow mb-2">Segurança</p>
-      <h1 className="text-3xl text-foreground mb-2">Auditoria</h1>
+      <PageHead eyebrow="Segurança" title="Auditoria" hint="Quem fez o quê e quando: ações administrativas e eventos das automações." />
       <Tabs tabs={[["auditoria", "Ações administrativas"], ["automacoes", "Automações (eventos)"]]} value={tab} onChange={setTab} />
       {tab === "auditoria" && <AuditLog />}
       {tab === "automacoes" && <Automations />}

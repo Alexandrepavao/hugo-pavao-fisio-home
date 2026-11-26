@@ -12,9 +12,10 @@ const ADMINS: AppRole[] = ["manager", "ops_admin"];
 
 export const GESTAO_NAV: FrameNavSection[] = [
   { label: "Principal", items: [
-    { to: "/admin/adm", label: "Dashboard", icon: LayoutDashboard, end: true, keywords: "indicadores cadastro painel gestão administrativo" },
+    { to: "/admin/adm", label: "Visão geral", icon: LayoutDashboard, end: true, keywords: "dashboard indicadores cadastro painel gestão administrativo atenção" },
     { to: "/admin/adm/pendencias", label: "Pendências", icon: ClipboardList, end: true, keywords: "pendências documentos contatos requisitos" },
-    { to: "/admin/adm/pendencias?aba=contratos", label: "Contratos", icon: FileSignature, keywords: "contratos assinatura vencimento" },
+    { to: "/admin/adm/pendencias?aba=contratos", label: "Contratos", icon: FileSignature, keywords: "contratos administrativos assinatura vencimento" },
+    { to: "/admin/adm/pendencias?aba=documentos", label: "Documentos", icon: FileText, keywords: "documentos validade vencidos ausentes exigidos cadastro" },
   ] },
   { label: "Cadastro", items: [
     { to: "/admin/adm/diretorio", label: "Planilha administrativa", icon: Table2, keywords: "pessoa física jurídica empresas planilha" },

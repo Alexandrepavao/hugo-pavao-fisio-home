@@ -67,7 +67,7 @@ const Team = () => {
   const toggle = async (u: Member) => { const { error } = await supabase.from("user_accounts").update({ status: u.status === "active" ? "suspended" : "active" }).eq("user_id", u.user_id); error ? m.err(errText(error)) : void qc.invalidateQueries({ queryKey: ["team"] }); };
 
   return (<div>
-    <PageHead eyebrow="Acessos" title="Equipe e convites" hint="Papéis são atribuídos por escopo (organização ou unidade) e podem ser combinados. Acesso só nasce de convite para e-mail verificado; não há senha padrão." />
+    <PageHead eyebrow="Acessos" title="Equipe e acessos" hint="Papéis são atribuídos por escopo (organização ou unidade) e podem ser combinados. Acesso só nasce de convite para e-mail verificado; não há senha padrão." />
     <Msg m={msg} />
     <form onSubmit={invite} className="hp-card p-5 mb-6 grid gap-3 sm:grid-cols-4 items-end" noValidate>
       <div className="sm:col-span-2"><label htmlFor="ie" className="block text-xs mb-1">E-mail da pessoa</label><input id="ie" type="email"   value={email} onChange={(e) => setEmail(e.target.value)} /></div>

@@ -56,7 +56,7 @@ test.describe.serial("@release Aplicativos contextuais e filtros", () => {
     for (const [path, item, app] of [["/admin/pessoas", "Pessoas", "Gestão"], ["/admin/equipe", "Equipe e acessos", "Gestão"], ["/admin/auditoria", "Auditoria", "Gestão"], ["/admin/agenda", "Agenda", "Operação"], ["/admin/paginas", "Páginas", "Pages"], ["/admin/academy", "Cursos e alunos", "Academy"], ["/admin/parceiros", "Parceiros", "Parceiros"], ["/admin/meu-dia", "Meu dia", "Produtividade"], ["/admin/contas-corporativas", "Contas corporativas", "Financeiro"]] as const) {
       await page.goto(path);
       await expect(side(page).getByRole("link", { name: item, exact: true }), `${path} → ${app}`).toHaveAttribute("aria-current", "page", { timeout: 30_000 });
-      await expect(page.locator("header h1")).toContainText(`${app} · `);
+      await expect(page.getByTestId("banner-app")).toHaveText(app);   // o aplicativo vem acima do título, no banner (o único h1 é o título da tela)
     }
   });
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -44,11 +45,15 @@ export const CONTRACT_STATUS: Record<string, string> = { draft: "Rascunho", awai
 export const DOC_STATE: Record<string, string> = { vencido: "Vencido", vencendo: "Vencendo", valido: "Vigente", sem_validade: "Sem validade informada", ausente: "Ausente" };
 export const HISTORY_LABEL: Record<string, string> = { created: "Criada", assigned: "Responsável definido", due_changed: "Prazo alterado", resolved: "Concluída", reopened: "Reaberta", cancelled: "Cancelada", noted: "Anotação", sent: "Enviado para assinatura", signed: "Assinatura registrada" };
 
-/** Destino "abrir o cadastro" de cada tipo de registro vinculado. */
-export const subjectRoute = (type: string | null, name?: string | null) => {
+/** Caminho de retorno seguro (só rotas internas do /admin; nunca URL externa ou protocolo-relativa). */
+export const safeBack = (v: string | null | undefined): string | null => (v && /^\/admin(\/|\?|$)/.test(v) && !v.includes("//") && !v.includes("\\") ? v : null);
+const withBack = (url: string, back?: string) => (back && safeBack(back) ? `${url}${url.includes("?") ? "&" : "?"}voltar=${encodeURIComponent(back)}` : url);
+/** Link para um registro relacionado, SEMPRE pelo id do vínculo real (nunca por correspondência de nome). `back` = onde o usuário estava, para o “Voltar” no destino. */
+export const subjectRoute = (type: string | null, name?: string | null, id?: string | null, back?: string) => {
   switch (type) {
-    case "person": case "legal_entity": return `/admin/adm/diretorio?q=${encodeURIComponent(name ?? "")}`;
-    case "contract": return "/admin/adm/pendencias?aba=contratos";
+    case "person": return id ? withBack(`/admin/adm/diretorio?abrir=person:${id}`, back) : null;
+    case "legal_entity": return id ? withBack(`/admin/adm/diretorio?tipo=pj&abrir=entity:${id}`, back) : null;
+    case "contract": return id ? withBack(`/admin/adm/pendencias?aba=contratos&contrato=${id}`, back) : withBack("/admin/adm/pendencias?aba=contratos", back);
     case "waitlist": case "package": return "/admin/agenda";
     case "professional": case "invitation": case "access": return "/admin/equipe";
     default: return null;
@@ -56,17 +61,30 @@ export const subjectRoute = (type: string | null, name?: string | null) => {
 };
 export const fmtHours = (h: number | null | undefined) => (h == null ? "—" : h >= 48 ? `${(h / 24).toFixed(1).replace(".", ",")} dias` : `${h.toFixed(1).replace(".", ",")} h`);
 
-export const useFilters = () => { const [f, setF] = useState<Filters>(NO_FILTERS); return [f, setF, Object.values(f).filter(Boolean).length] as const; };
+/** Onde o usuário está agora (caminho + busca), para os links de “abrir origem/ver cadastro” poderem voltar aqui. */
+export const useHere = () => { const l = useLocation(); return `${l.pathname}${l.search}`; };
+/** Filtro por UM cadastro (?cadastro=<id>) nas abas Pendências, Contratos e Documentos: relação real pelo id; vem de “Ver contratos/pendências/documentos” nas fichas. */
+export const useCadastroFilter = () => {
+  const [sp, setSp] = useSearchParams(); const id = /^[0-9a-f-]{36}$/i.test(sp.get("cadastro") ?? "") ? sp.get("cadastro")! : "";
+  return { id, clear: () => { const n = new URLSearchParams(sp); n.delete("cadastro"); setSp(n, { replace: true }); } };
+};
+/** Filtros da central (responsável, tipo, vínculo, situação) NA URL (f_owner, f_type, f_kind, f_status): ao seguir um cartão e voltar, o mesmo recorte é restaurado. */
+export const useFilters = () => {
+  const [sp, setSp] = useSearchParams();
+  const f: Filters = { owner: sp.get("f_owner") ?? "", type: sp.get("f_type") ?? "", kind: sp.get("f_kind") ?? "", status: sp.get("f_status") ?? "" };
+  const setF = (next: Filters) => { const n = new URLSearchParams(sp); (["owner", "type", "kind", "status"] as const).forEach((k) => { if (next[k]) n.set(`f_${k}`, next[k]); else n.delete(`f_${k}`); }); setSp(n, { replace: true }); };
+  return [f, setF, Object.values(f).filter(Boolean).length] as const;
+};
 
 export const useAdmCentral = (from: string, to: string, unit: string, f: Filters) => useQuery({
-  queryKey: ["adm-central", from, to, unit, f.owner, f.type, f.kind, f.status], retry: false,
+  queryKey: ["adm-central", from, to, unit, f.owner, f.type, f.kind, f.status], retry: 2, retryDelay: 1500,   // um estouro de tempo passageiro não pode deixar a tela presa em “falha ao carregar”
   queryFn: async () => {
     const { data, error } = await supabase.rpc("adm_central", { p_from: from, p_to: to, p_unit: unit || null, p_owner: f.owner || null, p_type: f.type || null, p_kind: f.kind || null, p_status: f.status || null });
     if (error) throw error; return data as Central;
   },
 });
 export const usePendencies = (unit: string, f: Filters, status: string, limit = 200) => useQuery({
-  queryKey: ["adm-pendencies", unit, f.owner, f.type, f.kind, status, limit], retry: false,
+  queryKey: ["adm-pendencies", unit, f.owner, f.type, f.kind, status, limit], retry: 2, retryDelay: 1500,
   queryFn: async () => {
     const { data, error } = await supabase.rpc("adm_pendency_list", { p_unit: unit || null, p_owner: f.owner || null, p_type: f.type || null, p_kind: f.kind || null, p_status: status || null, p_limit: limit });
     if (error) throw error; return data as Pendency[];

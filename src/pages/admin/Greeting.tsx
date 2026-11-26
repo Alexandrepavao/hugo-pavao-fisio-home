@@ -17,6 +17,14 @@ const useLocalHour = () => {
   return hour;
 };
 
+/** Texto da saudação (hora LOCAL do dispositivo + primeiro nome da conta) para o banner do Hub. */
+export const useGreetingText = () => {
+  const hour = useLocalHour();
+  const profile = useMyAccount();
+  const name = profile.data?.display_name?.trim().split(" ")[0];
+  return `${greetingFor(hour)}${name ? `, ${name}!` : "!"}`;
+};
+
 const Greeting = () => {
   const hour = useLocalHour();
   const profile = useMyAccount();

@@ -130,7 +130,7 @@ const CrmDashboard = () => {
 
   return (
     <div>
-      <PageHead eyebrow="CRM" title="Painel comercial" hint="Resumo comercial. Toque em qualquer cartão para ver o detalhamento."
+      <PageHead eyebrow="CRM" title="Visão geral" hint="Resumo comercial. Toque em qualquer cartão para ver o detalhamento."
         actions={
           <PeriodFilter preset={preset} from={custom.from} to={custom.to} unit={unit} units={units.data} compare={compare}
             onPreset={onPreset} onFrom={onFrom} onTo={onTo} onUnit={onUnit} onCompare={onCompare}

@@ -10,7 +10,7 @@ test.describe("autenticação e proteção de rotas", () => {
       await expect(page).toHaveURL(/\/admin$/);
       // O título da página agora é a saudação por horário local (varia com a hora e o nome) — verificamos o padrão, não o texto exato.
       await expect(page.getByRole("heading", { name: /Bom dia|Boa tarde|Boa noite/ })).toBeVisible();
-      await expect(page.getByText("Resumo da operação.")).toBeVisible();
+      await expect(page.getByTestId("banner-desc")).toHaveText("Sua operação em um só lugar.");   // descrição no banner (substitui o antigo subtítulo “Resumo da operação.”)
     });
     expect(errors).toEqual([]);
 
